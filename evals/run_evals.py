@@ -62,12 +62,18 @@ def build_test_cases(standards_data, category_filter=None, new_only=False, inclu
                 skipped.append(f"{std['id']} ({std.get('checkable_from', 'unknown')})")
                 continue
 
+            # Pick a content type where this standard is relevant.
+            # Library evals test the scan + validation pipeline, not the classifier.
+            relevant_types = std.get("relevant_content_types", [])
+            content_type = relevant_types[0] if relevant_types else "short_ui_copy"
+
             cases.append({
                 "case_id": f"{std['id']} correct",
                 "standard_id": std["id"],
                 "input": std["correct"],
                 "expected": "pass",
                 "category": cat["name"],
+                "content_type": content_type,
             })
             cases.append({
                 "case_id": f"{std['id']} incorrect",
@@ -75,15 +81,20 @@ def build_test_cases(standards_data, category_filter=None, new_only=False, inclu
                 "input": std["incorrect"],
                 "expected": "fail",
                 "category": cat["name"],
+                "content_type": content_type,
             })
     return cases, skipped
 
 
-def load_novel_cases(category_filter=None):
+def load_novel_cases(category_filter=None, standards_data=None):
     """Load novel (generalization) test cases from novel_cases.json.
 
     These are hand-written cases that test whether the agent reasons about
     standards vs. pattern-matching against the library examples.
+
+    Each case should have a content_type field specifying the context it
+    should be evaluated in. Falls back to deriving from the standard's
+    relevant_content_types if the field is missing.
     """
     if not NOVEL_CASES_PATH.exists():
         print(f"Novel cases file not found: {NOVEL_CASES_PATH}")
@@ -91,6 +102,14 @@ def load_novel_cases(category_filter=None):
 
     with open(NOVEL_CASES_PATH) as f:
         data = json.load(f)
+
+    # Fallback lookup for cases missing content_type
+    type_lookup = {}
+    if standards_data:
+        for cat in standards_data["categories"]:
+            for std in cat["standards"]:
+                relevant = std.get("relevant_content_types", [])
+                type_lookup[std["id"]] = relevant[0] if relevant else "short_ui_copy"
 
     cases = []
     for case in data["cases"]:
@@ -102,12 +121,18 @@ def load_novel_cases(category_filter=None):
             "input": case["input"],
             "expected": case["expected"],
             "category": case["category"],
+            "content_type": case.get("content_type") or type_lookup.get(case["standard_id"], "short_ui_copy"),
         })
     return cases
 
 
-def run_single_eval(cases, model, run_number, total_runs):
-    """Run one pass of all test cases. Returns list of result dicts."""
+def run_single_eval(cases, model, run_number, total_runs, check_kwargs=None):
+    """Run one pass of all test cases. Returns list of result dicts.
+
+    check_kwargs: extra keyword arguments passed to check_content
+    (e.g., skip_validation=True for library runs).
+    """
+    check_kwargs = check_kwargs or {}
     results = []
     total = len(cases)
 
@@ -117,7 +142,10 @@ def run_single_eval(cases, model, run_number, total_runs):
 
         try:
             result, latency, tokens = check_content(
-                case["input"], model=model
+                case["input"],
+                content_type_override=case.get("content_type"),
+                model=model,
+                **check_kwargs,
             )
             verdict = result.get("overall_verdict", "error")
             correct = verdict == case["expected"]
@@ -344,7 +372,11 @@ def main():
         print(f"Mode: novel (generalization) cases")
 
     if args.novel:
-        cases = load_novel_cases(category_filter=args.category)
+        standards_data = load_standards()
+        cases = load_novel_cases(
+            category_filter=args.category,
+            standards_data=standards_data,
+        )
         skipped = []
     else:
         standards_data = load_standards()
@@ -378,9 +410,20 @@ def main():
     print()
 
     all_runs = []
+
+    # Library evals test "does the system know its own rules" — use all standards
+    # with no content type context or validation. This is preprocess + one LLM call
+    # against the full library, matching v3.1.1 behavior plus deterministic checks.
+    # Novel evals test real-world accuracy with the full pipeline.
+    if args.novel:
+        check_kwargs = {}
+    else:
+        check_kwargs = {"skip_validation": True, "skip_filter": True}
+        print(f"Library mode: all standards, no filtering, no validation\n")
+
     for run_num in range(1, args.runs + 1):
         print(f"── Run {run_num}/{args.runs} ──")
-        results = run_single_eval(cases, args.model, run_num, args.runs)
+        results = run_single_eval(cases, args.model, run_num, args.runs, check_kwargs=check_kwargs)
         all_runs.append(results)
         correct = sum(1 for r in results if r["correct"])
         print(f"  Run {run_num} accuracy: {correct}/{len(results)} ({correct/len(results)*100:.1f}%)\n")
