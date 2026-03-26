@@ -1,2 +1,0 @@
-[console_scripts]
-content-checker = cli.main:main
