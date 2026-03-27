@@ -213,9 +213,10 @@ def check(
     filtered = filter_standards(standards_data, detected_type)
     active_notes = filtered.get("active_notes", [])
 
-    # Stage 3a: Deterministic preprocess
-    preprocess_violations = run_preprocess(text)
+    # Stage 3a: Deterministic preprocess (content-type-aware)
+    preprocess_violations = run_preprocess(text, detected_type)
     preprocess_ids = {v.standard_id for v in preprocess_violations}
+    suppressed_ids = getattr(preprocess_violations, 'suppressed_ids', set())
 
     # Stage 3b: LLM scan
     scan_result, scan_latency, scan_tokens = _llm_scan(
@@ -228,7 +229,9 @@ def check(
     llm_passes = _parse_llm_passes(scan_result.get("passes", []))
 
     # Deduplicate: preprocess wins on conflicts
-    llm_candidates = [v for v in llm_violations if v.standard_id not in preprocess_ids]
+    # Also suppress LLM violations for standards the preprocessor definitively passed
+    excluded_ids = preprocess_ids | suppressed_ids
+    llm_candidates = [v for v in llm_violations if v.standard_id not in excluded_ids]
 
     # Stage 4: Validate
     if llm_candidates:
@@ -279,6 +282,7 @@ def check_unfiltered(
     # Deterministic preprocess
     preprocess_violations = run_preprocess(text)
     preprocess_ids = {v.standard_id for v in preprocess_violations}
+    suppressed_ids = getattr(preprocess_violations, 'suppressed_ids', set())
 
     # LLM scan with full standards, no content type
     scan_result, latency, tokens = _llm_scan(
@@ -289,7 +293,10 @@ def check_unfiltered(
     llm_passes = _parse_llm_passes(scan_result.get("passes", []))
 
     # Merge (no validation)
-    llm_only = [v for v in llm_violations if v.standard_id not in preprocess_ids]
+    # Post-processing suppression: exclude both preprocess violation IDs
+    # and standards the preprocessor definitively passed
+    excluded_ids = preprocess_ids | suppressed_ids
+    llm_only = [v for v in llm_violations if v.standard_id not in excluded_ids]
     final_violations = list(preprocess_violations) + llm_only
     flagged_ids = {v.standard_id for v in final_violations}
     final_passes = [p for p in llm_passes if p.standard_id not in flagged_ids]

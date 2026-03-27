@@ -1,5 +1,5 @@
 {
-  "version": "4.0.0",
+  "version": "4.1.0",
   "total_standards": 46,
   "content_types": [
     {
@@ -50,7 +50,12 @@
           "incorrect": "Transaction declined due to insufficient authorization parameters.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "CLR-02",
@@ -59,7 +64,12 @@
           "incorrect": "We're excited to announce that for a limited time, customers who choose to upgrade will receive a 20% discount.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "CLR-03",
@@ -68,7 +78,11 @@
           "incorrect": "We wanted to let you know that the order you placed has been shipped and based on current estimates it should be arriving to you by Friday of this week.",
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "CLR-04",
@@ -77,7 +91,11 @@
           "incorrect": "You can export your data as a CSV which will include all records from the selected date range and can be opened in Excel or Google Sheets for further analysis.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "CLR-05",
@@ -86,7 +104,13 @@
           "incorrect": "This action is not irreversible.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         }
       ]
     },
@@ -101,7 +125,13 @@
           "incorrect": "Changes have been saved by the system. Preferences can be updated in the settings area by the user.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"],
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ],
           "content_type_notes": {
             "confirmation": "Passive voice is acceptable in confirmations and system status messages. Only flag if the passive construction is unnecessarily complex or awkwardly names the actor (e.g., 'Changes have been saved by the system')."
           }
@@ -113,7 +143,13 @@
           "incorrect": "Users can change their password in the settings menu.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "VT-03",
@@ -122,16 +158,28 @@
           "incorrect": "Oopsie! Something broke lol. Let's give it another go!!",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "VT-04",
-          "rule": "Be confident, not arrogant. State things directly without hedging or over-qualifying.",
+          "rule": "Be confident, not arrogant. State things directly without hedging or over-qualifying. Qualification language is acceptable when making definitive claims would be misleading or legally inaccurate \u2014 for example, eligibility statements in healthcare, finance, or legal contexts where outcomes depend on individual circumstances.",
           "correct": "This will take about 5 minutes.",
           "incorrect": "This should probably take around maybe 5 minutes or so.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "VT-05",
@@ -140,7 +188,9 @@
           "incorrect": "Save failed. Error code 408.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message"]
+          "relevant_content_types": [
+            "error_message"
+          ]
         }
       ]
     },
@@ -155,7 +205,10 @@
           "incorrect": "Go to Settings. In the Preferences panel, select Alerts.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"],
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ],
           "requires_multi_snippet": true
         },
         {
@@ -165,7 +218,15 @@
           "incorrect": "Manage Your Notification Preferences",
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["button_cta", "error_message", "confirmation", "tooltip_microcopy", "ui_label", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "button_cta",
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "ui_label",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "CON-03",
@@ -174,7 +235,14 @@
           "incorrect": "3/16/26",
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "ui_label", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "ui_label",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "CON-04",
@@ -183,7 +251,10 @@
           "incorrect": "Remove this file? You can recover it from the Deleted Items bin within 30 days.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"],
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ],
           "requires_multi_snippet": true
         },
         {
@@ -193,7 +264,14 @@
           "incorrect": "Use google drive to store your files.",
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "ui_label", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "ui_label",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         }
       ]
     },
@@ -208,7 +286,11 @@
           "incorrect": "Click here to learn more",
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["button_cta", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "button_cta",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "ACC-02",
@@ -217,7 +299,10 @@
           "incorrect": "Required fields are highlighted in red",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "ACC-03",
@@ -226,7 +311,9 @@
           "incorrect": "Bar chart image",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["long_form_copy"]
+          "relevant_content_types": [
+            "long_form_copy"
+          ]
         },
         {
           "id": "ACC-04",
@@ -235,7 +322,11 @@
           "incorrect": "Select a plan from the options on the right.",
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "ACC-05",
@@ -251,7 +342,9 @@
           "rule": "Don't include preceding articles (a, an, the) inside linked text. Link only the meaningful words.",
           "correct": "Read the [automation guide] for details.",
           "incorrect": "Read [the automation guide] for details.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "rich_text",
           "relevant_content_types": []
@@ -261,10 +354,15 @@
           "rule": "Write clear, concise form labels. Only mark fields as required when they are truly necessary.",
           "correct": "Email address (required)",
           "incorrect": "Please enter the email address you would like us to use for correspondence purposes",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["ui_label", "short_ui_copy"]
+          "relevant_content_types": [
+            "ui_label",
+            "short_ui_copy"
+          ]
         }
       ]
     },
@@ -279,7 +377,10 @@
           "incorrect": "Account creation",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["button_cta", "ui_label"]
+          "relevant_content_types": [
+            "button_cta",
+            "ui_label"
+          ]
         },
         {
           "id": "ACT-02",
@@ -288,7 +389,10 @@
           "incorrect": "Submit",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["button_cta", "ui_label"]
+          "relevant_content_types": [
+            "button_cta",
+            "ui_label"
+          ]
         },
         {
           "id": "ACT-03",
@@ -297,7 +401,11 @@
           "incorrect": "You cannot upload files larger than 25 MB.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "ACT-04",
@@ -306,7 +414,12 @@
           "incorrect": "Your account has been successfully created.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         }
       ]
     },
@@ -321,7 +434,9 @@
           "incorrect": "To complete verification you will need to provide a valid government-issued photo ID and you should also have a recent utility bill or bank statement that shows your current address on file with us.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["long_form_copy"]
+          "relevant_content_types": [
+            "long_form_copy"
+          ]
         },
         {
           "id": "STR-02",
@@ -330,16 +445,22 @@
           "incorrect": "Your files are backed up automatically every 24 hours to our secure cloud servers, which means you can always access previous versions of your work if you need to restore a file by going to the file browser and right-clicking the file you want to restore and selecting version history from the dropdown menu and choosing the version you want.",
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "STR-03",
-          "rule": "Use parallel structure in lists. Each item should follow the same grammatical pattern.",
+          "rule": "Use parallel structure in lists and sequential steps. Each item should follow the same grammatical pattern. In multi-step flows, a final result-state item ('You're ready to go', 'Your account is set up') may shift to declarative when it describes an outcome rather than an action.",
           "correct": "Upload your photo. Crop to fit. Apply a filter. Save your changes.",
           "incorrect": "Upload your photo. The photo should be cropped. You can apply a filter. Saving is the last step.",
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "STR-04",
@@ -348,7 +469,10 @@
           "incorrect": "On your current plan, which is the free tier, you're able to add up to a maximum of 5 team members to your workspace.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["tooltip_microcopy", "short_ui_copy"]
+          "relevant_content_types": [
+            "tooltip_microcopy",
+            "short_ui_copy"
+          ]
         },
         {
           "id": "STR-05",
@@ -357,14 +481,18 @@
           "incorrect": "Payment method under Settings, billing history under Account, invoices under Documents.",
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["long_form_copy"]
+          "relevant_content_types": [
+            "long_form_copy"
+          ]
         },
         {
           "id": "STR-06",
           "rule": "Nest headings hierarchically. Never skip heading levels for visual styling. H1 for page title, H2 for sections, H3 for subsections.",
           "correct": "H1: Account settings. H2: Notifications. H3: Email alerts.",
           "incorrect": "H1: Account settings. H3: Email alerts. H4: Frequency.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "rich_text",
           "relevant_content_types": []
@@ -380,50 +508,91 @@
           "rule": "Use the serial comma (Oxford comma) in lists of three or more items.",
           "correct": "You can send emails, build landing pages, and manage contacts.",
           "incorrect": "You can send emails, build landing pages and manage contacts.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "GRM-02",
-          "rule": "Spell out abbreviations and acronyms on first use. Use the short form for subsequent mentions.",
+          "rule": "Spell out abbreviations and acronyms on first use in body copy and help content. Use the short form for subsequent mentions. Universally understood abbreviations (FAQ, URL, ZIP, LLC, IRS) and regulated accessibility terms (TTY) do not require expansion in any context. Internal or organization-specific abbreviations should always be expanded on a public-facing page. If the surrounding copy acknowledges the reader may not know a term, expand it.",
           "correct": "We use single sign-on (SSO) across all products. SSO keeps your account secure.",
-          "incorrect": "We use SSO across all products. SSO keeps your account secure.",
-          "sources": ["Mailchimp"],
+          "incorrect": "If you don't know an HMO from an HSA, you're not alone.",
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "GRM-03",
           "rule": "Use exclamation points sparingly. Never use more than one at a time, and never in error messages or alerts.",
           "correct": "Welcome to your new dashboard.",
           "incorrect": "Welcome to your new dashboard!!!",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["button_cta", "error_message", "confirmation", "tooltip_microcopy", "ui_label", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "button_cta",
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "ui_label",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "GRM-04",
-          "rule": "Don't use ampersands in copy unless they are part of a brand name.",
+          "rule": "Don't use ampersands in body copy unless they are part of a brand name. Ampersands are acceptable in headings, navigation labels, footer links, and other space-constrained UI elements where '&' is a conventional shorthand.",
           "correct": "Terms and conditions",
-          "incorrect": "Terms & conditions",
-          "sources": ["Mailchimp"],
+          "incorrect": "Read our terms & conditions for more details.",
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["button_cta", "error_message", "confirmation", "tooltip_microcopy", "ui_label", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "button_cta",
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "ui_label",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "GRM-05",
           "rule": "Use numerals for numbers in body copy. Spell out a number only when it begins a sentence.",
           "correct": "You have 3 invitations and 12 unread messages.",
           "incorrect": "You have three invitations and twelve unread messages.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         }
       ]
     },
@@ -436,20 +605,30 @@
           "rule": "Use 'they,' 'them,' and 'their' as singular pronouns when the user's gender is unknown or irrelevant.",
           "correct": "When someone contacts support, they'll receive a confirmation email.",
           "incorrect": "When someone contacts support, he or she will receive a confirmation email.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "INC-02",
           "rule": "Don't ask for gender in forms unless it's necessary for the product. When you do, provide a text field rather than a limited dropdown.",
           "correct": "Gender (optional): [open text field]",
           "incorrect": "Gender (required): Male / Female",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["ui_label", "short_ui_copy"]
+          "relevant_content_types": [
+            "ui_label",
+            "short_ui_copy"
+          ]
         }
       ]
     },
@@ -462,70 +641,120 @@
           "rule": "Avoid words with multiple meanings that confuse translators. Replace 'once' (use 'after'), 'right' (use 'correct'), and 'since' (use 'because').",
           "correct": "After you sign in, you'll see your dashboard.",
           "incorrect": "Once you sign in, you'll see your dashboard.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "TRN-02",
           "rule": "Avoid unnecessary -ing words that create ambiguity in translation. Rewrite gerunds and -ing adjectives when a simpler form exists. Progressive verb forms are acceptable when they describe an ongoing action ('Uploading your file...', 'Loading results...').",
           "correct": "At the top of the page, you'll find a summary of your account.",
           "incorrect": "At the top of the page, you'll find a loading summary showing your account.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "TRN-03",
           "rule": "Repeat subjects and verbs in compound sentences instead of relying on implied subjects. Many languages require explicit subjects.",
           "correct": "The Pro plan includes analytics. The Starter plan does not include analytics.",
           "incorrect": "The Pro plan includes analytics, but not the Starter plan.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "TRN-04",
           "rule": "Avoid idioms, slang, and culturally specific references. These don't translate and confuse non-native speakers.",
           "correct": "This feature is simple to set up.",
           "incorrect": "Setting up this feature is a piece of cake.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "TRN-05",
           "rule": "Keep function words like 'the,' 'a,' 'that,' and 'to' even if they seem unnecessary. Removing them creates ambiguity in translation.",
           "correct": "Make sure that you have saved the file before you close the window.",
           "incorrect": "Verify file saved before close window.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["error_message", "confirmation", "tooltip_microcopy", "ui_label", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "error_message",
+            "confirmation",
+            "tooltip_microcopy",
+            "ui_label",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "TRN-06",
-          "rule": "Use metric measurements and 3-letter ISO currency codes (USD, EUR, GBP) instead of symbols when writing for international audiences.",
+          "rule": "Use metric measurements and 3-letter ISO currency codes (USD, EUR, GBP) instead of symbols when writing for international audiences. Currency symbols are acceptable in locale-specific content that will be localized (adapted per region) rather than translated (same content in multiple languages).",
           "correct": "Plans start at 10 USD per month.",
           "incorrect": "Plans start at $10/mo.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["tooltip_microcopy", "ui_label", "short_ui_copy", "long_form_copy"]
+          "relevant_content_types": [
+            "tooltip_microcopy",
+            "ui_label",
+            "short_ui_copy",
+            "long_form_copy"
+          ]
         },
         {
           "id": "TRN-07",
           "rule": "Avoid using different words for the same concept within a single piece of content. If 'workspace,' 'team hub,' and 'project space' all refer to the same thing, pick one term and use it consistently. Different terms are acceptable when they refer to genuinely different concepts.",
           "correct": "Create a campaign. Name your campaign. Send your campaign.",
           "incorrect": "Create a campaign. Name your email blast. Send your newsletter.",
-          "sources": ["Mailchimp"],
+          "sources": [
+            "Mailchimp"
+          ],
           "rule_type": "nuanced",
           "checkable_from": "plain_text",
-          "relevant_content_types": ["short_ui_copy", "long_form_copy"],
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy"
+          ],
           "requires_multi_snippet": true
         }
       ]

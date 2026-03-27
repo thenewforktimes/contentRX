@@ -1,7 +1,38 @@
-evals/results/
-__pycache__/
+# --- Private eval data (do NOT commit) ---
+# Domain-specific eval cases are proprietary data that informs
+# future content packs. Keep these local only.
+evals/industry/
+tools/extract_content.py
+
+# --- API keys and secrets ---
 .env
-*.pyc
-.DS_Store
-.venv/
+.env.local
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
 *.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+
+# --- Node/Figma plugin ---
+node_modules/
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Editor files ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Eval run artifacts (regenerable) ---
+evals/results/
