@@ -44,6 +44,36 @@ time when `DATABASE_URL` is not yet provisioned, and it avoids the
 - Always validate input with zod
 - Never log PII; violations table stores sha256 hashes only
 
+## /api/check request flow (locked)
+
+1. Auth via Clerk session OR `Authorization: Bearer cx_...` API key
+2. Load team rules (only matters when user is on Team plan)
+3. Check monthly quota — 402 if exhausted
+4. Rate limit check — 429 if exceeded (60/min per user, sliding window)
+5. Call `/api/evaluate` (Python) with `text`, `content_type`, `audience`, `moment`
+6. Apply team's disabled-rule filter (post-processing; full merge ships in Session 16)
+7. Log each violation into `violations` table with sha256 of text
+8. Increment `usage` counter for the current month
+9. Return result + usage metadata
+
+## Python engine
+
+The evaluation pipeline lives in `python/content_checker/` as a **vendored copy** of
+the engine repo. `api/evaluate.py` is a Vercel Python function that imports from
+there. The TS `/api/check` calls the Python function over internal HTTP via
+`src/lib/evaluate.ts`.
+
+**Sync policy:** the vendored copy is manually synced from the engine repo
+(`contentRX` on GitHub) until Session 7 publishes `contentrx-cli` to PyPI.
+After Session 7, switch `api/requirements.txt` to `contentrx-cli>=X.Y.Z` and
+delete `python/content_checker/`. Do not edit the vendored copy in place —
+fix it upstream and re-sync.
+
+**Internal secret:** `/api/evaluate` checks `x-internal-secret` against
+`INTERNAL_EVAL_SECRET`. Both runtimes read the same env var. Without this,
+anyone on the internet could hit `/api/evaluate` directly and burn our
+Anthropic budget.
+
 ## What not to do
 
 - Don't add new dependencies without checking bundle size
@@ -55,6 +85,11 @@ time when `DATABASE_URL` is not yet provisioned, and it avoids the
 - Don't wrap the Drizzle `db` object in a JavaScript `Proxy` for lazy
   init — it silently breaks libraries that inspect adapter shape. Use
   the `getDb()` pattern that's already in place.
+- Don't edit files under `python/content_checker/` directly — it's a
+  vendored copy. Fix the upstream engine and re-sync.
+- Don't expose `/api/evaluate` as a public surface; it's an internal
+  helper guarded by `INTERNAL_EVAL_SECRET`. All real clients call
+  `/api/check`.
 
 ## Running locally
 

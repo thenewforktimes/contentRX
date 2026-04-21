@@ -1,0 +1,74 @@
+/**
+ * Calls the Python evaluator via internal HTTP.
+ *
+ * Why internal HTTP: Vercel's Python runtime is a separate process from our
+ * Node.js runtime. Same-project fetch is the supported cross-runtime IPC.
+ * INTERNAL_EVAL_SECRET prevents anyone outside our project from hitting
+ * /api/evaluate directly even though it's public-by-default on Vercel.
+ */
+
+export type EvaluateParams = {
+  text: string;
+  content_type?: string;
+  audience?: "product_ui" | "general";
+  moment?: string;
+};
+
+export type EvaluationResult = {
+  content_type?: string;
+  overall_verdict: "pass" | "fail" | "error";
+  violations: Array<{
+    standard_id: string;
+    rule: string;
+    issue: string;
+    suggestion: string;
+    source?: string;
+  }>;
+  passes: Array<{ standard_id: string; rule: string }>;
+  summary?: string;
+  audience?: string;
+  moment?: string;
+  pipeline?: Record<string, number>;
+};
+
+export type EvaluateResponse = {
+  result: EvaluationResult;
+  latency_ms: number;
+  tokens: { input: number; output: number };
+};
+
+function internalEvaluateUrl(): string {
+  const base =
+    process.env.INTERNAL_EVAL_URL ??
+    process.env.NEXT_PUBLIC_APP_URL ??
+    "http://localhost:3000";
+  return `${base.replace(/\/$/, "")}/api/evaluate`;
+}
+
+export async function evaluate(
+  params: EvaluateParams,
+): Promise<EvaluateResponse> {
+  const secret = process.env.INTERNAL_EVAL_SECRET;
+  if (!secret) {
+    throw new Error("INTERNAL_EVAL_SECRET is not set");
+  }
+
+  const res = await fetch(internalEvaluateUrl(), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-internal-secret": secret,
+    },
+    body: JSON.stringify(params),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `Evaluation failed: ${res.status} ${res.statusText} ${body}`,
+    );
+  }
+
+  return (await res.json()) as EvaluateResponse;
+}
