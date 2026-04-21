@@ -1,0 +1,94 @@
+import { headers } from "next/headers";
+import { Webhook } from "svix";
+import { eq } from "drizzle-orm";
+import { getDb, schema } from "@/db";
+
+type ClerkUserEvent = {
+  type: "user.created" | "user.updated" | "user.deleted";
+  data: {
+    id: string;
+    email_addresses?: { email_address: string; id: string }[];
+    primary_email_address_id?: string | null;
+  };
+};
+
+function primaryEmail(data: ClerkUserEvent["data"]): string | null {
+  const list = data.email_addresses ?? [];
+  if (list.length === 0) return null;
+  const primary = list.find((e) => e.id === data.primary_email_address_id);
+  return (primary ?? list[0]).email_address;
+}
+
+export async function POST(req: Request) {
+  const secret = process.env.CLERK_WEBHOOK_SECRET;
+  if (!secret) {
+    return Response.json(
+      { error: "CLERK_WEBHOOK_SECRET not configured" },
+      { status: 500 },
+    );
+  }
+
+  const hdrs = await headers();
+  const svixId = hdrs.get("svix-id");
+  const svixTimestamp = hdrs.get("svix-timestamp");
+  const svixSignature = hdrs.get("svix-signature");
+
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    return Response.json(
+      { error: "Missing svix signature headers" },
+      { status: 400 },
+    );
+  }
+
+  const body = await req.text();
+  const wh = new Webhook(secret);
+
+  let evt: ClerkUserEvent;
+  try {
+    evt = wh.verify(body, {
+      "svix-id": svixId,
+      "svix-timestamp": svixTimestamp,
+      "svix-signature": svixSignature,
+    }) as ClerkUserEvent;
+  } catch {
+    return Response.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  const db = getDb();
+
+  if (evt.type === "user.created") {
+    const email = primaryEmail(evt.data);
+    if (!email) {
+      return Response.json({ error: "No email on user" }, { status: 400 });
+    }
+    await db
+      .insert(schema.users)
+      .values({
+        clerkId: evt.data.id,
+        email,
+        plan: "free",
+      })
+      .onConflictDoNothing({ target: schema.users.clerkId });
+    return Response.json({ ok: true });
+  }
+
+  if (evt.type === "user.updated") {
+    const email = primaryEmail(evt.data);
+    if (email) {
+      await db
+        .update(schema.users)
+        .set({ email })
+        .where(eq(schema.users.clerkId, evt.data.id));
+    }
+    return Response.json({ ok: true });
+  }
+
+  if (evt.type === "user.deleted") {
+    await db
+      .delete(schema.users)
+      .where(eq(schema.users.clerkId, evt.data.id));
+    return Response.json({ ok: true });
+  }
+
+  return Response.json({ ok: true });
+}

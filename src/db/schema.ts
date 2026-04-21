@@ -1,0 +1,153 @@
+import { createId } from "@paralleldrive/cuid2";
+import {
+  bigint,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+import type { InferSelectModel } from "drizzle-orm";
+
+const cuid = () =>
+  text("id")
+    .primaryKey()
+    .$defaultFn(() => createId());
+
+export const users = pgTable("users", {
+  id: cuid(),
+  clerkId: text("clerk_id").notNull().unique(),
+  email: text("email").notNull(),
+  plan: text("plan", { enum: ["free", "pro", "team"] })
+    .notNull()
+    .default("free"),
+  teamOwnerUserId: text("team_owner_user_id"),
+  apiKey: text("api_key").unique(),
+  dittoApiKeyEncrypted: text("ditto_api_key_encrypted"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const usage = pgTable(
+  "usage",
+  {
+    id: cuid(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    month: text("month").notNull(),
+    count: integer("count").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("usage_user_month_idx").on(t.userId, t.month)],
+);
+
+export const subscriptions = pgTable("subscriptions", {
+  id: cuid(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  stripeCustomerId: text("stripe_customer_id").notNull(),
+  stripeSubId: text("stripe_sub_id").notNull(),
+  status: text("status").notNull(),
+  plan: text("plan", { enum: ["pro", "team"] }).notNull(),
+  seats: integer("seats").notNull().default(1),
+  currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+});
+
+export const teamMembers = pgTable("team_members", {
+  id: cuid(),
+  teamOwnerUserId: text("team_owner_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  memberUserId: text("member_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  role: text("role", { enum: ["admin", "member"] })
+    .notNull()
+    .default("member"),
+  invitedAt: timestamp("invited_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+});
+
+export const teamRules = pgTable(
+  "team_rules",
+  {
+    id: cuid(),
+    teamOwnerUserId: text("team_owner_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    standardId: text("standard_id").notNull(),
+    action: text("action", { enum: ["disable", "override", "add"] }).notNull(),
+    ruleJson: jsonb("rule_json").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("team_rules_team_std_action_idx").on(
+      t.teamOwnerUserId,
+      t.standardId,
+      t.action,
+    ),
+  ],
+);
+
+export const violations = pgTable(
+  "violations",
+  {
+    id: cuid(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    teamId: text("team_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    contentType: text("content_type").notNull(),
+    moment: text("moment"),
+    standardId: text("standard_id").notNull(),
+    severity: text("severity").notNull(),
+    textHash: text("text_hash").notNull(),
+    source: text("source", {
+      enum: ["plugin", "cli", "action", "ditto"],
+    }).notNull(),
+  },
+  (t) => [
+    index("violations_user_created_idx").on(t.userId, t.createdAt),
+    index("violations_team_created_idx").on(t.teamId, t.createdAt),
+  ],
+);
+
+export const dittoSyncs = pgTable("ditto_syncs", {
+  id: cuid(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  projectId: text("project_id").notNull(),
+  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+  lastStatus: text("last_status"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type User = InferSelectModel<typeof users>;
+export type Usage = InferSelectModel<typeof usage>;
+export type Subscription = InferSelectModel<typeof subscriptions>;
+export type TeamMember = InferSelectModel<typeof teamMembers>;
+export type TeamRule = InferSelectModel<typeof teamRules>;
+export type Violation = InferSelectModel<typeof violations>;
+export type DittoSync = InferSelectModel<typeof dittoSyncs>;
