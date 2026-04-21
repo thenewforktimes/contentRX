@@ -31,11 +31,13 @@ import sys
 import traceback
 from http.server import BaseHTTPRequestHandler
 
-# The content_checker package is vendored at ./python/ in this repo.
-# Vercel sets the project root as cwd (/var/task); __file__ lives at
-# /var/task/api/evaluate.py, so python/ is one directory up.
+# content_checker is the Python engine package at the monorepo root
+# (src/content_checker/). Vercel's project root is cwd (/var/task/) and
+# __file__ is at /var/task/api/evaluate.py, so src/ is one directory up.
+# `vercel.json` → functions.includeFiles bundles src/content_checker/**
+# with this function so the import resolves at runtime.
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, os.path.join(_ROOT, "python"))
+sys.path.insert(0, os.path.join(_ROOT, "src"))
 
 from content_checker import check  # noqa: E402
 
