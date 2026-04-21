@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center gap-8 px-6 py-24">
@@ -20,12 +22,12 @@ export default function Home() {
         >
           Install for Figma
         </a>
-        <a
+        <Link
           href="/sign-in"
           className="rounded-md border border-neutral-300 px-4 py-2 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
         >
           Sign in
-        </a>
+        </Link>
       </div>
       <p className="text-xs text-neutral-500">
         Placeholder landing. Real marketing copy ships in Session 5.

@@ -10,7 +10,7 @@
  * swap the implementation without touching /api/check.
  */
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 
 type RuleAction = "disable" | "override" | "add";

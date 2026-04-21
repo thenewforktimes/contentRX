@@ -1,6 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
 import {
-  bigint,
   index,
   integer,
   jsonb,
