@@ -1,6 +1,6 @@
 {
   "version": "4.1.0",
-  "total_standards": 46,
+  "total_standards": 47,
   "content_types": [
     {
       "id": "button_cta",
@@ -36,6 +36,11 @@
       "id": "long_form_copy",
       "name": "Long-form copy",
       "description": "Help articles, documentation, onboarding flows, FAQs, and multi-paragraph content."
+    },
+    {
+      "id": "heading",
+      "name": "Heading",
+      "description": "Section headings, page titles, and card headings. Typically short (1-8 words), may use title case or sentence case depending on the design system."
     }
   ],
   "categories": [
@@ -55,7 +60,10 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
-          ]
+          ],
+          "content_type_notes": {
+            "_global": "CLR-01 covers three distinct failure modes. Match your suggestion to the actual problem: (1) Jargon \u2014 domain-specific terms the audience won't know. Suggest a plain-language equivalent. (2) Non-standard English \u2014 unnecessarily complex words with simpler alternatives (e.g., 'utilize' \u2192 'use'). Name the simpler word. (3) Vacuous copy \u2014 filler phrases that add no meaning (e.g., 'in order to' \u2192 'to'). Suggest removing or tightening. (4) Domain-mainstream terminology \u2014 medical and financial terms that have entered mainstream awareness through cultural discourse (e.g., GLP-1, FDIC, 401(k)) do not violate plain language requirements. Evaluate jargon relative to the target audience and domain, not in absolute terms. Terms may also be required by regulatory constraints (e.g., GLP-1 is the correct generic term when brand names cannot be used pre-prescription)."
+          }
         },
         {
           "id": "CLR-02",
@@ -130,10 +138,13 @@
             "confirmation",
             "tooltip_microcopy",
             "short_ui_copy",
-            "long_form_copy"
+            "long_form_copy",
+            "heading"
           ],
           "content_type_notes": {
-            "confirmation": "Passive voice is acceptable in confirmations and system status messages. Only flag if the passive construction is unnecessarily complex or awkwardly names the actor (e.g., 'Changes have been saved by the system')."
+            "confirmation": "Passive voice is acceptable in confirmations and system status messages. Only flag if the passive construction is unnecessarily complex or awkwardly names the actor (e.g., 'Changes have been saved by the system').",
+            "heading": "Passive voice is acceptable when used to emphasize a trust signal, credential, or user benefit (e.g., \"Trusted by 10,000 patients,\" \"Handled by the pros\"). These constructions correctly foreground what matters to the user. Only flag passive voice when it obscures the actor in a way that reduces clarity or accountability.",
+            "short_ui_copy": "Passive voice is acceptable when used to emphasize a trust signal, credential, or user benefit (e.g., \"Trusted by 10,000 patients,\" \"Handled by the pros\"). These constructions correctly foreground what matters to the user. Only flag passive voice when it obscures the actor in a way that reduces clarity or accountability."
           }
         },
         {
@@ -149,7 +160,10 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
-          ]
+          ],
+          "content_type_notes": {
+            "_global": "First-person 'We/Our' framing is acceptable when the sentence also addresses the user directly ('you', 'your') and when the company is making commitments about its own behavior or identifying its own resources (security, support, providers, service guarantees). This is a common organizational voice strategy. In healthcare contexts, 'Our physicians/providers' may be clearer than 'Your physician' when the user has not yet established a care relationship. The test: is the user the object or beneficiary of the sentence? If yes, the framing is user-centric despite the first-person subject."
+          }
         },
         {
           "id": "VT-03",
@@ -372,7 +386,7 @@
       "standards": [
         {
           "id": "ACT-01",
-          "rule": "Start button and CTA text with a verb. Tell the user what will happen. Navigation labels, tabs, and section headings can use noun phrases when they describe a destination rather than an action.",
+          "rule": "Start button and CTA text with a verb. Tell the user what will happen. Navigation labels, tabs, section headings, and confirmation or status messages are not CTAs \u2014 patterns like 'Project created' or 'Payment sent' are valid confirmation copy and should not be flagged.",
           "correct": "Create account",
           "incorrect": "Account creation",
           "rule_type": "nuanced",
@@ -593,6 +607,22 @@
             "short_ui_copy",
             "long_form_copy"
           ]
+        },
+        {
+          "id": "GRM-06",
+          "rule": "Hyphenate number-unit compound modifiers before nouns. The unit takes singular form when hyphenated.",
+          "correct": "Start your 30-day free trial. | We offer a 2-hour workshop. | It's a one-time offer.",
+          "incorrect": "Start your 30 day free trial. | We offer a 2 hours workshop. | It's a one time offer.",
+          "rule_type": "mechanical",
+          "checkable_from": "plain_text",
+          "relevant_content_types": [
+            "short_ui_copy",
+            "long_form_copy",
+            "heading",
+            "tooltip_microcopy",
+            "error_message",
+            "confirmation"
+          ]
         }
       ]
     },
@@ -703,7 +733,10 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
-          ]
+          ],
+          "content_type_notes": {
+            "_global": "Flag slang, colloquial expressions, and culturally specific phrases that have clear plain-language alternatives (e.g., 'tap into' \u2192 'use', 'piece of cake' \u2192 'simple', 'let's go' \u2192 descriptive CTA). Do NOT flag widely understood metaphorical language that professional translators handle routinely, such as 'peace of mind,' 'take control,' or 'journey' used to describe a process. The test: would a professional translator working in this vertical need to look this phrase up, or would they translate it idiomatically without hesitation?"
+          }
         },
         {
           "id": "TRN-05",

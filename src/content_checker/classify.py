@@ -19,7 +19,14 @@ def classify_heuristic(text: str) -> str:
 
     if length <= 15 and any(w in text_lower for w in [
         "error", "fail", "couldn't", "can't", "unable", "went wrong",
-        "oops", "problem", "issue", "sorry", "unexpected",
+        # "problem" and "issue" removed — Opendoor triage Cluster 6.
+        # These words appear frequently in instructional/presentation
+        # content ("care about the problem") where error_message
+        # classification triggers false positives. Accepted tradeoff:
+        # heuristic-only false negatives on rare error messages that use
+        # only "problem" as their signal. The LLM classifier is the
+        # primary path and still catches these correctly.
+        "oops", "sorry", "unexpected",
     ]):
         return "error_message"
 

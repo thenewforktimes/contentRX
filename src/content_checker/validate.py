@@ -7,9 +7,14 @@ context-specific evaluation guidance.
 
 from __future__ import annotations
 
-import json
 import time
 
+from content_checker.api_utils import (
+    create_message,
+    parse_llm_json,
+    ParseError,
+    DEFAULT_MODEL,
+)
 from content_checker.models import TokenUsage, Violation
 
 
@@ -55,16 +60,18 @@ def validate_candidates(
     content_type: str,
     candidates: list[Violation],
     active_notes: list[dict] | None = None,
-    model: str = "claude-sonnet-4-20250514",
+    model: str = DEFAULT_MODEL,
 ) -> tuple[list[Violation], list[Violation], float, TokenUsage]:
     """Validate candidate violations with a focused LLM call.
+
+    Fail-closed contract: if the LLM response is unparseable, ALL
+    candidates are returned as confirmed. This is the safe default —
+    a parse failure should never silently drop violations.
 
     Returns (confirmed, rejected, latency, token_usage).
     """
     if not candidates:
         return [], [], 0.0, TokenUsage()
-
-    import anthropic
 
     active_notes = active_notes or []
     system_prompt = _build_validation_prompt(content_type, active_notes)
@@ -76,32 +83,24 @@ def validate_candidates(
         if v.suggestion:
             candidate_text += f"   Suggested fix: {v.suggestion}\n"
 
-    client = anthropic.Anthropic()
-
     start = time.time()
-    response = client.messages.create(
+    llm_response = create_message(
+        system=system_prompt,
+        user=candidate_text,
         model=model,
         max_tokens=1000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": candidate_text}],
     )
     latency = time.time() - start
 
     tokens = TokenUsage(
-        input=response.usage.input_tokens,
-        output=response.usage.output_tokens,
+        input=llm_response.input_tokens,
+        output=llm_response.output_tokens,
     )
 
-    raw = response.content[0].text.strip()
-    if raw.startswith("```"):
-        raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
-    if raw.endswith("```"):
-        raw = raw[:-3]
-    raw = raw.strip()
-
     try:
-        result = json.loads(raw)
-    except json.JSONDecodeError:
+        result = parse_llm_json(llm_response.text, context="validate")
+    except ParseError:
+        # Fail-closed: treat all candidates as confirmed when we can't parse
         return candidates, [], latency, tokens
 
     validation_map = {}

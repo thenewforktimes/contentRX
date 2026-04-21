@@ -3,7 +3,9 @@
 <head>
 <style>
   /* ------------------------------------------------------------------ */
-  /* Base — uses Figma's theme colors via CSS variables                  */
+  /* Base                                                                */
+  /* Figma injects theme colors as CSS variables. We use them with       */
+  /* fallbacks so the plugin looks right in both light and dark mode.    */
   /* ------------------------------------------------------------------ */
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -72,10 +74,7 @@
     color: #fff;
   }
   .btn-primary:hover { opacity: 0.9; }
-  .btn-primary:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .btn-secondary {
     background: var(--figma-color-bg-secondary, #f0f0f0);
@@ -83,6 +82,7 @@
     border: 1px solid var(--figma-color-border, #ddd);
   }
   .btn-secondary:hover { background: var(--figma-color-bg-hover, #e8e8e8); }
+  .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .btn-text {
     background: none;
@@ -92,6 +92,13 @@
     font-size: 11px;
   }
   .btn-text:hover { color: var(--figma-color-text, #333); }
+
+  .btn-danger {
+    background: #fde8e8;
+    color: #c33;
+    border: 1px solid #f5c6c6;
+  }
+  .btn-danger:hover { background: #fcd0d0; }
 
   .btn-row {
     display: flex;
@@ -120,19 +127,9 @@
     margin-bottom: 12px;
   }
 
-  .verdict-pass {
-    background: #e6f9ed;
-    color: #1a7f37;
-  }
-
-  .verdict-fail {
-    background: #fde8e8;
-    color: #c33;
-  }
-
-  .verdict-icon {
-    font-size: 14px;
-  }
+  .verdict-pass { background: #e6f9ed; color: #1a7f37; }
+  .verdict-fail { background: #fde8e8; color: #c33; }
+  .verdict-icon { font-size: 14px; }
 
   /* ------------------------------------------------------------------ */
   /* Violation cards                                                      */
@@ -177,6 +174,33 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /* Source badges (preprocessor vs AI)                                   */
+  /* ------------------------------------------------------------------ */
+  .source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  .source-badge-instant {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .source-badge-ai {
+    background: #e8e0f7;
+    color: #5b3ea2;
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Content type badge                                                  */
   /* ------------------------------------------------------------------ */
   .content-type-badge {
@@ -190,20 +214,180 @@
     margin-bottom: 8px;
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Summary                                                             */
-  /* ------------------------------------------------------------------ */
-  .summary {
-    font-size: 12px;
-    color: var(--figma-color-text, #333);
-    padding: 8px 12px;
-    background: var(--figma-color-bg-secondary, #f8f8f8);
-    border-radius: 6px;
-    margin-bottom: 12px;
+  .moment-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--figma-color-bg-brand-tertiary, #eef2ff);
+    color: var(--figma-color-text-brand, #5b3ea2);
+    margin-bottom: 8px;
+    margin-left: 4px;
   }
 
   /* ------------------------------------------------------------------ */
-  /* Loading state                                                       */
+  /* Batch results                                                       */
+  /* ------------------------------------------------------------------ */
+  .scan-summary {
+    display: flex;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--figma-color-bg-secondary, #f8f8f8);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+
+  .scan-stat {
+    text-align: center;
+    flex: 1;
+  }
+
+  .scan-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .scan-stat-label {
+    font-size: 10px;
+    color: var(--figma-color-text-secondary, #888);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .stat-fail .scan-stat-value { color: #c33; }
+  .stat-pass .scan-stat-value { color: #1a7f37; }
+  .stat-total .scan-stat-value { color: var(--figma-color-text, #333); }
+
+  /* Node result card — groups all violations for a single text layer */
+  .node-card {
+    border: 1px solid var(--figma-color-border, #eee);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .node-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--figma-color-bg-secondary, #f8f8f8);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .node-card-header:hover {
+    background: var(--figma-color-bg-hover, #f0f0f0);
+  }
+
+  .node-verdict-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-fail { background: #e55; }
+  .dot-pass { background: #1a7f37; }
+  .dot-error { background: #f59e0b; }
+
+  .node-card-title {
+    font-size: 11px;
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .node-card-meta {
+    font-size: 10px;
+    color: var(--figma-color-text-secondary, #999);
+    flex-shrink: 0;
+  }
+
+  .node-card-body {
+    padding: 8px 12px;
+    display: none; /* toggled open by JS */
+  }
+
+  .node-card.open .node-card-body { display: block; }
+
+  .node-card .checked-text {
+    font-size: 11px;
+    color: var(--figma-color-text-secondary, #666);
+    padding: 6px 8px;
+    background: var(--figma-color-bg-secondary, #f5f5f5);
+    border-radius: 4px;
+    margin-bottom: 8px;
+    word-break: break-word;
+    font-style: italic;
+    max-height: 48px;
+    overflow-y: auto;
+  }
+
+  .btn-goto {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--figma-color-border, #ddd);
+    background: var(--figma-color-bg, #fff);
+    color: var(--figma-color-text-secondary, #666);
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+
+  .btn-goto:hover {
+    background: var(--figma-color-bg-hover, #f0f0f0);
+    color: var(--figma-color-text, #333);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Progress / scanning screen                                          */
+  /* ------------------------------------------------------------------ */
+  .progress-container {
+    padding: 24px 12px;
+    text-align: center;
+  }
+
+  .progress-bar-track {
+    width: 100%;
+    height: 4px;
+    background: var(--figma-color-border, #e0e0e0);
+    border-radius: 2px;
+    margin: 16px 0 12px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--figma-color-bg-brand, #0d99ff);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .progress-status {
+    font-size: 11px;
+    color: var(--figma-color-text-secondary, #666);
+    margin-bottom: 4px;
+  }
+
+  .progress-detail {
+    font-size: 10px;
+    color: var(--figma-color-text-tertiary, #999);
+    margin-bottom: 16px;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Spinner (reused from v1)                                            */
   /* ------------------------------------------------------------------ */
   .spinner {
     display: inline-block;
@@ -220,8 +404,17 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ------------------------------------------------------------------ */
-  /* Checked text preview                                                */
+  /* Summary (single check)                                              */
   /* ------------------------------------------------------------------ */
+  .summary {
+    font-size: 12px;
+    color: var(--figma-color-text, #333);
+    padding: 8px 12px;
+    background: var(--figma-color-bg-secondary, #f8f8f8);
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+
   .checked-text {
     font-size: 11px;
     color: var(--figma-color-text-secondary, #666);
@@ -233,6 +426,33 @@
     font-style: italic;
     max-height: 60px;
     overflow-y: auto;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Filter tabs for results                                             */
+  /* ------------------------------------------------------------------ */
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .filter-tab {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--figma-color-border, #ddd);
+    background: var(--figma-color-bg, #fff);
+    color: var(--figma-color-text-secondary, #666);
+    cursor: pointer;
+  }
+
+  .filter-tab:hover { background: var(--figma-color-bg-hover, #f0f0f0); }
+  .filter-tab.active {
+    background: var(--figma-color-bg-brand, #0d99ff);
+    color: #fff;
+    border-color: var(--figma-color-bg-brand, #0d99ff);
   }
 
   /* ------------------------------------------------------------------ */
@@ -270,43 +490,72 @@
     autocomplete="off"
   />
   <button class="btn btn-primary" id="btn-save-key">Save key</button>
+  <div id="key-error" style="color:#EF4444;font-size:12px;margin-top:8px;display:none;"></div>
 </div>
 
 <!-- ================================================================== -->
-<!-- SCREEN: Main (check content)                                       -->
+<!-- SCREEN: Main (scan controls + results area)                        -->
 <!-- ================================================================== -->
 <div id="screen-main" class="screen">
   <h2>Content standards checker</h2>
-  <p>Select one or more text layers in Figma, then check them against your content standards.</p>
+  <p>Scan text layers against 47 content standards. Mechanical issues are caught instantly; nuanced rules are evaluated by AI.</p>
 
-  <button class="btn btn-primary" id="btn-check">Check selected text</button>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-scan-page">Scan page</button>
+    <button class="btn btn-secondary" id="btn-check-selection">Check selection</button>
+  </div>
 
   <div class="divider"></div>
   <div id="results-area"></div>
 
   <div class="footer">
-    <button class="btn btn-text" id="btn-settings">Change API key</button>
+    <button class="btn btn-text" id="btn-settings">Settings</button>
   </div>
 </div>
 
 <!-- ================================================================== -->
-<!-- SCREEN: Loading                                                    -->
+<!-- SCREEN: Scanning (progress indicator)                              -->
 <!-- ================================================================== -->
-<div id="screen-loading" class="screen">
-  <div style="text-align:center; padding: 40px 0;">
-    <div class="spinner"></div>
-    <span id="loading-text">Checking content…</span>
+<div id="screen-scanning" class="screen">
+  <div class="progress-container">
+    <h2 id="scan-title">Scanning...</h2>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-status" id="progress-status">Collecting text layers...</div>
+    <div class="progress-detail" id="progress-detail"></div>
+    <button class="btn btn-danger" id="btn-cancel-scan" style="margin-top:12px;">Cancel scan</button>
   </div>
 </div>
 
 
 <script>
 // ====================================================================
-// Standards library (embedded to avoid extra network calls)
+// Constants
+// ====================================================================
+// ---------------------------------------------------------------------------
+// Developer mode: set to false before distributing the alpha.
+// Controls visibility of the "Export results" button and any other
+// internal tooling that alpha testers should not see.
+// ---------------------------------------------------------------------------
+const DEV_MODE = true;
+
+const BATCH_SIZE = 8;        // Strings per API call — balances quality vs speed
+const MAX_CONCURRENT = 2;    // Parallel API calls — conservative for BYOK rate limits
+const LIBRARY_VERSION = "4.5.1";
+
+
+// ====================================================================
+// Standards library (v4.5.1, embedded)
+//
+// Only includes fields the plugin needs: id, rule, correct, incorrect.
+// Routing metadata (relevant_content_types, content_type_notes) lives
+// in the Python package and is not needed here since we skip
+// content-type filtering in the plugin.
 // ====================================================================
 const STANDARDS = {
-  "version": "3.1.1",
-  "total_standards": 46,
+  "version": "4.5.1",
+  "total_standards": 47,
   "categories": [
     {
       "id": "clarity",
@@ -326,7 +575,7 @@ const STANDARDS = {
         },
         {
           "id": "CLR-03",
-          "rule": "Use short sentences. Aim for 15–20 words per sentence. Sentences over 25 words should almost always be split.",
+          "rule": "Use short sentences. Aim for 15-20 words per sentence. Sentences over 25 words should almost always be split.",
           "correct": "Your order shipped. It should arrive by Friday.",
           "incorrect": "We wanted to let you know that the order you placed has been shipped and based on current estimates it should be arriving to you by Friday of this week."
         },
@@ -368,7 +617,7 @@ const STANDARDS = {
         },
         {
           "id": "VT-04",
-          "rule": "Be confident, not arrogant. State things directly without hedging or over-qualifying.",
+          "rule": "Be confident, not arrogant. State things directly without hedging or over-qualifying. Qualification language is acceptable when making definitive claims would be misleading or legally inaccurate — for example, eligibility statements in healthcare, finance, or legal contexts where outcomes depend on individual circumstances.",
           "correct": "This will take about 5 minutes.",
           "incorrect": "This should probably take around maybe 5 minutes or so."
         },
@@ -454,19 +703,13 @@ const STANDARDS = {
           "id": "ACC-06",
           "rule": "Don't include preceding articles (a, an, the) inside linked text. Link only the meaningful words.",
           "correct": "Read the [automation guide] for details.",
-          "incorrect": "Read [the automation guide] for details.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Read [the automation guide] for details."
         },
         {
           "id": "ACC-07",
           "rule": "Write clear, concise form labels. Only mark fields as required when they are truly necessary.",
           "correct": "Email address (required)",
-          "incorrect": "Please enter the email address you would like us to use for correspondence purposes",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Please enter the email address you would like us to use for correspondence purposes"
         }
       ]
     },
@@ -518,7 +761,7 @@ const STANDARDS = {
         },
         {
           "id": "STR-03",
-          "rule": "Use parallel structure in lists. Each item should follow the same grammatical pattern.",
+          "rule": "Use parallel structure in lists and sequential steps. Each item should follow the same grammatical pattern. In multi-step flows, a final result-state item ('You're ready to go', 'Your account is set up') may shift to declarative when it describes an outcome rather than an action.",
           "correct": "Upload your photo. Crop to fit. Apply a filter. Save your changes.",
           "incorrect": "Upload your photo. The photo should be cropped. You can apply a filter. Saving is the last step."
         },
@@ -538,10 +781,7 @@ const STANDARDS = {
           "id": "STR-06",
           "rule": "Nest headings hierarchically. Never skip heading levels for visual styling. H1 for page title, H2 for sections, H3 for subsections.",
           "correct": "H1: Account settings. H2: Notifications. H3: Email alerts.",
-          "incorrect": "H1: Account settings. H3: Email alerts. H4: Frequency.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "H1: Account settings. H3: Email alerts. H4: Frequency."
         }
       ]
     },
@@ -553,46 +793,37 @@ const STANDARDS = {
           "id": "GRM-01",
           "rule": "Use the serial comma (Oxford comma) in lists of three or more items.",
           "correct": "You can send emails, build landing pages, and manage contacts.",
-          "incorrect": "You can send emails, build landing pages and manage contacts.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "You can send emails, build landing pages and manage contacts."
         },
         {
           "id": "GRM-02",
-          "rule": "Spell out abbreviations and acronyms on first use. Use the short form for subsequent mentions.",
+          "rule": "Spell out abbreviations and acronyms on first use in body copy and help content. Use the short form for subsequent mentions. Universally understood abbreviations (FAQ, URL, ZIP, LLC, IRS) and regulated accessibility terms (TTY) do not require expansion in any context. Internal or organization-specific abbreviations should always be expanded on a public-facing page. If the surrounding copy acknowledges the reader may not know a term, expand it.",
           "correct": "We use single sign-on (SSO) across all products. SSO keeps your account secure.",
-          "incorrect": "We use SSO across all products. SSO keeps your account secure.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "If you don't know an HMO from an HSA, you're not alone."
         },
         {
           "id": "GRM-03",
           "rule": "Use exclamation points sparingly. Never use more than one at a time, and never in error messages or alerts.",
           "correct": "Welcome to your new dashboard.",
-          "incorrect": "Welcome to your new dashboard!!!",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Welcome to your new dashboard!!!"
         },
         {
           "id": "GRM-04",
-          "rule": "Don't use ampersands in copy unless they are part of a brand name.",
+          "rule": "Don't use ampersands in body copy unless they are part of a brand name. Ampersands are acceptable in headings, navigation labels, footer links, and other space-constrained UI elements where '&' is a conventional shorthand.",
           "correct": "Terms and conditions",
-          "incorrect": "Terms & conditions",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Read our terms & conditions for more details."
         },
         {
           "id": "GRM-05",
           "rule": "Use numerals for numbers in body copy. Spell out a number only when it begins a sentence.",
           "correct": "You have 3 invitations and 12 unread messages.",
-          "incorrect": "You have three invitations and twelve unread messages.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "You have three invitations and twelve unread messages."
+        },
+        {
+          "id": "GRM-06",
+          "rule": "Hyphenate compound modifiers before a noun. A number or word plus a unit that together modify a following noun need a hyphen.",
+          "correct": "Start your 30-day free trial.",
+          "incorrect": "Start your 30 day free trial."
         }
       ]
     },
@@ -604,19 +835,13 @@ const STANDARDS = {
           "id": "INC-01",
           "rule": "Use 'they,' 'them,' and 'their' as singular pronouns when the user's gender is unknown or irrelevant.",
           "correct": "When someone contacts support, they'll receive a confirmation email.",
-          "incorrect": "When someone contacts support, he or she will receive a confirmation email.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "When someone contacts support, he or she will receive a confirmation email."
         },
         {
           "id": "INC-02",
           "rule": "Don't ask for gender in forms unless it's necessary for the product. When you do, provide a text field rather than a limited dropdown.",
           "correct": "Gender (optional): [open text field]",
-          "incorrect": "Gender (required): Male / Female",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Gender (required): Male / Female"
         }
       ]
     },
@@ -628,64 +853,43 @@ const STANDARDS = {
           "id": "TRN-01",
           "rule": "Avoid words with multiple meanings that confuse translators. Replace 'once' (use 'after'), 'right' (use 'correct'), and 'since' (use 'because').",
           "correct": "After you sign in, you'll see your dashboard.",
-          "incorrect": "Once you sign in, you'll see your dashboard.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Once you sign in, you'll see your dashboard."
         },
         {
           "id": "TRN-02",
           "rule": "Avoid unnecessary -ing words that create ambiguity in translation. Rewrite gerunds and -ing adjectives when a simpler form exists. Progressive verb forms are acceptable when they describe an ongoing action ('Uploading your file...', 'Loading results...').",
           "correct": "At the top of the page, you'll find a summary of your account.",
-          "incorrect": "At the top of the page, you'll find a loading summary showing your account.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "At the top of the page, you'll find a loading summary showing your account."
         },
         {
           "id": "TRN-03",
           "rule": "Repeat subjects and verbs in compound sentences instead of relying on implied subjects. Many languages require explicit subjects.",
           "correct": "The Pro plan includes analytics. The Starter plan does not include analytics.",
-          "incorrect": "The Pro plan includes analytics, but not the Starter plan.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "The Pro plan includes analytics, but not the Starter plan."
         },
         {
           "id": "TRN-04",
           "rule": "Avoid idioms, slang, and culturally specific references. These don't translate and confuse non-native speakers.",
           "correct": "This feature is simple to set up.",
-          "incorrect": "Setting up this feature is a piece of cake.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Setting up this feature is a piece of cake."
         },
         {
           "id": "TRN-05",
           "rule": "Keep function words like 'the,' 'a,' 'that,' and 'to' even if they seem unnecessary. Removing them creates ambiguity in translation.",
           "correct": "Make sure that you have saved the file before you close the window.",
-          "incorrect": "Verify file saved before close window.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Verify file saved before close window."
         },
         {
           "id": "TRN-06",
-          "rule": "Use metric measurements and 3-letter ISO currency codes (USD, EUR, GBP) instead of symbols when writing for international audiences.",
+          "rule": "Use metric measurements and 3-letter ISO currency codes (USD, EUR, GBP) instead of symbols when writing for international audiences. Currency symbols are acceptable in locale-specific content that will be localized (adapted per region) rather than translated (same content in multiple languages).",
           "correct": "Plans start at 10 USD per month.",
-          "incorrect": "Plans start at $10/mo.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Plans start at $10/mo."
         },
         {
           "id": "TRN-07",
           "rule": "Avoid using different words for the same concept within a single piece of content. If 'workspace,' 'team hub,' and 'project space' all refer to the same thing, pick one term and use it consistently. Different terms are acceptable when they refer to genuinely different concepts.",
           "correct": "Create a campaign. Name your campaign. Send your campaign.",
-          "incorrect": "Create a campaign. Name your email blast. Send your newsletter.",
-          "sources": [
-            "Mailchimp"
-          ]
+          "incorrect": "Create a campaign. Name your email blast. Send your newsletter."
         }
       ]
     }
@@ -694,21 +898,1235 @@ const STANDARDS = {
 
 
 // ====================================================================
-// Content type detection (mirrors checker.py logic)
+// Preprocessor — deterministic checks, zero API cost
+//
+// Ported from Python preprocess.py (src/content_checker/preprocess.py).
+// Same three outcomes: VIOLATION, PASS, DEFER.
+// Same contract: preprocessor PASS suppresses any LLM violation for
+// that standard. DEFER sends the standard to the LLM.
+//
+// The preprocessor runs on every string BEFORE any API call. Every
+// violation caught here is one that never hits the API — saving the
+// user tokens and giving them instant feedback.
+// ====================================================================
+
+// Brand names that legitimately contain ampersands (GRM-04)
+const BRAND_AMPERSANDS = [
+  "AT&T", "H&M", "S&P", "D&G", "M&M", "M&Ms", "H&R Block",
+  "Johnson & Johnson", "J&J", "Procter & Gamble", "P&G",
+  "Ben & Jerry's", "Dolce & Gabbana", "Tiffany & Co",
+  "Abercrombie & Fitch", "A&W", "B&H", "Barnes & Noble",
+  "Simon & Schuster", "Ernst & Young", "Arm & Hammer",
+  "Marks & Spencer", "R&B",
+];
+
+// Universally known abbreviations that never need expansion (GRM-02)
+const COMMON_ABBREVIATIONS = new Set([
+  "API", "APIs", "SDK", "SDKs", "URL", "URLs", "HTML", "CSS", "PDF",
+  "USB", "GPS", "SaaS", "AI", "IT", "UI", "UX", "DNS", "HTTP", "HTTPS",
+  "FTP", "SQL", "CMS", "CDN", "RAM", "CPU", "GPU", "SSD", "OS", "iOS",
+  "VPN", "SSL", "TLS", "SSO", "OTP", "CEO", "CTO", "CFO", "COO", "HR",
+  "LLC", "IRS", "FAQ", "FAQs", "ID", "PIN", "ATM", "IPO", "ROI", "KPI",
+  "B2B", "B2C", "PR", "QA", "VP", "SVP", "EVP", "MBA", "CPA", "ESG",
+  "TTY", "ADA", "HIPAA", "ER", "ICU", "RN", "MD", "OTC", "FDA",
+  "ACH", "FDIC", "FICO", "APR", "APY", "ETF", "IRA",
+  "ZIP", "RSVP", "TV", "DVD", "AC", "AM", "PM", "USA", "UK", "EU",
+  "UN", "NATO", "NASA", "ASAP", "ETA", "FYI", "DIY", "JPEG",
+  "PNG", "GIF", "MP3", "MP4", "W-2", "W-9", "1099", "401k",
+]);
+
+// Content types where ampersands are acceptable (space-constrained)
+const AMPERSAND_ALLOWED_TYPES = new Set(["button_cta", "ui_label"]);
+// Content types where ampersands in non-brand text are violations
+const AMPERSAND_BODY_TYPES = new Set([
+  "short_ui_copy", "long_form_copy", "tooltip_microcopy",
+  "error_message", "confirmation",
+]);
+
+// Industry-standard UI patterns that look like title case but are
+// conventional navigation/action patterns. Exact match on normalized input.
+// Expansion protocol: ≥2 confirmed false positives from triage → add + test.
+const CON02_SAFE_PHRASES = new Set([
+  "see all", "view all", "show all", "browse all",
+  "show more", "load more", "view more",
+  "sign in", "sign up", "sign out", "log in", "log out",
+  "add new", "create new",
+  "go back", "go home",
+  "opt in", "opt out",
+  "get started", "try free",
+]);
+
+// Binary response buttons that don't need a leading verb (ACT-01 pass-only).
+// Same architectural pattern as GRM-02: can ONLY pass, never flags.
+// Added from Opendoor triage Cluster 4 (8 false positives eliminated).
+const BINARY_RESPONSES = new Set([
+  "yes", "no", "ok", "okay", "cancel", "dismiss",
+  "got it", "not now", "maybe later", "no thanks",
+  "allow", "deny", "accept", "decline", "skip",
+  "confirm", "reject", "agreed", "disagree",
+]);
+const BINARY_COMPOUND_RE = /^(yes|no|ok|okay),?\s+/i;
+
+
+/**
+ * Run all 25 deterministic checks on a single string.
+ *
+ * @param {string} text — The content to check.
+ * @param {string} contentType — Heuristic content type from detectContentType().
+ * @returns {{ violations: Array, suppressedIds: Set }}
+ *   violations: Array of { standardId, issue, suggestion, source: "preprocessor" }
+ *   suppressedIds: Set of standard IDs the preprocessor definitively passed.
+ */
+function runPreprocessor(text, contentType) {
+  const results = [
+    // Standards-based checks
+    checkGrm01OxfordComma(text),
+    checkGrm02Abbreviations(text),
+    checkGrm03ExclamationPoints(text),
+    checkGrm04Ampersands(text, contentType),
+    checkGrm05Numerals(text),
+    checkGrm06CompoundModifiers(text),
+    checkCon03DateFormats(text),
+    checkCon02SentenceCase(text),
+    checkAct01BinaryResponses(text),
+    checkPrf01DoubleSpaces(text),
+    checkPrf02RepeatedWords(text),
+    checkPrf03TrailingPeriod(text, contentType),
+    checkPrf04StraightQuotes(text, contentType),
+    checkPrf05MissingSpaceAfterPunctuation(text),
+    checkPrf06LeadingTrailingWhitespace(text),
+    checkPrf07SpaceBeforePunctuation(text),
+    checkAcc01VagueLinkText(text),
+    checkPrf10LatinAbbreviations(text, contentType),
+    checkPrf11DismissiveLanguage(text, contentType),
+    // Phase 2 checks (v4.2.0)
+    checkPrf08PlaceholderText(text),
+    checkPrf09AllCaps(text),
+    checkClr01RedundantPhrases(text),
+    checkClr01BannedWords(text),
+    checkInc01GenderedLanguage(text),
+    checkInc02NonInclusiveTech(text),
+  ];
+
+  const violations = [];
+  const suppressedIds = new Set();
+
+  for (const r of results) {
+    if (r.outcome === "violation") {
+      violations.push({
+        standard_id: r.standardId,
+        issue: r.issue,
+        suggestion: r.suggestion,
+        source: "preprocessor",
+      });
+    } else if (r.outcome === "pass") {
+      suppressedIds.add(r.standardId);
+    }
+    // "defer" → standard goes to LLM, no action here
+  }
+
+  return { violations, suppressedIds };
+}
+
+
+// --- Individual checks ---------------------------------------------------
+// Each returns { standardId, outcome, issue?, suggestion? }
+
+function checkGrm01OxfordComma(text) {
+  // Find "and" or "or" preceded by a comma-separated list without the final comma.
+  for (const conj of ["and", "or"]) {
+    const re = new RegExp("\\s+" + conj + "\\s+", "i");
+    const match = re.exec(text);
+    if (!match) continue;
+
+    const beforeConj = text.substring(0, match.index);
+    const commaPositions = [];
+    for (let i = 0; i < beforeConj.length; i++) {
+      if (beforeConj[i] === ",") commaPositions.push(i);
+    }
+    if (commaPositions.length === 0) continue;
+
+    const lastComma = commaPositions[commaPositions.length - 1];
+    const between = beforeConj.substring(lastComma + 1).trim();
+    if (between.length > 0) {
+      return {
+        standardId: "GRM-01", outcome: "violation",
+        issue: `Missing Oxford comma before "${conj}" in a list.`,
+        suggestion: `Add a comma before "${conj}".`,
+      };
+    }
+  }
+  return { standardId: "GRM-01", outcome: "defer" };
+}
+
+
+function checkGrm02Abbreviations(text) {
+  // Pass-only: if all abbreviations in the text are universally known, pass.
+  // Otherwise defer to LLM for audience-aware judgment.
+  const abbrPattern = /\b([A-Z][A-Z0-9&\-]{1,})\b/g;
+  const found = [];
+  let m;
+  while ((m = abbrPattern.exec(text)) !== null) found.push(m[1]);
+  if (found.length === 0) return { standardId: "GRM-02", outcome: "defer" };
+
+  const unknown = found.filter(a => !COMMON_ABBREVIATIONS.has(a) && a !== "AM" && a !== "PM");
+  if (unknown.length === 0) return { standardId: "GRM-02", outcome: "pass" };
+  return { standardId: "GRM-02", outcome: "defer" };
+}
+
+
+function checkGrm03ExclamationPoints(text) {
+  if (/!{2,}/.test(text)) {
+    return {
+      standardId: "GRM-03", outcome: "violation",
+      issue: "Multiple consecutive exclamation marks.",
+      suggestion: "Use a single exclamation mark or remove it entirely.",
+    };
+  }
+  return { standardId: "GRM-03", outcome: "defer" };
+}
+
+
+function checkGrm04Ampersands(text, contentType) {
+  if (!text.includes("&")) return { standardId: "GRM-04", outcome: "pass" };
+
+  // Check brand name allowlist (case-insensitive)
+  const lower = text.toLowerCase();
+  for (const brand of BRAND_AMPERSANDS) {
+    if (lower.includes(brand.toLowerCase())) {
+      return { standardId: "GRM-04", outcome: "pass" };
+    }
+  }
+
+  // Strip HTML entities before checking for real ampersands
+  let cleaned = text.replace(/&[a-zA-Z]+;/g, "").replace(/&#\d+;/g, "");
+  if (!cleaned.includes("&")) return { standardId: "GRM-04", outcome: "pass" };
+
+  // Content type determines the verdict
+  if (AMPERSAND_ALLOWED_TYPES.has(contentType)) {
+    return { standardId: "GRM-04", outcome: "pass" };
+  }
+  if (AMPERSAND_BODY_TYPES.has(contentType)) {
+    return {
+      standardId: "GRM-04", outcome: "violation",
+      issue: "Ampersand used in body copy. Use 'and' instead.",
+      suggestion: text.replace(/ & /g, " and ").replace(/& /g, "and ").replace(/ &/g, " and"),
+    };
+  }
+
+  // Unknown content type
+  return { standardId: "GRM-04", outcome: "defer" };
+}
+
+
+function checkGrm05Numerals(text) {
+  const numberWords = {
+    "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+    "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11,
+    "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+    "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
+    "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+  };
+
+  const oneSafeContexts = [
+    "number one", "one of", "one more", "one time", "one day",
+    "one way", "one thing", "one another", "one by one", "one at a time",
+    "no one", "any one", "every one", "each one", "this one",
+    "that one", "which one", "someone", "anyone", "everyone",
+    // Compound/hyphenated uses (from Apple eval)
+    "one on one", "one-on-one", "one-way", "one app",
+    // Duration and brand contexts (from Apple eval v4.4.2)
+    "one year", "one-year", "applecare one",
+  ];
+
+  // Normalize unicode hyphens to ASCII before safe context matching.
+  // U+2011 (non-breaking hyphen) and U+2010 (hyphen) appear in Apple
+  // product copy and prevent matches against safe phrases like "one-year".
+  const textLower = text.toLowerCase()
+    .replace(/\u2011/g, "-")
+    .replace(/\u2010/g, "-");
+  const sentences = text.split(/(?<=[.!?])\s+/);
+
+  // Check "one" separately
+  if (/\bone\b/.test(textLower)) {
+    const inSafe = oneSafeContexts.some(p => textLower.includes(p));
+    if (!inSafe) {
+      for (const s of sentences) {
+        const sLower = s.trim().toLowerCase();
+        if (!sLower) continue;
+        const words = sLower.split(/\s+/);
+        if (words[0] === "one") return { standardId: "GRM-05", outcome: "pass" };
+        if (/\bone\b/.test(sLower) && words[0] !== "one") {
+          return {
+            standardId: "GRM-05", outcome: "violation",
+            issue: "'One' should be written as a numeral.",
+            suggestion: "Use '1' instead of 'one'.",
+          };
+        }
+      }
+    }
+  }
+
+  // Check all other number words
+  for (const [word, numeral] of Object.entries(numberWords)) {
+    const wordRe = new RegExp("\\b" + word + "\\b", "i");
+    for (const s of sentences) {
+      const sLower = s.trim().toLowerCase();
+      if (!sLower || !wordRe.test(sLower)) continue;
+      const words = sLower.split(/\s+/);
+      if (words[0] === word) return { standardId: "GRM-05", outcome: "pass" };
+      return {
+        standardId: "GRM-05", outcome: "violation",
+        issue: `'${word.charAt(0).toUpperCase() + word.slice(1)}' should be written as a numeral.`,
+        suggestion: `Use '${numeral}' instead of '${word}'.`,
+      };
+    }
+  }
+
+  return { standardId: "GRM-05", outcome: "defer" };
+}
+
+
+function checkCon03DateFormats(text) {
+  const match = text.match(/\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})\b/);
+  if (match) {
+    const full = match[0];
+    // Exclude likely version numbers (e.g., 2.0.1)
+    const parts = full.split(/[/\-.]/);
+    if (parts.every(p => p.length <= 2) && full.includes(".")) {
+      return { standardId: "CON-03", outcome: "defer" };
+    }
+    return {
+      standardId: "CON-03", outcome: "violation",
+      issue: `Numeric date format '${full}'. Spell out the month.`,
+      suggestion: "Use a format like 'March 16, 2026' instead.",
+    };
+  }
+  return { standardId: "CON-03", outcome: "defer" };
+}
+
+
+function checkCon02SentenceCase(text) {
+  // CON-02: Verify sentence case deterministically. PASS-only check.
+  //
+  // Prevents LLM hallucinations where it flags clearly sentence-case
+  // text as "title case." The LLM is unreliable at character-level
+  // pattern matching. This regex does it perfectly.
+  //
+  // "Time to review your selling options" → all lowercase after first → PASS
+  // "Time To Review Your Options" → uppercase after first → DEFER to LLM
+  //
+  // NEVER generates a VIOLATION. Only confirms text IS sentence case.
+
+  const words = text.split(/\s+/);
+  if (words.length <= 1) {
+    return { standardId: "CON-02", outcome: "defer" };
+  }
+
+  // Safe phrases: industry-standard patterns with intentional casing
+  const normalized = text.trim().toLowerCase();
+  if (CON02_SAFE_PHRASES.has(normalized)) {
+    return { standardId: "CON-02", outcome: "pass" };
+  }
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    if (!word) continue;
+    const firstChar = word[0];
+
+    if (firstChar >= "A" && firstChar <= "Z") {
+      // All-caps words (acronyms) don't indicate title case
+      const stripped = word.replace(/[.,;:!?]$/, "");
+      if (stripped === stripped.toUpperCase()) continue;
+      if (KNOWN_ACRONYMS && KNOWN_ACRONYMS.has(stripped)) continue;
+      // A capitalized word after the first → could be title case → defer
+      return { standardId: "CON-02", outcome: "defer" };
+    }
+  }
+
+  // Every word after the first is lowercase or an acronym.
+  // Definitively sentence case — suppress any LLM CON-02 violation.
+  return { standardId: "CON-02", outcome: "pass" };
+}
+
+
+function checkPrf01DoubleSpaces(text) {
+  // Strip padded pipe separators in data visualizations before checking.
+  // Patterns like "63.6%  |  4.7M" are intentional formatting in dashboards.
+  const cleaned = text.replace(/[\d$%\.KMBkmb]\s{2,}\|\s{2,}[\d$%\.KMBkmb]/g, (m) => m.replace(/\s{2,}/g, " "));
+  if (/[^\n] {2,}[^\n]/.test(cleaned)) {
+    return {
+      standardId: "PRF-01", outcome: "violation",
+      issue: "Double space between words.",
+      suggestion: "Use a single space between words.",
+    };
+  }
+  return { standardId: "PRF-01", outcome: "pass" };
+}
+
+
+function checkPrf02RepeatedWords(text) {
+  const match = text.match(/\b(\w+)\s+\1\b/i);
+  if (match) {
+    const word = match[1];
+    return {
+      standardId: "PRF-02", outcome: "violation",
+      issue: `Repeated word: '${word} ${word}'.`,
+      suggestion: `Remove the duplicate '${word}'.`,
+    };
+  }
+  return { standardId: "PRF-02", outcome: "pass" };
+}
+
+
+function checkPrf03TrailingPeriod(text, contentType) {
+  // Only check short, label-like content types
+  if (!["button_cta", "ui_label"].includes(contentType)) {
+    return { standardId: "PRF-03", outcome: "defer" };
+  }
+  const stripped = text.trimEnd();
+  if (stripped.endsWith(".") && !stripped.endsWith("...")) {
+    return {
+      standardId: "PRF-03", outcome: "violation",
+      issue: `Trailing period on a ${contentType.replace(/_/g, " ")}.`,
+      suggestion: "Remove the period. Headings, buttons, and labels don't need terminal punctuation.",
+    };
+  }
+  return { standardId: "PRF-03", outcome: "pass" };
+}
+
+
+function checkPrf04StraightQuotes(text, contentType) {
+  // Developer-facing content types get deferred to LLM
+  if (contentType === "tooltip_microcopy") {
+    return { standardId: "PRF-04", outcome: "defer" };
+  }
+
+  // Remove backtick code spans and HTML tags
+  let cleaned = text.replace(/`[^`]+`/g, "").replace(/<[^>]+>/g, "");
+
+  // Strip measurement inch marks before checking (e.g., 13", 15.6", 27")
+  // Common in product specs. Added from Apple eval.
+  cleaned = cleaned.replace(/(\d)"/g, "$1");
+
+  // Remove contractions and possessives (don't, can't, user's)
+  const withoutContractions = cleaned.replace(/\w'\w/g, "").replace(/\w's\b/g, "");
+
+  const hasStraightSingle = withoutContractions.includes("'");
+  const hasStraightDouble = cleaned.includes('"');
+
+  if (hasStraightSingle || hasStraightDouble) {
+    return {
+      standardId: "PRF-04", outcome: "violation",
+      issue: "Straight quotes in published copy.",
+      suggestion: "Use curly quotes (\u2018 \u2019 \u201c \u201d) instead of straight quotes (' \").",
+    };
+  }
+  return { standardId: "PRF-04", outcome: "pass" };
+}
+
+
+function checkPrf05MissingSpaceAfterPunctuation(text) {
+  let cleaned = text;
+  cleaned = cleaned.replace(/https?:\/\/\S+/g, "");
+  cleaned = cleaned.replace(/\S+@\S+\.\S+/g, "");
+  cleaned = cleaned.replace(/\b(a\.m|p\.m|e\.g|i\.e|vs|Dr|Mr|Mrs|Ms|Jr|Sr|St)\./gi, "");
+  cleaned = cleaned.replace(/\d+\.\d+/g, "");
+  cleaned = cleaned.replace(/\.(pdf|doc|docx|xls|xlsx|csv|txt|html|css|js|json|png|jpg|jpeg|gif|svg|zip|xml|yaml|yml|md)\b/gi, "");
+  cleaned = cleaned.replace(/\.{3}/g, "");
+
+  if (/[.!?][A-Za-z]/.test(cleaned)) {
+    return {
+      standardId: "PRF-05", outcome: "violation",
+      issue: "Missing space after punctuation.",
+      suggestion: "Add a space after the period, exclamation mark, or question mark.",
+    };
+  }
+  return { standardId: "PRF-05", outcome: "pass" };
+}
+
+
+function checkPrf06LeadingTrailingWhitespace(text) {
+  if (text !== text.trim()) {
+    return {
+      standardId: "PRF-06", outcome: "violation",
+      issue: "Leading or trailing whitespace.",
+      suggestion: "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+    };
+  }
+  return { standardId: "PRF-06", outcome: "pass" };
+}
+
+
+function checkPrf07SpaceBeforePunctuation(text) {
+  // Remove ellipsis patterns first
+  const cleaned = text.replace(/\s*\.{3}/g, "");
+  if (/\s+[.,;:!?]/.test(cleaned)) {
+    return {
+      standardId: "PRF-07", outcome: "violation",
+      issue: "Space before punctuation mark.",
+      suggestion: "Remove the space before the punctuation.",
+    };
+  }
+  return { standardId: "PRF-07", outcome: "pass" };
+}
+
+
+function checkAcc01VagueLinkText(text) {
+  // ACC-01 adjacent: "click here" is the most universally banned phrase
+  // in content design. Every guide surveyed prohibits it by name.
+  // Also catches standalone "here" as link text and "learn more" as
+  // a standalone phrase (without surrounding context).
+  //
+  // This is more specific than ACC-01 (descriptive link text) — it
+  // catches the exact anti-patterns deterministically. The LLM still
+  // handles subtler ACC-01 cases like vague link text that isn't
+  // literally "click here."
+  const lower = text.toLowerCase().trim();
+
+  // Exact match: the entire text layer IS "click here" or similar
+  const bannedExact = [
+    "click here", "tap here", "click here.", "tap here.",
+    "click here!", "tap here!",
+  ];
+  if (bannedExact.includes(lower)) {
+    return {
+      standardId: "ACC-01", outcome: "violation",
+      issue: "'Click here' is non-descriptive link text.",
+      suggestion: "Describe the destination or action: 'View billing details' instead of 'Click here.'",
+    };
+  }
+
+  // Contained: "click here" or "tap here" inside a longer string
+  if (/\bclick here\b/i.test(text) || /\btap here\b/i.test(text)) {
+    return {
+      standardId: "ACC-01", outcome: "violation",
+      issue: "Contains 'click here' — use descriptive link text instead.",
+      suggestion: "Replace 'click here' with text that describes what the user will find, e.g., 'View our pricing' instead of 'Click here to see pricing.'",
+    };
+  }
+
+  // Standalone vague link phrases (ACC-01 adjacent)
+  const vaguePhrases = ["read more", "learn more", "more info", "find out more"];
+  if (vaguePhrases.includes(lower)) {
+    return {
+      standardId: "ACC-01", outcome: "violation",
+      issue: `'${text}' is non-descriptive link text.`,
+      suggestion: "Describe the destination: 'Read our pricing guide' instead of 'Read more.'",
+    };
+  }
+
+  // "Read more" / "Learn more" at start of a longer string
+  if (/^(read more|learn more|more info)\b/i.test(lower)) {
+    return {
+      standardId: "ACC-01", outcome: "violation",
+      issue: "Starts with non-descriptive link text.",
+      suggestion: "Lead with specific context: 'Explore billing options' instead of 'Learn more about billing.'",
+    };
+  }
+
+  return { standardId: "ACC-01", outcome: "defer" };
+}
+
+
+function checkPrf10LatinAbbreviations(text, contentType) {
+  // Atlassian, Apple, and GitLab ban Latin abbreviations (e.g., i.e.,
+  // etc.) for accessibility and localization. Screen readers may
+  // mispronounce them, and they're confusing for non-native speakers.
+  //
+  // Exception: developer-facing content where these are conventional.
+  // The preprocessor defers on tooltip_microcopy (often developer-facing)
+  // and flags everywhere else.
+
+  // Skip developer-facing content types
+  if (contentType === "tooltip_microcopy") {
+    return { standardId: "PRF-10", outcome: "defer" };
+  }
+
+  // Match e.g., i.e., etc. with various punctuation patterns
+  // Handles: "e.g." "e.g.," "e.g.:" "i.e." "etc."
+  // Word boundary prevents matching inside words like "siege"
+  const latinMatch = text.match(/\b(e\.g\.|i\.e\.|etc\.)/i);
+  if (latinMatch) {
+    const found = latinMatch[1].toLowerCase();
+    const replacements = {
+      "e.g.": "for example",
+      "i.e.": "that is",
+      "etc.": "and so on",
+    };
+    const replacement = replacements[found] || "the full phrase";
+    return {
+      standardId: "PRF-10", outcome: "violation",
+      issue: `Latin abbreviation '${found}' — use '${replacement}' instead.`,
+      suggestion: `Replace '${found}' with '${replacement}' for accessibility and clarity.`,
+    };
+  }
+
+  return { standardId: "PRF-10", outcome: "pass" };
+}
+
+
+function checkPrf11DismissiveLanguage(text, contentType) {
+  // GitLab, GOV.UK, and Intuit ban "simple/simply/easy/easily/just"
+  // in instructional and error content because these words dismiss the
+  // user's potential difficulty and undermine trust. If a user is
+  // struggling, being told something is "easy" makes them feel worse.
+  //
+  // Exception: marketing copy where "easy setup" is a legitimate value
+  // proposition. The preprocessor only flags these words in UI copy,
+  // error messages, help text, and confirmations — not in marketing
+  // or heading content.
+
+  // Only flag in content types where dismissiveness hurts
+  const flaggableTypes = new Set([
+    "error_message", "tooltip_microcopy", "short_ui_copy",
+    "long_form_copy", "confirmation",
+  ]);
+  if (!flaggableTypes.has(contentType)) {
+    return { standardId: "PRF-11", outcome: "defer" };
+  }
+
+  // Match dismissive words at word boundaries
+  const match = text.match(/\b(simply|easily|effortlessly)\b/i)
+    || text.match(/\b(just)\s+(click|tap|select|enter|type|press|go|follow|add|open|use|do|drag|set)\b/i);
+
+  if (match) {
+    const word = match[0];
+    return {
+      standardId: "PRF-11", outcome: "violation",
+      issue: `'${word}' can feel dismissive — it implies the task is trivial when the user may be struggling.`,
+      suggestion: "Remove the word. 'Select your plan' is clearer than 'Simply select your plan.'",
+    };
+  }
+
+  // Check "simple" and "easy" as adjectives (not in compound words)
+  // "easy" and "simple" need more context — only flag when directly
+  // modifying a task description, not in brand names or feature names
+  const adjectiveMatch = text.match(/\b(simple|easy)\s+(to|way|steps?|process|setup|method|task|fix|solution|guide)\b/i);
+  if (adjectiveMatch) {
+    return {
+      standardId: "PRF-11", outcome: "violation",
+      issue: `'${adjectiveMatch[1]}' can feel dismissive — remove it and let the simplicity speak for itself.`,
+      suggestion: `Instead of '${adjectiveMatch[0]}', describe the action directly. 'Set up in 3 steps' is more credible than 'Easy setup.'`,
+    };
+  }
+
+  return { standardId: "PRF-11", outcome: "defer" };
+}
+
+
+// --- Phase 2 checks (ported from Python preprocessor v4.2.0) --------
+// 6 new deterministic checks: placeholder text, ALL CAPS,
+// redundant phrases, banned words, gendered language, non-inclusive tech.
+
+function checkPrf08PlaceholderText(text) {
+  // Flag lorem ipsum, dev markers (TODO, FIXME, WIP, DRAFT, TBD,
+  // PLACEHOLDER), and bracket placeholders like [insert company name].
+  // These are never acceptable in shipped UI copy.
+  //
+  // "todo" and "draft" in lowercase prose are valid UI terms
+  // (e.g., "Add a new todo item", "Save as draft").
+  // Only uppercase markers signal dev artifacts.
+
+  const lower = text.toLowerCase();
+
+  if (/lorem ipsum/i.test(text)) {
+    return {
+      standardId: "PRF-08", outcome: "violation",
+      issue: "Lorem ipsum placeholder text.",
+      suggestion: "Replace with real copy before shipping.",
+    };
+  }
+
+  // Dev markers: only match uppercase to avoid false positives
+  // on legitimate words like "draft" or "todo"
+  if (/\b(TODO|FIXME|PLACEHOLDER|WIP)\b/.test(text)
+      || /^(TBD|DRAFT)\b/.test(text)
+      || /\b(TBD|DRAFT)\b/.test(text) && text === text.toUpperCase()) {
+    const match = text.match(/\b(TODO|FIXME|TBD|PLACEHOLDER|WIP|DRAFT)\b/);
+    return {
+      standardId: "PRF-08", outcome: "violation",
+      issue: `Dev marker '${match[0]}' in UI copy.`,
+      suggestion: "Replace with final copy before shipping.",
+    };
+  }
+
+  // Bracket placeholders: [insert X], [your X here], [replace X], [TBD]
+  if (/\[(insert|your|replace|enter|add|placeholder|text|TBD)[^\]]*\]/i.test(text)) {
+    return {
+      standardId: "PRF-08", outcome: "violation",
+      issue: "Bracket placeholder in UI copy.",
+      suggestion: "Replace the bracketed placeholder with final copy.",
+    };
+  }
+
+  return { standardId: "PRF-08", outcome: "pass" };
+}
+
+
+// Known acronyms that should NOT be flagged by the ALL CAPS check.
+// Matches the Python COMMON_ABBREVIATIONS allowlist plus common
+// marketing/UI patterns (FREE, SALE, NEW, BETA, PRO, VIP).
+const KNOWN_ACRONYMS = new Set([
+  "API","APIs","SDK","SDKs","URL","URLs","HTML","CSS","PDF","USB","GPS",
+  "SaaS","AI","IT","UI","UX","DNS","HTTP","HTTPS","FTP","SQL","CMS",
+  "CDN","RAM","CPU","GPU","SSD","iOS","VPN","SSL","TLS","SSO","OTP",
+  "CEO","CTO","CFO","COO","HR","LLC","IRS","FAQ","FAQs","ID","PIN",
+  "ATM","IPO","ROI","KPI","B2B","B2C","PR","QA","VP","SVP","EVP",
+  "MBA","CPA","ESG","TTY","ADA","HIPAA","ER","ICU","RN","MD","OTC",
+  "CPR","EHR","EMR","FDA","ACH","FDIC","FICO","APR","APY","ETF","IRA",
+  "ZIP","RSVP","TV","DVD","AC","AM","PM","USA","UK","EU","UN","NATO",
+  "NASA","ASAP","ETA","FYI","DIY","JPEG","PNG","GIF","MP3","MP4",
+  "WCAG","JSON","XML","YAML","CSV","REST","SMTP","IMAP","POP",
+  // Common marketing/UI patterns that aren't violations
+  "FREE","SALE","NEW","BETA","PRO","VIP",
+  // Dev markers caught by PRF-11 instead
+  "TODO","FIXME","TBD","WIP","DRAFT","PLACEHOLDER",
+]);
+
+function checkPrf09AllCaps(text) {
+  // Flag ALL CAPS words (4+ letters) that aren't known acronyms.
+  // ALL CAPS in UI copy is almost always a tone/accessibility issue.
+  //
+  // 3-letter words are excluded because they're too often legitimate
+  // (THE, AND, FOR, etc.). The 4-letter threshold catches CLICK,
+  // YOUR, HERE, WARNING, etc.
+
+  const capsWords = text.match(/\b[A-Z]{4,}\b/g);
+  if (!capsWords) {
+    return { standardId: "PRF-09", outcome: "pass" };
+  }
+
+  const unknown = capsWords.filter(w => !KNOWN_ACRONYMS.has(w));
+  if (unknown.length === 0) {
+    return { standardId: "PRF-09", outcome: "pass" };
+  }
+
+  return {
+    standardId: "PRF-09", outcome: "violation",
+    issue: `ALL CAPS text: '${unknown[0]}'. Use sentence case instead.`,
+    suggestion: "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+  };
+}
+
+
+function checkClr01RedundantPhrases(text) {
+  // Flag wordy phrases that have universally simpler replacements.
+  // These are never a style choice — they're just extra words.
+  //
+  // Only checks phrases where the replacement is unambiguous.
+  // "In order to" → "to" is always correct. "Prior to" → "before"
+  // is always correct. No judgment needed.
+
+  // Canonical list from Python preprocessor — 20 phrases.
+  // Every major content design system agrees these are replaceable.
+  const phrases = [
+    { pattern: /\bin order to\b/i,            replacement: "to" },
+    { pattern: /\bwhether or not\b/i,         replacement: "whether" },
+    { pattern: /\bdue to the fact that\b/i,   replacement: "because" },
+    { pattern: /\bat this point in time\b/i,  replacement: "now" },
+    { pattern: /\bat this time\b/i,           replacement: "now" },
+    { pattern: /\bhas the ability to\b/i,     replacement: "can" },
+    { pattern: /\bis able to\b/i,             replacement: "can" },
+    { pattern: /\bare able to\b/i,            replacement: "can" },
+    { pattern: /\bin the event that\b/i,      replacement: "if" },
+    { pattern: /\bprior to\b/i,              replacement: "before" },
+    { pattern: /\bsubsequent to\b/i,         replacement: "after" },
+    { pattern: /\bin regard to\b/i,          replacement: "about" },
+    { pattern: /\bwith regard to\b/i,        replacement: "about" },
+    { pattern: /\bin regards to\b/i,         replacement: "about" },
+    { pattern: /\bfor the purpose of\b/i,    replacement: "to" },
+    { pattern: /\bon a daily basis\b/i,      replacement: "daily" },
+    { pattern: /\bon a regular basis\b/i,    replacement: "regularly" },
+    { pattern: /\ba large number of\b/i,     replacement: "many" },
+    { pattern: /\ba majority of\b/i,         replacement: "most" },
+    { pattern: /\bin close proximity to?\b/i, replacement: "near" },
+    { pattern: /\bdespite the fact that\b/i, replacement: "although" },
+    { pattern: /\bat the present time\b/i,   replacement: "now" },
+  ];
+
+  for (const { pattern, replacement } of phrases) {
+    const match = text.match(pattern);
+    if (match) {
+      return {
+        standardId: "CLR-01", outcome: "violation",
+        issue: `Wordy phrase: '${match[0]}'. Use '${replacement}' instead.`,
+        suggestion: `Replace '${match[0]}' with '${replacement}'.`,
+      };
+    }
+  }
+
+  return { standardId: "CLR-01", outcome: "defer" };
+}
+
+
+function checkClr01BannedWords(text) {
+  // Flag unnecessarily complex words with universally simpler
+  // alternatives. "Utilize" always means "use." "Commence" always
+  // means "start." No context changes these.
+  //
+  // Word-boundary matching prevents false positives on substrings
+  // ("terminal" should not trigger "terminate").
+
+  // Canonical list from Python preprocessor — 15 words.
+  // Word-boundary matching prevents false positives on substrings
+  // ("terminal" should not trigger "terminate").
+  const banned = [
+    { pattern: /\butilize[sd]?\b/i,        replacement: "use" },
+    { pattern: /\butilization\b/i,         replacement: "use" },
+    { pattern: /\bleverage[sd]?\b/i,       replacement: "use" },
+    { pattern: /\bfacilitate[sd]?\b/i,     replacement: "help" },
+    { pattern: /\bcommence[sd]?\b/i,       replacement: "start" },
+    { pattern: /\bterminate[sd]?\b/i,      replacement: "end" },
+    { pattern: /\baforementioned\b/i,      replacement: "this" },
+    { pattern: /\bherein\b/i,             replacement: "(remove)" },
+    { pattern: /\btherein\b/i,            replacement: "(remove)" },
+    { pattern: /\bhenceforth\b/i,         replacement: "from now on" },
+    { pattern: /\bnotwithstanding\b/i,    replacement: "despite" },
+    { pattern: /\bheretofore\b/i,         replacement: "until now" },
+    { pattern: /\bwhereby\b/i,            replacement: "where" },
+    { pattern: /\bwherein\b/i,            replacement: "where" },
+    { pattern: /\binasmuch\b/i,           replacement: "because" },
+  ];
+
+  for (const { pattern, replacement } of banned) {
+    const match = text.match(pattern);
+    if (match) {
+      return {
+        standardId: "CLR-01", outcome: "violation",
+        issue: `'${match[0]}' — use '${replacement}' instead.`,
+        suggestion: `Replace '${match[0]}' with '${replacement}'.`,
+      };
+    }
+  }
+
+  return { standardId: "CLR-01", outcome: "defer" };
+}
+
+
+function checkInc01GenderedLanguage(text) {
+  // Flag gendered terms with gender-neutral alternatives.
+  // Word-boundary matching prevents false positives on substrings
+  // ("manage" should not trigger the "man" root).
+  //
+  // Uses explicit patterns, not root-based matching, to avoid
+  // false positives. Only flags terms where a gender-neutral
+  // alternative exists and is universally preferred.
+
+  // Canonical list merged from Python preprocessor (16 terms) + plural
+  // forms. Uses explicit patterns to prevent "manage" from matching "man".
+  const gendered = [
+    { pattern: /\bchairman\b/i,       suggestion: "chair or chairperson" },
+    { pattern: /\bchairmen\b/i,       suggestion: "chairs or chairpeople" },
+    { pattern: /\bmankind\b/i,        suggestion: "humanity or people" },
+    { pattern: /\bmanpower\b/i,       suggestion: "workforce or staffing" },
+    { pattern: /\bmanmade\b/i,        suggestion: "synthetic or artificial" },
+    { pattern: /\bman-made\b/i,       suggestion: "synthetic or artificial" },
+    { pattern: /\bfireman\b/i,        suggestion: "firefighter" },
+    { pattern: /\bfiremen\b/i,        suggestion: "firefighters" },
+    { pattern: /\bpoliceman\b/i,      suggestion: "police officer" },
+    { pattern: /\bpolicemen\b/i,      suggestion: "police officers" },
+    { pattern: /\bsalesman\b/i,       suggestion: "salesperson" },
+    { pattern: /\bsalesmen\b/i,       suggestion: "salespeople" },
+    { pattern: /\bstewardess\b/i,     suggestion: "flight attendant" },
+    { pattern: /\bwaitress\b/i,       suggestion: "server" },
+    { pattern: /\bmailman\b/i,        suggestion: "mail carrier" },
+    { pattern: /\bcongressman\b/i,    suggestion: "representative" },
+    { pattern: /\bbusinessmen\b/i,    suggestion: "businesspeople" },
+    { pattern: /\bhe\/she\b/i,        suggestion: "they" },
+    { pattern: /\bhis\/her\b/i,       suggestion: "their" },
+    { pattern: /\bhis or her\b/i,     suggestion: "their" },
+    { pattern: /\bhe or she\b/i,      suggestion: "they" },
+  ];
+
+  for (const { pattern, suggestion } of gendered) {
+    const match = text.match(pattern);
+    if (match) {
+      return {
+        standardId: "INC-01", outcome: "violation",
+        issue: `Gendered term: '${match[0]}'. Use gender-neutral language.`,
+        suggestion: `Replace '${match[0]}' with '${suggestion}'.`,
+      };
+    }
+  }
+
+  return { standardId: "INC-01", outcome: "defer" };
+}
+
+
+function checkInc02NonInclusiveTech(text) {
+  // Flag non-inclusive technical terminology with industry-standard
+  // alternatives. Major tech companies (Google, Apple, Microsoft,
+  // GitHub) have adopted these replacements.
+  //
+  // Word-boundary matching prevents false positives: "mastery"
+  // should not trigger "master", "listed" should not trigger "list"
+  // in "blacklist" context.
+
+  const terms = [
+    { pattern: /\bwhitelist(ed|ing|s)?\b/i, suggestion: "allow list" },
+    { pattern: /\bblacklist(ed|ing|s)?\b/i, suggestion: "block list or deny list" },
+    { pattern: /\bmaster\b/i,               suggestion: "main, primary, or source" },
+    { pattern: /\bslave\b/i,                suggestion: "replica, secondary, or worker" },
+    { pattern: /\bgrandfathered\b/i,        suggestion: "legacy or exempt" },
+  ];
+
+  for (const { pattern, suggestion } of terms) {
+    const match = text.match(pattern);
+    if (match) {
+      // "master" needs extra context — only flag in tech-specific
+      // compounds to avoid flagging "master's degree" or "masterful"
+      if (/^master$/i.test(match[0])) {
+        const lower = text.toLowerCase();
+        // Only flag when paired with tech context
+        if (/master\s+(branch|node|server|database|db|slave|copy|record)/i.test(lower)
+            || /\b(git|push to|merge to|pull from)\s+master\b/i.test(lower)) {
+          return {
+            standardId: "INC-02", outcome: "violation",
+            issue: `Non-inclusive term: '${match[0]}'. Use '${suggestion}' instead.`,
+            suggestion: `Replace '${match[0]}' with '${suggestion}'.`,
+          };
+        }
+        return { standardId: "INC-02", outcome: "defer" };
+      }
+
+      return {
+        standardId: "INC-02", outcome: "violation",
+        issue: `Non-inclusive term: '${match[0]}'. Use '${suggestion}' instead.`,
+        suggestion: `Replace '${match[0]}' with '${suggestion}'.`,
+      };
+    }
+  }
+
+  return { standardId: "INC-02", outcome: "defer" };
+}
+
+
+// --- ACT-01: Binary response buttons (pass-only, v4.3.1) ---
+// Same pattern as GRM-02: can ONLY pass, never flag.
+// Prevents false positives on Yes/No/OK/Cancel buttons.
+function checkAct01BinaryResponses(text) {
+  const stripped = text.trim();
+  const normalized = stripped.toLowerCase();
+
+  if (BINARY_RESPONSES.has(normalized)) {
+    return { standardId: "ACT-01", outcome: "pass" };
+  }
+
+  // Compound confirmations: "Yes, delete" / "OK, remove"
+  const words = stripped.split(/\s+/);
+  if (words.length <= 5 && BINARY_COMPOUND_RE.test(stripped)) {
+    return { standardId: "ACT-01", outcome: "pass" };
+  }
+
+  return { standardId: "ACT-01", outcome: "defer" };
+}
+
+
+// --- GRM-06: Compound modifier hyphenation (v4.5.0) ---
+
+const COMPOUND_MOD_UNITS = [
+  'day', 'week', 'month', 'year',
+  'hour', 'minute', 'second',
+  'time',
+  'step', 'page', 'word',
+  'mile', 'foot', 'inch', 'pound',
+  'dollar', 'percent',
+  'factor', 'way',
+];
+
+const _compoundUnitsAlt = COMPOUND_MOD_UNITS.map(u => `${u}s?`).join('|');
+
+const COMPOUND_STOPWORDS = [
+  'of', 'in', 'to', 'for', 'from', 'ago', 'later',
+  'or', 'and', 'is', 'are', 'was', 'were', 'has', 'have',
+  'remaining', 'left', 'total', 'each', 'per', 'every',
+];
+const _stopwordLookahead = COMPOUND_STOPWORDS.map(w => `${w}\\b`).join('|');
+
+const SPELLED_NUMBERS = [
+  'one', 'two', 'three', 'four', 'five',
+  'six', 'seven', 'eight', 'nine', 'ten',
+];
+
+// Numeric: "5 day streak" → violation
+const _unhyphenatedNumericRe = new RegExp(
+  `\\b(\\d+)\\s+(${_compoundUnitsAlt})\\s+(?!${_stopwordLookahead})(\\w{2,})\\b`, 'i'
+);
+// Numeric pass: "5-day streak"
+const _hyphenatedNumericRe = new RegExp(
+  `\\b\\d+-(${COMPOUND_MOD_UNITS.join('|')})\\s+\\w+\\b`, 'i'
+);
+// Spelled-out: "one time offer" → violation
+const _unhyphenatedSpelledRe = new RegExp(
+  `\\b(${SPELLED_NUMBERS.join('|')})\\s+(${_compoundUnitsAlt})\\s+(?!${_stopwordLookahead})(\\w{2,})\\b`, 'i'
+);
+// Spelled-out pass: "one-time offer"
+const _hyphenatedSpelledRe = new RegExp(
+  `\\b(${SPELLED_NUMBERS.join('|')})-(${COMPOUND_MOD_UNITS.join('|')})\\s+\\w+\\b`, 'i'
+);
+
+function checkGrm06CompoundModifiers(text) {
+  // PASS: correctly hyphenated
+  if (_hyphenatedNumericRe.test(text) || _hyphenatedSpelledRe.test(text)) {
+    return { standardId: "GRM-06", outcome: "pass" };
+  }
+
+  // VIOLATION: unhyphenated numeric ("5 day streak")
+  let match = text.match(_unhyphenatedNumericRe);
+  if (match) {
+    const num = match[1];
+    const unit = match[2];
+    const singular = (unit.endsWith('s') && !unit.endsWith('ss'))
+      ? unit.slice(0, -1) : unit;
+    return {
+      standardId: "GRM-06", outcome: "violation",
+      issue: `Compound modifier '${num} ${unit}' needs a hyphen before the noun.`,
+      suggestion: `Use '${num}-${singular}' with a hyphen and singular unit.`,
+    };
+  }
+
+  // VIOLATION: unhyphenated spelled-out ("one time offer")
+  match = text.match(_unhyphenatedSpelledRe);
+  if (match) {
+    const word = match[1];
+    const unit = match[2];
+    const singular = (unit.endsWith('s') && !unit.endsWith('ss'))
+      ? unit.slice(0, -1) : unit;
+    return {
+      standardId: "GRM-06", outcome: "violation",
+      issue: `Compound modifier '${word} ${unit}' needs a hyphen before the noun.`,
+      suggestion: `Use '${word}-${singular}' with a hyphen and singular unit.`,
+    };
+  }
+
+  return { standardId: "GRM-06", outcome: "defer" };
+}
+
+
+// ====================================================================
+// Moment detection (Tier 1: text-pattern inference)
+//
+// Detects the experiential moment a piece of UI copy is serving.
+// Content type tells you WHAT the string is (heading, button, error).
+// Moment tells you WHERE THE PERSON IS (confirming, recovering, deciding).
+//
+// The same string evaluates differently depending on the moment:
+// "Are you sure?" in a destructive_action moment -> VT-05 empathy weight
+//   increases, STR-02 content density relaxes (friction is acceptable).
+// "Are you sure?" in a task_execution moment -> different evaluation.
+//
+// Tier 1 is heuristic, zero-cost, sub-millisecond. Tier 2 (frame-level
+// inference from grouped strings) and Tier 3 (user-declared dropdown)
+// are future work.
+// ====================================================================
+
+const MOMENT_TAXONOMY = {
+  first_encounter:    "Onboarding, setup, first-run. Clarity above all.",
+  browsing_discovery: "Homepages, landing pages, feature tours. Scannability matters.",
+  decision_point:     "Pricing, plan selection, upgrade prompts. No dark patterns.",
+  task_execution:     "Form filling, configuration, multi-step flows. Actionable labels.",
+  confirmation:       "Success, saved, completed. Brevity, passive voice is fine.",
+  celebration:        "Achievement, milestone, streak. Enthusiasm is earned, not excessive.",
+  error_recovery:     "Validation, system errors, failed states. No blame, clear next step.",
+  destructive_action: "Delete, cancel, irreversible. Explicit consequences, friction OK.",
+  empty_state:        "Zero data, no results. Helpful, suggest next action.",
+  interruption:       "Modals, toasts, notifications. Brevity critical, clear dismiss.",
+  trust_permission:   "Permissions, consent, verification. Precision over warmth, hedging OK.",
+  wayfinding:         "Navigation, breadcrumbs, section labels. Consistency, space-constrained OK.",
+};
+
+
+// ====================================================================
+// Display labels: human-readable names for standard IDs
+//
+// Every standard ID maps to a scannable word that tells the user
+// what to fix. The standard ID appears as secondary reference text.
+// This map is the JS equivalent of Python's labels.py — both must
+// stay in sync.
+// ====================================================================
+
+const DISPLAY_LABELS = {
+  "GRM-01": "Punctuation", "GRM-02": "Abbreviations",
+  "GRM-03": "Punctuation", "GRM-04": "Punctuation", "GRM-05": "Numerals",
+  "CON-01": "Terminology", "CON-02": "Casing",
+  "CON-03": "Date format", "CON-04": "Terminology",
+  "CLR-01": "Clarity", "CLR-02": "Clarity", "CLR-03": "Sentence length",
+  "VT-01": "Voice", "VT-02": "Voice", "VT-03": "Tone",
+  "VT-04": "Tone", "VT-05": "Empathy",
+  "STR-01": "Structure", "STR-02": "Structure",
+  "STR-03": "Structure", "STR-04": "Hierarchy", "STR-05": "Lists",
+  "ACT-01": "Action verbs", "ACT-02": "Action verbs",
+  "ACC-01": "Accessibility", "ACC-02": "Accessibility",
+  "ACC-03": "Accessibility", "ACC-04": "Accessibility",
+  "ACC-05": "Alt text", "ACC-06": "Accessibility", "ACC-07": "Form labels",
+  "INC-01": "Inclusive language", "INC-02": "Inclusive language",
+  "TRN-01": "Translation", "TRN-02": "Translation",
+  "PRF-01": "Proofing", "PRF-02": "Proofing", "PRF-03": "Proofing",
+  "PRF-04": "Proofing", "PRF-05": "Proofing", "PRF-06": "Proofing",
+  "PRF-07": "Proofing", "PRF-08": "Placeholder", "PRF-09": "Readability",
+  "PRF-10": "Accessibility", "PRF-11": "Tone",
+};
+
+function getDisplayLabel(standardId) {
+  return DISPLAY_LABELS[standardId] || standardId;
+}
+
+
+// ====================================================================
+// Proper noun grey area detection
+//
+// When CON-02 flags title case, the text might contain branded
+// terms or proper nouns. Detect 2+ consecutive capitalized words
+// and enrich the suggestion to let the user decide.
+// ====================================================================
+
+function detectPossibleProperNouns(text) {
+  if (text.split(/\s+/).length <= 2) return [];
+  const matches = text.match(/(?<!\. )([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/g);
+  return matches ? matches.map(m => m.trim()) : [];
+}
+
+function enrichCasingSuggestion(standardId, suggestion, originalText) {
+  if (standardId !== "CON-02") return suggestion;
+  const candidates = detectPossibleProperNouns(originalText);
+  if (candidates.length === 0) return suggestion;
+
+  const nounPhrase = candidates.map(c => `'${c}'`).join(", ");
+  const qualifier = candidates.length === 1
+    ? "a branded term or proper noun"
+    : "branded terms or proper nouns";
+
+  return suggestion
+    + `\n\nNote: if ${nounPhrase} is ${qualifier} at your organization, `
+    + `the title case is correct — dismiss this check.`;
+}
+
+
+function detectMoment(text, contentType) {
+  const lower = text.toLowerCase().trim();
+  const words = lower.split(/\s+/);
+  const len = words.length;
+
+  // --- Destructive action (check early, high specificity) ---
+  if (/\b(permanently\s+delete|cannot be undone|can't be undone|irreversible|delete\s+(this|your|all)|remove\s+(this|your|all)|are you sure\s+you\s+want\s+to\s+(delete|remove|cancel))\b/i.test(lower)) {
+    return "destructive_action";
+  }
+  if (contentType === "button_cta" && /\b(delete|remove|deactivate|close\s+account|cancel\s+(plan|account|subscription))\b/i.test(lower)) {
+    return "destructive_action";
+  }
+
+  // --- Error recovery ---
+  if (contentType === "error_message") return "error_recovery";
+  if (/\b(went wrong|try again|couldn't|unable to|failed to|not found|something.{0,10}wrong|oops|we('re| are) sorry)\b/i.test(lower) && len <= 30) {
+    return "error_recovery";
+  }
+
+  // --- Celebration / achievement (before confirmation — more specific) ---
+  if (/\b(congrat(s|ulations)|great job|well done|you did it|way to go|nice work|achievement|streak|milestone|level(ed)?\s+up|unlocked|earned|badge|completed\s+\d+|new (record|high\s*score|personal\s+best)|keep it up|on a roll)\b/i.test(lower)) {
+    return "celebration";
+  }
+
+  // --- Confirmation ---
+  if (contentType === "confirmation") return "confirmation";
+  if (/\b(successfully|has been (saved|created|updated|deleted|sent|removed|confirmed|published)|you're all set|all done|changes saved)\b/i.test(lower) && len <= 25) {
+    return "confirmation";
+  }
+
+  // --- Empty state ---
+  if (/\b(no\s+\w+\s+yet|nothing (here|to show)|get started by|no results|no items|looks empty|you (haven't|don't have any))\b/i.test(lower)) {
+    return "empty_state";
+  }
+
+  // --- First encounter / onboarding ---
+  if (/\b(welcome( to|,| back)|let's get|set up your|first,?\s+(let's|you|we)|getting started|new to|walkthrough|step\s+\d\s+of\s+\d)\b/i.test(lower)) {
+    return "first_encounter";
+  }
+
+  // --- Trust / permission (before decision_point — "allow" is consent, not choice) ---
+  if (/\b(allow\s+access|grant\s+access|allow\s+.{0,20}\s+to\s+access|agree\s+to|consent\s+to|accept\s+(the\s+)?terms|verify\s+your\s+(identity|email|phone|account)|confirm\s+your\s+(identity|email|phone)|enable\s+(notifications?|location|cookies|tracking)|turn\s+on\s+(notifications?|location)|we\s+(use|collect|share|store)\s+(your\s+)?(data|information|cookies)|privacy\s+policy|data\s+sharing|this\s+(app|site|service)\s+(would like|wants|needs)\s+to|would\s+like\s+to\s+(access|use|send|know\s+your)|permission\s+to\s+access)\b/i.test(lower)) {
+    return "trust_permission";
+  }
+
+  // --- Decision point (includes e-commerce patterns from Apple eval) ---
+  if (/\b(compare\s+plans?|choose\s+(a\s+)?plan|select\s+(a\s+)?plan|upgrade|downgrade|pricing|per\s+month|\/mo\b|free\s+trial|which\s+(plan|option|tier)|trade[\s-]in|interest[\s-]free|save\s+up\s+to|monthly\s+installments?|education\s+pricing|financing|credit\s+toward)\b/i.test(lower)) {
+    return "decision_point";
+  }
+
+  // --- Interruption ---
+  if (/\b(dismiss|got it|remind\s+me\s+later|not now|maybe later|snooze|don't show\s+(this\s+)?again)\b/i.test(lower)) {
+    return "interruption";
+  }
+
+  // --- Wayfinding ---
+  if (contentType === "ui_label" && len <= 4) return "wayfinding";
+  if (contentType === "heading" && len <= 3) return "wayfinding";
+
+  // --- Task execution ---
+  if (/\b(enter\s+(your|a|the)|type\s+(your|a|the)|fill\s+(in|out)|upload\s+(your|a)|select\s+(your|a|the)|choose\s+(your|a))\b/i.test(lower) && contentType !== "button_cta") {
+    return "task_execution";
+  }
+  if (contentType === "tooltip_microcopy" && len <= 20) return "task_execution";
+
+  // --- Default: browsing/discovery ---
+  return "browsing_discovery";
+}
+
+
+// ====================================================================
+// Content type detection (heuristic, client-side)
+//
+// Mirrors the Python classify.py heuristic fallback. Used for:
+// 1. Preprocessor checks that are content-type-aware (GRM-04, PRF-03)
+// 2. Providing a content type hint in batch API prompts
+//
+// This is NOT the LLM classifier — it's a fast, cheap approximation.
+// The LLM in the API call can override this classification.
 // ====================================================================
 function detectContentType(text) {
   const lower = text.toLowerCase().trim();
-  const words = lower.split(/\s+/).length;
+  const wordList = lower.split(/\s+/);
+  const words = wordList.length;
+  const firstWord = wordList[0] || "";
 
-  const buttonWords = ["click","tap","save","delete","create","submit","cancel",
-    "confirm","sign","log","get started","try","upgrade"];
-  const errorWords = ["error","fail","couldn't","can't","unable","went wrong","oops"];
-  const confirmWords = ["success","done","complete","ready","saved","sent",
-    "created","updated","deleted"];
+  // --- 1. Button exact matches (check first — "Done" is a button, not a confirmation) ---
+  const buttonExactMatches = new Set([
+    "next","back","done","skip","dismiss","retry","undo","redo",
+    "ok","okay","yes","no","got it","get started","sign in",
+    "sign up","log in","log out","try again","learn more",
+    "share","open","close",
+  ]);
+  if (words <= 3 && buttonExactMatches.has(lower)) return "button_cta";
 
-  if (words <= 5 && buttonWords.some(w => lower.includes(w))) return "button_cta";
+  // --- 2. Error messages ---
+  const errorWords = ["error","fail","couldn't","can't","unable","went wrong",
+    // "problem" and "issue" removed — Opendoor triage Cluster 6.
+    // These trigger false error_message classification on instructional content.
+    "oops","sorry","not found","denied","declined","expired"];
   if (words <= 15 && errorWords.some(w => lower.includes(w))) return "error_message";
-  if (words <= 20 && !lower.includes("?") && confirmWords.some(w => lower.includes(w))) return "confirmation";
+
+  // --- 3. Confirmations ---
+  // Strong signals are unambiguous at any length. Weak signals ("done",
+  // "complete", "ready") are adjectives in short strings — require 3+ words.
+  const strongConfirm = ["success","saved","sent","created","updated","deleted",
+    "verified","confirmed","approved","removed","published","applied","added"];
+  const weakConfirm = ["done","complete","ready"];
+  if (words >= 2 && words <= 20 && !lower.includes("?")) {
+    if (strongConfirm.some(w => lower.includes(w))) return "confirmation";
+    if (words >= 3 && weakConfirm.some(w => lower.includes(w))) return "confirmation";
+  }
+
+  // --- 4. Button start-with-verb (unambiguous imperatives only) ---
+  // "open", "close", "share" excluded — too often nouns/adjectives
+  // ("Open hours", "Share price", "Close date"). Handled as exact matches above.
+  const buttonVerbs = new Set([
+    "save","delete","create","submit","cancel","confirm","sign","log",
+    "try","upgrade","download","enable","start","continue","apply",
+    "send","export","import","connect","edit","update",
+    "remove","add","copy","move",
+  ]);
+  if (words <= 5 && buttonVerbs.has(firstWord)) return "button_cta";
+
   if (words <= 30 && lower.includes("?")) return "tooltip_microcopy";
   if (words <= 8) return "ui_label";
   if (words <= 40) return "short_ui_copy";
@@ -717,7 +2135,7 @@ function detectContentType(text) {
 
 
 // ====================================================================
-// System prompt builder (mirrors checker.py logic)
+// System prompt builder
 // ====================================================================
 function buildSystemPrompt() {
   let standardsText = "";
@@ -748,7 +2166,29 @@ ${standardsText}
 
 3. For each genuine violation, cite the standard ID, explain what is wrong, and suggest a fix.
 
-4. Give an overall pass/fail verdict. A single minor issue does not automatically mean fail — use judgment about whether the content is good enough to ship.
+4. Give an overall pass/fail verdict. A single minor issue does not automatically mean fail — use judgment about whether the content is good enough to ship.`;
+}
+
+
+// ====================================================================
+// API communication
+// ====================================================================
+let apiKey = "";
+
+/**
+ * Single-string API check (used when only 1 text layer is selected).
+ * Returns the parsed JSON result from the LLM.
+ */
+async function checkContentSingle(text, signal) {
+  const systemPrompt = buildSystemPrompt();
+  const contentType = detectContentType(text);
+  const moment = detectMoment(text, contentType);
+  const momentHint = moment !== "browsing_discovery"
+    ? `\nMoment: ${moment.replace(/_/g, " ")} — ${MOMENT_TAXONOMY[moment]}`
+    : "";
+  const userMessage = `Check this ${contentType} content against the standards:${momentHint}
+
+"${text}"
 
 Respond in this exact JSON format (no markdown, no backticks):
 {
@@ -757,7 +2197,6 @@ Respond in this exact JSON format (no markdown, no backticks):
   "violations": [
     {
       "standard_id": "the standard ID",
-      "rule": "the rule text",
       "issue": "what's wrong with the content",
       "suggestion": "how to fix it"
     }
@@ -770,50 +2209,358 @@ Respond in this exact JSON format (no markdown, no backticks):
   ],
   "summary": "1-2 sentence plain language summary of the assessment"
 }`;
+
+  return callAnthropicAPI(systemPrompt, userMessage, 2000, signal);
 }
 
 
-// ====================================================================
-// API call
-// ====================================================================
-let apiKey = "";
-
-async function checkContent(text) {
-  const contentType = detectContentType(text);
+/**
+ * Batch API check — evaluates multiple strings in a single API call.
+ * Each string is identified by its index in the batch.
+ *
+ * @param {Array} batch — Array of { index, text, contentType }
+ * @param {AbortSignal} signal — For cancellation
+ * @returns {Array} Array of result objects per string
+ */
+async function checkContentBatch(batch, signal) {
   const systemPrompt = buildSystemPrompt();
-  const userMessage = `Check this ${contentType} content against the standards:\n\n"${text}"`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`API error ${response.status}: ${err}`);
+  let stringsBlock = "";
+  for (const item of batch) {
+    const momentLabel = item.moment && item.moment !== "browsing_discovery"
+      ? `, moment: ${item.moment.replace(/_/g, " ")}`
+      : "";
+    stringsBlock += `[${item.index}] (${item.contentType}${momentLabel}) "${item.text}"\n`;
   }
 
-  const data = await response.json();
+  const userMessage = `Evaluate each of the following UI strings against the content standards above. For each string, determine if it passes or fails.
+
+${stringsBlock}
+Respond in this exact JSON format (no markdown, no backticks):
+{
+  "results": [
+    {
+      "index": 1,
+      "content_type": "detected type",
+      "overall_verdict": "pass" or "fail",
+      "violations": [
+        {
+          "standard_id": "the standard ID",
+          "issue": "what's wrong",
+          "suggestion": "how to fix"
+        }
+      ],
+      "summary": "1 sentence assessment"
+    }
+  ]
+}`;
+
+  // More tokens for batch responses
+  const maxTokens = Math.min(batch.length * 500, 4096);
+  return callAnthropicAPI(systemPrompt, userMessage, maxTokens, signal);
+}
+
+
+/**
+ * Low-level API call to Anthropic. Handles network errors, HTTP status
+ * codes, malformed responses, and JSON parsing failures with user-friendly
+ * messages. No raw error text or status codes are shown to end users.
+ */
+async function callAnthropicAPI(systemPrompt, userMessage, maxTokens, signal) {
+  // #11: Catch network errors (offline, DNS failure, CORS, etc.)
+  // #19: 60-second timeout per request
+  let response;
+  try {
+    const timeoutId = setTimeout(() => {
+      if (signal && !signal.aborted) signal.reason = "timeout";
+    }, 60000);
+
+    const fetchPromise = fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }],
+      }),
+      signal: signal,
+    });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(
+        "The request is taking too long. The API may be slow — try again in a few minutes."
+      )), 60000)
+    );
+
+    response = await Promise.race([fetchPromise, timeoutPromise]);
+    clearTimeout(timeoutId);
+  } catch (err) {
+    if (err.name === "AbortError") throw err;
+    throw new Error("Can't reach the API. Check your internet connection and try again.");
+  }
+
+  // #12, #13, #14, #15, #16: Translate HTTP errors to user-friendly messages
+  if (!response.ok) {
+    const status = response.status;
+    if (status === 401) {
+      throw new Error("Your API key is invalid or expired. Update it in settings.");
+    }
+    if (status === 429) {
+      throw new Error("Rate limited. Wait a moment and try again.");
+    }
+    if (status === 400) {
+      throw new Error("Something went wrong with the request. Try scanning again.");
+    }
+    if (status === 500 || status === 503 || status === 529) {
+      throw new Error("Anthropic's API is temporarily unavailable. Try again in a few minutes.");
+    }
+    throw new Error("Unexpected API error. Try again in a few minutes.");
+  }
+
+  // #17, #18: Safely parse the response — don't crash on unexpected shapes
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("Received an unreadable response from the API. Try scanning again.");
+  }
+
+  if (!data || !data.content || !data.content[0] || !data.content[0].text) {
+    throw new Error("Received an unexpected response from the API. Try scanning again.");
+  }
+
   let raw = data.content[0].text.trim();
 
-  // Strip markdown fences if present
-  if (raw.startsWith("```")) raw = raw.split("\n", 2)[1] || raw.slice(3);
+  // Strip markdown fences if the model wraps the JSON
+  if (raw.startsWith("```")) {
+    const firstNewline = raw.indexOf("\n");
+    raw = firstNewline > -1 ? raw.substring(firstNewline + 1) : raw.substring(3);
+  }
   if (raw.endsWith("```")) raw = raw.slice(0, -3);
   raw = raw.trim();
 
-  return JSON.parse(raw);
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error("The API returned a response that couldn't be processed. Try scanning again.");
+  }
 }
+
+
+// ====================================================================
+// Batch scan orchestrator
+//
+// This is the core engine for "Scan page" and "Check selection".
+// Flow:
+//   1. Run preprocessor on every node (instant, zero cost)
+//   2. Group remaining nodes into batches of BATCH_SIZE
+//   3. Send batches to API with MAX_CONCURRENT concurrency
+//   4. Merge preprocessor results with API results
+//   5. Apply suppression: preprocessor PASS overrides LLM violations
+//   6. Return unified results array
+// ====================================================================
+let scanAbortController = null;
+
+/**
+ * Run a full batch scan on an array of text nodes.
+ *
+ * @param {Array} nodes — Array of { id, name, characters, parentName } from code.js
+ * @param {Function} onProgress — Callback for progress updates
+ * @returns {Array} Array of node results, each with violations and verdict
+ */
+async function runBatchScan(nodes, onProgress) {
+  scanAbortController = new AbortController();
+  const signal = scanAbortController.signal;
+  const results = [];
+
+  // -----------------------------------------------------------------------
+  // Stage 1: Preprocessor (instant)
+  // -----------------------------------------------------------------------
+  onProgress({ phase: "preprocess", current: 0, total: nodes.length });
+
+  const preprocessedNodes = [];
+  let instantViolationCount = 0;
+
+  for (const node of nodes) {
+    const contentType = detectContentType(node.characters);
+    const moment = detectMoment(node.characters, contentType);
+    const { violations, suppressedIds } = runPreprocessor(node.characters, contentType);
+    instantViolationCount += violations.length;
+
+    preprocessedNodes.push({
+      node,
+      contentType,
+      moment,
+      preprocessViolations: violations,
+      suppressedIds,
+    });
+  }
+
+  onProgress({
+    phase: "preprocess-done",
+    total: nodes.length,
+    instantViolations: instantViolationCount,
+  });
+
+  // -----------------------------------------------------------------------
+  // Stage 2: Group into batches for API evaluation
+  // -----------------------------------------------------------------------
+  const batches = [];
+  let currentBatch = [];
+  let globalIndex = 1;
+
+  for (const pn of preprocessedNodes) {
+    currentBatch.push({
+      index: globalIndex++,
+      text: pn.node.characters,
+      contentType: pn.contentType,
+      moment: pn.moment,
+      preprocessed: pn,
+    });
+
+    if (currentBatch.length >= BATCH_SIZE) {
+      batches.push(currentBatch);
+      currentBatch = [];
+    }
+  }
+  if (currentBatch.length > 0) batches.push(currentBatch);
+
+  // -----------------------------------------------------------------------
+  // Stage 3: API evaluation with concurrency control
+  // -----------------------------------------------------------------------
+  const batchResults = new Array(batches.length).fill(null);
+  let completedBatches = 0;
+
+  // Process batches with a concurrency pool
+  async function processBatch(batchIndex) {
+    if (signal.aborted) return;
+
+    const batch = batches[batchIndex];
+    const apiInput = batch.map(item => ({
+      index: item.index,
+      text: item.text,
+      contentType: item.contentType,
+      moment: item.moment,
+    }));
+
+    try {
+      const apiResult = await checkContentBatch(apiInput, signal);
+      batchResults[batchIndex] = apiResult;
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      // Store the error so we can show partial results
+      batchResults[batchIndex] = { error: err.message };
+    }
+
+    completedBatches++;
+    onProgress({
+      phase: "evaluating",
+      current: completedBatches,
+      total: batches.length,
+    });
+  }
+
+  // Concurrency pool: process MAX_CONCURRENT batches at a time
+  const queue = batches.map((_, i) => i);
+  const workers = [];
+  for (let i = 0; i < Math.min(MAX_CONCURRENT, queue.length); i++) {
+    workers.push(runWorker(queue, processBatch));
+  }
+  await Promise.all(workers);
+
+  if (signal.aborted) return null; // Scan was cancelled
+
+  // -----------------------------------------------------------------------
+  // Stage 4: Merge preprocessor + API results with suppression
+  // -----------------------------------------------------------------------
+  for (let bi = 0; bi < batches.length; bi++) {
+    const batch = batches[bi];
+    const apiResult = batchResults[bi];
+    const apiResults = apiResult && apiResult.results ? apiResult.results : [];
+    const apiError = apiResult && apiResult.error ? apiResult.error : null;
+
+    for (const item of batch) {
+      const pn = item.preprocessed;
+      const nodeResult = {
+        nodeId: pn.node.id,
+        nodeName: pn.node.name,
+        parentName: pn.node.parentName,
+        text: pn.node.characters,
+        contentType: pn.contentType,
+        moment: pn.moment,
+        violations: [...pn.preprocessViolations],
+        overallVerdict: "pass",
+        summary: "",
+        error: apiError || null,
+      };
+
+      // Find this node's API result by index
+      const apiNodeResult = apiResults.find(r => r.index === item.index);
+      if (apiNodeResult) {
+        nodeResult.contentType = apiNodeResult.content_type || pn.contentType;
+
+        // Merge API violations, applying preprocessor suppression
+        const apiViolations = apiNodeResult.violations || [];
+        for (const v of apiViolations) {
+          // Suppression: if preprocessor said PASS for this standard, skip
+          if (pn.suppressedIds.has(v.standard_id)) continue;
+          nodeResult.violations.push({
+            standard_id: v.standard_id,
+            issue: v.issue,
+            suggestion: v.suggestion,
+            source: "ai",
+          });
+        }
+
+        // Derive verdict from actual violations, not the LLM's original answer.
+        // The LLM might have said "fail" for a violation the preprocessor
+        // suppressed — the violations array is the source of truth.
+        if (nodeResult.violations.length > 0) {
+          nodeResult.overallVerdict = "fail";
+          nodeResult.summary = apiNodeResult.summary || "";
+        } else {
+          nodeResult.overallVerdict = "pass";
+          // If the LLM said fail but all its violations were suppressed,
+          // the summary would mention issues that don't exist anymore.
+          // Clear it to avoid contradicting the pass verdict.
+          const llmSaidFail = apiNodeResult.overall_verdict === "fail";
+          nodeResult.summary = llmSaidFail ? "" : (apiNodeResult.summary || "");
+        }
+      }
+
+      results.push(nodeResult);
+    }
+  }
+
+  onProgress({ phase: "complete", total: results.length });
+  return results;
+}
+
+
+/**
+ * Concurrency pool worker. Pulls batch indices from a shared queue
+ * and processes them sequentially.
+ */
+async function runWorker(queue, processFn) {
+  while (queue.length > 0) {
+    const index = queue.shift();
+    if (index === undefined) break;
+    await processFn(index);
+  }
+}
+
+
+// ====================================================================
+// State
+// ====================================================================
+let currentResults = null;  // Array of node results from the last scan
+let currentFilter = "all";  // "all", "fail", "pass"
 
 
 // ====================================================================
@@ -824,18 +2571,310 @@ function showScreen(id) {
   document.getElementById(`screen-${id}`).classList.add("active");
 }
 
-function renderResults(text, result) {
+
+/**
+ * Render batch scan results into the results area.
+ */
+function renderBatchResults(results) {
+  currentResults = results;
+  currentFilter = "all";
+  const area = document.getElementById("results-area");
+
+  const failCount = results.filter(r => r.overallVerdict === "fail").length;
+  const passCount = results.filter(r => r.overallVerdict === "pass").length;
+  const errorCount = results.filter(r => r.error).length;
+  const totalViolations = results.reduce((sum, r) => sum + r.violations.length, 0);
+
+  let html = "";
+
+  // Summary stats bar
+  html += `<div class="scan-summary">
+    <div class="scan-stat stat-total">
+      <div class="scan-stat-value">${results.length}</div>
+      <div class="scan-stat-label">Scanned</div>
+    </div>
+    <div class="scan-stat stat-fail">
+      <div class="scan-stat-value">${failCount}</div>
+      <div class="scan-stat-label">Issues</div>
+    </div>
+    <div class="scan-stat stat-pass">
+      <div class="scan-stat-value">${passCount}</div>
+      <div class="scan-stat-label">Passing</div>
+    </div>
+  </div>`;
+
+  // Filter tabs
+  html += `<div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all">All (${results.length})</button>
+    <button class="filter-tab" data-filter="fail">Issues (${failCount})</button>
+    <button class="filter-tab" data-filter="pass">Passing (${passCount})</button>
+  </div>`;
+
+  // Dev mode: export results button
+  if (DEV_MODE) {
+    html += `<button id="btn-export-results" style="
+      width:100%; padding:8px; margin:0 0 12px; border:1px dashed
+      var(--figma-color-border-secondary,#555); border-radius:6px;
+      background:transparent; color:var(--figma-color-text-secondary,#888);
+      font-size:11px; cursor:pointer;
+    ">Export scan results (dev)</button>`;
+  }
+
+  // Store results globally for export
+  window._lastScanResults = results;
+
+  // Node cards — failures first, then passes
+  const sorted = [...results].sort((a, b) => {
+    if (a.overallVerdict === "fail" && b.overallVerdict !== "fail") return -1;
+    if (a.overallVerdict !== "fail" && b.overallVerdict === "fail") return 1;
+    return b.violations.length - a.violations.length;
+  });
+
+  html += `<div id="node-cards">`;
+  for (const r of sorted) {
+    html += renderNodeCard(r);
+  }
+  html += `</div>`;
+
+  area.innerHTML = html;
+
+  // Attach filter tab listeners
+  area.querySelectorAll(".filter-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      area.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      filterResults(tab.dataset.filter);
+    });
+  });
+
+  // Attach card toggle listeners
+  area.querySelectorAll(".node-card-header").forEach(header => {
+    header.addEventListener("click", () => {
+      header.parentElement.classList.toggle("open");
+    });
+  });
+
+  // Attach go-to-layer listeners
+  area.querySelectorAll(".btn-goto").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      parent.postMessage({
+        pluginMessage: { type: "focus-node", nodeId: btn.dataset.nodeId }
+      }, "*");
+    });
+  });
+
+  // Attach export button listener (dev mode only)
+  const exportBtn = document.getElementById("btn-export-results");
+  if (exportBtn) {
+    exportBtn.addEventListener("click", () => exportScanResults());
+  }
+}
+
+
+/**
+ * Export scan results as structured JSON (dev mode only).
+ *
+ * Formats results in a schema compatible with the eval case format
+ * so triaged results can feed directly into the eval pipeline.
+ * Each node becomes a case with all detection metadata preserved:
+ * text, content type, moment, violations, verdict, parent frame.
+ *
+ * The human reviewer adds: human_verdict, human_confidence, human_notes,
+ * and a triage_category (misclassification, hallucination, missing_standard,
+ * context_gap, correct).
+ */
+function exportScanResults() {
+  const results = window._lastScanResults;
+  if (!results || results.length === 0) {
+    alert("No scan results to export.");
+    return;
+  }
+
+  const timestamp = new Date().toISOString();
+  const exported = {
+    description: "Scan results exported from ContentRX Figma plugin for triage and eval case creation.",
+    exported_at: timestamp,
+    schema_version: "1.2.0",
+    scan_stats: {
+      total_scanned: results.length,
+      issues: results.filter(r => r.overallVerdict === "fail").length,
+      passing: results.filter(r => r.overallVerdict === "pass").length,
+      total_violations: results.reduce((sum, r) => sum + r.violations.length, 0),
+    },
+    cases: results.map((r, i) => ({
+      case_id: `SCAN-${timestamp.slice(0,10)}-${String(i + 1).padStart(3, "0")}`,
+      input: r.text,
+      content_type: r.contentType,
+      moment: r.moment || null,
+      parent_frame: r.parentName || null,
+      node_name: r.nodeName || null,
+      machine_verdict: r.overallVerdict,
+      violations: r.violations.map(v => ({
+        standard_id: v.standard_id,
+        display_label: getDisplayLabel(v.standard_id),
+        issue: v.issue,
+        suggestion: v.suggestion || null,
+        source: v.source,
+      })),
+      summary: r.summary || null,
+      // Human triage fields — filled in during review
+      human_verdict: null,
+      human_confidence: null,
+      human_notes: null,
+      triage_category: null,  // misclassification | hallucination | missing_standard | context_gap | correct
+    })),
+  };
+
+  const json = JSON.stringify(exported, null, 2);
+
+  // Figma's plugin iframe blocks navigator.clipboard.writeText().
+  // Use a temporary textarea + execCommand('copy') instead — this
+  // works reliably in sandboxed environments.
+  const textarea = document.createElement("textarea");
+  textarea.value = json;
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch (e) {
+    copied = false;
+  }
+  document.body.removeChild(textarea);
+
+  const btn = document.getElementById("btn-export-results");
+  if (copied && btn) {
+    const original = btn.textContent;
+    btn.textContent = `Copied ${results.length} results to clipboard`;
+    btn.style.borderColor = "var(--figma-color-bg-success, #16a34a)";
+    btn.style.color = "var(--figma-color-text-success, #16a34a)";
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.style.borderColor = "";
+      btn.style.color = "";
+    }, 2500);
+  } else {
+    // Last resort: log to console
+    console.log("ContentRX scan export:", json);
+    if (btn) {
+      btn.textContent = "Check browser console for export data";
+      setTimeout(() => { btn.textContent = "Export scan results (dev)"; }, 3000);
+    }
+  }
+}
+
+
+/**
+ * Render a single node result card.
+ */
+function renderNodeCard(result) {
+  const isFail = result.overallVerdict === "fail";
+  const isError = result.error && result.violations.length === 0;
+  const dotClass = isError ? "dot-error" : isFail ? "dot-fail" : "dot-pass";
+  const filterClass = isFail ? "fail" : "pass";
+  const preview = result.text.length > 60 ? result.text.slice(0, 60) + "…" : result.text;
+  const violationCount = result.violations.length;
+  const meta = violationCount > 0
+    ? `${violationCount} issue${violationCount !== 1 ? "s" : ""}`
+    : isError ? "Error" : "Pass";
+
+  let html = `<div class="node-card" data-verdict="${filterClass}">`;
+  html += `<div class="node-card-header">
+    <div class="node-verdict-dot ${dotClass}"></div>
+    <div class="node-card-title" title="${escapeHtml(result.text)}">${escapeHtml(preview)}</div>
+    <div class="node-card-meta">${meta}</div>
+  </div>`;
+
+  html += `<div class="node-card-body">`;
+
+  // Go to layer button
+  html += `<button class="btn-goto" data-node-id="${escapeHtml(result.nodeId)}">
+    &#8599; Go to layer${result.parentName ? " · " + escapeHtml(result.parentName) : ""}
+  </button>`;
+
+  // Full text preview
+  html += `<div class="checked-text">"${escapeHtml(result.text)}"</div>`;
+
+  // Content type badge + moment badge
+  html += `<span class="content-type-badge">${escapeHtml(result.contentType)}</span>`;
+  if (result.moment && result.moment !== "browsing_discovery") {
+    const momentLabel = result.moment.replace(/_/g, " ");
+    html += `<span class="moment-badge">${escapeHtml(momentLabel)}</span>`;
+  }
+
+  if (result.error) {
+    html += `<div class="violation-card" style="border-left-color: #f59e0b;">
+      <div class="issue">Evaluation error: ${escapeHtml(result.error)}</div>
+    </div>`;
+  }
+
+  // Violation cards
+  for (const v of result.violations) {
+    const sourceBadge = v.source === "preprocessor"
+      ? `<span class="source-badge source-badge-instant">&#9889; Instant</span>`
+      : `<span class="source-badge source-badge-ai">&#10024; AI</span>`;
+
+    const label = getDisplayLabel(v.standard_id);
+    const enrichedSuggestion = enrichCasingSuggestion(
+      v.standard_id, v.suggestion || "", result.text || "",
+    );
+
+    html += `<div class="violation-card" data-standard-id="${escapeHtml(v.standard_id)}">
+      <div class="standard-id">${escapeHtml(label)} ${sourceBadge}</div>
+      <div class="issue">${escapeHtml(v.issue)}</div>
+      ${enrichedSuggestion ? `<div class="suggestion-label">Suggestion</div>
+      <div class="suggestion">${escapeHtml(enrichedSuggestion)}</div>` : ""}
+    </div>`;
+  }
+
+  if (violationCount === 0 && !result.error) {
+    html += `<div style="font-size:11px; color:var(--figma-color-text-secondary,#888); padding:4px 0;">
+      No violations found. ${result.summary ? escapeHtml(result.summary) : ""}
+    </div>`;
+  }
+
+  html += `</div></div>`; // close node-card-body and node-card
+  return html;
+}
+
+
+/**
+ * Filter the visible node cards by verdict.
+ */
+function filterResults(filter) {
+  currentFilter = filter;
+  document.querySelectorAll(".node-card").forEach(card => {
+    const verdict = card.dataset.verdict;
+    if (filter === "all") {
+      card.style.display = "";
+    } else {
+      card.style.display = verdict === filter ? "" : "none";
+    }
+  });
+}
+
+
+/**
+ * Render a single-string result (legacy mode, for when only 1 layer is selected).
+ */
+function renderSingleResult(text, result) {
   const area = document.getElementById("results-area");
   const isPassing = result.overall_verdict === "pass";
   const violations = result.violations || [];
 
-  // Truncate preview if long
   const preview = text.length > 120 ? text.slice(0, 120) + "…" : text;
 
   let html = `<div class="checked-text">"${escapeHtml(preview)}"</div>`;
-
   html += `<span class="content-type-badge">${escapeHtml(result.content_type || "unknown")}</span>`;
-
+  // Detect moment for single results (not from batch pipeline)
+  const singleMoment = detectMoment(text, result.content_type || detectContentType(text));
+  if (singleMoment && singleMoment !== "browsing_discovery") {
+    html += `<span class="moment-badge">${escapeHtml(singleMoment.replace(/_/g, " "))}</span>`;
+  }
   html += isPassing
     ? `<div class="verdict verdict-pass"><span class="verdict-icon">✓</span> Pass</div>`
     : `<div class="verdict verdict-fail"><span class="verdict-icon">✗</span> Fail — ${violations.length} violation${violations.length !== 1 ? "s" : ""}</div>`;
@@ -843,33 +2882,79 @@ function renderResults(text, result) {
   html += `<div class="summary">${escapeHtml(result.summary || "")}</div>`;
 
   for (const v of violations) {
-    html += `
-      <div class="violation-card">
-        <div class="standard-id">${escapeHtml(v.standard_id)}</div>
-        <div class="issue">${escapeHtml(v.issue)}</div>
-        <div class="suggestion-label">Suggestion</div>
-        <div class="suggestion">${escapeHtml(v.suggestion)}</div>
-      </div>`;
+    const label = getDisplayLabel(v.standard_id);
+    const enrichedSuggestion = enrichCasingSuggestion(
+      v.standard_id, v.suggestion || "", text,
+    );
+    html += `<div class="violation-card" data-standard-id="${escapeHtml(v.standard_id)}">
+      <div class="standard-id">${escapeHtml(label)}</div>
+      <div class="issue">${escapeHtml(v.issue)}</div>
+      ${enrichedSuggestion ? `<div class="suggestion-label">Suggestion</div>
+      <div class="suggestion">${escapeHtml(enrichedSuggestion)}</div>` : ""}
+    </div>`;
   }
 
   area.innerHTML = html;
 }
+
 
 function renderError(message) {
   const area = document.getElementById("results-area");
   area.innerHTML = `<div class="verdict verdict-fail"><span class="verdict-icon">!</span> ${escapeHtml(message)}</div>`;
 }
 
+
 function renderEmpty() {
   const area = document.getElementById("results-area");
   area.innerHTML = `
     <div class="empty-state">
       <div class="icon">📝</div>
-      <p>Select a text layer in Figma and click "Check selected text" to get started.</p>
+      <p>Select text layers and click "Check selection" — or scan the entire page.</p>
     </div>`;
 }
 
+
+/**
+ * Update the progress screen during a batch scan.
+ */
+function updateProgress(data) {
+  const fill = document.getElementById("progress-fill");
+  const status = document.getElementById("progress-status");
+  const detail = document.getElementById("progress-detail");
+
+  switch (data.phase) {
+    case "preprocess":
+      fill.style.width = "5%";
+      status.textContent = `Found ${data.total} text layer${data.total !== 1 ? "s" : ""}. Running instant checks...`;
+      detail.textContent = "";
+      break;
+
+    case "preprocess-done":
+      fill.style.width = "15%";
+      status.textContent = data.instantViolations > 0
+        ? `Instant checks: ${data.instantViolations} issue${data.instantViolations !== 1 ? "s" : ""} caught`
+        : "Instant checks complete. No mechanical issues.";
+      detail.textContent = `Evaluating ${data.total} strings with AI...`;
+      break;
+
+    case "evaluating":
+      const pct = 15 + Math.round((data.current / data.total) * 80);
+      fill.style.width = pct + "%";
+      status.textContent = `AI evaluation: batch ${data.current} of ${data.total}...`;
+      detail.textContent = "This could take a few seconds or a couple minutes.";
+      break;
+
+    case "complete":
+      fill.style.width = "100%";
+      status.textContent = "Scan complete.";
+      detail.textContent = "";
+      break;
+  }
+}
+
+
 function escapeHtml(str) {
+  if (typeof str !== "string") return "";
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
@@ -880,20 +2965,98 @@ function escapeHtml(str) {
 // Event handlers
 // ====================================================================
 
-// Save API key
-document.getElementById("btn-save-key").addEventListener("click", () => {
+// Save API key — validates format and tests against the API before saving
+document.getElementById("btn-save-key").addEventListener("click", async () => {
   const input = document.getElementById("api-key-input");
+  const errorEl = document.getElementById("key-error");
+  const btn = document.getElementById("btn-save-key");
   const key = input.value.trim();
-  if (!key) return;
-  parent.postMessage({ pluginMessage: { type: "save-api-key", key } }, "*");
+
+  errorEl.style.display = "none";
+  errorEl.textContent = "";
+
+  // #1: Empty input
+  if (!key) {
+    errorEl.textContent = "Enter an API key to continue.";
+    errorEl.style.display = "block";
+    return;
+  }
+
+  // #2: Basic format check
+  if (!key.startsWith("sk-ant-")) {
+    errorEl.textContent = "That doesn't look like an Anthropic API key. Keys start with sk-ant-.";
+    errorEl.style.display = "block";
+    return;
+  }
+
+  // #3: Test the key with a minimal API call
+  btn.disabled = true;
+  btn.textContent = "Checking...";
+
+  try {
+    const testResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1,
+        messages: [{ role: "user", content: "hi" }],
+      }),
+    });
+
+    if (testResponse.status === 401) {
+      errorEl.textContent = "This key didn't work. Check it and try again.";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    if (!testResponse.ok && testResponse.status !== 200) {
+      // API is reachable but returned an error — key might still be valid
+      // (e.g., rate limit, server error). Accept the key and move on.
+    }
+  } catch {
+    // Network error — can't validate, but don't block the user.
+    // They'll get a clear error on first scan if the key is bad.
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Save key";
+  }
+
+  // #4: Save with storage error handling
+  try {
+    parent.postMessage({ pluginMessage: { type: "save-api-key", key } }, "*");
+  } catch {
+    errorEl.textContent = "Couldn't save the key. Try closing and reopening the plugin.";
+    errorEl.style.display = "block";
+  }
 });
 
-// Check button — ask sandbox for the current selection
-document.getElementById("btn-check").addEventListener("click", () => {
-  parent.postMessage({ pluginMessage: { type: "get-selection" } }, "*");
+// Scan page — ask sandbox for all text nodes on the current page
+document.getElementById("btn-scan-page").addEventListener("click", () => {
+  parent.postMessage({ pluginMessage: { type: "scan-page" } }, "*");
 });
 
-// Settings link
+// Check selection — ask sandbox for text nodes in the current selection
+document.getElementById("btn-check-selection").addEventListener("click", () => {
+  parent.postMessage({ pluginMessage: { type: "scan-selection" } }, "*");
+});
+
+// Cancel scan
+document.getElementById("btn-cancel-scan").addEventListener("click", () => {
+  if (scanAbortController) {
+    scanAbortController.abort();
+    scanAbortController = null;
+  }
+  showScreen("main");
+  renderError("Scan cancelled.");
+});
+
+// Settings
 document.getElementById("btn-settings").addEventListener("click", () => {
   showScreen("setup");
   document.getElementById("api-key-input").value = "";
@@ -933,44 +3096,75 @@ window.onmessage = async (event) => {
       break;
     }
 
+    // -----------------------------------------------------------------------
+    // Page scan result — full batch scan of all text on the page
+    // -----------------------------------------------------------------------
+    case "page-scan-result": {
+      const nodes = msg.nodes || [];
+      if (nodes.length === 0) {
+        showScreen("main");
+        renderError("No text layers found on this page.");
+        return;
+      }
+      await executeBatchScan(nodes);
+      break;
+    }
+
+    // -----------------------------------------------------------------------
+    // Selection result — batch scan of selected text layers
+    // -----------------------------------------------------------------------
     case "selection-result": {
       const nodes = msg.nodes || [];
-
       if (nodes.length === 0) {
-        renderError("No text layers selected. Select one or more text layers and try again.");
         showScreen("main");
+        renderError("No text layers selected. Select one or more text layers or a frame containing text.");
         return;
       }
+      await executeBatchScan(nodes);
+      break;
+    }
 
-      // For v1, concatenate all selected text (or check each — here we do one at a time for the first)
-      // If multiple layers, check the first one for now
-      const node = nodes[0];
-      const text = node.characters;
+    case "focus-complete": {
+      // Node was focused successfully — no UI update needed
+      break;
+    }
 
-      if (!text || !text.trim()) {
-        renderError("Selected layer has no text content.");
-        showScreen("main");
-        return;
-      }
-
-      showScreen("loading");
-      document.getElementById("loading-text").textContent =
-        nodes.length > 1
-          ? `Checking "${node.name}" (1 of ${nodes.length})…`
-          : "Checking content…";
-
-      try {
-        const result = await checkContent(text);
-        showScreen("main");
-        renderResults(text, result);
-      } catch (err) {
-        showScreen("main");
-        renderError(`Check failed: ${err.message}`);
-      }
+    case "focus-error": {
+      // #24, #25: Layer was deleted or moved to a different page
+      renderError(msg.message);
       break;
     }
   }
 };
+
+
+/**
+ * Execute a batch scan with progress UI. Shared by page-scan and selection-scan.
+ */
+async function executeBatchScan(nodes) {
+  showScreen("scanning");
+  document.getElementById("scan-title").textContent =
+    `Scanning ${nodes.length} text layer${nodes.length !== 1 ? "s" : ""}...`;
+
+  try {
+    const results = await runBatchScan(nodes, updateProgress);
+
+    if (!results) {
+      // Scan was cancelled
+      return;
+    }
+
+    showScreen("main");
+    renderBatchResults(results);
+  } catch (err) {
+    showScreen("main");
+    if (err.name === "AbortError") {
+      renderError("Scan cancelled.");
+    } else {
+      renderError(`Scan failed: ${err.message}`);
+    }
+  }
+}
 
 
 // ====================================================================
