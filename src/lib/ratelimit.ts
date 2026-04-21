@@ -15,11 +15,22 @@ let _ratelimit: Ratelimit | null = null;
 function getRatelimit(): Ratelimit {
   if (_ratelimit) return _ratelimit;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Accept both naming conventions:
+  //   - UPSTASH_REDIS_REST_* — native Upstash naming (standalone Upstash account)
+  //   - KV_REST_API_*        — Vercel Marketplace Upstash integration, which
+  //                            preserves the legacy @vercel/kv env var names
+  //                            for backward compat.
+  // Identical Redis, different env var keys depending on how the DB was
+  // provisioned. Try the native names first, fall back to Vercel Marketplace.
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
   if (!url || !token) {
     throw new Error(
-      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set",
+      "Redis credentials not set. Expected UPSTASH_REDIS_REST_URL + " +
+        "UPSTASH_REDIS_REST_TOKEN, or KV_REST_API_URL + KV_REST_API_TOKEN " +
+        "(Vercel Marketplace integration).",
     );
   }
 
