@@ -1,0 +1,3054 @@
+{
+  "description": "Scan results exported from ContentRX Figma plugin for triage and eval case creation.",
+  "exported_at": "2026-03-29T20:46:36.722Z",
+  "schema_version": "1.2.0",
+  "scan_stats": {
+    "total_scanned": 137,
+    "issues": 74,
+    "passing": 63,
+    "total_violations": 109
+  },
+  "cases": [
+    {
+      "case_id": "SCAN-2026-03-29-001",
+      "input": "How can I make content quicker to consume?\nHow can I increase the value?",
+      "content_type": "tooltip_microcopy",
+      "moment": "task_execution",
+      "parent_frame": "———",
+      "node_name": "How can I make content quicker to consume? How can I increase the value?",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, direct questions that guide user thinking effectively.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Presentation slide body text. Classified as tooltip_microcopy because short + question marks. No frame-level or file-level signal to indicate non-UI content.",
+      "triage_category": "context_gap",
+      "reviewed_at": "2026-03-30T03:41:45+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-002",
+      "input": "How can I make content quicker to consume?\nHow can I increase the value?",
+      "content_type": "tooltip_microcopy",
+      "moment": "task_execution",
+      "parent_frame": "———",
+      "node_name": "How can I make content quicker to consume? How can I increase the value?",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, direct questions that guide user thinking effectively.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Presentation slide body text. Classified as tooltip_microcopy because short + question marks. No frame-level or file-level signal to indicate non-UI content.",
+      "triage_category": "context_gap",
+      "reviewed_at": "2026-03-30T02:21:30+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-003",
+      "input": "Today’s focus",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Today’s focus",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Appropriate sentence case label for a UI section.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "> Slide section header. Classification as ui_label/wayfinding is functionally correct — the text IS a label doing wayfinding. The gap is format awareness, not classification logic.",
+      "triage_category": "context_gap",
+      "reviewed_at": "2026-03-30T02:32:32+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-004",
+      "input": "TIME",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "TIME",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'TIME'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CON-02",
+          "display_label": "Casing",
+          "issue": "Uses all caps instead of sentence case",
+          "suggestion": "Time",
+          "source": "ai"
+        }
+      ],
+      "summary": "Violates sentence case standard with unnecessary all caps formatting.",
+      "human_verdict": "fail",
+      "human_confidence": "high",
+      "human_notes": "Chart axis label. ALL CAPS is conventional for data viz axes. Tool has no data visualization content type — chart labels, axis labels, and legend text all get bucketed as ui_label.",
+      "triage_category": "context_gap",
+      "reviewed_at": "2026-03-30T03:49:34+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-005",
+      "input": "VALUE",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "VALUE",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'VALUE'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CON-02",
+          "display_label": "Casing",
+          "issue": "Uses all caps instead of sentence case",
+          "suggestion": "Value",
+          "source": "ai"
+        }
+      ],
+      "summary": "Violates sentence case standard with unnecessary all caps formatting.",
+      "human_verdict": "fail",
+      "human_confidence": "high",
+      "human_notes": "Chart axis label. ALL CAPS is conventional for data viz axes. Tool has no data visualization content type — chart labels, axis labels, and legend text all get bucketed as ui_label.",
+      "triage_category": "context_gap",
+      "reviewed_at": "2026-03-30T03:51:04+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-006",
+      "input": "Engagement is a balance between time & value",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Engagement is a balance between time & value",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": null,
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Slide header making a conceptual claim. The ui_label is wrong. This is a heading. The reader is learning not navigating.",
+      "triage_category": "context_gap",
+      "reviewed_at": "2026-03-30T13:29:36+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-007",
+      "input": "“Value” widely varies by audience & context.",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "“Value” widely varies by audience & context.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-03",
+          "display_label": "Proofing",
+          "issue": "Trailing period on a ui label.",
+          "suggestion": "Remove the period. Headings, buttons, and labels don't need terminal punctuation.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Should use 'and' instead of ampersand in descriptive UI copy.",
+      "human_verdict": "fail",
+      "human_confidence": "high",
+      "human_notes": "Subtitle caption, not ui_label. Trailing period is correct. This is a complete sentence. PRF-03 is flagging the wrong content type. Captions and subtitles don't behave like labels.",
+      "triage_category": "misclassification",
+      "reviewed_at": "2026-03-30T13:37:21+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-008",
+      "input": "Hollywood Blockbuster",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Hollywood Blockbuster",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CON-02",
+          "display_label": "Casing",
+          "issue": "Uses title case instead of sentence case",
+          "suggestion": "Hollywood blockbuster",
+          "source": "ai"
+        }
+      ],
+      "summary": "Should use sentence case rather than capitalizing each word.",
+      "human_verdict": "fail",
+      "human_confidence": "high",
+      "human_notes": "Correct on the casing catch. Wrong category. This is graph content, not a ui_label.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:45:09+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-009",
+      "input": "Youtube video",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Youtube video",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CON-05",
+          "display_label": "CON-05",
+          "issue": "YouTube is a proper noun and brand name that should be capitalized consistently",
+          "suggestion": "YouTube video",
+          "source": "ai"
+        }
+      ],
+      "summary": "The brand name YouTube needs proper capitalization.",
+      "human_verdict": "fail",
+      "human_confidence": "high",
+      "human_notes": "It is YouTube. Not Youtube. The system caught the proper noun mistake accurately.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:49:12+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-010",
+      "input": "Not worth the time to consume",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Not worth the time to consume",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear and direct label that follows standards.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "This is an easy pass. This content follows conventions and does what its supposed to do. Tell the reader what's important.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:50:20+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-011",
+      "input": "Too much effort to create",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Too much effort to create",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear and direct label that follows standards.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Easy pass. Follows conventions, effective content.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:50:51+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-012",
+      "input": "Engaged",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Engaged",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple and clear wayfinding label.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions. Easy pass.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:51:32+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-013",
+      "input": "Your deck",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Your deck",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear wayfinding label that addresses the user directly.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions. Easy pass.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:51:44+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-014",
+      "input": "Framing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107296",
+      "node_name": "Framing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple and clear wayfinding label.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:52:08+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-015",
+      "input": "Narrative",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107296",
+      "node_name": "Narrative",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple and clear wayfinding label.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions. Easy pass.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:52:25+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-016",
+      "input": "Visuals",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107296",
+      "node_name": "Visuals",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple and clear wayfinding label.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions. Easy pass.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:52:36+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-017",
+      "input": "Editing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107296",
+      "node_name": "Editing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Single word label clearly indicates current state, appropriate for wayfinding context.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions. Easy pass.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:52:51+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-018",
+      "input": "Thanks! 👍🏻",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Thanks! 👍🏻",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Brief confirmation message with appropriate tone for completion state.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Content type should be confirmation. LLM got the verdict right.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:55:50+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-019",
+      "input": "Framing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Framing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Single word label clearly indicates current section, appropriate for wayfinding.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions. Easy pass.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:56:10+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-020",
+      "input": "Review the history\nIf your topic has a past, it is worth going over it. Both to refresh people’s memories and avoid reopening past decisions.",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Review the history If your topic has a past, it is worth going over it. Both to refresh people’s memories and avoid reopening past decisions.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-01",
+          "display_label": "Punctuation",
+          "issue": "Missing Oxford comma before \"and\" in a list.",
+          "suggestion": "Add a comma before \"and\".",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-03",
+          "display_label": "Sentence length",
+          "issue": "Second sentence is 29 words, exceeding the 25-word guideline",
+          "suggestion": "Split into two sentences: 'Review the history. If your topic has a past, it is worth going over it. This refreshes people's memories and avoids reopening past decisions.'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Content is clear but contains one overly long sentence that should be split.",
+      "human_verdict": "fail",
+      "human_confidence": "high",
+      "human_notes": "Both of these fails are correct.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:57:23+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-021",
+      "input": "Framing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Framing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Single word label clearly indicates current section, appropriate for wayfinding.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T13:58:02+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-022",
+      "input": "Assume your lead has forgotten everything about your project\nExplain all the necessary basics. Include all the information required to provide a steer in a vacuum.  ",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Assume your lead has forgotten everything about your project Explain all the necessary basics. Include all the information required to provide a steer in a vacuum.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-06",
+          "display_label": "Proofing",
+          "issue": "Leading or trailing whitespace.",
+          "suggestion": "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-03",
+          "display_label": "Sentence length",
+          "issue": "Second sentence is 26 words, exceeding the 25-word guideline",
+          "suggestion": "Split into two sentences: 'Include all the necessary basics. Provide all information required to give guidance in a vacuum.'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Content communicates clearly but contains one sentence that exceeds length guidelines.",
+      "human_verdict": "fail",
+      "human_confidence": "high",
+      "human_notes": "Presentation copy, not short_ui_copy.",
+      "triage_category": "context_gap",
+      "reviewed_at": "2026-03-30T14:02:15+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-023",
+      "input": "Spatial Audio, Dustin Wagner",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Spatial Audio, Dustin Wagner",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Label combines topic and presenter name, appropriate for wayfinding in meeting or presentation context.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "No notes. Easy pass.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T14:02:49+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-024",
+      "input": "Framing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Framing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Single word label clearly indicates current section, appropriate for wayfinding.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T14:03:07+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-025",
+      "input": "Start with a straightforward why\nThis will be either a problem or opportunity. Even better, contextualize the why to the org/company goals/mission/vision. ",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Start with a straightforward why This will be either a problem or opportunity. Even better, contextualize the why to the org/company goals/mission/vision.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-06",
+          "display_label": "Proofing",
+          "issue": "Leading or trailing whitespace.",
+          "suggestion": "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-03",
+          "display_label": "Sentence length",
+          "issue": "Second sentence is 31 words, well over the 25-word limit",
+          "suggestion": "Split into shorter sentences: 'This will be either a problem or opportunity. Contextualize the why to your organization's goals, mission, or vision.'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Fails due to one excessively long sentence that should be broken up.",
+      "human_verdict": "fail",
+      "human_confidence": "high",
+      "human_notes": "Presentation copy, not short_ui_copy. Content should clearer and more concise.",
+      "triage_category": "context_gap",
+      "reviewed_at": "2026-03-30T14:05:52+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-026",
+      "input": "Immersion Controls, Mac Pierson, Chris Tanner, Aine Zhou",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Immersion Controls, Mac Pierson, Chris Tanner, Aine Zhou",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple list of names with clear structure.",
+      "human_verdict": "pass",
+      "human_confidence": "high",
+      "human_notes": "Clear and follows conventions.",
+      "triage_category": "correct",
+      "reviewed_at": "2026-03-30T14:06:28+00:00"
+    },
+    {
+      "case_id": "SCAN-2026-03-29-027",
+      "input": "Framing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Framing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, concise navigation label.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-028",
+      "input": "Make arguments\nConvince your audience they should care about the problem. ",
+      "content_type": "error_message",
+      "moment": "error_recovery",
+      "parent_frame": "———",
+      "node_name": "Make arguments Convince your audience they should care about the problem.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-06",
+          "display_label": "Proofing",
+          "issue": "Leading or trailing whitespace.",
+          "suggestion": "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "VT-05",
+          "display_label": "Empathy",
+          "issue": "Error message lacks empathy and doesn't acknowledge the problem or provide recovery guidance",
+          "suggestion": "Rewrite to acknowledge the issue and provide next steps: 'We couldn't process your arguments. Try strengthening your points about why the audience should care about this problem.'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Fails as an error message because it doesn't provide proper error context or recovery guidance.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-029",
+      "input": "Project Sunrise, Jahmeilah Roberson, Charles Hodgkins, Mary Safy",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Project Sunrise, Jahmeilah Roberson, Charles Hodgkins, Mary Safy",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear project name and team member list.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-030",
+      "input": "Narrative",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Narrative",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple, clear navigation label.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-031",
+      "input": "Ignore story arcs \nThis isn’t a novel.\nBut, pay attention to linear progression. Introduce concepts so that they build on each other. Question and answer is good format to reveal information in sequence\nReference back to the why—help the audience answer: Are we solving the problem?",
+      "content_type": "long_form_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Ignore story arcs This isn’t a novel. But, pay attention to linear progression. Introduce concepts so that they build on each other. Question and answer is good format to reveal information in sequence Reference back to the why—help the audience answer: Are we solving the problem?",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-01",
+          "display_label": "Punctuation",
+          "issue": "Missing Oxford comma before \"and\" in a list.",
+          "suggestion": "Add a comma before \"and\".",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Well-structured instructional content with clear headings and actionable guidance.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-032",
+      "input": "Improving Privacy Moments for NUX, Phil Kimura-Thollander",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Improving Privacy Moments for NUX, Phil Kimura-Thollander",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear project title with team member name.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-033",
+      "input": "Visuals",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Visuals",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, single-word navigation label that follows sentence case conventions.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-034",
+      "input": "Create visual aids\nWe work on complex topics, visuals help communicate those. If you think the topic will be clearer with one the time investment is worth it!",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Create visual aids We work on complex topics, visuals help communicate those. If you think the topic will be clearer with one the time investment is worth it!",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-05",
+          "display_label": "Numerals",
+          "issue": "'One' should be written as a numeral.",
+          "suggestion": "Use '1' instead of 'one'.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-03",
+          "display_label": "Sentence length",
+          "issue": "Second sentence is 30 words, exceeding the 25-word limit and should be split",
+          "suggestion": "Create visual aids. We work on complex topics, and visuals help communicate those. If you think the topic will be clearer with one, the time investment is worth it!",
+          "source": "ai"
+        },
+        {
+          "standard_id": "GRM-01",
+          "display_label": "Punctuation",
+          "issue": "Missing serial comma in compound sentence structure",
+          "suggestion": "We work on complex topics, and visuals help communicate those.",
+          "source": "ai"
+        }
+      ],
+      "summary": "Helpful guidance content with sentence length and punctuation issues that impact readability.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-035",
+      "input": "Integrations Models, Anastasia Victor & Stella Konopski",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Integrations Models, Anastasia Victor & Stella Konopski",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Descriptive label with proper names that clearly identifies content and contributors.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-036",
+      "input": "Visuals",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Visuals",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, single-word navigation label that follows sentence case conventions.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-037",
+      "input": "Design a clear hierarchy\nMake it unmistakable what is a new section / title screen. Keep things organized.",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Design a clear hierarchy Make it unmistakable what is a new section / title screen. Keep things organized.",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, actionable guidance with good structure and appropriate length.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-038",
+      "input": "Worlds in Library, Stella Konopski and Sarah Simpson",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Worlds in Library, Stella Konopski and Sarah Simpson",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-01",
+          "display_label": "Punctuation",
+          "issue": "Missing Oxford comma before \"and\" in a list.",
+          "suggestion": "Add a comma before \"and\".",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Descriptive label that clearly identifies content and contributors.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-039",
+      "input": "Visuals",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Visuals",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, single-word navigation label that follows sentence case conventions.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-040",
+      "input": "Handhold when necessary\nFigma decks can be viewed in presentation mode or the editor. Consider these two ways of consuming and provide aids for both.",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Handhold when necessary Figma decks can be viewed in presentation mode or the editor. Consider these two ways of consuming and provide aids for both.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-05",
+          "display_label": "Numerals",
+          "issue": "'Two' should be written as a numeral.",
+          "suggestion": "Use '2' instead of 'two'.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear, helpful guidance that addresses user needs in different contexts.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-041",
+      "input": "Clear sections for easier scanning when zoomed out",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Clear sections for easier scanning when zoomed out",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, descriptive label that explains the function effectively.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-042",
+      "input": "Note for media that won’t play",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Note for media that won’t play",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Concise label that clearly describes the purpose.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-043",
+      "input": "Handholding for how to view design flows",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Handholding for how to view design flows",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses jargon term 'handholding' which is unclear and unprofessional",
+          "suggestion": "Guidance for viewing design flows",
+          "source": "ai"
+        }
+      ],
+      "summary": "Uses unclear jargon that doesn't communicate the function clearly.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-044",
+      "input": "System Components, Anastasia Victor",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "System Components, Anastasia Victor",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear wayfinding label with appropriate context information.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-045",
+      "input": "Hide and Remove from Library, Sarah Simpson",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Hide and Remove from Library, Sarah Simpson",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Descriptive label that clearly indicates the available actions.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-046",
+      "input": "Visuals",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Visuals",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple, clear navigation label.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-047",
+      "input": "Doc, deck or Figma?",
+      "content_type": "tooltip_microcopy",
+      "moment": "task_execution",
+      "parent_frame": "———",
+      "node_name": "Doc, deck or Figma?",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-01",
+          "display_label": "Punctuation",
+          "issue": "Missing Oxford comma before \"or\" in a list.",
+          "suggestion": "Add a comma before \"or\".",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Conversational question that helps users clarify their task.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-048",
+      "input": "Do you need to show design flows or user journeys?",
+      "content_type": "tooltip_microcopy",
+      "moment": "task_execution",
+      "parent_frame": "———",
+      "node_name": "Do you need to show design flows or user journeys?",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear question that helps users understand their options.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-049",
+      "input": "Figma",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Figma",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Product name is correctly capitalized and appropriate for wayfinding context.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-050",
+      "input": "YES",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "YES",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "ACT-01",
+          "display_label": "Action verbs",
+          "issue": "Button text doesn't start with a verb or tell the user what will happen",
+          "suggestion": "Use specific action verbs like 'Confirm', 'Save', 'Continue', or 'Accept'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Vague response button fails to communicate the specific action being performed.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-051",
+      "input": "YES",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "YES",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "ACT-01",
+          "display_label": "Action verbs",
+          "issue": "Button text doesn't start with a verb or tell the user what will happen",
+          "suggestion": "Use specific action verbs like 'Confirm', 'Save', 'Continue', or 'Accept'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Vague response button fails to communicate the specific action being performed.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-052",
+      "input": "YES",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "YES",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "ACT-01",
+          "display_label": "Action verbs",
+          "issue": "Button text doesn't start with a verb or tell the user what will happen",
+          "suggestion": "Use specific action verbs like 'Confirm', 'Save', 'Continue', or 'Accept'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Vague response button fails to communicate the specific action being performed.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-053",
+      "input": "NO",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "NO",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "ACT-01",
+          "display_label": "Action verbs",
+          "issue": "Button text doesn't start with a verb or tell the user what will happen",
+          "suggestion": "Use specific action verbs like 'Cancel', 'Skip', 'Decline', or 'Go back'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Vague response button fails to communicate the specific action being performed.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-054",
+      "input": "NO",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "NO",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "ACT-01",
+          "display_label": "Action verbs",
+          "issue": "Button text doesn't start with a verb or tell the user what will happen",
+          "suggestion": "Use specific action verbs like 'Cancel', 'Skip', 'Decline', or 'Go back'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Vague response button fails to communicate the specific action being performed.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-055",
+      "input": "NO",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "NO",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "ACT-01",
+          "display_label": "Action verbs",
+          "issue": "Button text doesn't start with a verb or tell the user what will happen",
+          "suggestion": "Use specific action verbs like 'Cancel', 'Skip', 'Decline', or 'Go back'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Vague response button fails to communicate the specific action being performed.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-056",
+      "input": "NO",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "NO",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "ACT-01",
+          "display_label": "Action verbs",
+          "issue": "Button text doesn't start with a verb or tell the user what will happen",
+          "suggestion": "Use specific action verbs like 'Cancel', 'Skip', 'Decline', or 'Go back'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Vague response button fails to communicate the specific action being performed.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-057",
+      "input": "YES",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "YES",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "ACT-01",
+          "display_label": "Action verbs",
+          "issue": "Button text should start with a verb to tell the user what will happen",
+          "suggestion": "Use a specific verb like 'Confirm', 'Accept', or 'Continue' instead of 'YES'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Button lacks action-oriented verb to clearly communicate what happens when clicked.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-058",
+      "input": "START",
+      "content_type": "button_cta",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "START",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'START'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear verb-based CTA that tells user what action will occur.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-059",
+      "input": "Doc",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Doc",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Concise navigation label appropriate for wayfinding context.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-060",
+      "input": "Deck",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Deck",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear navigation label that effectively communicates the destination.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-061",
+      "input": "Is the goal a product decision?",
+      "content_type": "tooltip_microcopy",
+      "moment": "task_execution",
+      "parent_frame": "———",
+      "node_name": "Is the goal a product decision?",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, direct question that helps users understand the task.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-062",
+      "input": "Is the goal a product decision?",
+      "content_type": "tooltip_microcopy",
+      "moment": "task_execution",
+      "parent_frame": "———",
+      "node_name": "Is the goal a product decision?",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, direct question that helps users understand the task.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-063",
+      "input": "Is the audience only designers? ",
+      "content_type": "tooltip_microcopy",
+      "moment": "task_execution",
+      "parent_frame": "———",
+      "node_name": "Is the audience only designers? ",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-06",
+          "display_label": "Proofing",
+          "issue": "Leading or trailing whitespace.",
+          "suggestion": "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear question with minor trailing space that doesn't impact usability.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-064",
+      "input": "Editing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Editing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Acceptable navigation label using gerund form to indicate current state or mode.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-065",
+      "input": "Assume your audience will only scan \nReduce your content to a few short sentences. Spend just as much time removing as you do adding. \nAs you refine, reevaluate if you are using the right formats—for example, be open to culling a visual, or creating new ones.",
+      "content_type": "long_form_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Assume your audience will only scan Reduce your content to a few short sentences. Spend just as much time removing as you do adding.  As you refine, reevaluate if you are using the right formats—for example, be open to culling a visual, or creating new ones.",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear instructional content with good structure and parallel formatting advice.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-066",
+      "input": "Storytelling can feel is a overwhelming, but it really isn’t, it is just and overloaded term.\nStorytelling is a overwhelming and overloaded term.\nStorytelling is a loaded term.",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Storytelling can feel is a overwhelming, but it really isn’t, it is just and overloaded term. Storytelling is a overwhelming and overloaded term. Storytelling is a loaded term.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-01",
+          "display_label": "Punctuation",
+          "issue": "Missing Oxford comma before \"and\" in a list.",
+          "suggestion": "Add a comma before \"and\".",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "GRM-01",
+          "display_label": "Punctuation",
+          "issue": "Missing serial comma in 'just and overloaded term'",
+          "suggestion": "Use 'just an overloaded term' or rephrase entirely",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Grammatical errors make the content unclear - 'feel is a overwhelming' and 'just and overloaded'",
+          "suggestion": "Fix to 'Storytelling can feel overwhelming, but it isn't. It's just an overloaded term.'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Contains clear grammatical errors that hurt comprehension.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-067",
+      "input": "Editing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Editing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple, clear wayfinding label using appropriate gerund form.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-068",
+      "input": "Tailor the deliverable to your audience\nThe same content to be shared with different leads groups or forums, but shouldn’t be the exact same. \nAnticipate what context, formats, etc. might be easiest for each group to consume. Director+ product/eng leads struggle with Figma slides, so it can be worth the extra time to copy over to google docs or slides. ",
+      "content_type": "long_form_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Tailor the deliverable to your audience The same content to be shared with different leads groups or forums, but shouldn’t be the exact same. Anticipate what context, formats, etc. might be easiest for each group to consume. Director+ product/eng leads struggle with Figma slides, so it can be worth the extra time to copy over to google docs or slides.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-06",
+          "display_label": "Proofing",
+          "issue": "Leading or trailing whitespace.",
+          "suggestion": "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "PRF-10",
+          "display_label": "Accessibility",
+          "issue": "Latin abbreviation 'etc.' — use 'and so on' instead.",
+          "suggestion": "Replace 'etc.' with 'and so on' for accessibility and clarity.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Grammatical errors make content unclear: 'The same content to be shared' is incomplete sentence structure",
+          "suggestion": "Rewrite as 'The same content can be shared with different groups, but shouldn't be identical.'",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CON-05",
+          "display_label": "CON-05",
+          "issue": "Inconsistent capitalization of product names - 'google docs' should be capitalized",
+          "suggestion": "Use 'Google Docs'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Grammatical errors and inconsistent product name capitalization hurt clarity.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-069",
+      "input": "Figma slides worked fine for local leads",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Figma slides worked fine for local leads",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear descriptive label with proper product name capitalization.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-070",
+      "input": "But we translated that info to a doc for senior leaders.",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "But we translated that info to a doc for senior leaders.",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, conversational explanation of content adaptation.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-071",
+      "input": "Editing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Editing",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple, clear wayfinding label using appropriate gerund form.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-072",
+      "input": "Approach iteratively\nJust like designs, expect that you’ll redo the framing, narrative, and visuals a few times.\nStart the framing early in the design process and refine through the feedback you get. Incorporate concerns/questions so you address them directly. ",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Approach iteratively Just like designs, expect that you’ll redo the framing, narrative, and visuals a few times. Start the framing early in the design process and refine through the feedback you get. Incorporate concerns/questions so you address them directly.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-06",
+          "display_label": "Proofing",
+          "issue": "Leading or trailing whitespace.",
+          "suggestion": "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear instructional content with good structure and actionable advice.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-073",
+      "input": "Cohorts",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Cohorts",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, single-word label using proper sentence case.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-074",
+      "input": "COHORT 1",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 288832215",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Violates sentence case standard by using all caps.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-075",
+      "input": "Notified only\n64% of VR MAU",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "Frame 288832215",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-02",
+          "display_label": "Abbreviations",
+          "issue": "Uses unexpanded abbreviations VR MAU and HzW MAU without explanation",
+          "suggestion": "Notified only 64% of Virtual Reality Monthly Active Users",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical jargon and abbreviations that are unclear to general users",
+          "suggestion": "Notified only 64% of monthly users",
+          "source": "ai"
+        }
+      ],
+      "summary": "Fails due to unexpanded abbreviations and technical jargon that would confuse users.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-076",
+      "input": "COHORT 1",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107445",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Violates sentence case standard by using all caps.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-077",
+      "input": "Nothing\n54% of HzW MAU",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "Frame 1010107445",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-02",
+          "display_label": "Abbreviations",
+          "issue": "Uses unexpanded abbreviation HzW MAU without explanation",
+          "suggestion": "Nothing 54% of monthly active users",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical jargon and abbreviations that are unclear to general users",
+          "suggestion": "Nothing 54% of monthly users",
+          "source": "ai"
+        }
+      ],
+      "summary": "Fails due to unexpanded abbreviations and technical jargon that would confuse users.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-078",
+      "input": "COHORT 2",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107444",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Violates sentence case standard by using all caps.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-079",
+      "input": "Legally required to consent to Activity visibility increasing\n36% of VR MAU",
+      "content_type": "confirmation",
+      "moment": "confirmation",
+      "parent_frame": "Frame 1010107444",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-03",
+          "display_label": "Sentence length",
+          "issue": "Sentence is too long and confusing with mixed concepts",
+          "suggestion": "You must consent to activity visibility. This affects 36% of VR monthly active users.",
+          "source": "ai"
+        },
+        {
+          "standard_id": "GRM-02",
+          "display_label": "Abbreviations",
+          "issue": "Uses unexpanded abbreviation VR MAU without explanation",
+          "suggestion": "Legally required to consent to activity visibility increasing 36% of Virtual Reality monthly active users",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical jargon that is unclear to general users",
+          "suggestion": "You must consent to activity visibility changes",
+          "source": "ai"
+        }
+      ],
+      "summary": "Fails due to overly long sentence structure, unexpanded abbreviations, and unclear technical language.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-080",
+      "input": "COHORT 2",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107446",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Violates sentence case standard by using all caps.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-081",
+      "input": "Legally required to consent to audience expansion of rich presence\n33% of HzW MAU",
+      "content_type": "confirmation",
+      "moment": "confirmation",
+      "parent_frame": "Frame 1010107446",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses jargon and technical terms like 'audience expansion of rich presence' and 'MAU' without explanation",
+          "suggestion": "Rewrite in plain language explaining what the user is consenting to",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CLR-02",
+          "display_label": "Clarity",
+          "issue": "Buries the key information (consent requirement) in technical details",
+          "suggestion": "Lead with the action: 'You must consent to share your activity status with a wider audience'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Technical jargon makes this confirmation unclear for users.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-082",
+      "input": "COHORT 3",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107447",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Should use sentence case for UI labels.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-083",
+      "input": "Had mismatched Active Status settings between VR & HzW\n13% of HzW MAU",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "Frame 1010107447",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-04",
+          "display_label": "Punctuation",
+          "issue": "Ampersand used in body copy. Use 'and' instead.",
+          "suggestion": "Had mismatched Active Status settings between VR and HzW\n13% of HzW MAU",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical jargon like 'Active Status settings', 'VR', 'HzW', and 'MAU' without explanation",
+          "suggestion": "Explain what this means in plain language for the user",
+          "source": "ai"
+        }
+      ],
+      "summary": "Technical abbreviations and jargon make this unclear to users.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-084",
+      "input": "VR MUX",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "VR MUX",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Technical abbreviation is acceptable for a navigation label in what appears to be an admin or technical interface.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-085",
+      "input": "HzW MUX",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "HzW MUX",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Technical abbreviation is acceptable for a navigation label in what appears to be an admin or technical interface.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-086",
+      "input": "v1",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "v1",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Version label is clear and appropriate for navigation.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-087",
+      "input": "v2",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "v2",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Version label is clear and appropriate for navigation.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-088",
+      "input": "v3",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "v3",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Version label is clear and appropriate for navigation.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-089",
+      "input": "Cohorts",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Cohorts",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, simple navigation label using appropriate sentence case.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-090",
+      "input": "COHORT 1",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 288832215",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Violates sentence case standard for UI labels.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-091",
+      "input": "Notified only\n64% of VR MAU",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "Frame 288832215",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical jargon 'VR MAU' without explanation",
+          "suggestion": "Notified only 64% of VR monthly active users",
+          "source": "ai"
+        }
+      ],
+      "summary": "Contains unexplained technical acronym that reduces clarity.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-092",
+      "input": "COHORT 2",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107444",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Violates sentence case standard for UI labels.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-093",
+      "input": "Legally required to consent to Activity visibility increasing\n36% of VR MAU",
+      "content_type": "confirmation",
+      "moment": "confirmation",
+      "parent_frame": "Frame 1010107444",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-03",
+          "display_label": "Sentence length",
+          "issue": "Single sentence with 35+ words that should be split",
+          "suggestion": "You're legally required to consent to Activity visibility. This will increase visibility for 36% of VR monthly active users.",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical jargon 'VR MAU' without explanation",
+          "suggestion": "Replace 'VR MAU' with 'VR monthly active users'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Overly long sentence with technical jargon makes this confirmation hard to understand.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-094",
+      "input": "COHORT 2",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107446",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Violates sentence case standard for UI labels.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-095",
+      "input": "Legally required to consent to audience expansion of rich presence\n4.7% of VR MAU",
+      "content_type": "confirmation",
+      "moment": "confirmation",
+      "parent_frame": "Frame 1010107446",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-03",
+          "display_label": "Sentence length",
+          "issue": "Single sentence with 30+ words that should be split",
+          "suggestion": "You're legally required to consent to audience expansion of rich presence. This affects 4.7% of VR monthly active users.",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical jargon 'VR MAU' without explanation",
+          "suggestion": "Replace 'VR MAU' with 'VR monthly active users'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Overly long sentence with technical jargon creates clarity issues.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-096",
+      "input": "HzW COHORT 2",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "Frame 1010107447",
+      "node_name": "SUB-TEXT",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses unexplained abbreviation 'HzW'",
+          "suggestion": "Spell out what HzW stands for or use a clearer term",
+          "source": "ai"
+        }
+      ],
+      "summary": "Contains unclear abbreviation and violates sentence case standards.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-097",
+      "input": "Had mismatched Active Status settings between VR & HzW\n13% of VR MAU",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "Frame 1010107447",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-04",
+          "display_label": "Punctuation",
+          "issue": "Ampersand used in body copy. Use 'and' instead.",
+          "suggestion": "Had mismatched Active Status settings between VR and HzW\n13% of VR MAU",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses undefined abbreviations VR and HzW without explanation",
+          "suggestion": "Define abbreviations: 'Had mismatched Active Status settings between Virtual Reality (VR) & [HzW product name]'",
+          "source": "ai"
+        },
+        {
+          "standard_id": "CLR-02",
+          "display_label": "Clarity",
+          "issue": "Buries the key metric (13% of VR MAU) at the end instead of leading with impact",
+          "suggestion": "13% of VR monthly active users had mismatched Active Status settings with HzW",
+          "source": "ai"
+        }
+      ],
+      "summary": "Fails due to undefined abbreviations and burying key information.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-098",
+      "input": "Cohorts",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Cohorts",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, appropriate wayfinding label.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-099",
+      "input": "~8.5M",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear numeric label with appropriate abbreviation.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-100",
+      "input": "7.4M",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear numeric label.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-101",
+      "input": "63.6%  |  4.7M",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear percentage and count display.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-102",
+      "input": "36.4%  |  2.7M",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear percentage and count display.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-103",
+      "input": "1.1M",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear numeric label with appropriate abbreviation.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-104",
+      "input": "59.8%  |  658k",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear percentage and count display.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-105",
+      "input": "40.2%  |  442k",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Numeric data display is clear and appropriately formatted for wayfinding context.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-106",
+      "input": "36.4%  |  161k",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Numeric data display is clear and appropriately formatted for wayfinding context.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-107",
+      "input": "36.4%  |  240k",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Numeric data display is clear and appropriately formatted for wayfinding context.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-108",
+      "input": "63.6%  |  281k",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Numeric data display is clear and appropriately formatted for wayfinding context.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-109",
+      "input": "63.6%  |  418k",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Captivate",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Numeric data display is clear and appropriately formatted for wayfinding context.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-110",
+      "input": "VR MAU",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-02",
+          "display_label": "Abbreviations",
+          "issue": "Abbreviations are not spelled out - VR and MAU are not universally understood",
+          "suggestion": "Virtual Reality Monthly Active Users or expand on first use",
+          "source": "ai"
+        }
+      ],
+      "summary": "Unexpanded abbreviations create confusion for users unfamiliar with VR and MAU terms.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-111",
+      "input": "MR only MAU",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-02",
+          "display_label": "Abbreviations",
+          "issue": "Abbreviations MR and MAU are not spelled out and not universally understood",
+          "suggestion": "Mixed Reality Only Monthly Active Users or expand abbreviations",
+          "source": "ai"
+        }
+      ],
+      "summary": "Multiple unexpanded abbreviations make this label unclear for general users.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-112",
+      "input": "Profile visibility unchanged",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear status message using plain language and appropriate sentence case.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-113",
+      "input": "Profile visibility changing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "TRN-02",
+          "display_label": "Translation",
+          "issue": "Uses unnecessary -ing word 'changing' that creates ambiguity in translation",
+          "suggestion": "Profile visibility changed",
+          "source": "ai"
+        }
+      ],
+      "summary": "The -ing form creates translation ambiguity and should be replaced with a clearer past tense.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-114",
+      "input": "HzW MAU",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses unexplained abbreviations 'HzW' and 'MAU' that are not universally understood",
+          "suggestion": "Monthly active users (HorizonWorks)",
+          "source": "ai"
+        },
+        {
+          "standard_id": "GRM-02",
+          "display_label": "Abbreviations",
+          "issue": "Abbreviations are not spelled out on first use",
+          "suggestion": "HorizonWorks monthly active users (HzW MAU)",
+          "source": "ai"
+        }
+      ],
+      "summary": "Technical abbreviations make this label incomprehensible to users.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-115",
+      "input": "VR<>HzW Privacy settings mismatch",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical abbreviations 'VR' and 'HzW' without explanation",
+          "suggestion": "ViewRight and HorizonWorks privacy settings don't match",
+          "source": "ai"
+        }
+      ],
+      "summary": "Abbreviations and technical formatting make this status unclear to users.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-116",
+      "input": "VR<>HzW Privacy settings match",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses technical abbreviations 'VR' and 'HzW' without explanation",
+          "suggestion": "ViewRight and HorizonWorks privacy settings match",
+          "source": "ai"
+        }
+      ],
+      "summary": "Technical abbreviations reduce clarity for users.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-117",
+      "input": "Profile visibility changing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "TRN-02",
+          "display_label": "Translation",
+          "issue": "Uses unnecessary -ing word 'changing' that creates ambiguity in translation",
+          "suggestion": "Profile visibility changed",
+          "source": "ai"
+        }
+      ],
+      "summary": "The -ing form creates translation ambiguity and should be replaced with a clearer past tense.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-118",
+      "input": "Profile visibility changing",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "TRN-02",
+          "display_label": "Translation",
+          "issue": "Uses unnecessary -ing word 'changing' that creates ambiguity in translation",
+          "suggestion": "Profile visibility changed",
+          "source": "ai"
+        }
+      ],
+      "summary": "The -ing form creates translation ambiguity and should be replaced with a clearer past tense.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-119",
+      "input": "Profile visibility unchanged",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear status message that communicates effectively.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-120",
+      "input": "Profile visibility unchanged",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "Title",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear status message that communicates effectively.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-121",
+      "input": "MR COHORT 1",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "MR COHORT 1",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses unclear acronyms 'MR' and 'COHORT' without explanation",
+          "suggestion": "Spell out what MR stands for or use clearer terminology, e.g. 'Medical research group 1'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Unclear acronyms and improper capitalization make this label hard to understand.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-122",
+      "input": "MR COHORT 2",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "MR COHORT 2",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses unclear acronyms 'MR' and 'COHORT' without explanation",
+          "suggestion": "Spell out what MR stands for or use clearer terminology, e.g. 'Medical research group 2'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Unclear acronyms and improper capitalization make this label hard to understand.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-123",
+      "input": "HZW COHORT 1",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "HZW COHORT 1",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses unclear acronyms 'HZW' and 'COHORT' without explanation",
+          "suggestion": "Spell out what HZW stands for or use clearer terminology",
+          "source": "ai"
+        }
+      ],
+      "summary": "Unclear acronyms and improper capitalization make this label hard to understand.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-124",
+      "input": "HZW COHORT 2",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "   ",
+      "node_name": "HZW COHORT 2",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'COHORT'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "Uses unclear acronyms 'HZW' and 'COHORT' without explanation",
+          "suggestion": "Spell out what HZW stands for or use clearer terminology",
+          "source": "ai"
+        }
+      ],
+      "summary": "Unclear acronyms and improper capitalization make this label hard to understand.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-125",
+      "input": "Profile visibility consent NOT required\nPrivacy settings match",
+      "content_type": "confirmation",
+      "moment": "confirmation",
+      "parent_frame": "   ",
+      "node_name": "Profile visibility consent NOT required Privacy settings match",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "CLR-05",
+          "display_label": "CLR-05",
+          "issue": "Uses confusing double negative 'consent NOT required' that makes users work to parse the meaning",
+          "suggestion": "Change to 'Profile visibility consent not needed' or 'No consent required for profile visibility'",
+          "source": "ai"
+        },
+        {
+          "standard_id": "STR-02",
+          "display_label": "Structure",
+          "issue": "Two separate concepts crammed into one confirmation without clear relationship",
+          "suggestion": "Split into clearer statements: 'No consent needed for profile visibility. Privacy settings are configured correctly.'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Double negative and unclear structure make this confirmation hard to understand.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-126",
+      "input": "Profile visibility consent  required\nPrivacy settings match",
+      "content_type": "confirmation",
+      "moment": "confirmation",
+      "parent_frame": "   ",
+      "node_name": "Profile visibility consent required Privacy settings match",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear and understandable confirmation message with proper structure.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-127",
+      "input": "Profile visibility consent  NOT required\nPrivacy settings mismatch",
+      "content_type": "confirmation",
+      "moment": "confirmation",
+      "parent_frame": "   ",
+      "node_name": "Profile visibility consent NOT required Privacy settings mismatch",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-05",
+          "display_label": "CLR-05",
+          "issue": "Uses confusing double negative 'consent NOT required' that makes users work to parse the meaning",
+          "suggestion": "Change to 'Profile visibility consent not needed' or 'No consent required for profile visibility'",
+          "source": "ai"
+        },
+        {
+          "standard_id": "STR-02",
+          "display_label": "Structure",
+          "issue": "Two separate concepts with unclear relationship between consent status and settings mismatch",
+          "suggestion": "Clarify the relationship: 'No consent needed for profile visibility, but privacy settings need adjustment.'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Double negative and unclear connection between the two statements create confusion.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-128",
+      "input": "Profile visibility consent  required\nPrivacy settings mismatch",
+      "content_type": "confirmation",
+      "moment": "confirmation",
+      "parent_frame": "   ",
+      "node_name": "Profile visibility consent required Privacy settings mismatch",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Clear confirmation that effectively communicates both consent requirement and settings status.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-129",
+      "input": "ISDK UI Modules, Yoon Park & Stella Muehlhaus",
+      "content_type": "ui_label",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "ISDK UI Modules, Yoon Park & Stella Muehlhaus",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-09",
+          "display_label": "Readability",
+          "issue": "ALL CAPS text: 'ISDK'. Use sentence case instead.",
+          "suggestion": "Rewrite in sentence case. ALL CAPS reduces readability and can feel like shouting.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CON-02",
+          "display_label": "Casing",
+          "issue": "Uses title case with capital letters starting each word",
+          "suggestion": "Change to sentence case: 'ISDK UI modules, Yoon Park & Stella Muehlhaus'",
+          "source": "ai"
+        }
+      ],
+      "summary": "Violates sentence case standard for UI labels.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-130",
+      "input": "Narrative",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Narrative",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple wayfinding label follows sentence case correctly.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-131",
+      "input": "Write conversationally \nThis clarifies the flow between concepts.  “ok, so what are we going to do about the problem?” \nAnticipate the questions the audience will have and address them directly “What does this mean?”",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Write conversationally This clarifies the flow between concepts. “ok, so what are we going to do about the problem?” Anticipate the questions the audience will have and address them directly “What does this mean?”",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "GRM-01",
+          "display_label": "Punctuation",
+          "issue": "Missing Oxford comma before \"and\" in a list.",
+          "suggestion": "Add a comma before \"and\".",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "PRF-01",
+          "display_label": "Proofing",
+          "issue": "Double space between words.",
+          "suggestion": "Use a single space between words.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Instructional copy is clear and conversational with good structure.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-132",
+      "input": "MR Cross Platform Calling, Connor Paglia, Tiantian Xu, Ryan Chavez, Therese Mushock",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "MR Cross Platform Calling, Connor Paglia, Tiantian Xu, Ryan Chavez, Therese Mushock",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Project title with proper names follows expected format.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-133",
+      "input": "Narrative",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Narrative",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Simple wayfinding label follows sentence case correctly.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-134",
+      "input": "Create user journeys \nShow how people will use your feature. \nLeverage personas and scenarios to make them feel believable. Keep personas consistent (names, photos, etc.) remove any confusion from who is doing what?",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Create user journeys Show how people will use your feature. Leverage personas and scenarios to make them feel believable. Keep personas consistent (names, photos, etc.) remove any confusion from who is doing what?",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-10",
+          "display_label": "Accessibility",
+          "issue": "Latin abbreviation 'etc.' — use 'and so on' instead.",
+          "suggestion": "Replace 'etc.' with 'and so on' for accessibility and clarity.",
+          "source": "preprocessor"
+        },
+        {
+          "standard_id": "CLR-01",
+          "display_label": "Clarity",
+          "issue": "'Leverage' — use 'use' instead.",
+          "suggestion": "Replace 'Leverage' with 'use'.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Instructional guidance with clear structure and actionable advice.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-135",
+      "input": "Storytelling is a loaded term.\nSimpler to think of it as a toolset to engage your audience. ",
+      "content_type": "short_ui_copy",
+      "moment": "browsing_discovery",
+      "parent_frame": "———",
+      "node_name": "Storytelling is a loaded term. Simpler to think of it as a toolset to engage your audience.",
+      "machine_verdict": "fail",
+      "violations": [
+        {
+          "standard_id": "PRF-06",
+          "display_label": "Proofing",
+          "issue": "Leading or trailing whitespace.",
+          "suggestion": "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+          "source": "preprocessor"
+        }
+      ],
+      "summary": "Brief explanatory text that reads naturally and conversationally.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-136",
+      "input": "Storytelling",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "Storytelling",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Single-word wayfinding label follows sentence case correctly.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    },
+    {
+      "case_id": "SCAN-2026-03-29-137",
+      "input": "for designers",
+      "content_type": "ui_label",
+      "moment": "wayfinding",
+      "parent_frame": "———",
+      "node_name": "for designers",
+      "machine_verdict": "pass",
+      "violations": [],
+      "summary": "Clear, concise label that effectively communicates the target audience for this section or feature.",
+      "human_verdict": null,
+      "human_confidence": null,
+      "human_notes": null,
+      "triage_category": null,
+      "reviewed_at": null
+    }
+  ],
+  "triage_stats": {
+    "total_cases": 137,
+    "reviewed": 26,
+    "unreviewed": 111,
+    "last_reviewed_at": "2026-03-30T14:06:28+00:00",
+    "category_counts": {
+      "correct": 17,
+      "context_gap": 8,
+      "misclassification": 1
+    },
+    "agreement_rate": 1.0
+  }
+}

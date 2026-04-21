@@ -21,4 +21,6 @@ from content_checker.batch import check_batch
 from content_checker.pipeline import check, check_unfiltered
 from content_checker.standards.loader import load_standards
 
-__all__ = ["check", "check_unfiltered", "check_batch", "load_standards"]
+__version__ = "4.6.1"
+
+__all__ = ["check", "check_unfiltered", "check_batch", "load_standards", "__version__"]

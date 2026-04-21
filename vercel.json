@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "functions": {
+    "api/evaluate.py": {
+      "includeFiles": "src/content_checker/**"
+    }
+  }
+}

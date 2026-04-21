@@ -9,10 +9,16 @@ Single-string mode can't detect terminology inconsistency — batch mode can.
 
 from __future__ import annotations
 
+import logging
 import time
 
+from content_checker.api_utils import (
+    create_message,
+    parse_llm_json,
+    ParseError,
+    DEFAULT_MODEL,
+)
 from content_checker.filter import get_multi_snippet_standards
-from content_checker.llm_json import parse_llm_json
 from content_checker.models import (
     BatchResult,
     ConsistencyViolation,
@@ -22,6 +28,8 @@ from content_checker.models import (
 )
 from content_checker.pipeline import check
 from content_checker.standards.loader import load_standards
+
+logger = logging.getLogger("content_checker.batch")
 
 
 def _build_consistency_prompt(multi_standards: list[dict]) -> str:
@@ -62,18 +70,20 @@ def _build_consistency_prompt(multi_standards: list[dict]) -> str:
 
 def _check_consistency(
     items: list[ContentItem],
-    model: str = "claude-sonnet-4-20250514",
-) -> tuple[list[ConsistencyViolation], float, TokenUsage]:
+    model: str = DEFAULT_MODEL,
+) -> tuple[list[ConsistencyViolation] | None, float, TokenUsage]:
     """Run cross-snippet consistency checks across all items.
 
     Only runs if there are 2+ items. Checks CON-01, CON-04, and TRN-07.
 
     Returns (violations, latency, tokens).
+
+    On parse failure, returns (None, latency, tokens) instead of silently
+    returning an empty list. The caller must distinguish "checked and clean"
+    (empty list) from "check failed" (None).
     """
     if len(items) < 2:
         return [], 0.0, TokenUsage()
-
-    import anthropic
 
     standards_data = load_standards()
 
@@ -97,25 +107,28 @@ def _check_consistency(
         label = item.label or f"String {i}"
         items_text += f'{i}. [{label}] "{item.text}"\n'
 
-    client = anthropic.Anthropic()
-
     start = time.time()
-    response = client.messages.create(
+    llm_response = create_message(
+        system=system_prompt,
+        user=items_text,
         model=model,
         max_tokens=1000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": items_text}],
     )
     latency = time.time() - start
 
     tokens = TokenUsage(
-        input=response.usage.input_tokens,
-        output=response.usage.output_tokens,
+        input=llm_response.input_tokens,
+        output=llm_response.output_tokens,
     )
 
-    result = parse_llm_json(response.content[0].text)
-    if result is None:
-        return [], latency, tokens
+    try:
+        result = parse_llm_json(llm_response.text, context="consistency")
+    except ParseError as e:
+        # Fail-closed: return None so the caller knows the check failed.
+        # Previous behavior silently returned [] which is indistinguishable
+        # from "checked and found no issues" — a dangerous false negative.
+        logger.warning("Consistency check parse failure: %s", e)
+        return None, latency, tokens
 
     violations = []
     # Look up rule text for each violation
@@ -138,7 +151,7 @@ def _check_consistency(
 
 def check_batch(
     items: list[ContentItem],
-    model: str = "claude-sonnet-4-20250514",
+    model: str = DEFAULT_MODEL,
     use_llm_classifier: bool = True,
     skip_consistency: bool = False,
 ) -> BatchResult:
@@ -180,7 +193,17 @@ def check_batch(
         consistency_violations, con_latency, con_tokens = _check_consistency(
             items, model=model,
         )
-        batch.consistency_violations = consistency_violations
+        # None means the consistency check failed to parse — surface this
+        # rather than treating it as "no issues found"
+        if consistency_violations is None:
+            logger.warning(
+                "Consistency check failed for batch of %d items. "
+                "Results may be incomplete.",
+                len(items),
+            )
+            batch.consistency_violations = []
+        else:
+            batch.consistency_violations = consistency_violations
         batch.total_latency += con_latency
         batch.total_tokens += con_tokens
 

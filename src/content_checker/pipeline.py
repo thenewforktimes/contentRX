@@ -3,21 +3,44 @@
 Composes the 5 stages: classify, filter, preprocess, scan, validate.
 Each stage is a separate function call — no boolean flags to toggle behavior.
 Use check() for the full pipeline, or call individual stages directly.
+
+Audience-aware: the pipeline accepts an audience parameter that propagates
+through filtering, preprocessing, and LLM evaluation. See audience.py for
+the audience types and their effects on each stage.
+
+Moment-aware (v4.4.0+): the pipeline detects the experiential moment after
+classification and uses it to:
+    - Record the moment in CheckResult for triage tracking (Phase 1)
+    - Suppress violations for standards irrelevant to the moment (Phase 2)
+    - Inject moment context into the LLM system prompt (Phase 3)
+See moments.py for the 12 canonical moments and their standards weights.
 """
 
 from __future__ import annotations
 
 import time
 
+from content_checker.api_utils import (
+    create_message,
+    parse_scan_response,
+    ParseError,
+    DEFAULT_MODEL,
+)
+from content_checker.audience import Audience, get_audience_prompt_context, is_standard_active
 from content_checker.classify import classify, classify_heuristic
 from content_checker.filter import filter_standards, get_content_type_descriptions
-from content_checker.llm_json import parse_llm_json
 from content_checker.models import (
     CheckResult,
     PassedStandard,
     PipelineMeta,
     TokenUsage,
     Violation,
+)
+from content_checker.moments import (
+    detect_moment,
+    build_moment_prompt_section,
+    get_moment_weights_applied,
+    is_standard_suppressed_by_moment,
 )
 from content_checker.preprocess import run_preprocess
 from content_checker.standards.loader import load_standards
@@ -37,10 +60,16 @@ def _validate_text_input(text: str) -> None:
         )
 
 
-def build_system_prompt(standards_data: dict, content_type: str | None = None) -> str:
+def build_system_prompt(
+    standards_data: dict,
+    content_type: str | None = None,
+    audience: Audience = Audience.PRODUCT_UI,
+    moment: str = "",
+) -> str:
     """Build the system prompt with embedded standards.
 
     Accepts either the full or filtered standards library.
+    Injects audience context and moment context to calibrate LLM judgment.
     """
     standards_text = ""
     for cat in standards_data["categories"]:
@@ -57,11 +86,21 @@ def build_system_prompt(standards_data: dict, content_type: str | None = None) -
             "Evaluate it with this content type in mind.\n"
         )
 
+    # Audience context calibrates the LLM's judgment for the content surface
+    audience_line = f"\n{get_audience_prompt_context(audience)}\n"
+
+    # Phase 3: Moment context calibrates the LLM for the experiential moment.
+    # Returns empty string for the default moment (browsing_discovery)
+    # so the system prompt is unchanged for the baseline case.
+    moment_section = build_moment_prompt_section(moment) if moment else ""
+
     return (
         "You are a content standards checker for UX and UI copy. "
         "You evaluate whether a piece of copy meets established content standards.\n"
-        f"{content_type_line}\n"
+        f"{content_type_line}"
+        f"{audience_line}\n"
         f"Here are the standards you check against:\n{standards_text}\n\n"
+        f"{moment_section}"
         "## How to evaluate\n\n"
         "1. Check the content against the standards listed above, applying these rules:\n"
         "   - **Only flag clear, unambiguous violations.** If you are less than 90% "
@@ -109,43 +148,44 @@ def _llm_scan(
     standards_data: dict,
     content_type: str | None,
     model: str,
+    audience: Audience = Audience.PRODUCT_UI,
+    moment: str = "",
 ) -> tuple[dict, float, TokenUsage]:
     """Run the LLM scan stage. Returns (parsed_result, latency, tokens)."""
-    import anthropic
-
     prompt_ct = None if content_type == "unfiltered" else content_type
-    system_prompt = build_system_prompt(standards_data, content_type=prompt_ct)
+    system_prompt = build_system_prompt(
+        standards_data, content_type=prompt_ct, audience=audience,
+        moment=moment,
+    )
 
     if prompt_ct:
         user_message = f'Check this {content_type} content against the standards:\n\n"{text}"'
     else:
         user_message = f'Check this content against the standards:\n\n"{text}"'
 
-    client = anthropic.Anthropic()
-
     start = time.time()
-    response = client.messages.create(
+    llm_response = create_message(
+        system=system_prompt,
+        user=user_message,
         model=model,
         max_tokens=2000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_message}],
     )
     latency = time.time() - start
 
     tokens = TokenUsage(
-        input=response.usage.input_tokens,
-        output=response.usage.output_tokens,
+        input=llm_response.input_tokens,
+        output=llm_response.output_tokens,
     )
 
-    raw = response.content[0].text
-    result = parse_llm_json(raw)
-    if result is None:
+    try:
+        result = parse_scan_response(llm_response.text)
+    except ParseError:
         result = {
             "content_type": content_type or "unknown",
             "overall_verdict": "error",
             "violations": [],
             "passes": [],
-            "summary": f"Failed to parse response: {raw.strip()[:200]}",
+            "summary": f"Failed to parse response: {llm_response.text[:200]}",
         }
 
     return result, latency, tokens
@@ -184,10 +224,12 @@ def _parse_llm_passes(raw_passes: list[dict]) -> list[PassedStandard]:
 def check(
     text: str,
     content_type: str | None = None,
-    model: str = "claude-sonnet-4-20250514",
+    model: str = DEFAULT_MODEL,
     use_llm_classifier: bool = True,
+    audience: Audience | str = Audience.PRODUCT_UI,
+    moment: str | None = None,
 ) -> tuple[CheckResult, float, TokenUsage]:
-    """Full pipeline: classify → filter → preprocess → scan → validate.
+    """Full pipeline: classify → detect moment → filter → preprocess → scan → validate.
 
     This is the primary entry point for real-world usage.
 
@@ -196,11 +238,21 @@ def check(
         content_type: If provided, skips classification.
         model: Claude model for all LLM calls.
         use_llm_classifier: Use LLM for classification (True) or heuristic (False).
+        audience: Content audience mode. Controls which standards are active.
+            Accepts an Audience enum or a string ("product_ui", "general").
+            Defaults to Audience.PRODUCT_UI (full standards enforcement).
+        moment: If provided, skips moment detection and uses this value.
+            Accepts any valid moment ID from MOMENT_TAXONOMY.
+            If None, moment is auto-detected from text and content type.
 
     Returns:
         (CheckResult, total_latency, total_tokens)
     """
     _validate_text_input(text)
+
+    # Normalize audience to enum if passed as string
+    if isinstance(audience, str):
+        audience = Audience.from_str(audience)
 
     standards_data = load_standards()
     total_latency = 0.0
@@ -217,8 +269,16 @@ def check(
         total_latency += cls_latency
         total_tokens += cls_tokens
 
-    # Stage 2: Filter
-    filtered = filter_standards(standards_data, detected_type)
+    # Stage 1b: Detect moment (Phase 1)
+    # Runs after classification because the heuristic uses content_type.
+    # Zero cost, <1ms. If moment was passed explicitly (Tier 3), skip detection.
+    if moment is None:
+        detected_moment = detect_moment(text, detected_type)
+    else:
+        detected_moment = moment
+
+    # Stage 2: Filter (audience-aware — suppresses UI-specific standards in general mode)
+    filtered = filter_standards(standards_data, detected_type, audience=audience)
     active_notes = filtered.get("active_notes", [])
 
     # Stage 3a: Deterministic preprocess (content-type-aware)
@@ -226,9 +286,11 @@ def check(
     preprocess_ids = {v.standard_id for v in preprocess_violations}
     suppressed_ids = getattr(preprocess_violations, 'suppressed_ids', set())
 
-    # Stage 3b: LLM scan
+    # Stage 3b: LLM scan (audience + moment context injected into system prompt)
     scan_result, scan_latency, scan_tokens = _llm_scan(
         text, filtered, detected_type, model,
+        audience=audience,
+        moment=detected_moment,
     )
     total_latency += scan_latency
     total_tokens += scan_tokens
@@ -253,9 +315,46 @@ def check(
         confirmed, rejected = [], []
 
     # Stage 5: Merge
-    final_violations = list(preprocess_violations) + confirmed
+    #
+    # Two suppression layers, applied in order:
+    #
+    # Layer 1 — Audience gate: suppress violations for UI-specific standards
+    # in general mode. Handles cases where the preprocessor fires (e.g.,
+    # PRF-03 trailing period on heading) but the standard isn't relevant
+    # for non-UI content.
+    #
+    # Layer 2 — Moment gate (Phase 2): suppress violations for standards
+    # that have a "suppress" weight in the detected moment. Handles cases
+    # where a standard is relevant for the surface type but not for the
+    # experiential context (e.g., PRF-11 "easy" in browsing_discovery).
+    #
+    # Both layers apply to preprocessor violations AND confirmed LLM violations.
+    # The merge stage is the single point of truth for suppression policy.
+
+    active_preprocess = [
+        v for v in preprocess_violations
+        if is_standard_active(v.standard_id, audience)
+        and not is_standard_suppressed_by_moment(v.standard_id, detected_moment)
+    ]
+
+    active_confirmed = [
+        v for v in confirmed
+        if not is_standard_suppressed_by_moment(v.standard_id, detected_moment)
+    ]
+
+    # Count what was suppressed by moment for pipeline metadata
+    moment_suppressed_count = sum(
+        1 for v in (list(preprocess_violations) + confirmed)
+        if is_standard_suppressed_by_moment(v.standard_id, detected_moment)
+        and is_standard_active(v.standard_id, audience)
+    )
+
+    final_violations = active_preprocess + active_confirmed
     flagged_ids = {v.standard_id for v in final_violations}
     final_passes = [p for p in llm_passes if p.standard_id not in flagged_ids]
+
+    # Collect moment metadata for triage
+    moment_weights = get_moment_weights_applied(detected_moment)
 
     result = CheckResult(
         content_type=detected_type,
@@ -263,13 +362,17 @@ def check(
         violations=final_violations,
         passes=final_passes,
         summary=scan_result.get("summary", ""),
+        audience=audience.value,
+        moment=detected_moment,
         pipeline=PipelineMeta(
             standards_checked=filtered.get("filtered_count", 0),
             standards_total=filtered.get("total_count", 0),
-            preprocess_violations=len(preprocess_violations),
+            preprocess_violations=len(active_preprocess),
             llm_candidates=len(llm_candidates),
-            validated_confirmed=len(confirmed),
+            validated_confirmed=len(active_confirmed),
             validated_rejected=len(rejected),
+            moment_weights_applied=len(moment_weights),
+            moment_suppressed=moment_suppressed_count,
         ),
     )
 
@@ -278,12 +381,13 @@ def check(
 
 def check_unfiltered(
     text: str,
-    model: str = "claude-sonnet-4-20250514",
+    model: str = DEFAULT_MODEL,
 ) -> tuple[CheckResult, float, TokenUsage]:
     """Preprocess + single LLM call with all standards. No filtering, no validation.
 
     Used for library evals where synthetic test strings need the full rulebook
-    without content type context.
+    without content type context. No moment detection — eval cases test
+    standards in isolation, not in experiential context.
     """
     _validate_text_input(text)
 
@@ -302,7 +406,7 @@ def check_unfiltered(
     llm_violations = _parse_llm_violations(scan_result.get("violations", []))
     llm_passes = _parse_llm_passes(scan_result.get("passes", []))
 
-    # Merge (no validation)
+    # Merge (no validation, no moment, no audience)
     # Post-processing suppression: exclude both preprocess violation IDs
     # and standards the preprocessor definitively passed
     excluded_ids = preprocess_ids | suppressed_ids
@@ -318,11 +422,12 @@ def check_unfiltered(
         passes=final_passes,
         summary=scan_result.get("summary", ""),
         pipeline=PipelineMeta(
-            standards_checked=standards_data.get("total_standards", 46),
-            standards_total=standards_data.get("total_standards", 46),
+            standards_checked=standards_data.get("total_standards", 47),
+            standards_total=standards_data.get("total_standards", 47),
             preprocess_violations=len(preprocess_violations),
             llm_candidates=len(llm_only),
         ),
     )
 
     return result, latency, tokens
+

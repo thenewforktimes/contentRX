@@ -42,7 +42,15 @@ class PassedStandard:
 
 @dataclass
 class PipelineMeta:
-    """Metadata about the pipeline run."""
+    """Metadata about the pipeline run.
+
+    Moment fields (v4.4.0+):
+        moment_weights_applied: count of MomentWeight entries active for
+            the detected moment (how many standards had evaluation adjusted).
+        moment_suppressed: count of violations filtered out by moment
+            weights in the merge stage (the moment equivalent of
+            audience-gated violations).
+    """
 
     standards_checked: int | str = 0
     standards_total: int | str = 0
@@ -50,6 +58,8 @@ class PipelineMeta:
     llm_candidates: int = 0
     validated_confirmed: int = 0
     validated_rejected: int = 0
+    moment_weights_applied: int = 0
+    moment_suppressed: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -59,6 +69,8 @@ class PipelineMeta:
             "llm_candidates": self.llm_candidates,
             "validated_confirmed": self.validated_confirmed,
             "validated_rejected": self.validated_rejected,
+            "moment_weights_applied": self.moment_weights_applied,
+            "moment_suppressed": self.moment_suppressed,
         }
 
 
@@ -80,13 +92,21 @@ class TokenUsage:
 
 @dataclass
 class CheckResult:
-    """The complete result of checking a piece of content."""
+    """The complete result of checking a piece of content.
+
+    Moment field (v4.4.0+):
+        moment: the detected experiential moment (e.g., "error_recovery",
+            "decision_point"). Empty string when moment detection was not
+            run (e.g., check_unfiltered). Set by check() in pipeline.py.
+    """
 
     content_type: str
     overall_verdict: str  # "pass", "fail", or "error"
     violations: list[Violation] = field(default_factory=list)
     passes: list[PassedStandard] = field(default_factory=list)
     summary: str = ""
+    audience: str = "product_ui"  # "product_ui" or "general"
+    moment: str = ""  # detected moment ID, empty if not detected
     pipeline: PipelineMeta = field(default_factory=PipelineMeta)
 
     def to_dict(self) -> dict:
@@ -96,6 +116,8 @@ class CheckResult:
             "violations": [v.to_dict() for v in self.violations],
             "passes": [p.to_dict() for p in self.passes],
             "summary": self.summary,
+            "audience": self.audience,
+            "moment": self.moment,
             "pipeline": self.pipeline.to_dict(),
         }
 
