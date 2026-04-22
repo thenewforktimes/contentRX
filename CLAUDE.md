@@ -161,11 +161,12 @@ survive pulls.
 Things the post-Session-3 audit flagged that we consciously chose NOT
 to fix immediately. Track these so they don't get forgotten.
 
-1. **API keys are stored plaintext on `users.api_key`.** Lookups via
-   `eq(users.apiKey, apiKey)` on the unique b-tree index have a
-   theoretical timing signal. Best practice is hash storage: store
-   `sha256(key)`, look up by hash. **Target:** Session 9 (dashboard key
-   generation + rotation). Use `cuid2` for the key body.
+1. ~~API keys are stored plaintext on `users.api_key`.~~ Resolved in
+   Session 9: keys are now sha256-hashed at `users.api_key_hash` (unique)
+   with a short display prefix at `users.api_key_prefix`. Raw `cx_...`
+   values are shown to the user exactly once at mint/rotate time via
+   `/dashboard` or the Figma sign-in callback. `resolveAuth` hashes the
+   incoming bearer before the DB lookup. The key body is a cuid2.
 
 2. **`getCurrentUsage` → `incrementUsage` race.** A user can fire up to
    their rate-limit ceiling of concurrent requests through the quota
