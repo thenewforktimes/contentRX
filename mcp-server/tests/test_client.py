@@ -24,6 +24,7 @@ from contentrx_mcp.client import (
 def _client_with(transport: httpx.MockTransport) -> ContentRXClient:
     """Build a ContentRXClient backed by a mock transport for tests."""
     obj = ContentRXClient.__new__(ContentRXClient)
+    obj._api_key = "cx_test_key_xxxxxxxxx"  # type: ignore[attr-defined]
     obj._client = httpx.AsyncClient(  # type: ignore[attr-defined]
         base_url="https://test.contentrx",
         transport=transport,

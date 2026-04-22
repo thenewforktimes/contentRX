@@ -41,7 +41,11 @@ sys.path.insert(0, os.path.join(_ROOT, "src"))
 
 from content_checker import check  # noqa: E402
 from content_checker.classify import classify  # noqa: E402
-from content_checker.moments import detect_moment  # noqa: E402
+from content_checker.moments import (  # noqa: E402
+    MOMENT_TAXONOMY,
+    MOMENT_WEIGHTS,
+    detect_moment,
+)
 from content_checker.standards.loader import load_standards  # noqa: E402
 
 
@@ -69,11 +73,42 @@ class handler(BaseHTTPRequestHandler):
         except (ValueError, json.JSONDecodeError) as exc:
             return self._respond(400, {"error": f"Invalid JSON: {exc}"})
 
+        mode = body.get("mode", "check")
+
+        # Catalog mode: returns the moments taxonomy + weighted-standards
+        # mapping. Used by /api/moments to back the MCP server's
+        # `list_standards(moment=...)` filter and the
+        # `contentrx://moments` resource. No text required — this is a
+        # static-ish data query, not an evaluation.
+        if mode == "catalog":
+            return self._respond(
+                200,
+                {
+                    "result": {
+                        "moments": [
+                            {
+                                "id": mid,
+                                "description": desc,
+                                "weighted_standards": [
+                                    {
+                                        "standard_id": w.standard_id,
+                                        "modifier": w.modifier,
+                                        "rationale": w.rationale,
+                                    }
+                                    for w in MOMENT_WEIGHTS.get(mid, [])
+                                ],
+                            }
+                            for mid, desc in MOMENT_TAXONOMY.items()
+                        ],
+                    },
+                    "latency_ms": 0,
+                    "tokens": {"input": 0, "output": 0},
+                },
+            )
+
         text = body.get("text")
         if not isinstance(text, str) or not text:
             return self._respond(400, {"error": "text is required"})
-
-        mode = body.get("mode", "check")
 
         # Classify-only mode: cheap (~1 LLM call) helper used by the MCP
         # server's classify_moment tool. Skips the full check pipeline

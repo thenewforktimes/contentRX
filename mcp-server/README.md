@@ -66,7 +66,7 @@ desktop's. Use the same `command` / `args` / `env` block.
 
 ## Tools
 
-### `evaluate_copy`
+### `evaluate_copy` — full review (counts against quota)
 
 Check UI copy against the 47-standard content-design library.
 
@@ -85,10 +85,10 @@ evaluate_copy(
 }
 ```
 
-This counts against your monthly quota (Free: 25, Pro: 5,000, Team:
+Counts against your monthly quota (Free: 25, Pro: 5,000, Team:
 5,000 × seats).
 
-### `classify_moment`
+### `classify_moment` — quick moment probe (no quota cost)
 
 Classify what UI moment a string represents — without running the
 full evaluation. Useful for planning copy before you write it.
@@ -103,16 +103,66 @@ classify_moment(text: str) -> {
 Free of quota. Rate-limited at 60/min per user (same bucket as
 `evaluate_copy`).
 
-## A `/review_ui_copy` prompt is coming in v2 Session 5
+### `explain_violation` — rule rationale + examples (no quota cost)
 
-The 0.1 release ships only the two tools above. Session 5 (the next
-release) adds:
-- `explain_violation(standard_id)` — the rationale + examples for any
-  rule the evaluator cited
-- `list_standards(moment?)` — browseable rule catalog
-- `contentrx://standards/*` resources
-- A `review_ui_copy` prompt that wraps a full file or diff in a
-  multi-step review workflow
+Look up the full text + pass/fail examples for any standard ID. The
+`violations[].standard_id` field of an `evaluate_copy` result is the
+typical input here.
+
+```
+explain_violation(standard_id: str) -> {
+  id, rule, correct, incorrect, rule_type, category_id, category_name,
+  relevant_content_types, content_type_notes,
+}
+```
+
+Public — works without an API key. Useful even before you have an
+account, for spec browsing.
+
+### `list_standards` — filterable rule catalog (no quota cost)
+
+Browse the standards library. Optional moment filter narrows to rules
+that "matter" for the moment (i.e. emphasized or relaxed; suppressed
+rules are excluded).
+
+```
+list_standards(moment: str | None) -> {
+  total: int,
+  moment_filter: str | None,
+  standards: [{id, rule, rule_type, relevant_content_types}],
+}
+```
+
+Public — works without an API key.
+
+## Resources
+
+Three read-only resources the LLM can pull into context:
+
+| URI | What |
+|---|---|
+| `contentrx://standards` | Markdown index of every standard in the library |
+| `contentrx://standards/{id}` | A single standard — rule, examples, notes, content-type guidance |
+| `contentrx://moments` | The 13 UI moments + each one's standards-weight adjustments |
+
+Resources don't require an API key.
+
+## Prompts
+
+### `/review_ui_copy [focus?]`
+
+Multi-step review workflow. Walks every UI string in a file or diff
+through `classify_moment` → `evaluate_copy` (and `explain_violation`
+where useful), then summarizes violations by severity with rule
+citations.
+
+```
+/review_ui_copy                              # uses file/diff in context
+/review_ui_copy src/app/dashboard/page.tsx   # focus a specific file
+/review_ui_copy "Click here to learn more"   # focus a single string
+```
+
+Appears as a slash command in Claude desktop and Cursor.
 
 ## Environment variables
 
