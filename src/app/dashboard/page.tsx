@@ -118,7 +118,10 @@ export default async function DashboardPage() {
       />
 
       {plan === "team" && (
-        <TeamRulesLink isAdmin={user.teamOwnerUserId === null} />
+        <>
+          <TeamRulesLink isAdmin={user.teamOwnerUserId === null} />
+          <TeamAnalyticsLink />
+        </>
       )}
 
       <DittoPanel />
@@ -145,6 +148,27 @@ function TeamRulesLink({ isAdmin }: { isAdmin: boolean }) {
         className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
       >
         Open team rules
+      </Link>
+    </section>
+  );
+}
+
+function TeamAnalyticsLink() {
+  return (
+    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+      <header className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Team analytics</h2>
+        <span className="text-xs text-neutral-500">Last 7 / 30 / 90 days</span>
+      </header>
+      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
+        Violations by standard, daily trends, and per-member activity.
+        No text content stored — aggregated from the violations log.
+      </p>
+      <Link
+        href="/dashboard/team/analytics"
+        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+      >
+        Open analytics
       </Link>
     </section>
   );

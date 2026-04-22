@@ -139,9 +139,19 @@ export async function POST(req: Request) {
   // Log + increment are observational — if they fail, the user still gets
   // their result. We surface the failure through Sentry, not to the user.
   try {
+    // For team analytics: team_id is the team-owner's user.id regardless
+    // of which team member ran the check. resolveAuth returns
+    // teamOwnerUserId=null for the owner themselves (since their own
+    // row's team_owner_user_id is null), so we promote user.id in that
+    // case. Free/Pro users stay on teamId=null — they have no team to
+    // roll up into.
+    const teamIdForLog =
+      auth.plan === "team"
+        ? auth.teamOwnerUserId ?? auth.user.id
+        : null;
     await logViolations({
       userId: auth.user.id,
-      teamId: auth.teamOwnerUserId,
+      teamId: teamIdForLog,
       source,
       contentType: result.content_type ?? content_type ?? "unknown",
       moment: (result.moment as string | undefined) ?? moment ?? null,
