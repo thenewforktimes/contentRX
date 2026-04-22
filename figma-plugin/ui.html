@@ -472,25 +472,63 @@
     color: var(--figma-color-text-secondary, #888);
   }
   .empty-state .icon { font-size: 28px; margin-bottom: 8px; }
+
+  /* Quota indicator — shown below results once we've seen a /api/check response */
+  .quota-indicator {
+    margin-top: 12px;
+    padding: 8px 10px;
+    border: 1px solid var(--figma-color-border, #e5e5e5);
+    border-radius: 6px;
+    background: var(--figma-color-bg-secondary, #fafafa);
+    font-size: 11px;
+    color: var(--figma-color-text-secondary, #666);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .quota-indicator .quota-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--figma-color-bg-tertiary, #eee);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0 8px;
+  }
+  .quota-indicator .quota-bar-fill {
+    height: 100%;
+    background: var(--figma-color-bg-brand, #0d99ff);
+    transition: width 0.3s;
+  }
+  .quota-indicator.exhausted .quota-bar-fill { background: #dc2626; }
 </style>
 </head>
 <body>
 
 <!-- ================================================================== -->
-<!-- SCREEN: Setup (first-time API key entry)                           -->
+<!-- SCREEN: Sign in (shown when no cx_token is on file)                -->
 <!-- ================================================================== -->
-<div id="screen-setup" class="screen">
-  <h2>Set up your API key</h2>
-  <p>Your key is stored locally on this device using Figma's client storage. It's never sent anywhere except the Anthropic API.</p>
-  <input
-    type="password"
-    id="api-key-input"
-    placeholder="sk-ant-..."
-    spellcheck="false"
-    autocomplete="off"
-  />
-  <button class="btn btn-primary" id="btn-save-key">Save key</button>
-  <div id="key-error" style="color:#EF4444;font-size:12px;margin-top:8px;display:none;"></div>
+<div id="screen-signin" class="screen">
+  <h2>Sign in to ContentRX</h2>
+  <p>Sign in with your ContentRX account to scan content. We'll open a tab in your browser — come back here once you're done.</p>
+  <button class="btn btn-primary" id="btn-sign-in">Sign in</button>
+  <div id="signin-error" style="color:#EF4444;font-size:12px;margin-top:8px;display:none;"></div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SCREEN: Signing in (waiting for the browser handoff to complete)   -->
+<!-- ================================================================== -->
+<div id="screen-signing-in" class="screen">
+  <h2>Waiting for your browser...</h2>
+  <p>Finish signing in in the browser tab we just opened. This plugin will pick it up automatically.</p>
+  <div class="progress-container" style="padding: 16px 0;">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="signin-progress-fill" style="width: 10%;"></div>
+    </div>
+    <div class="progress-status" id="signin-status">Opened your browser. Complete sign-in there...</div>
+  </div>
+  <button class="btn btn-secondary" id="btn-signin-retry">Re-open browser tab</button>
+  <button class="btn btn-text" id="btn-signin-cancel" style="margin-top:4px;">Cancel</button>
 </div>
 
 <!-- ================================================================== -->
@@ -507,9 +545,23 @@
 
   <div class="divider"></div>
   <div id="results-area"></div>
+  <div id="quota-indicator" class="quota-indicator" style="display:none;"></div>
 
   <div class="footer">
     <button class="btn btn-text" id="btn-settings">Settings</button>
+  </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- SCREEN: Settings (sign out, account info)                          -->
+<!-- ================================================================== -->
+<div id="screen-settings" class="screen">
+  <h2>Settings</h2>
+  <p id="settings-status">You're signed in to ContentRX.</p>
+  <div id="settings-quota" class="quota-indicator" style="margin-bottom:12px; display:none;"></div>
+  <button class="btn btn-danger" id="btn-sign-out">Sign out</button>
+  <div class="footer">
+    <button class="btn btn-text" id="btn-settings-back">Back</button>
   </div>
 </div>
 
@@ -540,8 +592,12 @@
 // ---------------------------------------------------------------------------
 const DEV_MODE = true;
 
-const BATCH_SIZE = 8;        // Strings per API call — balances quality vs speed
-const MAX_CONCURRENT = 2;    // Parallel API calls — conservative for BYOK rate limits
+// /api/check evaluates one string per call, so we don't batch multiple
+// strings together client-side anymore. MAX_CONCURRENT is the pool size
+// for parallel requests; 2 stays under the backend's 60-req/min ceiling
+// for a typical page scan while still feeling fast.
+const MAX_CONCURRENT = 2;
+const API_BASE_URL = "https://content-rx.vercel.app";
 const LIBRARY_VERSION = "4.6.1";
 
 
@@ -2179,183 +2235,119 @@ ${standardsText}
 // ====================================================================
 // API communication
 // ====================================================================
-let apiKey = "";
+let cxToken = "";
+let latestUsage = null; // Last { used, quota, remaining, plan, month } seen
 
-/**
- * Single-string API check (used when only 1 text layer is selected).
- * Returns the parsed JSON result from the LLM.
- */
-async function checkContentSingle(text, signal) {
-  const systemPrompt = buildSystemPrompt();
-  const contentType = detectContentType(text);
-  const moment = detectMoment(text, contentType);
-  const momentHint = moment !== "browsing_discovery"
-    ? `\nMoment: ${moment.replace(/_/g, " ")} — ${MOMENT_TAXONOMY[moment]}`
-    : "";
-  const userMessage = `Check this ${contentType} content against the standards:${momentHint}
-
-"${text}"
-
-Respond in this exact JSON format (no markdown, no backticks):
-{
-  "content_type": "detected type",
-  "overall_verdict": "pass" or "fail",
-  "violations": [
-    {
-      "standard_id": "the standard ID",
-      "issue": "what's wrong with the content",
-      "suggestion": "how to fix it"
-    }
-  ],
-  "passes": [
-    {
-      "standard_id": "the standard ID",
-      "rule": "brief rule description"
-    }
-  ],
-  "summary": "1-2 sentence plain language summary of the assessment"
-}`;
-
-  return callAnthropicAPI(systemPrompt, userMessage, 2000, signal);
+// Thrown by the plugin when /api/check returns 401 — the stored token is
+// no longer valid and the UI should fall back to the signed-out state.
+class AuthError extends Error {
+  constructor(message) { super(message); this.name = "AuthError"; }
 }
 
+// Thrown by the plugin when /api/check returns 402 — the user has hit
+// their monthly quota. The scan halts and the UI surfaces a prompt to
+// upgrade or wait for the reset.
+class QuotaError extends Error {
+  constructor(message, details) {
+    super(message);
+    this.name = "QuotaError";
+    this.details = details || {};
+  }
+}
 
 /**
- * Batch API check — evaluates multiple strings in a single API call.
- * Each string is identified by its index in the batch.
+ * POST one string to /api/check and return the parsed response.
+ * Maps server-side 401/402/429 to typed errors the scan loop can react
+ * to (sign out, stop-early with upgrade prompt, retryable throttling).
  *
- * @param {Array} batch — Array of { index, text, contentType }
- * @param {AbortSignal} signal — For cancellation
- * @returns {Array} Array of result objects per string
+ * The server response shape is:
+ *   { result: { content_type, moment, overall_verdict, violations, summary },
+ *     usage:  { plan, used, quota, remaining, month, text_hash } }
  */
-async function checkContentBatch(batch, signal) {
-  const systemPrompt = buildSystemPrompt();
-
-  let stringsBlock = "";
-  for (const item of batch) {
-    const momentLabel = item.moment && item.moment !== "browsing_discovery"
-      ? `, moment: ${item.moment.replace(/_/g, " ")}`
-      : "";
-    stringsBlock += `[${item.index}] (${item.contentType}${momentLabel}) "${item.text}"\n`;
+async function checkContentViaApi(text, contentType, moment, signal) {
+  const body = {
+    text,
+    content_type: contentType,
+    source: "plugin",
+  };
+  // Only send `moment` when it's informative — the server defaults to
+  // browsing_discovery internally, so we save a few bytes on the wire.
+  if (moment && moment !== "browsing_discovery") {
+    body.moment = moment;
   }
 
-  const userMessage = `Evaluate each of the following UI strings against the content standards above. For each string, determine if it passes or fails.
-
-${stringsBlock}
-Respond in this exact JSON format (no markdown, no backticks):
-{
-  "results": [
-    {
-      "index": 1,
-      "content_type": "detected type",
-      "overall_verdict": "pass" or "fail",
-      "violations": [
-        {
-          "standard_id": "the standard ID",
-          "issue": "what's wrong",
-          "suggestion": "how to fix"
-        }
-      ],
-      "summary": "1 sentence assessment"
-    }
-  ]
-}`;
-
-  // More tokens for batch responses
-  const maxTokens = Math.min(batch.length * 500, 4096);
-  return callAnthropicAPI(systemPrompt, userMessage, maxTokens, signal);
-}
-
-
-/**
- * Low-level API call to Anthropic. Handles network errors, HTTP status
- * codes, malformed responses, and JSON parsing failures with user-friendly
- * messages. No raw error text or status codes are shown to end users.
- */
-async function callAnthropicAPI(systemPrompt, userMessage, maxTokens, signal) {
-  // #11: Catch network errors (offline, DNS failure, CORS, etc.)
-  // #19: 60-second timeout per request
   let response;
   try {
-    const timeoutId = setTimeout(() => {
-      if (signal && !signal.aborted) signal.reason = "timeout";
-    }, 60000);
-
-    const fetchPromise = fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: maxTokens,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userMessage }],
-      }),
-      signal: signal,
-    });
-
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error(
-        "The request is taking too long. The API may be slow — try again in a few minutes."
+        "The request is taking too long. Try scanning again in a few minutes."
       )), 60000)
     );
 
+    const fetchPromise = fetch(`${API_BASE_URL}/api/check`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${cxToken}`,
+      },
+      body: JSON.stringify(body),
+      signal,
+    });
+
     response = await Promise.race([fetchPromise, timeoutPromise]);
-    clearTimeout(timeoutId);
   } catch (err) {
     if (err.name === "AbortError") throw err;
-    throw new Error("Can't reach the API. Check your internet connection and try again.");
+    throw new Error("Can't reach ContentRX. Check your internet connection and try again.");
   }
 
-  // #12, #13, #14, #15, #16: Translate HTTP errors to user-friendly messages
+  if (response.status === 401) {
+    throw new AuthError("Your session has expired. Sign in again to continue.");
+  }
+  if (response.status === 402) {
+    const data = await response.json().catch(() => ({}));
+    if (data && data.used != null && data.quota != null) {
+      latestUsage = {
+        plan: data.plan || (latestUsage && latestUsage.plan) || "free",
+        used: data.used,
+        quota: data.quota,
+        remaining: 0,
+        month: (latestUsage && latestUsage.month) || "",
+      };
+    }
+    throw new QuotaError(
+      `You've used all ${data.quota || "available"} scans for this month.`,
+      data,
+    );
+  }
+  if (response.status === 429) {
+    throw new Error("Too many requests. Wait a moment and try again.");
+  }
+  if (response.status === 400) {
+    throw new Error("We couldn't read that text layer. Try scanning again.");
+  }
+  if (response.status >= 500) {
+    throw new Error("ContentRX is temporarily unavailable. Try again in a few minutes.");
+  }
   if (!response.ok) {
-    const status = response.status;
-    if (status === 401) {
-      throw new Error("Your API key is invalid or expired. Update it in settings.");
-    }
-    if (status === 429) {
-      throw new Error("Rate limited. Wait a moment and try again.");
-    }
-    if (status === 400) {
-      throw new Error("Something went wrong with the request. Try scanning again.");
-    }
-    if (status === 500 || status === 503 || status === 529) {
-      throw new Error("Anthropic's API is temporarily unavailable. Try again in a few minutes.");
-    }
     throw new Error("Unexpected API error. Try again in a few minutes.");
   }
 
-  // #17, #18: Safely parse the response — don't crash on unexpected shapes
   let data;
   try {
     data = await response.json();
   } catch {
-    throw new Error("Received an unreadable response from the API. Try scanning again.");
+    throw new Error("Received an unreadable response. Try scanning again.");
   }
 
-  if (!data || !data.content || !data.content[0] || !data.content[0].text) {
-    throw new Error("Received an unexpected response from the API. Try scanning again.");
+  if (!data || !data.result) {
+    throw new Error("Received an unexpected response. Try scanning again.");
   }
 
-  let raw = data.content[0].text.trim();
-
-  // Strip markdown fences if the model wraps the JSON
-  if (raw.startsWith("```")) {
-    const firstNewline = raw.indexOf("\n");
-    raw = firstNewline > -1 ? raw.substring(firstNewline + 1) : raw.substring(3);
+  if (data.usage) {
+    latestUsage = data.usage;
   }
-  if (raw.endsWith("```")) raw = raw.slice(0, -3);
-  raw = raw.trim();
 
-  try {
-    return JSON.parse(raw);
-  } catch {
-    throw new Error("The API returned a response that couldn't be processed. Try scanning again.");
-  }
+  return data;
 }
 
 
@@ -2365,11 +2357,10 @@ async function callAnthropicAPI(systemPrompt, userMessage, maxTokens, signal) {
 // This is the core engine for "Scan page" and "Check selection".
 // Flow:
 //   1. Run preprocessor on every node (instant, zero cost)
-//   2. Group remaining nodes into batches of BATCH_SIZE
-//   3. Send batches to API with MAX_CONCURRENT concurrency
-//   4. Merge preprocessor results with API results
-//   5. Apply suppression: preprocessor PASS overrides LLM violations
-//   6. Return unified results array
+//   2. Dispatch one /api/check request per node, with MAX_CONCURRENT
+//      requests in flight at a time
+//   3. Merge preprocessor + API results, applying suppression
+//   4. Stop early on quota exhaustion or auth failure
 // ====================================================================
 let scanAbortController = null;
 
@@ -2378,19 +2369,20 @@ let scanAbortController = null;
  *
  * @param {Array} nodes — Array of { id, name, characters, parentName } from code.js
  * @param {Function} onProgress — Callback for progress updates
- * @returns {Array} Array of node results, each with violations and verdict
+ * @returns {Object} { results, terminated, terminationReason }, where
+ *   terminated is "quota" | "auth" | "cancelled" | null and results holds
+ *   the node results completed before termination.
  */
 async function runBatchScan(nodes, onProgress) {
   scanAbortController = new AbortController();
   const signal = scanAbortController.signal;
-  const results = [];
 
   // -----------------------------------------------------------------------
   // Stage 1: Preprocessor (instant)
   // -----------------------------------------------------------------------
   onProgress({ phase: "preprocess", current: 0, total: nodes.length });
 
-  const preprocessedNodes = [];
+  const items = []; // One entry per node, populated with API result later.
   let instantViolationCount = 0;
 
   for (const node of nodes) {
@@ -2399,12 +2391,14 @@ async function runBatchScan(nodes, onProgress) {
     const { violations, suppressedIds } = runPreprocessor(node.characters, contentType);
     instantViolationCount += violations.length;
 
-    preprocessedNodes.push({
+    items.push({
       node,
       contentType,
       moment,
       preprocessViolations: violations,
       suppressedIds,
+      apiData: null,   // { result: {...}, usage: {...} }
+      apiError: null,  // String error message if this node failed
     });
   }
 
@@ -2415,137 +2409,116 @@ async function runBatchScan(nodes, onProgress) {
   });
 
   // -----------------------------------------------------------------------
-  // Stage 2: Group into batches for API evaluation
+  // Stage 2: One /api/check request per node, concurrency-limited.
+  // Fatal errors (401, 402) abort the whole pool so we don't burn through
+  // the quota or spam the server with requests that will never succeed.
   // -----------------------------------------------------------------------
-  const batches = [];
-  let currentBatch = [];
-  let globalIndex = 1;
+  let completed = 0;
+  let fatalError = null; // { kind: "auth" | "quota", message, details? }
 
-  for (const pn of preprocessedNodes) {
-    currentBatch.push({
-      index: globalIndex++,
-      text: pn.node.characters,
-      contentType: pn.contentType,
-      moment: pn.moment,
-      preprocessed: pn,
-    });
-
-    if (currentBatch.length >= BATCH_SIZE) {
-      batches.push(currentBatch);
-      currentBatch = [];
-    }
-  }
-  if (currentBatch.length > 0) batches.push(currentBatch);
-
-  // -----------------------------------------------------------------------
-  // Stage 3: API evaluation with concurrency control
-  // -----------------------------------------------------------------------
-  const batchResults = new Array(batches.length).fill(null);
-  let completedBatches = 0;
-
-  // Process batches with a concurrency pool
-  async function processBatch(batchIndex) {
-    if (signal.aborted) return;
-
-    const batch = batches[batchIndex];
-    const apiInput = batch.map(item => ({
-      index: item.index,
-      text: item.text,
-      contentType: item.contentType,
-      moment: item.moment,
-    }));
-
+  async function processItem(itemIndex) {
+    if (signal.aborted || fatalError) return;
+    const item = items[itemIndex];
     try {
-      const apiResult = await checkContentBatch(apiInput, signal);
-      batchResults[batchIndex] = apiResult;
+      const apiData = await checkContentViaApi(
+        item.node.characters, item.contentType, item.moment, signal,
+      );
+      item.apiData = apiData;
     } catch (err) {
       if (err.name === "AbortError") return;
-      // Store the error so we can show partial results
-      batchResults[batchIndex] = { error: err.message };
+      if (err.name === "AuthError") {
+        fatalError = { kind: "auth", message: err.message };
+        scanAbortController.abort();
+        return;
+      }
+      if (err.name === "QuotaError") {
+        fatalError = { kind: "quota", message: err.message, details: err.details };
+        scanAbortController.abort();
+        return;
+      }
+      item.apiError = err.message;
     }
 
-    completedBatches++;
+    completed++;
     onProgress({
       phase: "evaluating",
-      current: completedBatches,
-      total: batches.length,
+      current: completed,
+      total: nodes.length,
     });
   }
 
-  // Concurrency pool: process MAX_CONCURRENT batches at a time
-  const queue = batches.map((_, i) => i);
+  const queue = items.map((_, i) => i);
   const workers = [];
-  for (let i = 0; i < Math.min(MAX_CONCURRENT, queue.length); i++) {
-    workers.push(runWorker(queue, processBatch));
+  const poolSize = Math.min(MAX_CONCURRENT, queue.length);
+  for (let i = 0; i < poolSize; i++) {
+    workers.push(runWorker(queue, processItem));
   }
   await Promise.all(workers);
 
-  if (signal.aborted) return null; // Scan was cancelled
+  if (fatalError && fatalError.kind === "auth") {
+    return { results: [], terminated: "auth", terminationReason: fatalError };
+  }
 
   // -----------------------------------------------------------------------
-  // Stage 4: Merge preprocessor + API results with suppression
+  // Stage 3: Merge preprocessor + API results with suppression.
+  // Nodes that never got a response (cancelled, quota-stop, per-node error)
+  // still yield a card so the user can see what wasn't evaluated.
   // -----------------------------------------------------------------------
-  for (let bi = 0; bi < batches.length; bi++) {
-    const batch = batches[bi];
-    const apiResult = batchResults[bi];
-    const apiResults = apiResult && apiResult.results ? apiResult.results : [];
-    const apiError = apiResult && apiResult.error ? apiResult.error : null;
+  const results = [];
+  for (const item of items) {
+    const nodeResult = {
+      nodeId: item.node.id,
+      nodeName: item.node.name,
+      parentName: item.node.parentName,
+      text: item.node.characters,
+      contentType: item.contentType,
+      moment: item.moment,
+      violations: [...item.preprocessViolations],
+      overallVerdict: "pass",
+      summary: "",
+      error: item.apiError || null,
+    };
 
-    for (const item of batch) {
-      const pn = item.preprocessed;
-      const nodeResult = {
-        nodeId: pn.node.id,
-        nodeName: pn.node.name,
-        parentName: pn.node.parentName,
-        text: pn.node.characters,
-        contentType: pn.contentType,
-        moment: pn.moment,
-        violations: [...pn.preprocessViolations],
-        overallVerdict: "pass",
-        summary: "",
-        error: apiError || null,
-      };
+    const apiResult = item.apiData && item.apiData.result;
+    if (apiResult) {
+      nodeResult.contentType = apiResult.content_type || item.contentType;
+      if (apiResult.moment) nodeResult.moment = apiResult.moment;
 
-      // Find this node's API result by index
-      const apiNodeResult = apiResults.find(r => r.index === item.index);
-      if (apiNodeResult) {
-        nodeResult.contentType = apiNodeResult.content_type || pn.contentType;
-
-        // Merge API violations, applying preprocessor suppression
-        const apiViolations = apiNodeResult.violations || [];
-        for (const v of apiViolations) {
-          // Suppression: if preprocessor said PASS for this standard, skip
-          if (pn.suppressedIds.has(v.standard_id)) continue;
-          nodeResult.violations.push({
-            standard_id: v.standard_id,
-            issue: v.issue,
-            suggestion: v.suggestion,
-            source: "ai",
-          });
-        }
-
-        // Derive verdict from actual violations, not the LLM's original answer.
-        // The LLM might have said "fail" for a violation the preprocessor
-        // suppressed — the violations array is the source of truth.
-        if (nodeResult.violations.length > 0) {
-          nodeResult.overallVerdict = "fail";
-          nodeResult.summary = apiNodeResult.summary || "";
-        } else {
-          nodeResult.overallVerdict = "pass";
-          // If the LLM said fail but all its violations were suppressed,
-          // the summary would mention issues that don't exist anymore.
-          // Clear it to avoid contradicting the pass verdict.
-          const llmSaidFail = apiNodeResult.overall_verdict === "fail";
-          nodeResult.summary = llmSaidFail ? "" : (apiNodeResult.summary || "");
-        }
+      for (const v of apiResult.violations || []) {
+        // Suppression: if the JS preprocessor passed this standard, skip
+        // the server-side violation for the same id. Preprocessor is the
+        // source of truth for the mechanical checks it covers.
+        if (item.suppressedIds.has(v.standard_id)) continue;
+        nodeResult.violations.push({
+          standard_id: v.standard_id,
+          issue: v.issue,
+          suggestion: v.suggestion,
+          source: v.source === "preprocessor" ? "preprocessor" : "ai",
+        });
       }
 
-      results.push(nodeResult);
+      if (nodeResult.violations.length > 0) {
+        nodeResult.overallVerdict = "fail";
+        nodeResult.summary = apiResult.summary || "";
+      } else {
+        nodeResult.overallVerdict = "pass";
+        const serverSaidFail = apiResult.overall_verdict === "fail";
+        nodeResult.summary = serverSaidFail ? "" : (apiResult.summary || "");
+      }
     }
+
+    results.push(nodeResult);
+  }
+
+  if (signal.aborted && !fatalError) {
+    return { results, terminated: "cancelled", terminationReason: null };
+  }
+  if (fatalError && fatalError.kind === "quota") {
+    return { results, terminated: "quota", terminationReason: fatalError };
   }
 
   onProgress({ phase: "complete", total: results.length });
-  return results;
+  return { results, terminated: null, terminationReason: null };
 }
 
 
@@ -2946,7 +2919,7 @@ function updateProgress(data) {
     case "evaluating":
       const pct = 15 + Math.round((data.current / data.total) * 80);
       fill.style.width = pct + "%";
-      status.textContent = `AI evaluation: batch ${data.current} of ${data.total}...`;
+      status.textContent = `AI evaluation: ${data.current} of ${data.total} layer${data.total !== 1 ? "s" : ""}...`;
       detail.textContent = "This could take a few seconds or a couple minutes.";
       break;
 
@@ -2968,78 +2941,133 @@ function escapeHtml(str) {
 
 
 // ====================================================================
+// Sign-in flow
+//
+// 1. User clicks "Sign in" in the signed-out screen.
+// 2. We generate a random handoff code and ask the sandbox to open
+//    https://content-rx.vercel.app/auth/figma?plugin=1&handoff=<code>
+//    in the user's default browser via figma.openExternal.
+// 3. The user completes Clerk sign-in. The /auth/figma-callback page
+//    stashes their cx_token in Redis under the handoff code.
+// 4. While that's happening, we poll /auth/figma?poll=1&handoff=<code>
+//    every 2s. When the token arrives, we save it and switch to the
+//    main screen.
+// ====================================================================
+let signinPollAbortController = null;
+const SIGNIN_POLL_INTERVAL_MS = 2000;
+const SIGNIN_POLL_TIMEOUT_MS = 5 * 60 * 1000;
+
+function generateHandoffCode() {
+  // 24 bytes → 32 chars in base64url, well inside the backend's
+  // [16, 128] bound. crypto.getRandomValues is available in the
+  // Figma plugin iframe.
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function showSigninError(message) {
+  const errorEl = document.getElementById("signin-error");
+  errorEl.textContent = message;
+  errorEl.style.display = "block";
+}
+
+async function pollForToken(handoffCode, signal) {
+  const start = Date.now();
+  while (!signal.aborted) {
+    if (Date.now() - start > SIGNIN_POLL_TIMEOUT_MS) {
+      throw new Error("Sign-in timed out. Try again.");
+    }
+
+    let response;
+    try {
+      response = await fetch(
+        `${API_BASE_URL}/auth/figma?poll=1&handoff=${encodeURIComponent(handoffCode)}`,
+        { method: "GET", signal },
+      );
+    } catch (err) {
+      if (err.name === "AbortError") throw err;
+      // Transient network hiccup — wait and retry instead of giving up.
+      await new Promise(r => setTimeout(r, SIGNIN_POLL_INTERVAL_MS));
+      continue;
+    }
+
+    if (response.status === 200) {
+      const data = await response.json().catch(() => null);
+      if (data && typeof data.token === "string") return data.token;
+      throw new Error("Sign-in succeeded but the token was malformed. Try again.");
+    }
+    if (response.status === 202) {
+      await new Promise(r => setTimeout(r, SIGNIN_POLL_INTERVAL_MS));
+      continue;
+    }
+    if (response.status === 400) {
+      throw new Error("Sign-in link is invalid. Try again.");
+    }
+    // Any 5xx here is transient; keep polling.
+    await new Promise(r => setTimeout(r, SIGNIN_POLL_INTERVAL_MS));
+  }
+  throw new DOMException("Polling cancelled", "AbortError");
+}
+
+async function startSigninFlow() {
+  const handoffCode = generateHandoffCode();
+  const signinUrl =
+    `${API_BASE_URL}/auth/figma?plugin=1&handoff=${encodeURIComponent(handoffCode)}`;
+
+  // Ask the sandbox thread to open the URL in the user's default browser.
+  parent.postMessage(
+    { pluginMessage: { type: "open-external", url: signinUrl } }, "*",
+  );
+
+  showScreen("signing-in");
+  const statusEl = document.getElementById("signin-status");
+  const fillEl = document.getElementById("signin-progress-fill");
+  statusEl.textContent = "Opened your browser. Complete sign-in there...";
+  fillEl.style.width = "10%";
+
+  // Remember this URL so the "Re-open" button can reuse it.
+  window._lastSigninUrl = signinUrl;
+
+  signinPollAbortController = new AbortController();
+  try {
+    const token = await pollForToken(handoffCode, signinPollAbortController.signal);
+    fillEl.style.width = "100%";
+    statusEl.textContent = "Signed in! Loading...";
+    cxToken = token;
+    parent.postMessage({ pluginMessage: { type: "save-token", token } }, "*");
+  } catch (err) {
+    if (err.name === "AbortError") return;
+    showScreen("signin");
+    showSigninError(err.message || "Sign-in failed. Try again.");
+  }
+}
+
+// ====================================================================
 // Event handlers
 // ====================================================================
 
-// Save API key — validates format and tests against the API before saving
-document.getElementById("btn-save-key").addEventListener("click", async () => {
-  const input = document.getElementById("api-key-input");
-  const errorEl = document.getElementById("key-error");
-  const btn = document.getElementById("btn-save-key");
-  const key = input.value.trim();
+document.getElementById("btn-sign-in").addEventListener("click", () => {
+  document.getElementById("signin-error").style.display = "none";
+  startSigninFlow();
+});
 
-  errorEl.style.display = "none";
-  errorEl.textContent = "";
-
-  // #1: Empty input
-  if (!key) {
-    errorEl.textContent = "Enter an API key to continue.";
-    errorEl.style.display = "block";
-    return;
+document.getElementById("btn-signin-retry").addEventListener("click", () => {
+  if (window._lastSigninUrl) {
+    parent.postMessage(
+      { pluginMessage: { type: "open-external", url: window._lastSigninUrl } }, "*",
+    );
   }
+});
 
-  // #2: Basic format check
-  if (!key.startsWith("sk-ant-")) {
-    errorEl.textContent = "That doesn't look like an Anthropic API key. Keys start with sk-ant-.";
-    errorEl.style.display = "block";
-    return;
+document.getElementById("btn-signin-cancel").addEventListener("click", () => {
+  if (signinPollAbortController) {
+    signinPollAbortController.abort();
+    signinPollAbortController = null;
   }
-
-  // #3: Test the key with a minimal API call
-  btn.disabled = true;
-  btn.textContent = "Checking...";
-
-  try {
-    const testResponse = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1,
-        messages: [{ role: "user", content: "hi" }],
-      }),
-    });
-
-    if (testResponse.status === 401) {
-      errorEl.textContent = "This key didn't work. Check it and try again.";
-      errorEl.style.display = "block";
-      return;
-    }
-
-    if (!testResponse.ok && testResponse.status !== 200) {
-      // API is reachable but returned an error — key might still be valid
-      // (e.g., rate limit, server error). Accept the key and move on.
-    }
-  } catch {
-    // Network error — can't validate, but don't block the user.
-    // They'll get a clear error on first scan if the key is bad.
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Save key";
-  }
-
-  // #4: Save with storage error handling
-  try {
-    parent.postMessage({ pluginMessage: { type: "save-api-key", key } }, "*");
-  } catch {
-    errorEl.textContent = "Couldn't save the key. Try closing and reopening the plugin.";
-    errorEl.style.display = "block";
-  }
+  showScreen("signin");
 });
 
 // Scan page — ask sandbox for all text nodes on the current page
@@ -3064,8 +3092,16 @@ document.getElementById("btn-cancel-scan").addEventListener("click", () => {
 
 // Settings
 document.getElementById("btn-settings").addEventListener("click", () => {
-  showScreen("setup");
-  document.getElementById("api-key-input").value = "";
+  renderSettingsQuota();
+  showScreen("settings");
+});
+
+document.getElementById("btn-settings-back").addEventListener("click", () => {
+  showScreen("main");
+});
+
+document.getElementById("btn-sign-out").addEventListener("click", () => {
+  parent.postMessage({ pluginMessage: { type: "clear-token" } }, "*");
 });
 
 
@@ -3078,27 +3114,28 @@ window.onmessage = async (event) => {
 
   switch (msg.type) {
 
-    case "api-key-loaded": {
-      apiKey = msg.key || "";
-      if (apiKey) {
+    case "token-loaded": {
+      cxToken = msg.token || "";
+      if (cxToken) {
         showScreen("main");
         renderEmpty();
       } else {
-        showScreen("setup");
+        showScreen("signin");
       }
       break;
     }
 
-    case "api-key-saved": {
-      apiKey = document.getElementById("api-key-input").value.trim();
+    case "token-saved": {
       showScreen("main");
       renderEmpty();
       break;
     }
 
-    case "api-key-cleared": {
-      apiKey = "";
-      showScreen("setup");
+    case "token-cleared": {
+      cxToken = "";
+      latestUsage = null;
+      hideQuotaIndicator();
+      showScreen("signin");
       break;
     }
 
@@ -3153,15 +3190,24 @@ async function executeBatchScan(nodes) {
     `Scanning ${nodes.length} text layer${nodes.length !== 1 ? "s" : ""}...`;
 
   try {
-    const results = await runBatchScan(nodes, updateProgress);
+    const outcome = await runBatchScan(nodes, updateProgress);
 
-    if (!results) {
-      // Scan was cancelled
+    if (outcome.terminated === "auth") {
+      // Token expired or was revoked server-side. Clear local token and
+      // bounce back to the sign-in screen so the user can get a fresh one.
+      parent.postMessage({ pluginMessage: { type: "clear-token" } }, "*");
       return;
     }
 
     showScreen("main");
-    renderBatchResults(results);
+    renderBatchResults(outcome.results);
+
+    if (outcome.terminated === "quota") {
+      renderQuotaExhaustedBanner(outcome.terminationReason);
+    } else if (outcome.terminated === "cancelled") {
+      // No-op — cancel handler already rendered a message.
+    }
+    renderQuotaIndicator();
   } catch (err) {
     showScreen("main");
     if (err.name === "AbortError") {
@@ -3174,9 +3220,69 @@ async function executeBatchScan(nodes) {
 
 
 // ====================================================================
-// Init — ask sandbox for stored API key
+// Quota indicator
 // ====================================================================
-parent.postMessage({ pluginMessage: { type: "load-api-key" } }, "*");
+function renderQuotaIndicator() {
+  const el = document.getElementById("quota-indicator");
+  if (!el) return;
+  if (!latestUsage) {
+    el.style.display = "none";
+    return;
+  }
+  el.innerHTML = buildQuotaHTML(latestUsage);
+  el.classList.toggle("exhausted", latestUsage.remaining === 0);
+  el.style.display = "flex";
+}
+
+function renderSettingsQuota() {
+  const el = document.getElementById("settings-quota");
+  if (!el) return;
+  if (!latestUsage) {
+    el.style.display = "none";
+    return;
+  }
+  el.innerHTML = buildQuotaHTML(latestUsage);
+  el.classList.toggle("exhausted", latestUsage.remaining === 0);
+  el.style.display = "flex";
+}
+
+function hideQuotaIndicator() {
+  const el = document.getElementById("quota-indicator");
+  if (el) el.style.display = "none";
+  const settingsEl = document.getElementById("settings-quota");
+  if (settingsEl) settingsEl.style.display = "none";
+}
+
+function buildQuotaHTML(usage) {
+  const { used, quota, plan } = usage;
+  const pct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
+  const planLabel = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : "";
+  return `
+    <span>${used} of ${quota} this month</span>
+    <div class="quota-bar"><div class="quota-bar-fill" style="width:${pct}%"></div></div>
+    <span>${escapeHtml(planLabel)}</span>
+  `;
+}
+
+function renderQuotaExhaustedBanner(info) {
+  const area = document.getElementById("results-area");
+  const quota = info && info.details && info.details.quota;
+  const message = quota
+    ? `You've used all ${quota} scans for this month. Upgrade or wait for the next reset to scan more.`
+    : (info && info.message) || "Monthly quota exhausted.";
+  const banner = `
+    <div class="verdict verdict-fail" style="margin-bottom:12px;">
+      <span class="verdict-icon">!</span> ${escapeHtml(message)}
+    </div>
+  `;
+  area.innerHTML = banner + area.innerHTML;
+}
+
+
+// ====================================================================
+// Init — ask sandbox for stored cx_token
+// ====================================================================
+parent.postMessage({ pluginMessage: { type: "load-token" } }, "*");
 </script>
 
 </body>

@@ -28,6 +28,28 @@ import {
 } from "@/lib/team-rules";
 import { getCurrentUsage, incrementUsage } from "@/lib/usage";
 
+// CORS: the Figma plugin iframe has Origin: null. We allow any origin
+// because the request is gated on the Authorization header, not on
+// cookies. No credentials, no Set-Cookie — so wildcard is safe.
+const CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Max-Age": "86400",
+};
+
+function json(body: unknown, init?: ResponseInit): NextResponse {
+  const res = NextResponse.json(body, init);
+  for (const [k, v] of Object.entries(CORS_HEADERS)) {
+    res.headers.set(k, v);
+  }
+  return res;
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 const RequestSchema = z.object({
   // Engine enforces MAX_CONTENT_LENGTH=100_000; match that exactly.
   text: z.string().min(1).max(100_000),
@@ -42,13 +64,13 @@ const RequestSchema = z.object({
 export async function POST(req: Request) {
   const auth = await resolveAuth(req);
   if ("status" in auth) {
-    return NextResponse.json({ error: auth.message }, { status: auth.status });
+    return json({ error: auth.message }, { status: auth.status });
   }
 
   const body = await req.json().catch(() => null);
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
+    return json(
       { error: "Invalid request", issues: parsed.error.issues },
       { status: 400 },
     );
@@ -59,7 +81,7 @@ export async function POST(req: Request) {
   const used = await getCurrentUsage(auth.user.id);
 
   if (used >= quota) {
-    return NextResponse.json(
+    return json(
       {
         error: "Monthly quota exhausted",
         quota,
@@ -74,7 +96,7 @@ export async function POST(req: Request) {
 
   const rl = await checkRateLimit(auth.user.id);
   if (!rl.success) {
-    return NextResponse.json(
+    return json(
       {
         error: "Rate limit exceeded",
         reset_at: new Date(rl.reset).toISOString(),
@@ -98,7 +120,7 @@ export async function POST(req: Request) {
     // message to the caller — the Python-side error can include file paths,
     // model names, Anthropic error bodies, or a truncated LLM response.
     console.error("evaluate() failed:", err);
-    return NextResponse.json(
+    return json(
       { error: "Evaluation service unavailable" },
       { status: 502 },
     );
@@ -130,7 +152,7 @@ export async function POST(req: Request) {
     console.error("incrementUsage failed:", err);
   }
 
-  return NextResponse.json({
+  return json({
     result,
     latency_ms: evalResponse.latency_ms,
     tokens: evalResponse.tokens,

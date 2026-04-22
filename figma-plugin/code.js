@@ -1,15 +1,19 @@
-// Content standards checker — sandbox thread (v2.0.0)
+// Content standards checker — sandbox thread (v3.0.0)
 // Runs in Figma's sandbox. Reads text layers and relays data to the UI iframe.
 //
 // Architecture note: this thread has ZERO network access. All API calls
 // happen in ui.html. Communication is via postMessage() only.
 //
+// As of v3 the plugin no longer stores an Anthropic key; authentication
+// is a ContentRX session token (cx_...) obtained via a sign-in flow
+// that the UI opens in the user's default browser.
+//
 // Message protocol (sandbox → UI):
 //   selection-result    — text nodes from current selection
 //   page-scan-result    — text nodes from entire current page
-//   api-key-loaded      — stored API key on plugin open
-//   api-key-saved       — confirmation after saving key
-//   api-key-cleared     — confirmation after clearing key
+//   token-loaded        — stored cx_token on plugin open ("" if none)
+//   token-saved         — confirmation after saving a token
+//   token-cleared       — confirmation after clearing the token
 //   focus-complete      — confirmation after zooming to a node
 //
 // Message protocol (UI → sandbox):
@@ -17,9 +21,11 @@
 //   scan-page           — request all text layers on current page
 //   scan-selection      — request text layers in selected frames/layers
 //   focus-node          — zoom to and select a specific node by ID
-//   save-api-key        — persist API key to Figma client storage
-//   load-api-key        — retrieve stored API key
-//   clear-api-key       — delete stored API key
+//   save-token          — persist cx_token to Figma client storage
+//   load-token          — retrieve stored cx_token
+//   clear-token         — delete stored cx_token
+//   open-external       — open a URL in the user's default browser
+//                         (payload: { url })
 //   close               — close the plugin
 
 figma.showUI(__html__, { width: 420, height: 640, themeColors: true });
@@ -188,24 +194,36 @@ figma.ui.onmessage = async (msg) => {
     }
 
     // -----------------------------------------------------------------------
-    // API key management (unchanged from v1)
-    // Keys are stored in Figma's client storage — never leaves the machine.
+    // cx_token management. Stored in Figma's client storage so the user
+    // stays signed in between plugin opens; never leaves the local machine
+    // except as the Authorization header on requests to the ContentRX API.
     // -----------------------------------------------------------------------
-    case "save-api-key": {
-      await figma.clientStorage.setAsync("anthropic-api-key", msg.key);
-      figma.ui.postMessage({ type: "api-key-saved" });
+    case "save-token": {
+      await figma.clientStorage.setAsync("cx_token", msg.token);
+      figma.ui.postMessage({ type: "token-saved" });
       break;
     }
 
-    case "load-api-key": {
-      const key = await figma.clientStorage.getAsync("anthropic-api-key");
-      figma.ui.postMessage({ type: "api-key-loaded", key: key || "" });
+    case "load-token": {
+      const token = await figma.clientStorage.getAsync("cx_token");
+      figma.ui.postMessage({ type: "token-loaded", token: token || "" });
       break;
     }
 
-    case "clear-api-key": {
-      await figma.clientStorage.deleteAsync("anthropic-api-key");
-      figma.ui.postMessage({ type: "api-key-cleared" });
+    case "clear-token": {
+      await figma.clientStorage.deleteAsync("cx_token");
+      figma.ui.postMessage({ type: "token-cleared" });
+      break;
+    }
+
+    // -----------------------------------------------------------------------
+    // Open a URL in the user's default browser. figma.openExternal is
+    // sandbox-only; the UI iframe cannot call it directly.
+    // -----------------------------------------------------------------------
+    case "open-external": {
+      if (typeof msg.url === "string") {
+        figma.openExternal(msg.url);
+      }
       break;
     }
 
