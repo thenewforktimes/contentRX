@@ -20,9 +20,12 @@ RUN pip install --no-cache-dir "contentrx-cli>=0.1.0,<1.0"
 
 # Install the extractor's Node dependencies. Do this BEFORE copying src/
 # so a pure src/ edit doesn't invalidate the npm-install cache layer.
-COPY src/package.json /action/src/package.json
+# `npm ci` (not `npm install`) for reproducible builds: uses the
+# committed package-lock.json verbatim, errors on drift, and doesn't
+# rewrite it. Closes GHA-M-01 from the 2026-04-22 audit.
+COPY src/package.json src/package-lock.json /action/src/
 RUN cd /action/src \
-    && npm install --omit=dev --no-audit --no-fund
+    && npm ci --omit=dev --no-audit --no-fund
 
 # Now copy the rest of the source.
 COPY src/ /action/src/
