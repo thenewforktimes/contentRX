@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "contentrx-cli"
+version = "0.1.0"
+description = "Command-line interface for ContentRX — content-design linter for Figma, code, and CI."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "ContentRX" }]
+keywords = ["content", "linter", "ux-writing", "figma", "accessibility"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+]
+# urllib (stdlib) for HTTPS; no external runtime deps. Keeps the install
+# footprint tiny and the attack surface small — this is a security-adjacent
+# tool that ships API keys in headers, so we'd rather not pull in a TLS
+# stack we don't control.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://content-rx.vercel.app"
+Documentation = "https://content-rx.vercel.app/docs"
+Issues = "https://github.com/thenewforktimes/contentRX/issues"
+
+[project.scripts]
+contentrx = "contentrx.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["contentrx*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
