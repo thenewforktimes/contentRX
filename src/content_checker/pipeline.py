@@ -119,7 +119,15 @@ def build_system_prompt(
         "   - **Default verdict is pass.** Content should only fail when there are clear "
         "violations that would meaningfully hurt the user experience.\n\n"
         "2. For each genuine violation, cite the standard ID, explain what is wrong, "
-        "and suggest a fix.\n\n"
+        "suggest a fix, and rate your **confidence** in this finding from 0.0 to 1.0:\n"
+        "   - **1.0** — unambiguous, you'd bet on it (e.g., a literal banned word match)\n"
+        "   - **0.85** — pretty sure, default for clear nuanced violations\n"
+        "   - **0.6** — borderline; the rule applies but reasonable people might disagree\n"
+        "   - **< 0.5** — only flag if you genuinely think it warrants a second look\n"
+        "   The downstream system promotes any violation with confidence < 0.7 to a "
+        '"review_recommended" verdict so a human can adjudicate. Calibrate honestly — '
+        "over-confident borderline calls drown the signal; under-confident easy calls "
+        "make the tool feel weak.\n\n"
         "3. Give an overall pass/fail verdict. A single minor issue does not automatically "
         "mean fail — use judgment about whether the content is good enough to ship.\n\n"
         "Respond in this exact JSON format (no markdown, no backticks):\n"
@@ -131,7 +139,8 @@ def build_system_prompt(
         '      "standard_id": "the standard ID",\n'
         '      "rule": "the rule text",\n'
         '      "issue": "what\'s wrong with the content",\n'
-        '      "suggestion": "how to fix it"\n'
+        '      "suggestion": "how to fix it",\n'
+        '      "confidence": 0.85\n'
         "    }\n"
         "  ],\n"
         '  "passes": [\n'
