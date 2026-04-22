@@ -1,0 +1,47 @@
+name: JS/Python preprocessor parity
+
+# Runs the parity gate on every PR and every push to main. Fails the
+# build if `tools/parity_check.py` reports any divergence between the
+# Python preprocessor (src/content_checker/preprocess.py) and the JS
+# preprocessor (figma-plugin/ui.html → runPreprocessor).
+#
+# This is the v2 Session 2 deliverable. See tests/corpus/README.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref so a fast-follow push doesn't
+# burn minutes on the prior commit.
+concurrency:
+  group: parity-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python dependencies
+        # The parity check only needs the engine package itself —
+        # no Anthropic SDK, no test extras. Editable install keeps the
+        # JSON standards loader pointed at the in-tree library.
+        run: pip install -e .
+
+      - name: Run parity gate
+        run: python3 tools/parity_check.py
