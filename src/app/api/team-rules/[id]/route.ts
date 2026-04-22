@@ -14,6 +14,7 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { envelope } from "@/lib/api-envelope";
 import { getDb, schema } from "@/db";
 import { resolveAuth } from "@/lib/auth";
 import { findReDoSConcern } from "@/lib/team-rules";
@@ -114,7 +115,7 @@ export async function PATCH(req: Request, context: RouteContext) {
     .where(eq(schema.teamRules.id, id))
     .returning();
 
-  return NextResponse.json({ rule: row });
+  return NextResponse.json(envelope({ rule: row }));
 }
 
 export async function DELETE(req: Request, context: RouteContext) {
@@ -142,5 +143,5 @@ export async function DELETE(req: Request, context: RouteContext) {
   }
 
   await db.delete(schema.teamRules).where(eq(schema.teamRules.id, id));
-  return NextResponse.json({ ok: true });
+  return NextResponse.json(envelope({ ok: true }));
 }

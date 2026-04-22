@@ -23,6 +23,7 @@
 
 import { and, desc, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
 import { currentMonth } from "@/lib/quotas";
 import { getDb, schema } from "@/db";
@@ -37,11 +38,13 @@ export async function GET(req: Request) {
   }
 
   if (auth.plan !== "team") {
-    return NextResponse.json({
-      plan: auth.plan,
-      is_team: false,
-      message: "Team analytics requires a Team plan.",
-    });
+    return NextResponse.json(
+      envelope({
+        plan: auth.plan,
+        is_team: false,
+        message: "Team analytics requires a Team plan.",
+      }),
+    );
   }
 
   // Admin-only per BUILD_PLAN §17 (closes BE-M-05 from the 2026-04-22
@@ -192,25 +195,27 @@ export async function GET(req: Request) {
     .filter((r): r is { path: string; violations: number } => r.path !== null)
     .map((r) => ({ path: r.path, violations: r.violations }));
 
-  return NextResponse.json({
-    plan: auth.plan,
-    is_team: true,
-    range,
-    range_start: since.toISOString(),
-    generated_at: new Date().toISOString(),
-    totals: {
-      violations: violations_count,
-      evaluations_month: evaluations_count,
-      violation_rate:
-        evaluations_count > 0
-          ? Math.round((violations_count / evaluations_count) * 1000) / 10
-          : null, // null → "insufficient data" in the UI
-    },
-    top_standards: topStandardsRaw,
-    daily,
-    member_activity: memberActivity,
-    top_files,
-  });
+  return NextResponse.json(
+    envelope({
+      plan: auth.plan,
+      is_team: true,
+      range,
+      range_start: since.toISOString(),
+      generated_at: new Date().toISOString(),
+      totals: {
+        violations: violations_count,
+        evaluations_month: evaluations_count,
+        violation_rate:
+          evaluations_count > 0
+            ? Math.round((violations_count / evaluations_count) * 1000) / 10
+            : null, // null → "insufficient data" in the UI
+      },
+      top_standards: topStandardsRaw,
+      daily,
+      member_activity: memberActivity,
+      top_files,
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------
