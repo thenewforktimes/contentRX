@@ -5,3 +5,9 @@ docs-site
 cli-client
 github-action
 .venv
+
+# Claude Code state — settings, worktrees of in-progress work, etc.
+# Worktrees in .claude/worktrees/ have their own node_modules and
+# Finder-duplicate "node_modules 2" stragglers that surface as build
+# warnings on every prod deploy. Nothing in here belongs in the bundle.
+.claude
