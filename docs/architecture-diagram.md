@@ -1,12 +1,17 @@
 # ContentRX architecture & flows
 
-Snapshot: 2026-04-22, after Sessions 1–17, 13, 19 + audit waves 1–3 + npm audit + .vercelignore hotfixes.
+Snapshot: 2026-04-22, after v1 audit waves 1–3 + Resend/Sentry/Plausible wiring + docs-site scaffold + npm audit/vercelignore hotfixes.
+
+**Plan source of truth**: [BUILD_PLAN_v2.md](../BUILD_PLAN_v2.md). The
+diagrams below show the *current* deployed state plus the surfaces v2
+adds (MCP server in Phase 1, LSP server in Phase 5, public accuracy
+page in Phase 4, public content-model spec in Phase 6).
 
 ## Legend
 
 - 🟢 **Live in prod and working** — code shipped, env vars set, end-to-end functional
 - 🟡 **Code-ready, inert** — code merged + deployed, but waiting on you to provision env vars / external accounts
-- 🔴 **Future** — not started, in BUILD_PLAN or out of scope
+- 🔴 **Future (v2)** — not started; named v2 phase / session indicates when it lands
 
 ---
 
@@ -15,11 +20,13 @@ Snapshot: 2026-04-22, after Sessions 1–17, 13, 19 + audit waves 1–3 + npm au
 ```mermaid
 graph TB
     subgraph "Client surfaces"
-        FP["Figma Plugin<br/>(figma-plugin/ui.html)<br/>🟢"]
-        CLI["CLI client<br/>(contentrx-cli on PyPI)<br/>🟢"]
-        GHA["GitHub Action<br/>(github-action/, in-tree)<br/>🟡 needs Marketplace publish"]
-        WEB["Web browser<br/>(landing + dashboard)<br/>🟢"]
-        DOC["docs.contentrx.app<br/>(docs-site/)<br/>🟡 needs separate Vercel project"]
+        MCP["MCP server 🔴<br/>(uvx contentrx-mcp)<br/>v2 Phase 1 — THE reposition<br/>Claude Code · Cursor · Claude desktop"]
+        LSP["LSP server 🔴<br/>(uvx contentrx-lsp)<br/>v2 Phase 5<br/>VS Code · Cursor · Zed · Neovim"]
+        GHA["GitHub Action 🟡<br/>(github-action/, in-tree)<br/>v2 Phase 2: Marketplace publish<br/>engineers on PRs"]
+        CLI["CLI client 🟢<br/>(contentrx-cli on PyPI)<br/>engineers in terminals + CI"]
+        FP["Figma Plugin 🟢<br/>(figma-plugin/ui.html)<br/>designers + PMs"]
+        WEB["Web browser 🟢<br/>(landing + dashboard)<br/>admins"]
+        DOC["docs.contentrx.app 🟡<br/>(docs-site/, in-tree)<br/>v2 Phase 6: separate Vercel project"]
     end
 
     subgraph "Vercel — content-rx.vercel.app"
@@ -45,16 +52,21 @@ graph TB
         PL["Plausible<br/>(register site +<br/>NEXT_PUBLIC_PLAUSIBLE_DOMAIN)"]
     end
 
-    subgraph "External services — 🔴 future"
-        DT["Ditto API<br/>(Session 18, encrypted key storage)"]
+    subgraph "Future surfaces (v2)"
+        ACC["Accuracy page 🔴<br/>contentrx.app/accuracy<br/>v2 Session 15"]
+        SPEC["Public content-model spec 🔴<br/>github.com/contentrx/content-model<br/>v2 Session 20 (CC-BY 4.0)"]
+        VSC["VS Code + Cursor extensions 🔴<br/>v2 Session 18 (LSP launchers)"]
     end
 
     %% Client → Vercel
+    MCP -. "POST /api/check<br/>Bearer cx_<token>" .-> MW
+    LSP -. "POST /api/check<br/>Bearer cx_<token>" .-> MW
     FP -- "POST /api/check<br/>Bearer cx_<token>" --> MW
     CLI -- "POST /api/check<br/>Bearer cx_<token>" --> MW
     GHA -- "POST /api/check<br/>Bearer cx_<token>" --> MW
     WEB -- "Cookies (Clerk session)" --> MW
     MW -- "auth.protect() OR<br/>pass through if Bearer cx_" --> NXT
+    VSC -. "spawns" .-> LSP
 
     %% Vercel internals
     NXT -- "POST /api/evaluate<br/>x-internal-secret" --> PY
@@ -81,11 +93,12 @@ graph TB
     NXT -- "captureException" --> SN
     WEB -- "captureException + replays" --> SN
 
-    %% Future
-    NXT -. "encrypted key,<br/>sync component scans" .-> DT
-
     %% Docs site
     DOC -. "reads<br/>standards_library.json<br/>at build time" .-> PG
+
+    %% Future links
+    WEB -. "links to" .-> ACC
+    DOC -. "reads pinned spec" .-> SPEC
 
     classDef live fill:#d1fae5,stroke:#059669,color:#065f46
     classDef inert fill:#fef3c7,stroke:#d97706,color:#92400e
@@ -94,9 +107,16 @@ graph TB
 
     class FP,CLI,WEB,PG,RDS,CK,AN,NXT,PY live
     class GHA,DOC,ST,RS,SN,PL inert
-    class DT future
+    class MCP,LSP,ACC,SPEC,VSC future
     class MW vercel
 ```
+
+> **About the dashed edges to MCP / LSP / VS Code-Cursor**: those
+> surfaces don't exist in code yet. The dashed lines show what their
+> request shape *will* be when v2 Phases 1 + 5 land — same `/api/check`
+> hot path, same `Bearer cx_<token>` auth. Per the v2 banned-shortcuts
+> rule "no new surfaces that bypass the engine," every future surface
+> calls into the same single source of truth.
 
 ---
 
@@ -270,7 +290,7 @@ If you treat each flow above as a "real product moment" the user has to land, he
 | GitHub Action posts PR comments | Action needs to be split to its own public repo + Marketplace publish |
 | Real users (not Clerk test instance) | Clerk live keys (`pk_live_...` / `sk_live_...`) + new webhook secret |
 | docs.contentrx.app | New Vercel project, `Root directory: docs-site/`, bind domain |
-| Ditto integration | Session 18 — not started |
+| Ditto integration | Was v1 Session 18 — **dropped from v2** (not in BUILD_PLAN_v2 phases). Was always blocked on a Ditto API account. |
 
 ---
 
@@ -285,6 +305,8 @@ Roughly cheapest → most setup work, and prerequisites first:
 5. **Clerk live keys** (30 min) — production instance + new webhook. Switches off the test publishable key.
 6. **docs-site Vercel project** (15 min) — second Vercel project, root = docs-site/. Goes live.
 7. **GitHub Action repo split + Marketplace** (longer) — separate public repo, publish.
-8. **Ditto** — Session 18, when you have a Ditto account.
+8. **(Ditto integration is no longer in the plan — see v2 doc.)**
+
+This whole order maps to **v2 Session 1** ("Clerk live mode + env provisioning"). It's the Phase 0 floor — every later phase assumes prod has live keys + working observability + working email.
 
 After 1–5 you have a fully working free + paid product. After 6–7 the distribution story is complete.

@@ -2,18 +2,27 @@
 
 **Read this file first. Every session. No exceptions.**
 
+After this file, read [BUILD_PLAN_v2.md](BUILD_PLAN_v2.md) for the
+current canonical build plan (v5.0.0). The historical v1 plan is at
+[docs/build-plan-v1-archive.md](docs/build-plan-v1-archive.md).
+
 ## What this repo is
 
-One repo, one directory, one push cycle. Ships four things that share
-the same GitHub repo (`thenewforktimes/contentRX`) and the same working
-tree:
+One repo, one directory, one push cycle. Currently ships four things
+from the same working tree (`thenewforktimes/contentRX`); two more
+surfaces (MCP server, LSP server) land in BUILD_PLAN_v2 phases 1 and 5.
 
 1. **Python evaluation engine** — `src/content_checker/` (the library)
 2. **Figma plugin** — `figma-plugin/`
-3. **Python CLI** — `cli/`
+3. **Python CLI** — `cli/` (engine-side) and `cli-client/` (HTTP client
+   shipped to PyPI as `contentrx-cli`)
 4. **Next.js 15 backend app** — `src/app/`, `src/lib/`, `src/db/`,
    `src/middleware.ts`, `api/`, top-level `package.json` / `tsconfig.json`
    / `next.config.ts` / etc.
+5. **GitHub Action** — `github-action/` (in-tree today, splits to its
+   own public repo in v2 Phase 2)
+6. **Docs site** — `docs-site/` (in-tree today, gets its own Vercel
+   project at `docs.contentrx.app` in v2 Phase 6)
 
 The Next.js app imports the Python engine at runtime via a Vercel Python
 function (`api/evaluate.py`); no vendored copy, no sync script — the
@@ -107,7 +116,7 @@ internal helper.
 - Don't add new dependencies without checking bundle size.
 - Don't build custom UI for billing — Stripe Portal handles everything.
 - Don't store plaintext strings in the `violations` table.
-- Don't add features not in BUILD_PLAN.md — scope creep kills the ship.
+- Don't add features not in BUILD_PLAN_v2.md — scope creep kills the ship.
 - Don't commit `.env.local`; commit `.env.local.example` instead.
 - Don't wrap the Drizzle `db` object in a JavaScript `Proxy` for lazy
   init — it silently breaks libraries that inspect adapter shape. Use
@@ -208,5 +217,51 @@ to fix immediately. Track these so they don't get forgotten.
 - `python3 -m pytest tests/` — engine tests must stay green
 - `npm run lint` — app linter
 - `npm run build` — catches typecheck + Next.js build errors together
-- Run through the acceptance criteria from the current BUILD_PLAN
+- Run through the acceptance criteria from the current BUILD_PLAN_v2
   session
+
+---
+
+## Surfaces, in order of primacy (BUILD_PLAN_v2)
+
+1. **MCP server** (Python, stdio, via `uvx contentrx-mcp`) — engineers in
+   Claude Code / Cursor / Claude desktop. **Lands in v2 Phase 1.**
+2. **LSP server** (Python, stdio, via `uvx contentrx-lsp`) — engineers
+   typing in any LSP client. **Lands in v2 Phase 5.**
+3. **GitHub Action** — engineers on PRs. (In-tree today; publishes to
+   Marketplace in v2 Phase 2.)
+4. **CLI** — engineers in terminals and CI. (`contentrx-cli` on PyPI.)
+5. **Figma plugin** — designers and PMs working in Figma.
+6. **Web dashboard** — admins configuring teams.
+
+The plugin is no longer the headline. The MCP server is.
+
+## Non-negotiables (additions per BUILD_PLAN_v2)
+
+These join the existing rules in "What not to do" above. They apply to
+every API change, every new surface, every code review going forward.
+
+- `schema_version` on every API response, semver'd. (Lands in v2 Session 9.)
+- All LLM JSON parses go through `parse_llm_json` in `api_utils.py`. (Lands in v2 Session 3.)
+- All Anthropic clients have `max_retries=2`. (Lands in v2 Session 3.)
+- JS/Python parity is CI-gated; divergence blocks merge. (Lands in v2 Session 2.)
+- Every violation emitted includes a `docs_url` field pointing at the
+  rationale on docs.contentrx.app. (Lands in v2 Phase 6.)
+- Every verdict is one of `violation | review_recommended | pass`. (Lands in v2 Session 10.)
+- Override dismissals write to the `violation_overrides` table — never
+  silently discarded. (Lands in v2 Session 11.)
+
+## Banned shortcuts
+
+- **No new surfaces that bypass the engine.** Every surface calls the
+  same `/api/check` (or, in-process, the same underlying pipeline). One
+  source of truth for verdicts; no per-surface drift.
+- **No silently-swallowed errors.** Fail-closed, log, surface. Every
+  `except`/`catch` either re-raises, returns an explicit error, or
+  logs to stderr — never `pass`.
+- **No "contact sales" gating on self-serve-appropriate tiers.** Free
+  and Pro must be self-serve end to end. Team can require a one-step
+  upgrade flow but not a sales call.
+- **No accuracy claims without a link to the accuracy page.** Once
+  `/accuracy` lands (v2 Session 15), every customer-facing surface that
+  mentions accuracy links to it.
