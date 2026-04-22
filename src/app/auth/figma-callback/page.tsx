@@ -15,12 +15,12 @@
  * Session 9 to rework as sha256(key) lookup.
  */
 
-import { createId } from "@paralleldrive/cuid2";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
+import { apiKeyPrefix, generateApiKey, hashApiKey } from "@/lib/api-key";
 import { getRedis } from "@/lib/redis";
 
 const HANDOFF_PREFIX = "figma_handoff:";
@@ -68,14 +68,31 @@ async function ensureApiKey(clerkId: string): Promise<string> {
     throw new Error("Failed to provision user row");
   }
 
-  if (row.apiKey) {
-    return row.apiKey;
+  // If the user already has a key, we can't show it to them again — the
+  // raw value isn't stored. Mint a fresh one and overwrite. Rotation is
+  // the user-visible path for this; here it's automatic because the
+  // alternative (returning nothing) would break the plugin's sign-in.
+  if (row.apiKeyHash) {
+    const existingKey = generateApiKey();
+    await db
+      .update(schema.users)
+      .set({
+        apiKeyHash: hashApiKey(existingKey),
+        apiKeyPrefix: apiKeyPrefix(existingKey),
+        apiKeyCreatedAt: new Date(),
+      })
+      .where(eq(schema.users.id, row.id));
+    return existingKey;
   }
 
-  const newKey = `cx_${createId()}`;
+  const newKey = generateApiKey();
   await db
     .update(schema.users)
-    .set({ apiKey: newKey })
+    .set({
+      apiKeyHash: hashApiKey(newKey),
+      apiKeyPrefix: apiKeyPrefix(newKey),
+      apiKeyCreatedAt: new Date(),
+    })
     .where(eq(schema.users.id, row.id));
   return newKey;
 }

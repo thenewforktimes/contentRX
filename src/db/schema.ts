@@ -23,7 +23,18 @@ export const users = pgTable("users", {
     .notNull()
     .default("free"),
   teamOwnerUserId: text("team_owner_user_id"),
-  apiKey: text("api_key").unique(),
+  // sha256(rawKey) hex digest. Raw cx_... tokens never persist — the key
+  // shown to the user once at rotation/mint time is all they get. Unique
+  // so bearer lookup via eq(apiKeyHash, sha256(bearer)) hits one row or
+  // zero and never needs a scan. Nullable: a user without a current key
+  // has no hash and must rotate to get one.
+  apiKeyHash: text("api_key_hash").unique(),
+  // Display-only prefix for the dashboard ("cx_a1b2c3d4…"). Stores the
+  // first 12 chars of the raw key so the UI can confirm "yes, this is
+  // still the one you copied" without persisting the rest. Non-unique
+  // by design — collisions are vanishingly unlikely but not disallowed.
+  apiKeyPrefix: text("api_key_prefix"),
+  apiKeyCreatedAt: timestamp("api_key_created_at", { withTimezone: true }),
   dittoApiKeyEncrypted: text("ditto_api_key_encrypted"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

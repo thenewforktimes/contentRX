@@ -13,6 +13,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { hashApiKey, isWellFormedApiKey } from "./api-key";
 import type { Plan } from "./quotas";
 
 export type AuthResolved = {
@@ -32,10 +33,15 @@ export async function resolveAuth(req: Request): Promise<AuthResolved | AuthErro
 
   const apiKey = parseBearerToken(req.headers.get("authorization"));
   if (apiKey) {
+    // Reject malformed bearer tokens up front — saves an unnecessary DB
+    // round-trip and keeps malformed hashes out of the index lookup.
+    if (!isWellFormedApiKey(apiKey)) {
+      return { status: 401, message: "Invalid API key" };
+    }
     const [user] = await db
       .select()
       .from(schema.users)
-      .where(eq(schema.users.apiKey, apiKey))
+      .where(eq(schema.users.apiKeyHash, hashApiKey(apiKey)))
       .limit(1);
     if (!user) {
       return { status: 401, message: "Invalid API key" };
