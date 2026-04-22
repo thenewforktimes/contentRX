@@ -4,6 +4,7 @@
 docs-site
 cli-client
 github-action
+mcp-server
 .venv
 
 # Claude Code state — settings, worktrees of in-progress work, etc.

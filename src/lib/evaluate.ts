@@ -89,3 +89,42 @@ export async function evaluate(
 
   return (await res.json()) as EvaluateResponse;
 }
+
+export type ClassifyResponse = {
+  result: { content_type: string; moment: string };
+  latency_ms: number;
+  tokens: { input: number; output: number };
+};
+
+/**
+ * Classify-only call into the Python evaluator. Skips the full check
+ * pipeline (no rule scan, no validation) and returns just the
+ * (content_type, moment) pair. Used by the public /api/classify route
+ * which the MCP server's `classify_moment` tool consumes — cheaper than
+ * running a full evaluation purely to peek at the moment.
+ */
+export async function classify(text: string): Promise<ClassifyResponse> {
+  const secret = process.env.INTERNAL_EVAL_SECRET;
+  if (!secret) {
+    throw new Error("INTERNAL_EVAL_SECRET is not set");
+  }
+
+  const res = await fetch(internalEvaluateUrl(), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-internal-secret": secret,
+    },
+    body: JSON.stringify({ text, mode: "classify" }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `Classification failed: ${res.status} ${res.statusText} ${body}`,
+    );
+  }
+
+  return (await res.json()) as ClassifyResponse;
+}

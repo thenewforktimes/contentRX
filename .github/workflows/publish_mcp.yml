@@ -1,0 +1,74 @@
+name: Publish contentrx-mcp
+
+# Builds and publishes the MCP server package to PyPI on every tag
+# matching mcp-v*. Use `mcp-v0.1.0`, `mcp-v0.2.0`, etc., so this
+# workflow doesn't fight the eventual cli-client publish workflow on
+# the same repo.
+#
+# PyPI auth: Trusted Publishing (no API token in this repo). Configure
+# a Trusted Publisher on https://pypi.org/manage/project/contentrx-mcp/
+# pointing at this workflow file + the `publish` environment.
+
+on:
+  push:
+    tags:
+      - "mcp-v*"
+
+jobs:
+  build:
+    name: Build wheel + sdist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: pip install build
+
+      - name: Verify version matches tag
+        # Trusted Publishing rejects mismatched versions, but failing
+        # early here gives a much clearer error message in the CI log.
+        run: |
+          PKG_VERSION=$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('mcp-server/pyproject.toml').read_text())['project']['version'])")
+          TAG_VERSION="${GITHUB_REF_NAME#mcp-v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::pyproject.toml version ($PKG_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+
+      - name: Build distributions
+        run: |
+          cd mcp-server
+          python -m build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: mcp-server/dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: publish
+      url: https://pypi.org/p/contentrx-mcp
+    permissions:
+      id-token: write  # required for Trusted Publishing
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish via Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

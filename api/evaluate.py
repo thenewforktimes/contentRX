@@ -40,6 +40,9 @@ _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(_ROOT, "src"))
 
 from content_checker import check  # noqa: E402
+from content_checker.classify import classify  # noqa: E402
+from content_checker.moments import detect_moment  # noqa: E402
+from content_checker.standards.loader import load_standards  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -69,6 +72,38 @@ class handler(BaseHTTPRequestHandler):
         text = body.get("text")
         if not isinstance(text, str) or not text:
             return self._respond(400, {"error": "text is required"})
+
+        mode = body.get("mode", "check")
+
+        # Classify-only mode: cheap (~1 LLM call) helper used by the MCP
+        # server's classify_moment tool. Skips the full check pipeline
+        # so MCP clients can plan content without burning a quota slot
+        # on every classification probe.
+        if mode == "classify":
+            try:
+                content_types = load_standards().get("content_types", [])
+                content_type, classify_latency_s, classify_tokens = classify(
+                    text=text, content_types=content_types,
+                )
+                moment = detect_moment(text=text, content_type=content_type)
+            except Exception:  # noqa: BLE001
+                traceback.print_exc()
+                return self._respond(500, {"error": "Classification failed"})
+
+            return self._respond(
+                200,
+                {
+                    "result": {
+                        "content_type": content_type,
+                        "moment": moment,
+                    },
+                    "latency_ms": int(classify_latency_s * 1000),
+                    "tokens": {
+                        "input": int(getattr(classify_tokens, "input", 0)),
+                        "output": int(getattr(classify_tokens, "output", 0)),
+                    },
+                },
+            )
 
         try:
             result, latency_s, tokens = check(

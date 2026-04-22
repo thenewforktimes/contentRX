@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "contentrx-mcp"
+version = "0.1.0"
+description = "ContentRX MCP server — content-design review for Claude Code, Cursor, and any MCP client."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "ContentRX" }]
+keywords = ["mcp", "content", "linter", "ux-writing", "claude", "cursor"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+]
+# httpx for the HTTP client (httpx.AsyncClient is the natural fit for
+# the MCP SDK's async I/O), mcp[cli] for the protocol + FastMCP
+# convenience layer + the `mcp` CLI for local introspection.
+dependencies = [
+  "mcp[cli]>=1.0.0",
+  "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+
+[project.urls]
+Homepage = "https://content-rx.vercel.app"
+Documentation = "https://github.com/thenewforktimes/contentRX/blob/main/mcp-server/README.md"
+Repository = "https://github.com/thenewforktimes/contentRX"
+Issues = "https://github.com/thenewforktimes/contentRX/issues"
+Changelog = "https://github.com/thenewforktimes/contentRX/releases"
+
+[project.scripts]
+contentrx-mcp = "contentrx_mcp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["contentrx_mcp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"

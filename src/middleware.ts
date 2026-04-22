@@ -3,6 +3,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 const isProtected = createRouteMatcher([
   "/dashboard(.*)",
   "/api/check(.*)",
+  "/api/classify(.*)",
   "/api/dashboard(.*)",
   "/api/team-rules(.*)",
   "/api/team-analytics(.*)",
@@ -17,6 +18,7 @@ const isProtected = createRouteMatcher([
 // the handler and let resolveAuth() in src/lib/auth.ts make the call.
 const acceptsApiKey = createRouteMatcher([
   "/api/check(.*)",
+  "/api/classify(.*)",
   "/api/team-rules(.*)",
   "/api/team-analytics(.*)",
   "/api/integrations/(.*)",

@@ -22,9 +22,11 @@ const eslintConfig = [
       // running the main app's lint over its node_modules + generated
       // files produces thousands of irrelevant findings.
       "docs-site/**",
-      // Same for cli-client + github-action — separate sub-projects.
+      // Same for cli-client + github-action + mcp-server — separate
+      // sub-projects with their own toolchains.
       "cli-client/**",
       "github-action/**",
+      "mcp-server/**",
     ],
   },
 ];

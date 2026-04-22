@@ -33,6 +33,7 @@
     "docs-site",
     "evals",
     "github-action",
+    "mcp-server",
     "tools",
     "triage",
     "figma-plugin"
