@@ -24,10 +24,11 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import {
+  FIGMA_HANDOFF_REDIS_PREFIX,
+  isValidHandoff,
+} from "@/lib/figma-handoff";
 import { getRedis } from "@/lib/redis";
-
-const HANDOFF_PREFIX = "figma_handoff:";
-const HANDOFF_RE = /^[A-Za-z0-9_-]{16,128}$/;
 
 function corsHeaders(): Record<string, string> {
   // Figma plugin iframes send Origin: null. A wildcard is safe here because
@@ -51,7 +52,7 @@ export async function GET(req: Request) {
   const isPoll = url.searchParams.get("poll") === "1";
   const isPlugin = url.searchParams.get("plugin") === "1";
 
-  if (!handoff || !HANDOFF_RE.test(handoff)) {
+  if (!isValidHandoff(handoff)) {
     return NextResponse.json(
       { error: "Missing or invalid handoff code" },
       { status: 400, headers: corsHeaders() },
@@ -61,19 +62,22 @@ export async function GET(req: Request) {
   // -------------------------------------------------------------------------
   // Polling path — plugin-facing JSON endpoint. Never redirects, never
   // touches Clerk. Returns {token} exactly once per handoff code.
+  //
+  // `GETDEL` is atomic at the Redis level: read + delete happen as a
+  // single operation, so two concurrent pollers can't both walk away
+  // with the same token (closes BE-M-01 from the 2026-04-22 audit).
   // -------------------------------------------------------------------------
   if (isPoll) {
     const redis = getRedis();
-    const key = HANDOFF_PREFIX + handoff;
-    const token = await redis.get<string>(key);
+    const token = await redis.getdel<string>(
+      FIGMA_HANDOFF_REDIS_PREFIX + handoff,
+    );
     if (!token) {
       return NextResponse.json(
         { status: "pending" },
         { status: 202, headers: corsHeaders() },
       );
     }
-    // Consume the token — it must not be reissued to a second poller.
-    await redis.del(key);
     return NextResponse.json(
       { token },
       { status: 200, headers: corsHeaders() },

@@ -8,11 +8,9 @@
  * up the token as soon as this page has stashed it.
  *
  * Provisioning side-effect: if the Clerk-backed user row exists but has no
- * api_key yet, one is generated here (cx_<cuid2>). That's a deliberate
- * trade-off: the BUILD_PLAN ships dashboard-driven key management in
- * Session 9, and between now and then the plugin is the mint point. Keys
- * are stored plaintext — known limitation #1 in CLAUDE.md, scheduled for
- * Session 9 to rework as sha256(key) lookup.
+ * api_key hash yet, one is generated here (cx_<cuid2>) and we persist
+ * only sha256(raw) + the display prefix. The raw value is handed to the
+ * plugin once via the Redis handoff and never written to disk.
  */
 
 import { auth } from "@clerk/nextjs/server";
@@ -21,11 +19,12 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import { apiKeyPrefix, generateApiKey, hashApiKey } from "@/lib/api-key";
+import {
+  FIGMA_HANDOFF_REDIS_PREFIX,
+  FIGMA_HANDOFF_TTL_SECONDS,
+  isValidHandoff,
+} from "@/lib/figma-handoff";
 import { getRedis } from "@/lib/redis";
-
-const HANDOFF_PREFIX = "figma_handoff:";
-const HANDOFF_TTL_SECONDS = 300;
-const HANDOFF_RE = /^[A-Za-z0-9_-]{16,128}$/;
 
 type PageProps = {
   searchParams: Promise<{ handoff?: string }>;
@@ -100,7 +99,7 @@ async function ensureApiKey(clerkId: string): Promise<string> {
 export default async function FigmaCallbackPage({ searchParams }: PageProps) {
   const { handoff } = await searchParams;
 
-  if (!handoff || !HANDOFF_RE.test(handoff)) {
+  if (!isValidHandoff(handoff)) {
     return (
       <CallbackShell tone="error">
         <p>
@@ -136,8 +135,8 @@ export default async function FigmaCallbackPage({ searchParams }: PageProps) {
 
   try {
     const redis = getRedis();
-    await redis.set(HANDOFF_PREFIX + handoff, token, {
-      ex: HANDOFF_TTL_SECONDS,
+    await redis.set(FIGMA_HANDOFF_REDIS_PREFIX + handoff, token, {
+      ex: FIGMA_HANDOFF_TTL_SECONDS,
     });
   } catch (err) {
     console.error("figma-callback: redis set failed", err);

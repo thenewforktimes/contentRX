@@ -59,7 +59,26 @@ class CliError(Exception):
 # API client
 # ---------------------------------------------------------------------------
 def _api_base_url() -> str:
-    return os.environ.get("CONTENTRX_API_URL", DEFAULT_API_URL).rstrip("/")
+    """Resolve the API base URL, enforcing HTTPS.
+
+    Plain-HTTP URLs send the cx_ API key in cleartext. Most users will
+    never touch CONTENTRX_API_URL; the ones who do (self-hosted,
+    staging) are overwhelmingly on https. We guard the common mistake
+    (pasting http:// instead of https://) while leaving an escape hatch
+    for hitting a local dev server on http://localhost. (CLI-M-01 from
+    2026-04-22 audit.)
+    """
+    raw = os.environ.get("CONTENTRX_API_URL", DEFAULT_API_URL).rstrip("/")
+    if raw.startswith("https://"):
+        return raw
+    if os.environ.get("CONTENTRX_INSECURE_HTTP") == "1":
+        return raw
+    raise CliError(
+        "CONTENTRX_API_URL must start with https://. "
+        "If you intentionally want to hit a local dev server over http, "
+        "set CONTENTRX_INSECURE_HTTP=1 to opt in.",
+        code=EXIT_USAGE,
+    )
 
 
 def _read_api_key() -> str:

@@ -6,7 +6,7 @@
  * prefix for the dashboard UI — the raw key never hits disk.
  */
 
-import { createHash, randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
 
 export const API_KEY_REGEX = /^cx_[A-Za-z0-9]{16,}$/;
@@ -15,14 +15,11 @@ export const API_KEY_PREFIX_LENGTH = 12;
 /**
  * Mint a fresh cx_... key. The suffix is a 24-char cuid2 — collision-
  * resistant and URL-safe, so the Figma plugin can ship it through
- * headers and query params without encoding surprises.
- *
- * A tiny amount of extra entropy (randomUUID bytes mixed into cuid2
- * via its default RNG) means even if two requests race to rotate a
- * key at the exact same millisecond, they can't collide.
+ * headers and query params without encoding surprises. cuid2's default
+ * RNG uses the Web Crypto API in Node ≥16, so the key body is
+ * cryptographically random without any extra seeding from us.
  */
 export function generateApiKey(): string {
-  void randomUUID();
   return `cx_${createId()}`;
 }
 

@@ -77,9 +77,15 @@ class handler(BaseHTTPRequestHandler):
                 audience=body.get("audience", "product_ui"),
                 moment=body.get("moment"),
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
+            # Keep the full traceback in stderr (Vercel captures it,
+            # Sentry ingests from there) but return a generic message
+            # to the caller. The exception string can include file
+            # paths, model names, Anthropic error bodies, or truncated
+            # LLM output — none of which the TS caller should surface.
+            # (ENG-H-01 from 2026-04-22 audit.)
             traceback.print_exc()
-            return self._respond(500, {"error": f"Evaluation failed: {exc}"})
+            return self._respond(500, {"error": "Evaluation failed"})
 
         return self._respond(
             200,

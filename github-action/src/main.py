@@ -66,25 +66,71 @@ def changed_files(event: dict, workspace: Path) -> list[Path]:
 def _fetch_changed_from_api(
     repo: str, number: int, token: str, workspace: Path
 ) -> list[Path]:
+    """Fetch the full list of files changed in a PR.
+
+    Follows RFC-5988 `Link: <...>; rel="next"` pagination, so PRs with
+    more than 100 changed files don't silently drop the tail.
+    GitHub caps per_page at 100; the number of pages we follow is
+    capped at 30 (3,000 files) to avoid rogue loops on pathological PRs.
+    (GHA-C-02 from 2026-04-22 audit.)
+    """
     import urllib.request
 
-    url = f"https://api.github.com/repos/{repo}/pulls/{number}/files?per_page=100"
-    req = urllib.request.Request(
-        url,
-        headers={
-            "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {token}",
-            "User-Agent": "contentrx-action",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        entries = json.loads(resp.read().decode("utf-8"))
     out: list[Path] = []
-    for e in entries:
-        if e.get("status") == "removed":
-            continue
-        out.append(workspace / e["filename"])
+    url: str | None = (
+        f"https://api.github.com/repos/{repo}/pulls/{number}/files?per_page=100"
+    )
+    pages_fetched = 0
+    MAX_PAGES = 30
+
+    while url and pages_fetched < MAX_PAGES:
+        req = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {token}",
+                "User-Agent": "contentrx-action",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            entries = json.loads(resp.read().decode("utf-8"))
+            link_header = resp.headers.get("Link", "")
+        for e in entries:
+            if e.get("status") == "removed":
+                continue
+            out.append(workspace / e["filename"])
+        url = _parse_next_link(link_header)
+        pages_fetched += 1
+
+    if url is not None:
+        # We stopped early because we hit MAX_PAGES. Log a warning so
+        # the PR author knows the lint coverage is partial.
+        print(
+            f"warning: PR has >{MAX_PAGES * 100} changed files; "
+            f"ContentRX linted the first {len(out)} and stopped.",
+            file=sys.stderr,
+        )
+
     return out
+
+
+def _parse_next_link(link_header: str) -> str | None:
+    """Extract the `rel=\"next\"` URL from a GitHub Link header.
+
+    Example value:
+      <https://api.github.com/...?page=2>; rel="next", <...>; rel="last"
+    """
+    if not link_header:
+        return None
+    for part in link_header.split(","):
+        segment = part.strip()
+        if 'rel="next"' not in segment:
+            continue
+        start = segment.find("<")
+        end = segment.find(">", start)
+        if start != -1 and end != -1:
+            return segment[start + 1 : end]
+    return None
 
 
 def run_ast_extractor(files: list[Path], workspace: Path) -> list[Extraction]:

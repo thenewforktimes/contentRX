@@ -2296,6 +2296,19 @@ class QuotaError extends Error {
   }
 }
 
+// Thrown by the plugin when /api/check returns 429 — the user has
+// exceeded the sliding-window rate limit. Carries a `retryAfterMs`
+// hint so the scan orchestrator can pause the worker pool and resume,
+// rather than failing the whole remaining batch (PLG-H-03 from the
+// 2026-04-22 audit).
+class RateLimitError extends Error {
+  constructor(message, retryAfterMs) {
+    super(message);
+    this.name = "RateLimitError";
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
 /**
  * POST one string to /api/check and return the parsed response.
  * Maps server-side 401/402/429 to typed errors the scan loop can react
@@ -2361,7 +2374,19 @@ async function checkContentViaApi(text, contentType, moment, signal) {
     );
   }
   if (response.status === 429) {
-    throw new Error("Too many requests. Wait a moment and try again.");
+    // Honour Retry-After if present (the backend sets it in seconds).
+    // Fall back to a 10-second default, which lines up with the sliding-
+    // window rate limit's typical recovery window.
+    const retryAfterHeader = response.headers.get("retry-after");
+    const retryAfterSec = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 10;
+    const retryAfterMs =
+      Number.isFinite(retryAfterSec) && retryAfterSec > 0
+        ? Math.min(retryAfterSec, 60) * 1000
+        : 10000;
+    throw new RateLimitError(
+      "Too many requests. Pausing the scan for a moment.",
+      retryAfterMs,
+    );
   }
   if (response.status === 400) {
     throw new Error("We couldn't read that text layer. Try scanning again.");
@@ -2456,28 +2481,65 @@ async function runBatchScan(nodes, onProgress) {
   // -----------------------------------------------------------------------
   let completed = 0;
   let fatalError = null; // { kind: "auth" | "quota", message, details? }
+  // When any worker sees a 429, every worker defers to this timestamp
+  // before issuing its next request. Single gate shared across the pool
+  // means we back off as a unit instead of individually dog-piling.
+  let rateLimitedUntil = 0;
+  const MAX_RATE_LIMIT_RETRIES_PER_ITEM = 3;
+
+  async function waitForRateLimitGate() {
+    while (!signal.aborted) {
+      const waitMs = rateLimitedUntil - Date.now();
+      if (waitMs <= 0) return;
+      try {
+        await abortableSleep(Math.min(waitMs, 5000), signal);
+      } catch {
+        return; // aborted
+      }
+    }
+  }
 
   async function processItem(itemIndex) {
     if (signal.aborted || fatalError) return;
     const item = items[itemIndex];
-    try {
-      const apiData = await checkContentViaApi(
-        item.node.characters, item.contentType, item.moment, signal,
-      );
-      item.apiData = apiData;
-    } catch (err) {
-      if (err.name === "AbortError") return;
-      if (err.name === "AuthError") {
-        fatalError = { kind: "auth", message: err.message };
-        scanAbortController.abort();
-        return;
+
+    let attempt = 0;
+    while (attempt <= MAX_RATE_LIMIT_RETRIES_PER_ITEM) {
+      if (signal.aborted || fatalError) return;
+      await waitForRateLimitGate();
+      try {
+        const apiData = await checkContentViaApi(
+          item.node.characters, item.contentType, item.moment, signal,
+        );
+        item.apiData = apiData;
+        break;
+      } catch (err) {
+        if (err.name === "AbortError") return;
+        if (err.name === "AuthError") {
+          fatalError = { kind: "auth", message: err.message };
+          scanAbortController.abort();
+          return;
+        }
+        if (err.name === "QuotaError") {
+          fatalError = { kind: "quota", message: err.message, details: err.details };
+          scanAbortController.abort();
+          return;
+        }
+        if (err.name === "RateLimitError") {
+          // Slide the pool's shared gate forward. Any worker that was
+          // about to send will wait before trying again.
+          const until = Date.now() + (err.retryAfterMs || 10000);
+          if (until > rateLimitedUntil) rateLimitedUntil = until;
+          attempt++;
+          if (attempt > MAX_RATE_LIMIT_RETRIES_PER_ITEM) {
+            item.apiError = "Rate limited repeatedly. Re-scan when traffic settles.";
+            break;
+          }
+          continue;
+        }
+        item.apiError = err.message;
+        break;
       }
-      if (err.name === "QuotaError") {
-        fatalError = { kind: "quota", message: err.message, details: err.details };
-        scanAbortController.abort();
-        return;
-      }
-      item.apiError = err.message;
     }
 
     completed++;
@@ -2878,46 +2940,6 @@ function filterResults(filter) {
 }
 
 
-/**
- * Render a single-string result (legacy mode, for when only 1 layer is selected).
- */
-function renderSingleResult(text, result) {
-  const area = document.getElementById("results-area");
-  const isPassing = result.overall_verdict === "pass";
-  const violations = result.violations || [];
-
-  const preview = text.length > 120 ? text.slice(0, 120) + "…" : text;
-
-  let html = `<div class="checked-text">"${escapeHtml(preview)}"</div>`;
-  html += `<span class="content-type-badge">${escapeHtml(result.content_type || "unknown")}</span>`;
-  // Detect moment for single results (not from batch pipeline)
-  const singleMoment = detectMoment(text, result.content_type || detectContentType(text));
-  if (singleMoment && singleMoment !== "browsing_discovery") {
-    html += `<span class="moment-badge">${escapeHtml(singleMoment.replace(/_/g, " "))}</span>`;
-  }
-  html += isPassing
-    ? `<div class="verdict verdict-pass"><span class="verdict-icon">✓</span> Pass</div>`
-    : `<div class="verdict verdict-fail"><span class="verdict-icon">✗</span> Fail — ${violations.length} violation${violations.length !== 1 ? "s" : ""}</div>`;
-
-  html += `<div class="summary">${escapeHtml(result.summary || "")}</div>`;
-
-  for (const v of violations) {
-    const label = getDisplayLabel(v.standard_id);
-    const enrichedSuggestion = enrichCasingSuggestion(
-      v.standard_id, v.suggestion || "", text,
-    );
-    html += `<div class="violation-card" data-standard-id="${escapeHtml(v.standard_id)}">
-      <div class="standard-id">${escapeHtml(label)}</div>
-      <div class="issue">${escapeHtml(v.issue)}</div>
-      ${enrichedSuggestion ? `<div class="suggestion-label">Suggestion</div>
-      <div class="suggestion">${escapeHtml(enrichedSuggestion)}</div>` : ""}
-    </div>`;
-  }
-
-  area.innerHTML = html;
-}
-
-
 function renderError(message) {
   const area = document.getElementById("results-area");
   area.innerHTML = `<div class="verdict verdict-fail"><span class="verdict-icon">!</span> ${escapeHtml(message)}</div>`;
@@ -3015,6 +3037,27 @@ function showSigninError(message) {
   errorEl.style.display = "block";
 }
 
+// Abort-aware sleep. Clears the timer the moment signal fires so we
+// don't leave stray callbacks queued after Cancel (PLG-M-04).
+function abortableSleep(ms, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Sleep aborted", "AbortError"));
+      return;
+    }
+    const handle = setTimeout(() => {
+      signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(handle);
+      signal.removeEventListener("abort", onAbort);
+      reject(new DOMException("Sleep aborted", "AbortError"));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
 async function pollForToken(handoffCode, signal) {
   const start = Date.now();
   while (!signal.aborted) {
@@ -3031,7 +3074,7 @@ async function pollForToken(handoffCode, signal) {
     } catch (err) {
       if (err.name === "AbortError") throw err;
       // Transient network hiccup — wait and retry instead of giving up.
-      await new Promise(r => setTimeout(r, SIGNIN_POLL_INTERVAL_MS));
+      await abortableSleep(SIGNIN_POLL_INTERVAL_MS, signal);
       continue;
     }
 
@@ -3041,19 +3084,30 @@ async function pollForToken(handoffCode, signal) {
       throw new Error("Sign-in succeeded but the token was malformed. Try again.");
     }
     if (response.status === 202) {
-      await new Promise(r => setTimeout(r, SIGNIN_POLL_INTERVAL_MS));
+      await abortableSleep(SIGNIN_POLL_INTERVAL_MS, signal);
       continue;
     }
     if (response.status === 400) {
       throw new Error("Sign-in link is invalid. Try again.");
     }
     // Any 5xx here is transient; keep polling.
-    await new Promise(r => setTimeout(r, SIGNIN_POLL_INTERVAL_MS));
+    await abortableSleep(SIGNIN_POLL_INTERVAL_MS, signal);
   }
   throw new DOMException("Polling cancelled", "AbortError");
 }
 
 async function startSigninFlow() {
+  // Double-click guard (PLG-H-02): if a sign-in is already in flight,
+  // don't start a second one against a new handoff code. Two concurrent
+  // polls against two different codes would leave the first poller
+  // orphaned and can confuse the backend-side single-use guarantee.
+  if (signinPollAbortController) {
+    showSigninError(
+      "Sign-in already in progress. Click Cancel to start over.",
+    );
+    return;
+  }
+
   const handoffCode = generateHandoffCode();
   const signinUrl =
     `${API_BASE_URL}/auth/figma?plugin=1&handoff=${encodeURIComponent(handoffCode)}`;
@@ -3083,6 +3137,9 @@ async function startSigninFlow() {
     if (err.name === "AbortError") return;
     showScreen("signin");
     showSigninError(err.message || "Sign-in failed. Try again.");
+  } finally {
+    // Clear the controller so the next click can start a fresh flow.
+    signinPollAbortController = null;
   }
 }
 
@@ -3148,10 +3205,22 @@ document.getElementById("btn-sign-out").addEventListener("click", () => {
 
 // ====================================================================
 // Message handler — receives data from the sandbox thread
+//
+// Origin check (PLG-C-01 from 2026-04-22 audit): the only legitimate
+// sender is the Figma sandbox host, which postMessages to us through
+// window.parent. We reject anything else — that closes off a token
+// hijack vector where a cross-frame script could emit a synthesized
+// `token-loaded` or `save-token` message.
+//
+// Figma's sandbox origin is not stable across surfaces (web vs.
+// desktop vs. FigJam), so we validate by sender rather than by origin
+// string.
 // ====================================================================
 window.onmessage = async (event) => {
+  if (event.source !== window.parent) return;
+  if (!event.data || typeof event.data !== "object") return;
   const msg = event.data.pluginMessage;
-  if (!msg) return;
+  if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
 
   switch (msg.type) {
 

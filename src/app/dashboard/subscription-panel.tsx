@@ -12,6 +12,35 @@
 import { useState } from "react";
 import type { Plan } from "@/lib/quotas";
 
+// Hosts we will redirect the browser to. Any `url` field returned by
+// /api/checkout or /api/portal must resolve to one of these before we
+// set window.location.href — guards against an open-redirect vuln if a
+// future refactor changes what the API returns (UI-H-01 from
+// 2026-04-22 audit).
+const STRIPE_REDIRECT_HOSTS = new Set<string>([
+  "checkout.stripe.com",
+  "billing.stripe.com",
+]);
+
+function safeStripeRedirect(raw: unknown): string {
+  if (typeof raw !== "string") {
+    throw new Error("Stripe didn't return a URL. Try again in a moment.");
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error("Got a malformed Stripe URL. Try again.");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error("Stripe URL must be https.");
+  }
+  if (!STRIPE_REDIRECT_HOSTS.has(parsed.host)) {
+    throw new Error(`Unexpected redirect host: ${parsed.host}`);
+  }
+  return parsed.toString();
+}
+
 type Props = {
   plan: Plan;
   seats: number;
@@ -67,8 +96,7 @@ function UpgradeCard() {
         throw new Error(body?.error ?? "Checkout failed");
       }
       const { url } = await res.json();
-      if (!url) throw new Error("No checkout URL returned");
-      window.location.href = url;
+      window.location.href = safeStripeRedirect(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
       setLoading(false);
@@ -166,8 +194,7 @@ function PaidCard({
         throw new Error(body?.error ?? "Portal failed");
       }
       const { url } = await res.json();
-      if (!url) throw new Error("No portal URL returned");
-      window.location.href = url;
+      window.location.href = safeStripeRedirect(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Portal failed");
       setLoading(false);

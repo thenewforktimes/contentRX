@@ -21,6 +21,16 @@ from typing import Iterable
 
 GITHUB_API = "https://api.github.com"
 
+# GitHub hard-caps issue comment bodies at 65,536 characters. We target a
+# safely-under-limit threshold so any last-line Markdown closure we might
+# append during truncation still fits. (GHA-C-01 from 2026-04-22 audit.)
+MAX_COMMENT_CHARS = 60000
+TRUNCATION_FOOTER = (
+    "\n\n---\n"
+    "_Comment truncated to fit GitHub's 65 KB limit. "
+    "Run the action locally or check the workflow logs for the full list._"
+)
+
 
 @dataclass(frozen=True)
 class FileReport:
@@ -87,7 +97,16 @@ def render_markdown(reports: Iterable[FileReport], total_strings: int) -> str:
         "Rotate your API key at the [dashboard](https://content-rx.vercel.app/dashboard).*"
     )
 
-    return "\n".join(lines)
+    body = "\n".join(lines)
+    # Enforce the GitHub char limit. Truncate at a line boundary where
+    # possible so we don't leave a half-rendered Markdown list behind.
+    if len(body) > MAX_COMMENT_CHARS:
+        budget = MAX_COMMENT_CHARS - len(TRUNCATION_FOOTER)
+        cut = body.rfind("\n", 0, budget)
+        if cut < int(budget * 0.5):
+            cut = budget  # extremely long single line — hard cut
+        body = body[:cut] + TRUNCATION_FOOTER
+    return body
 
 
 def post_comment(
