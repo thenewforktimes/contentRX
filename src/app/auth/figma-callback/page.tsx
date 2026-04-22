@@ -152,9 +152,7 @@ export default async function FigmaCallbackPage({ searchParams }: PageProps) {
 
   return (
     <CallbackShell tone="ok">
-      <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 12 }}>
-        You&apos;re signed in.
-      </h1>
+      <h1 className="mb-3 text-2xl font-semibold">You&apos;re signed in.</h1>
       <p>
         Head back to the Figma plugin — it&apos;s picking up your session now.
         You can close this tab.
@@ -170,30 +168,12 @@ function CallbackShell({
   tone: "ok" | "error";
   children: React.ReactNode;
 }) {
-  const accent = tone === "ok" ? "#16a34a" : "#dc2626";
+  const accentBorder =
+    tone === "ok" ? "border-t-green-600" : "border-t-red-600";
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-        fontFamily:
-          'Inter, "Helvetica Neue", Helvetica, Arial, sans-serif',
-      }}
-    >
+    <main className="flex min-h-screen items-center justify-center p-6">
       <div
-        style={{
-          maxWidth: 420,
-          borderTop: `4px solid ${accent}`,
-          padding: "24px 28px",
-          borderRadius: 8,
-          background: "#fff",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          color: "#1f2937",
-          lineHeight: 1.55,
-        }}
+        className={`w-full max-w-md rounded-lg border-t-4 bg-white px-7 py-6 leading-relaxed text-neutral-800 shadow-sm dark:bg-neutral-950 dark:text-neutral-200 ${accentBorder}`}
       >
         {children}
       </div>

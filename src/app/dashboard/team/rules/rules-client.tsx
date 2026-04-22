@@ -15,6 +15,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { AlertDialog } from "@/components/alert-dialog";
 import type { CategorySummary } from "@/lib/standards";
 
 export type TeamRule = {
@@ -237,6 +238,7 @@ function CustomRuleRow({
   busy: boolean;
   onRemove: () => void;
 }) {
+  const [confirming, setConfirming] = useState(false);
   const fields = rule.ruleJson as {
     title?: string;
     rule?: string;
@@ -264,15 +266,26 @@ function CustomRuleRow({
           <button
             type="button"
             disabled={busy}
-            onClick={() => {
-              if (confirm(`Remove ${rule.standardId}?`)) onRemove();
-            }}
+            onClick={() => setConfirming(true)}
             className="rounded-md border border-red-300 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
           >
             Remove
           </button>
         )}
       </div>
+      <AlertDialog
+        open={confirming}
+        title="Remove this custom rule?"
+        description={`Rule "${fields.title ?? rule.standardId}" will no longer apply to your team's evaluations. You can re-add it later.`}
+        confirmLabel="Remove rule"
+        cancelLabel="Keep rule"
+        tone="danger"
+        onConfirm={() => {
+          setConfirming(false);
+          onRemove();
+        }}
+        onCancel={() => setConfirming(false)}
+      />
     </li>
   );
 }

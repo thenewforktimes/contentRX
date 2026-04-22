@@ -10,6 +10,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { AlertDialog } from "@/components/alert-dialog";
 
 type Props = {
   initialPrefix: string | null;
@@ -22,13 +23,16 @@ type KeyState =
   | { kind: "error"; message: string }
   | { kind: "fresh"; rawKey: string; prefix: string; createdAt: string };
 
+type CopyState = "idle" | "copied" | "failed";
+
 export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [prefix, setPrefix] = useState<string | null>(initialPrefix);
   const [createdAt, setCreatedAt] = useState<string | null>(initialCreatedAt);
   const [state, setState] = useState<KeyState>({ kind: "idle" });
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>("idle");
+  const [confirmingRevoke, setConfirmingRevoke] = useState(false);
 
   async function rotate() {
     setState({ kind: "loading", action: "rotate" });
@@ -57,9 +61,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
   }
 
   async function revoke() {
-    if (!confirm("Revoke your API key? The Figma plugin and any CLI sessions using this key will stop working.")) {
-      return;
-    }
+    setConfirmingRevoke(false);
     setState({ kind: "loading", action: "revoke" });
     try {
       const res = await fetch("/api/dashboard/api-key", { method: "DELETE" });
@@ -80,10 +82,13 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
   async function copyKey(key: string) {
     try {
       await navigator.clipboard.writeText(key);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopyState("copied");
+      setTimeout(
+        () => setCopyState((s) => (s === "copied" ? "idle" : s)),
+        2000,
+      );
     } catch {
-      // Ignore — the user can select and copy manually.
+      setCopyState("failed");
     }
   }
 
@@ -105,7 +110,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
             Copy this key now. We won&apos;t show it again.
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 truncate rounded border border-amber-200 bg-white px-2 py-1 font-mono text-xs text-neutral-900 dark:border-amber-800 dark:bg-neutral-900 dark:text-neutral-100">
+            <code className="flex-1 truncate rounded border border-amber-200 bg-white px-2 py-1 font-mono text-xs text-neutral-900 select-all dark:border-amber-800 dark:bg-neutral-900 dark:text-neutral-100">
               {state.rawKey}
             </code>
             <button
@@ -113,9 +118,17 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
               onClick={() => copyKey(state.rawKey)}
               className="rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:bg-neutral-900 dark:text-amber-200 dark:hover:bg-neutral-800"
             >
-              {copied ? "Copied" : "Copy"}
+              {copyState === "copied" ? "Copied" : "Copy"}
             </button>
           </div>
+          {copyState === "failed" && (
+            <p
+              role="status"
+              className="mt-2 text-xs text-amber-900 dark:text-amber-200"
+            >
+              Copy failed — select the text above and copy it manually.
+            </p>
+          )}
         </div>
       )}
 
@@ -149,7 +162,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
             <button
               type="button"
               disabled={isLoading}
-              onClick={revoke}
+              onClick={() => setConfirmingRevoke(true)}
               className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
             >
               {isLoading && state.action === "revoke" ? "Revoking…" : "Revoke"}
@@ -172,6 +185,17 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
           </button>
         </div>
       )}
+
+      <AlertDialog
+        open={confirmingRevoke}
+        title="Revoke this API key?"
+        description="The Figma plugin and any CLI sessions using this key will stop working immediately. You'll need to generate a new key to sign in again."
+        confirmLabel="Revoke key"
+        cancelLabel="Keep key"
+        tone="danger"
+        onConfirm={revoke}
+        onCancel={() => setConfirmingRevoke(false)}
+      />
     </section>
   );
 }

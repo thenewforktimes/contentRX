@@ -123,8 +123,6 @@ export default async function DashboardPage() {
           <TeamAnalyticsLink />
         </>
       )}
-
-      <DittoPanel />
     </div>
   );
 }
@@ -170,23 +168,6 @@ function TeamAnalyticsLink() {
       >
         Open analytics
       </Link>
-    </section>
-  );
-}
-
-function DittoPanel() {
-  return (
-    <section className="rounded-lg border border-dashed border-neutral-300 p-5 text-sm text-neutral-500 dark:border-neutral-700">
-      <header className="mb-1 flex items-center justify-between">
-        <h2 className="font-semibold text-neutral-700 dark:text-neutral-300">
-          Connect Ditto
-        </h2>
-        <span className="text-xs">Coming soon</span>
-      </header>
-      <p>
-        Scan Ditto components for content-standard violations alongside your
-        Figma work. Lands once the Ditto integration session ships.
-      </p>
     </section>
   );
 }
