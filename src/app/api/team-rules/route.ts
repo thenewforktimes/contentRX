@@ -15,6 +15,7 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
 import { getDb, schema } from "@/db";
 import {
@@ -66,7 +67,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: auth.message }, { status: auth.status });
   }
   if (auth.plan !== "team") {
-    return NextResponse.json({ rules: [] });
+    return NextResponse.json(envelope({ rules: [] }));
   }
 
   const ownerId = auth.teamOwnerUserId ?? auth.user.id;
@@ -76,10 +77,9 @@ export async function GET(req: Request) {
     .from(schema.teamRules)
     .where(eq(schema.teamRules.teamOwnerUserId, ownerId));
 
-  return NextResponse.json({
-    rules,
-    is_admin: auth.teamOwnerUserId === null,
-  });
+  return NextResponse.json(
+    envelope({ rules, is_admin: auth.teamOwnerUserId === null }),
+  );
 }
 
 export async function POST(req: Request) {
@@ -143,7 +143,7 @@ export async function POST(req: Request) {
         ruleJson: parsed.data.rule_json,
       })
       .returning();
-    return NextResponse.json({ rule: row }, { status: 201 });
+    return NextResponse.json(envelope({ rule: row }), { status: 201 });
   }
 
   const standardId = parsed.data.standard_id;
@@ -172,7 +172,7 @@ export async function POST(req: Request) {
         set: { updatedAt: new Date() },
       })
       .returning();
-    return NextResponse.json({ rule: row }, { status: 201 });
+    return NextResponse.json(envelope({ rule: row }), { status: 201 });
   }
 
   // override
@@ -193,5 +193,5 @@ export async function POST(req: Request) {
       set: { ruleJson: parsed.data.rule_json, updatedAt: new Date() },
     })
     .returning();
-  return NextResponse.json({ rule: row }, { status: 201 });
+  return NextResponse.json(envelope({ rule: row }), { status: 201 });
 }

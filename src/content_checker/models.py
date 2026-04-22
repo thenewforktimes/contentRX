@@ -7,6 +7,46 @@ Every function in the package uses these instead of raw dicts.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
+
+
+# ---------------------------------------------------------------------------
+# Public API envelope (BUILD_PLAN_v2 Session 9)
+# ---------------------------------------------------------------------------
+
+# Bumped whenever the response shape changes. Minor for additive fields,
+# major for breaking changes. The TS-side constant in
+# `src/lib/api-envelope.ts` mirrors this — keep them in lock-step.
+SCHEMA_VERSION = "1.0.0"
+
+
+@dataclass
+class EvaluationEnvelope:
+    """Wrapping shape for any public API response.
+
+    The TS layer is the primary source of truth (every public Next.js
+    route calls `envelope()` from `src/lib/api-envelope.ts`); this
+    dataclass mirrors the contract on the Python side so engine-level
+    tools that emit JSON directly (the eval pipeline harness, future
+    Python evaluators) can produce the same shape without re-deriving
+    the field set.
+
+    See docs/API_VERSIONING.md for the semver policy.
+    """
+
+    result: Any
+    schema_version: str = SCHEMA_VERSION
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        result = self.result
+        if hasattr(result, "to_dict"):
+            result = result.to_dict()
+        return {
+            "schema_version": self.schema_version,
+            "result": result,
+            "warnings": list(self.warnings),
+        }
 
 
 @dataclass

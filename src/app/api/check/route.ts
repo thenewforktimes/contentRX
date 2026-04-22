@@ -15,6 +15,7 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
 import { appUrl as emailAppUrl, sendEmail } from "@/lib/email";
 import { AUDIENCES, CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
@@ -194,19 +195,21 @@ export async function POST(req: Request) {
     console.error("logViolations failed:", err);
   }
 
-  return json({
-    result,
-    latency_ms: evalResponse.latency_ms,
-    tokens: evalResponse.tokens,
-    usage: {
-      plan: auth.plan,
-      used: newUsed,
-      quota,
-      remaining: Math.max(0, quota - newUsed),
-      month: currentMonth(),
-      text_hash: hashText(text),
-    },
-  });
+  return json(
+    envelope({
+      result,
+      latency_ms: evalResponse.latency_ms,
+      tokens: evalResponse.tokens,
+      usage: {
+        plan: auth.plan,
+        used: newUsed,
+        quota,
+        remaining: Math.max(0, quota - newUsed),
+        month: currentMonth(),
+        text_hash: hashText(text),
+      },
+    }),
+  );
 }
 
 function appUrl(): string {
