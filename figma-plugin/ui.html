@@ -129,6 +129,8 @@
 
   .verdict-pass { background: #e6f9ed; color: #1a7f37; }
   .verdict-fail { background: #fde8e8; color: #c33; }
+  /* v2 Session 10 — three-state verdict; REVIEW is amber, between pass and fail */
+  .verdict-review { background: #fff8e1; color: #b76e00; }
   .verdict-icon { font-size: 14px; }
 
   /* ------------------------------------------------------------------ */
@@ -304,6 +306,8 @@
   .dot-fail { background: #e55; }
   .dot-pass { background: #1a7f37; }
   .dot-error { background: #f59e0b; }
+  /* v2 Session 10 — REVIEW state. Amber, distinct from fail (red) and error (orange). */
+  .dot-review { background: #d4a017; }
 
   .node-card-title {
     font-size: 11px;
@@ -2589,6 +2593,11 @@ async function runBatchScan(nodes, onProgress) {
       moment: item.moment,
       violations: [...item.preprocessViolations],
       overallVerdict: "pass",
+      // v2 Session 10 — three-state verdict + reason. Default to "pass";
+      // populated from apiResult below or recomputed locally from
+      // violation count if the server didn't include it.
+      verdict: "pass",
+      reviewReason: null,
       summary: "",
       error: item.apiError || null,
     };
@@ -2608,6 +2617,7 @@ async function runBatchScan(nodes, onProgress) {
           issue: v.issue,
           suggestion: v.suggestion,
           source: v.source === "preprocessor" ? "preprocessor" : "ai",
+          confidence: typeof v.confidence === "number" ? v.confidence : 1.0,
         });
       }
 
@@ -2618,6 +2628,19 @@ async function runBatchScan(nodes, onProgress) {
         nodeResult.overallVerdict = "pass";
         const serverSaidFail = apiResult.overall_verdict === "fail";
         nodeResult.summary = serverSaidFail ? "" : (apiResult.summary || "");
+      }
+
+      // Prefer the server's three-state verdict when present (v1.1.0+).
+      // Fall back to a local recompute from violation suppression so
+      // older API responses still get a sensible state.
+      if (apiResult.verdict) {
+        nodeResult.verdict = apiResult.verdict;
+      } else {
+        nodeResult.verdict =
+          nodeResult.violations.length > 0 ? "violation" : "pass";
+      }
+      if (apiResult.review_reason) {
+        nodeResult.reviewReason = apiResult.review_reason;
       }
     }
 
@@ -2867,15 +2890,35 @@ function exportScanResults() {
  * Render a single node result card.
  */
 function renderNodeCard(result) {
-  const isFail = result.overallVerdict === "fail";
+  // v2 Session 10 — three-state verdict. Falls back to overallVerdict
+  // for backward compat with older /api/check responses (pre-1.1.0).
+  const verdict = result.verdict || result.overallVerdict;
+  const isReview = verdict === "review_recommended";
+  const isFail = verdict === "violation" || verdict === "fail";
   const isError = result.error && result.violations.length === 0;
-  const dotClass = isError ? "dot-error" : isFail ? "dot-fail" : "dot-pass";
-  const filterClass = isFail ? "fail" : "pass";
+  let dotClass, filterClass, statusLabel;
+  if (isError) {
+    dotClass = "dot-error";
+    filterClass = "fail";
+    statusLabel = "Error";
+  } else if (isReview) {
+    dotClass = "dot-review";
+    filterClass = "review";
+    statusLabel = "Review";
+  } else if (isFail) {
+    dotClass = "dot-fail";
+    filterClass = "fail";
+    statusLabel = null;  // violation count below
+  } else {
+    dotClass = "dot-pass";
+    filterClass = "pass";
+    statusLabel = "Pass";
+  }
   const preview = result.text.length > 60 ? result.text.slice(0, 60) + "…" : result.text;
   const violationCount = result.violations.length;
   const meta = violationCount > 0
-    ? `${violationCount} issue${violationCount !== 1 ? "s" : ""}`
-    : isError ? "Error" : "Pass";
+    ? `${violationCount} issue${violationCount !== 1 ? "s" : ""}${isReview ? " (review)" : ""}`
+    : statusLabel || "Pass";
 
   const gotoLabel = `Go to layer in Figma${result.parentName ? " (" + result.parentName + ")" : ""}`;
   let html = `<div class="node-card" data-verdict="${filterClass}">`;

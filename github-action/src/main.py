@@ -266,11 +266,20 @@ def collect_reports(
     for ext in extractions:
         response = run_contentrx(ext.text, content_type, ext.source_file)
         result = response.get("result") or {}
+        # v2 Session 10 — preserve the three-state verdict + reason.
+        # Defaults handle older API versions that don't ship v1.1.0:
+        # if `verdict` is absent, derive a coarse pass/violation from
+        # violation count.
+        verdict = result.get("verdict")
+        if not verdict:
+            verdict = "violation" if (result.get("violations") or []) else "pass"
         entry = {
             "text": ext.text,
             "line": ext.line,
             "kind": ext.kind,
             "violations": result.get("violations") or [],
+            "verdict": verdict,
+            "review_reason": result.get("review_reason"),
         }
         by_file.setdefault(ext.source_file, []).append(entry)
 
@@ -327,10 +336,20 @@ def main() -> int:
                 print(f"warning: could not read {p}: {err}", file=sys.stderr)
 
     reports = collect_reports(extractions, content_type=content_type)
+    # Hard violations vs review_recommended findings are tracked
+    # separately so the fail-on policy below can gate independently
+    # (BUILD_PLAN_v2 Session 10).
     total_violations = sum(
         len(e.get("violations", []))
         for r in reports
         for e in r.entries
+        if e.get("verdict") == "violation"
+    )
+    total_reviews = sum(
+        1
+        for r in reports
+        for e in r.entries
+        if e.get("verdict") == "review_recommended"
     )
 
     body = render_markdown(reports, total_strings=len(extractions))
@@ -349,11 +368,28 @@ def main() -> int:
         print(body)
 
     _write_output("violations", str(total_violations))
-    _write_output("passed", "true" if total_violations == 0 else "false")
+    _write_output("reviews", str(total_reviews))
 
-    if strict and total_violations > 0:
-        return 1
-    return 0
+    # fail-on policy (v2 Session 10):
+    #   "violation"  → fail when total_violations > 0  (default)
+    #   "review"     → fail when violations OR reviews exist (strictest)
+    #   "none"       → never fail (advisory-only)
+    # Backward compat: `strict: true` is the v1.0 toggle. When set, it
+    # forces fail-on=violation regardless of fail-on input. Existing
+    # workflows pinning strict keep working.
+    fail_on = os.environ.get("CONTENTRX_FAIL_ON", "violation").lower()
+    if strict:
+        fail_on = "violation"
+
+    if fail_on == "review":
+        failed = (total_violations + total_reviews) > 0
+    elif fail_on == "none":
+        failed = False
+    else:  # "violation" (default)
+        failed = total_violations > 0
+
+    _write_output("passed", "false" if failed else "true")
+    return 1 if failed else 0
 
 
 def _write_output(name: str, value: str) -> None:

@@ -17,7 +17,7 @@ import httpx
 
 from .auth import AuthError, get_api_base_url, get_api_key
 
-_USER_AGENT = "contentrx-mcp/0.2.0"
+_USER_AGENT = "contentrx-mcp/0.3.0"
 _TIMEOUT_SECONDS = 60.0
 
 
@@ -45,12 +45,15 @@ class RateLimitError(ContentRXError):
 class CheckResult:
     """Subset of /api/check response surfaced to MCP clients."""
 
-    overall_verdict: str
+    overall_verdict: str  # legacy: "pass" | "fail" | "error"
     content_type: str | None
     moment: str | None
     violations: list[dict[str, Any]]
     passes: list[dict[str, Any]]
     summary: str | None
+    # v1.1.0 (BUILD_PLAN_v2 Session 10) — three-state verdict + reason.
+    verdict: str = "pass"  # "pass" | "violation" | "review_recommended" | "error"
+    review_reason: str | None = None
 
 
 @dataclass
@@ -161,6 +164,8 @@ class ContentRXClient:
             violations=list(result.get("violations") or []),
             passes=list(result.get("passes") or []),
             summary=result.get("summary"),
+            verdict=result.get("verdict", result.get("overall_verdict", "pass")),
+            review_reason=result.get("review_reason"),
         )
 
     async def classify(self, *, text: str) -> ClassifyResult:

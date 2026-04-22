@@ -1136,7 +1136,10 @@ def run_preprocess(text: str, content_type: str = "short_ui_copy"):
     suppressed = get_suppressed_standards(results)
 
     try:
-        from content_checker.models import Violation
+        from content_checker.models import (
+            DEFAULT_CONFIDENCE_PREPROCESSOR,
+            Violation,
+        )
     except ImportError:
         violations = get_preprocess_violations(results)
         return violations
@@ -1144,12 +1147,15 @@ def run_preprocess(text: str, content_type: str = "short_ui_copy"):
     violations = []
     for r in results:
         if r.is_violation:
+            # Preprocessor checks are deterministic regex/AST work — full
+            # confidence in their findings (per BUILD_PLAN_v2 Session 10).
             violations.append(Violation(
                 standard_id=r.standard_id,
                 rule=r.issue or "",
                 issue=r.issue or "",
                 suggestion=r.suggestion or "",
                 source="deterministic",
+                confidence=DEFAULT_CONFIDENCE_PREPROCESSOR,
             ))
 
     violations = _ViolationList(violations, suppressed)

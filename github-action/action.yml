@@ -21,6 +21,22 @@ inputs:
     required: false
     default: 'false'
 
+  fail-on:
+    description: >-
+      Which verdict states fail the check (BUILD_PLAN_v2 Session 10
+      three-state verdict). One of:
+        violation  - default. Fails on hard violations only;
+                     review_recommended findings show in the comment
+                     as warnings but don't fail CI.
+        review     - Fails on either review_recommended OR violation.
+                     Strictest setting; pick this once your team
+                     trusts the calibrated REVIEW signal.
+        none       - Never fails (advisory-only).
+      Note: `strict: true` is the v1.0 toggle and forces fail-on=violation
+      when set, for backward compatibility.
+    required: false
+    default: 'violation'
+
   content-type:
     description: >-
       Default content_type hint sent to the API when the extractor can't
@@ -46,8 +62,14 @@ inputs:
 outputs:
   violations:
     description: Total violation count across all extracted strings.
+  reviews:
+    description: >-
+      Count of strings flagged as "review_recommended" (v1.1.0 verdict).
+      Zero on older API versions that don't return verdict.
   passed:
-    description: '"true" when no violations found, "false" otherwise.'
+    description: >-
+      "true" when no findings caused failure under the active fail-on
+      setting; "false" otherwise.
 
 runs:
   using: docker
@@ -56,5 +78,6 @@ runs:
     CONTENTRX_API_KEY: ${{ inputs.api-key }}
     CONTENTRX_API_URL: ${{ inputs.api-url }}
     CONTENTRX_STRICT: ${{ inputs.strict }}
+    CONTENTRX_FAIL_ON: ${{ inputs.fail-on }}
     CONTENTRX_CONTENT_TYPE: ${{ inputs.content-type }}
     CONTENTRX_PATHS: ${{ inputs.paths }}

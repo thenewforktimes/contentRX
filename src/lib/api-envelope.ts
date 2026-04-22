@@ -19,7 +19,7 @@
  *   consistency with the BUILD_PLAN_v2 envelope spec.
  */
 
-export const SCHEMA_VERSION = "1.0.0" as const;
+export const SCHEMA_VERSION = "1.1.0" as const;
 
 /**
  * Adds `schema_version` and `warnings` to a response payload. Existing

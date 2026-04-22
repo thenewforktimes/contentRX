@@ -31,10 +31,12 @@ from content_checker.classify import classify, classify_heuristic
 from content_checker.filter import filter_standards, get_content_type_descriptions
 from content_checker.models import (
     CheckResult,
+    DEFAULT_CONFIDENCE_LLM,
     PassedStandard,
     PipelineMeta,
     TokenUsage,
     Violation,
+    derive_verdict,
 )
 from content_checker.moments import (
     detect_moment,
@@ -192,17 +194,29 @@ def _llm_scan(
 
 
 def _parse_llm_violations(raw_violations: list[dict]) -> list[Violation]:
-    """Convert raw LLM violation dicts to Violation objects."""
-    return [
-        Violation(
-            standard_id=v.get("standard_id", ""),
-            rule=v.get("rule", ""),
-            issue=v.get("issue", ""),
-            suggestion=v.get("suggestion", ""),
-            source="llm",
+    """Convert raw LLM violation dicts to Violation objects.
+
+    Optional `confidence` from the LLM response (added in v1.1.0; absent
+    today since the scan prompt doesn't yet request it) is parsed when
+    present, falling back to DEFAULT_CONFIDENCE_LLM.
+    """
+    out: list[Violation] = []
+    for v in raw_violations:
+        try:
+            confidence = float(v.get("confidence", DEFAULT_CONFIDENCE_LLM))
+        except (TypeError, ValueError):
+            confidence = DEFAULT_CONFIDENCE_LLM
+        out.append(
+            Violation(
+                standard_id=v.get("standard_id", ""),
+                rule=v.get("rule", ""),
+                issue=v.get("issue", ""),
+                suggestion=v.get("suggestion", ""),
+                source="llm",
+                confidence=confidence,
+            )
         )
-        for v in raw_violations
-    ]
+    return out
 
 
 def _parse_llm_passes(raw_passes: list[dict]) -> list[PassedStandard]:
@@ -356,9 +370,16 @@ def check(
     # Collect moment metadata for triage
     moment_weights = get_moment_weights_applied(detected_moment)
 
+    overall = "fail" if final_violations else "pass"
+    verdict, review_reason = derive_verdict(
+        overall_verdict=overall, violations=final_violations,
+    )
+
     result = CheckResult(
         content_type=detected_type,
-        overall_verdict="fail" if final_violations else "pass",
+        overall_verdict=overall,
+        verdict=verdict,
+        review_reason=review_reason,
         violations=final_violations,
         passes=final_passes,
         summary=scan_result.get("summary", ""),
@@ -415,9 +436,16 @@ def check_unfiltered(
     flagged_ids = {v.standard_id for v in final_violations}
     final_passes = [p for p in llm_passes if p.standard_id not in flagged_ids]
 
+    overall = "fail" if final_violations else "pass"
+    verdict, review_reason = derive_verdict(
+        overall_verdict=overall, violations=final_violations,
+    )
+
     result = CheckResult(
         content_type="unfiltered",
-        overall_verdict="fail" if final_violations else "pass",
+        overall_verdict=overall,
+        verdict=verdict,
+        review_reason=review_reason,
         violations=final_violations,
         passes=final_passes,
         summary=scan_result.get("summary", ""),

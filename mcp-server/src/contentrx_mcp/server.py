@@ -92,7 +92,9 @@ async def evaluate_copy(
         return _typed_error(exc)
 
     return {
+        "verdict": result.verdict,
         "overall_verdict": result.overall_verdict,
+        "review_reason": result.review_reason,
         "content_type": result.content_type,
         "moment": result.moment,
         "violations": result.violations,

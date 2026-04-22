@@ -202,19 +202,40 @@ def print_result(
     verbose: bool,
     stream=None,
 ) -> bool:
-    """Render a single result; returns True if it passed."""
+    """Render a single result; returns True if it passed.
+
+    Three-state verdict (v1.1.0+, BUILD_PLAN_v2 Session 10):
+      pass               → green ✓
+      violation          → red ✗
+      review_recommended → yellow ⚠ (printed as "REVIEW")
+      error              → red ✗ (treated like a violation for output)
+
+    REVIEW does NOT count as a failure for the return value — CI runners
+    that wrap this CLI and exit on `passed=False` only fail on hard
+    violations. To fail on REVIEW too, use the GitHub Action's
+    `fail-on: review` input.
+    """
     stream = stream or sys.stdout
     result = response.get("result", {})
-    verdict = result.get("overall_verdict", "pass")
-    icon = "✓" if verdict == "pass" else "✗"
-    color = "\033[32m" if verdict == "pass" else "\033[31m"
+    # Prefer the new three-state verdict; fall back to overall_verdict
+    # for older API versions that haven't shipped the v1.1.0 envelope.
+    verdict = result.get("verdict") or result.get("overall_verdict", "pass")
+    review_reason = result.get("review_reason")
+    if verdict == "pass":
+        icon, color, label = "✓", "\033[32m", "PASS"
+    elif verdict == "review_recommended":
+        icon, color, label = "⚠", "\033[33m", "REVIEW"
+    else:  # violation, fail, error
+        icon, color, label = "✗", "\033[31m", verdict.upper()
     reset = "\033[0m"
     use_color = _stream_supports_color(stream)
 
-    verdict_line = f"{icon} {verdict.upper()}"
+    verdict_line = f"{icon} {label}"
     if use_color:
         verdict_line = f"{color}{verdict_line}{reset}"
     print(f"\n{verdict_line}", file=stream)
+    if verdict == "review_recommended" and review_reason:
+        print(f"  Reason: {review_reason}", file=stream)
     print(f"  Content type: {result.get('content_type', 'unknown')}", file=stream)
     if result.get("summary"):
         print(f"  {result['summary']}", file=stream)
@@ -240,7 +261,9 @@ def print_result(
         if lat is not None:
             print(f"  Latency: {lat} ms", file=stream)
 
-    return verdict == "pass"
+    # REVIEW counts as "passed" for exit-code purposes — REVIEW means
+    # "look at this," not "this is wrong." Hard violations still fail.
+    return verdict in ("pass", "review_recommended")
 
 
 def _stream_supports_color(stream) -> bool:

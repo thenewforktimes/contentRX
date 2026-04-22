@@ -91,13 +91,139 @@ def test_main_posts_comment_when_violations_found(
     monkeypatch.setattr(action_main, "post_comment", fake_post)
 
     code = action_main.main()
-    assert code == 0  # strict=false → violations don't fail the check
+    # v2 Session 10 — default fail-on is "violation" (was: don't fail
+    # unless strict=true). Hard violations now fail the check by default;
+    # workflows that want the v1 advisory-only behavior should set
+    # `fail-on: none`.
+    assert code == 1
     assert "ACC-01" in posted["body"]
     assert posted["repo"] == "owner/repo"
     assert posted["pull_number"] == 42
     output = output_file.read_text()
     assert "violations=" in output
     assert "passed=false" in output
+
+
+def test_fail_on_none_does_not_fail_on_violation(
+    monkeypatch: pytest.MonkeyPatch,
+    workspace: Path,
+    event_file: Path,
+    tmp_path: Path,
+) -> None:
+    """`fail-on: none` recovers the v1 advisory-only behavior."""
+    output_file = tmp_path / "gha_output"
+    monkeypatch.setenv("GITHUB_WORKSPACE", str(workspace))
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event_file))
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
+    monkeypatch.setenv("GITHUB_TOKEN", "ghs_test_token")
+    monkeypatch.setenv("CONTENTRX_API_KEY", "cx_test")
+    monkeypatch.setenv("CONTENTRX_STRICT", "false")
+    monkeypatch.setenv("CONTENTRX_FAIL_ON", "none")
+    monkeypatch.setenv("CONTENTRX_PATHS", "**/*.tsx")
+    monkeypatch.setattr(action_main, "_fetch_changed_from_api", _raise)
+    monkeypatch.setattr(
+        action_main, "run_contentrx",
+        lambda text, ct, fp: _violation_response(),
+    )
+    monkeypatch.setattr(action_main, "post_comment", lambda *_a, **_kw: {"id": 1})
+
+    code = action_main.main()
+    assert code == 0
+    output = output_file.read_text()
+    assert "passed=true" in output
+
+
+def test_fail_on_review_fails_when_review_recommended(
+    monkeypatch: pytest.MonkeyPatch,
+    workspace: Path,
+    event_file: Path,
+    tmp_path: Path,
+) -> None:
+    """`fail-on: review` fails on REVIEW-only results, not just violations."""
+    def review_response(text: str, ct: str, fp: str) -> dict:
+        return {
+            "result": {
+                "content_type": "button_cta",
+                "overall_verdict": "fail",
+                "verdict": "review_recommended",
+                "review_reason": "low_confidence",
+                "violations": [
+                    {
+                        "standard_id": "VT-01",
+                        "issue": "Possibly passive voice.",
+                        "suggestion": "Consider active voice.",
+                        "confidence": 0.5,
+                    }
+                ],
+                "summary": "Worth a second look.",
+            },
+            "usage": {"used": 1, "quota": 25},
+        }
+
+    output_file = tmp_path / "gha_output"
+    monkeypatch.setenv("GITHUB_WORKSPACE", str(workspace))
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event_file))
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
+    monkeypatch.setenv("GITHUB_TOKEN", "ghs_test_token")
+    monkeypatch.setenv("CONTENTRX_API_KEY", "cx_test")
+    monkeypatch.setenv("CONTENTRX_STRICT", "false")
+    monkeypatch.setenv("CONTENTRX_FAIL_ON", "review")
+    monkeypatch.setenv("CONTENTRX_PATHS", "**/*.tsx")
+    monkeypatch.setattr(action_main, "_fetch_changed_from_api", _raise)
+    monkeypatch.setattr(action_main, "run_contentrx", review_response)
+    monkeypatch.setattr(action_main, "post_comment", lambda *_a, **_kw: {"id": 1})
+
+    code = action_main.main()
+    assert code == 1
+    output = output_file.read_text()
+    # Workspace fixture has multiple .tsx files; each maps to one review.
+    assert "violations=0" in output
+    assert "passed=false" in output
+    # At least one review counted; exact number depends on the fixture.
+    assert any(line.startswith("reviews=") and int(line.split("=")[1]) >= 1
+               for line in output.splitlines())
+
+
+def test_fail_on_violation_default_passes_on_review_only(
+    monkeypatch: pytest.MonkeyPatch,
+    workspace: Path,
+    event_file: Path,
+    tmp_path: Path,
+) -> None:
+    """Default fail-on=violation does NOT fail on review_recommended only."""
+    def review_response(text: str, ct: str, fp: str) -> dict:
+        return {
+            "result": {
+                "content_type": "button_cta",
+                "overall_verdict": "fail",
+                "verdict": "review_recommended",
+                "violations": [
+                    {"standard_id": "VT-01", "issue": "?", "suggestion": "?", "confidence": 0.5}
+                ],
+                "summary": "",
+            },
+            "usage": {"used": 1, "quota": 25},
+        }
+
+    output_file = tmp_path / "gha_output"
+    monkeypatch.setenv("GITHUB_WORKSPACE", str(workspace))
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(event_file))
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
+    monkeypatch.setenv("GITHUB_TOKEN", "ghs_test_token")
+    monkeypatch.setenv("CONTENTRX_API_KEY", "cx_test")
+    monkeypatch.setenv("CONTENTRX_STRICT", "false")
+    monkeypatch.setenv("CONTENTRX_PATHS", "**/*.tsx")
+    monkeypatch.setattr(action_main, "_fetch_changed_from_api", _raise)
+    monkeypatch.setattr(action_main, "run_contentrx", review_response)
+    monkeypatch.setattr(action_main, "post_comment", lambda *_a, **_kw: {"id": 1})
+
+    code = action_main.main()
+    assert code == 0
+    output = output_file.read_text()
+    assert "violations=0" in output
+    assert "passed=true" in output
+    assert any(line.startswith("reviews=") and int(line.split("=")[1]) >= 1
+               for line in output.splitlines())
 
 
 def test_main_strict_mode_returns_nonzero_on_violations(

@@ -63,20 +63,47 @@ Whenever the version bumps, append a deprecation entry to the
 Clients should log + display warnings; future versions may turn them
 into errors.
 
+## Changelog
+
+### 1.1.0 (v2 Session 10)
+
+**Additive bump** — old clients keep working.
+
+- **`Violation.confidence`** (float, 0–1): engine self-rating for each
+  finding. Preprocessor violations get 1.0; LLM violations get 0.85
+  by default. When the LLM scan response includes its own confidence
+  per violation, that value overrides the default.
+- **`CheckResult.verdict`** (string, one of
+  `"pass" | "violation" | "review_recommended" | "error"`): the
+  calibrated three-state verdict. `overall_verdict` stays on
+  `"pass" | "fail" | "error"` for backward compat.
+- **`CheckResult.review_reason`** (string, optional): non-null only
+  when `verdict == "review_recommended"`. Current values: `"low_confidence"`.
+
+Clients that were reading `overall_verdict` keep working. Clients that
+want the three-state verdict should read `verdict` and fall back to
+`overall_verdict` if absent (for pre-1.1.0 responses).
+
+### 1.0.0 (v2 Session 9)
+
+Initial envelope: every public response carries `schema_version` and
+`warnings`. See [the envelope section](#the-envelope) above.
+
 ## Adding a field (minor bump example)
 
-When v2 Session 10 lands, every violation gets a new `confidence`
-field. To ship that:
+When v2 Session 10 landed, every violation got a new `confidence`
+field. The pattern:
 
 1. Add the field to `Violation.to_dict()` in
    `src/content_checker/models.py` — the field is OPTIONAL on the
    client side (clients that don't read it must continue to work).
 2. Bump `SCHEMA_VERSION` in `src/lib/api-envelope.ts` and the mirror
-   in `src/content_checker/models.py` from `1.0.0` to `1.1.0`.
+   in `src/content_checker/models.py` (e.g. `1.0.0` → `1.1.0`).
 3. Add a `warnings` entry only if the change affects existing fields
    (a pure addition typically doesn't need one).
 4. Run the parity gate (`python3 tools/parity_check.py`) to confirm
    the JS side is in lock-step.
+5. Update the Changelog section above.
 
 ## Removing a field (major bump example — hypothetical)
 
