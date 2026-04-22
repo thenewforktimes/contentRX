@@ -24,6 +24,7 @@
     "postgres": "^3.4.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "recharts": "^3.8.1",
     "resend": "^6.12.2",
     "stripe": "^22.0.2",
     "svix": "^1.91.1",
