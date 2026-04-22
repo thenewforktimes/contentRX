@@ -1,0 +1,7 @@
+# Sub-projects with their own Vercel projects / deploy targets.
+# Keeping them out of the main app's build context avoids accidental
+# inclusion in tsconfig walks and shrinks the upload bundle.
+docs-site
+cli-client
+github-action
+.venv

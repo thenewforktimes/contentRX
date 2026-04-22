@@ -29,7 +29,10 @@
     "src/content_checker",
     "tests",
     "cli",
+    "cli-client",
+    "docs-site",
     "evals",
+    "github-action",
     "tools",
     "triage",
     "figma-plugin"
