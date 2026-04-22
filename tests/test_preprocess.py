@@ -45,7 +45,6 @@ from content_checker.preprocess import (
     check_grm06_compound_modifiers,
     check_inc01_gendered_language,
     check_inc02_non_inclusive_tech,
-    check_legal_content,
     check_prf01_double_spaces,
     check_prf02_repeated_words,
     check_prf03_trailing_period_on_headings,
@@ -2118,51 +2117,6 @@ class TestAct01BinaryResponses:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Legal content routing
-# ═══════════════════════════════════════════════════════════════════════
-
-
-class TestLegalContentRouting:
-    """Legal boilerplate should be routed away from standards checking.
-
-    Source: test_preprocess.py
-    """
-
-    def test_kp_legal_disclaimer_detected(self):
-        text = (
-            "In California, KFHP plans are offered and underwritten by "
-            "Kaiser Foundation Health Plan, Inc., One Kaiser Plaza, Oakland, CA 94612."
-        )
-        assert check_legal_content(text) is True
-
-    def test_kp_medicare_contract_detected(self):
-        text = (
-            "In California, Hawaii, and Washington, Kaiser Permanente is an "
-            "HMO plan with a Medicare contract. In Colorado, Kaiser Permanente "
-            "is an HMO, HMO-POS and PPO plan with Medicare contracts."
-        )
-        assert check_legal_content(text) is True
-
-    def test_copyright_with_entity_detected(self):
-        text = "© 2026 Kaiser Foundation Health Plan, Inc."
-        assert check_legal_content(text) is True
-
-    def test_normal_ui_copy_not_detected(self):
-        """Normal UI copy should NOT be routed away."""
-        assert check_legal_content("Your order shipped.") is False
-
-    def test_single_legal_phrase_not_detected(self):
-        """A single legal-sounding phrase shouldn't trigger routing."""
-        assert check_legal_content("Terms and conditions") is False
-
-    def test_footer_link_not_detected(self):
-        assert check_legal_content("Terms and conditions apply") is False
-
-    def test_regulatory_code_with_entity(self):
-        text = "Y0043_N00043551_V2_M — Kaiser Foundation Health Plan, Inc."
-        assert check_legal_content(text) is True
-
-
 # ═══════════════════════════════════════════════════════════════════════
 # Real-world regression cases
 # ═══════════════════════════════════════════════════════════════════════
@@ -2202,16 +2156,6 @@ class TestRealWorldCases:
         """GRM-02 kp unexpanded-acronym kp-footer: KP is internal."""
         r = check_grm02_abbreviations("About KP")
         assert r.outcome == Outcome.DEFER
-
-    def test_kp_legal_disclaimer_routes(self):
-        """CLR-01 kp legalese state-disclaimers: legal content skips."""
-        text = (
-            "In California, KFHP plans are offered and underwritten by "
-            "Kaiser Foundation Health Plan, Inc., One Kaiser Plaza, Oakland, "
-            "CA 94612. In Colorado, all plans are offered and underwritten by "
-            "Kaiser Foundation Health Plan of Colorado."
-        )
-        assert check_legal_content(text) is True
 
     # --- Stripe cases ---
 

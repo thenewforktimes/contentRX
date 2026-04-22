@@ -85,12 +85,15 @@ def classify_llm(
 
     Returns (content_type_id, latency_seconds, token_usage).
     """
-    import anthropic
+    # Route through the shared Anthropic client in api_utils so retry
+    # config and future telemetry apply uniformly across the pipeline.
+    # Closes ENG-M-01 from the 2026-04-22 audit.
+    from content_checker.api_utils import get_client
 
     system_prompt = _build_classifier_prompt(content_types)
     valid_ids = [ct["id"] for ct in content_types]
 
-    client = anthropic.Anthropic()
+    client = get_client()
 
     start = time.time()
     response = client.messages.create(

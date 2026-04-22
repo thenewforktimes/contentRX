@@ -591,41 +591,6 @@ def check_act01_binary_responses(text: str) -> PreprocessResult:
     return PreprocessResult(standard_id="ACT-01", outcome=Outcome.DEFER)
 
 
-def check_legal_content(text: str) -> bool:
-    """Detect legal/regulatory boilerplate that should skip standards checking."""
-    signals = 0
-
-    if re.search(r"\b\w+,?\s+(Inc\.|LLC|Corp\.|Ltd\.)", text):
-        signals += 1
-
-    legal_phrases = (
-        "offered and underwritten by", "terms and conditions apply",
-        "subject to applicable", "pursuant to", "governed by the laws",
-        "underwritten by", "enrollment depends on contract renewal",
-        "all plans are offered and underwritten", "with a medicare contract",
-        "with medicare contracts", "plan with a medicare",
-    )
-    for phrase in legal_phrases:
-        if phrase.lower() in text.lower():
-            signals += 1
-            break
-
-    if re.search(r"[A-Z]\d{4}_[A-Z]\d+", text):
-        signals += 1
-
-    states = re.findall(
-        r"\bIn (California|Colorado|Georgia|Hawaii|Oregon|Washington|"
-        r"Maryland|Virginia|District of Columbia)\b", text,
-    )
-    if len(states) >= 2:
-        signals += 1
-
-    if re.search(r"©\s*\d{4}", text):
-        signals += 1
-
-    return signals >= 2
-
-
 # ═══════════════════════════════════════════════════════════════════════
 # Proofing checks (PRF): typography and formatting errors
 # ═══════════════════════════════════════════════════════════════════════

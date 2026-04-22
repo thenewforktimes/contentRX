@@ -79,11 +79,18 @@ def parse_llm_json(raw: str, *, context: str = "") -> dict:
     try:
         result = json.loads(cleaned)
     except json.JSONDecodeError as e:
+        # Log only shape info — the raw LLM output could include echoed
+        # user text in a failed-parse case, and we don't want copy
+        # landing in Vercel / Sentry logs even truncated. Closes ENG-M-02
+        # from the 2026-04-22 audit. The full raw string still rides
+        # along on the ParseError for in-memory debugging (api/evaluate.py
+        # swallows it before returning to the caller).
         logger.warning(
-            "JSON parse failure in %s: %s (first 200 chars: %r)",
+            "JSON parse failure in %s: %s (len=%d, err=%s)",
             context or "unknown",
-            e,
-            cleaned[:200],
+            e.__class__.__name__,
+            len(cleaned),
+            type(e).__name__,
         )
         raise ParseError(
             f"Failed to parse LLM JSON in {context or 'unknown'}: {e}",

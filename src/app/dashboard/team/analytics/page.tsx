@@ -56,11 +56,27 @@ export default async function TeamAnalyticsPage() {
     );
   }
 
-  // Non-admin team members get read-only too per spec — in this
-  // session there's no "Sensitive" data; the analytics view is the
-  // same regardless. Admin-only restriction can tighten later if
-  // the UX calls for it.
+  // Owner-only per BUILD_PLAN §17 and the 2026-04-22 audit (BE-M-05).
+  // Non-admin team members see an explanation instead of data; the API
+  // side enforces this with a 403 for belt-and-suspenders.
   const isAdmin = user.teamOwnerUserId === null;
+  if (!isAdmin) {
+    return (
+      <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
+        <h1 className="text-lg font-semibold">Team analytics</h1>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Only the team owner can see analytics. Ask your team owner if
+          you need aggregate numbers for your team&apos;s ContentRX usage.
+        </p>
+        <Link
+          href="/dashboard"
+          className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+        >
+          Back to dashboard
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,9 +89,8 @@ export default async function TeamAnalyticsPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Team analytics</h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          {isAdmin
-            ? "Every evaluation your team runs rolls up here. Violations table data only — no text or user content is ever stored."
-            : "Read-only view of your team's evaluation trends."}
+          Every evaluation your team runs rolls up here. Violations table
+          data only — no text or user content is ever stored.
         </p>
       </header>
 

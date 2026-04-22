@@ -136,6 +136,23 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
+  // Defence-in-depth: confirm the claimed user actually exists before
+  // writing subscription rows against their id. Prevents orphaned
+  // subscription rows if a Stripe-dashboard-edited session ever targets
+  // a deleted user (BE-M-06 from the 2026-04-22 audit).
+  const db = getDb();
+  const [user] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+  if (!user) {
+    console.warn(
+      `checkout.session.completed: client_reference_id=${userId} is not a known user; skipping`,
+    );
+    return;
+  }
+
   const subscriptionId =
     typeof session.subscription === "string"
       ? session.subscription

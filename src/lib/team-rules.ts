@@ -29,6 +29,52 @@ import { getDb, schema } from "@/db";
 export const CUSTOM_STANDARD_PREFIX = "TEAM-";
 export const CUSTOM_STANDARD_ID_REGEX = /^TEAM-\d{2,}$/;
 
+/**
+ * Hard ceiling on text fed into user-authored regex patterns. Bounded
+ * input length is the cheapest defence against any regex that sneaks
+ * past the pattern linter: catastrophic backtracking scales polynomially
+ * with the input size, so clipping to 10 KB gives predictable worst-case
+ * latency even for a maliciously-crafted rule. UI copy is almost never
+ * this long — covers the 99.9th percentile of real content.
+ */
+export const CUSTOM_RULE_MAX_TEXT_BYTES = 10_000;
+
+/**
+ * Lint a regex pattern for common ReDoS fingerprints. Doesn't catch
+ * every possible exponential backtracking case (that's undecidable),
+ * but blocks the textbook patterns (nested unbounded quantifiers,
+ * catch-all + repetition). False positives on legitimate user rules
+ * are acceptable — if an admin hits this error, they can simplify
+ * the pattern and resubmit. Returns null if safe; a string reason if
+ * the pattern should be rejected.
+ *
+ * Closes BE-M-02 from the 2026-04-22 audit.
+ */
+export function findReDoSConcern(pattern: string): string | null {
+  // Hard length cap on the pattern itself — the DB column is 500 chars
+  // but a shorter pattern is cheaper to evaluate.
+  if (pattern.length > 500) {
+    return "Pattern is too long (max 500 chars).";
+  }
+
+  // Nested unbounded quantifiers: (x+)+, (x*)*, (x+)*, (x*)+, (x+){n,},
+  // (x*){n,}. Each of these is a classic catastrophic-backtracking shape.
+  if (/\)\s*[+*]|[+*]\s*\)\s*[+*]|[+*]\s*\)\s*\{/.test(pattern)) {
+    // Second-pass confirmation — check the group before the outer
+    // quantifier actually has an inner unbounded quantifier.
+    if (/\(([^()]*[+*][^()]*)\)\s*[+*{]/.test(pattern)) {
+      return "Pattern has nested unbounded quantifiers — denied to prevent slow matches.";
+    }
+  }
+
+  // Unbounded greedy wildcards stacked: .*.*, .+.+, .*.+, .+.*
+  if (/\.\s*[+*]\s*\.\s*[+*]/.test(pattern)) {
+    return "Pattern stacks greedy wildcards — denied to prevent slow matches.";
+  }
+
+  return null;
+}
+
 type RuleAction = "disable" | "override" | "add";
 
 export type TeamRuleRow = typeof schema.teamRules.$inferSelect;
@@ -155,6 +201,15 @@ export function applyAddedRules<T extends EvaluationResult>(
 ): T {
   if (adds.length === 0) return result;
 
+  // Clip the input before any admin-authored regex sees it. Bounded
+  // input is the runtime defence-in-depth companion to the pattern
+  // linter: even if a ReDoS-y pattern slips past findReDoSConcern,
+  // worst-case match time stays predictable.
+  const clipped =
+    text.length > CUSTOM_RULE_MAX_TEXT_BYTES
+      ? text.slice(0, CUSTOM_RULE_MAX_TEXT_BYTES)
+      : text;
+
   const existingViolations = result.violations ?? [];
   const appended: Violation[] = [];
 
@@ -162,7 +217,7 @@ export function applyAddedRules<T extends EvaluationResult>(
     const { standardId, fields } = add;
     const re = compilePattern(fields);
     if (!re) continue;
-    const match = text.match(re);
+    const match = clipped.match(re);
     if (!match) continue;
 
     appended.push({

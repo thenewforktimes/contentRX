@@ -2,6 +2,10 @@ import { headers } from "next/headers";
 import { Webhook } from "svix";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { getRedis } from "@/lib/redis";
+
+const DEDUPE_PREFIX = "clerk_event:";
+const DEDUPE_TTL_SECONDS = 24 * 60 * 60;
 
 type ClerkUserEvent = {
   type: "user.created" | "user.updated" | "user.deleted";
@@ -52,6 +56,28 @@ export async function POST(req: Request) {
     }) as ClerkUserEvent;
   } catch {
     return Response.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  // Svix verification validates signature + 5-minute timestamp window,
+  // but within that window the same event can replay. Dedupe by svix-id
+  // so retries don't re-apply the change (closes BE-M-03 / Known
+  // Limitation #3 from the 2026-04-22 audit). We do this AFTER signature
+  // verification so forged delivery attempts can't poison our dedupe
+  // cache with arbitrary keys.
+  try {
+    const redis = getRedis();
+    const setResult = await redis.set(DEDUPE_PREFIX + svixId, "1", {
+      nx: true,
+      ex: DEDUPE_TTL_SECONDS,
+    });
+    if (setResult === null) {
+      return Response.json({ ok: true, deduplicated: true });
+    }
+  } catch (err) {
+    // Redis outage shouldn't drop valid webhooks — our handlers are
+    // idempotent (onConflictDoNothing on insert, by-id update on
+    // update). Log and proceed.
+    console.error("Clerk webhook dedupe lookup failed, proceeding", err);
   }
 
   const db = getDb();

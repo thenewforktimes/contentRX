@@ -19,6 +19,7 @@ import { resolveAuth } from "@/lib/auth";
 import { getDb, schema } from "@/db";
 import {
   CUSTOM_STANDARD_ID_REGEX,
+  findReDoSConcern,
   nextCustomStandardId,
 } from "@/lib/team-rules";
 import { isKnownStandardId } from "@/lib/standards";
@@ -120,6 +121,15 @@ export async function POST(req: Request) {
     } catch (err) {
       return NextResponse.json(
         { error: "Invalid regex pattern", detail: String(err) },
+        { status: 400 },
+      );
+    }
+    // ReDoS guard — reject obvious catastrophic-backtracking shapes
+    // so one admin can't self-DoS their team's /api/check path.
+    const redos = findReDoSConcern(parsed.data.rule_json.pattern);
+    if (redos) {
+      return NextResponse.json(
+        { error: redos },
         { status: 400 },
       );
     }

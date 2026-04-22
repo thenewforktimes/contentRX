@@ -16,6 +16,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { resolveAuth } from "@/lib/auth";
+import { findReDoSConcern } from "@/lib/team-rules";
 
 const OverrideFieldsSchema = z.object({
   rule: z.string().min(1).max(2000).optional(),
@@ -92,13 +93,18 @@ export async function PATCH(req: Request, context: RouteContext) {
   }
 
   if (existing.action === "add") {
+    const pattern = (fieldsParsed.data as { pattern: string }).pattern;
     try {
-      new RegExp((fieldsParsed.data as { pattern: string }).pattern);
+      new RegExp(pattern);
     } catch (err) {
       return NextResponse.json(
         { error: "Invalid regex pattern", detail: String(err) },
         { status: 400 },
       );
+    }
+    const redos = findReDoSConcern(pattern);
+    if (redos) {
+      return NextResponse.json({ error: redos }, { status: 400 });
     }
   }
 

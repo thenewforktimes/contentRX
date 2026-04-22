@@ -28,7 +28,7 @@ import {
   loadTeamRules,
   recomputeVerdict,
 } from "@/lib/team-rules";
-import { getCurrentUsage, incrementUsage } from "@/lib/usage";
+import { claimQuotaSlot } from "@/lib/usage";
 
 // CORS: the Figma plugin iframe has Origin: null. We allow any origin
 // because the request is gated on the Authorization header, not on
@@ -84,22 +84,10 @@ export async function POST(req: Request) {
   const { text, content_type, audience, moment, source, file_path } = parsed.data;
 
   const quota = monthlyQuota(auth.plan, auth.seats);
-  const used = await getCurrentUsage(auth.user.id);
 
-  if (used >= quota) {
-    return json(
-      {
-        error: "Monthly quota exhausted",
-        quota,
-        used,
-        plan: auth.plan,
-        upgrade_url: `${appUrl()}/pricing?from=quota`,
-        resets_at: monthResetISO(),
-      },
-      { status: 402 },
-    );
-  }
-
+  // Rate-limit check first (cheap + purely time-based), then the
+  // atomic quota claim. Order matters: we don't want rate-limited
+  // callers to consume slots they can't actually use.
   const rl = await checkRateLimit(auth.user.id);
   if (!rl.success) {
     return json(
@@ -115,6 +103,26 @@ export async function POST(req: Request) {
       },
     );
   }
+
+  // Atomic claim: increments count by one ONLY if the user had room
+  // under their plan's quota. A burst of concurrent requests can no
+  // longer all squeeze past the cap (closes BE-M-04 / Known
+  // Limitation #2 from the 2026-04-22 audit).
+  const claim = await claimQuotaSlot(auth.user.id, quota);
+  if (!claim.granted) {
+    return json(
+      {
+        error: "Monthly quota exhausted",
+        quota,
+        used: claim.count,
+        plan: auth.plan,
+        upgrade_url: `${appUrl()}/pricing?from=quota`,
+        resets_at: monthResetISO(),
+      },
+      { status: 402 },
+    );
+  }
+  const newUsed = claim.count;
 
   const teamRules = await loadTeamRules(auth.teamOwnerUserId);
 
@@ -165,13 +173,6 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error("logViolations failed:", err);
-  }
-
-  let newUsed = used;
-  try {
-    newUsed = await incrementUsage(auth.user.id);
-  } catch (err) {
-    console.error("incrementUsage failed:", err);
   }
 
   return json({

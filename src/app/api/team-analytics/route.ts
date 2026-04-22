@@ -44,6 +44,17 @@ export async function GET(req: Request) {
     });
   }
 
+  // Admin-only per BUILD_PLAN §17 (closes BE-M-05 from the 2026-04-22
+  // audit). Team members get 403; the page-level gate below mirrors
+  // this so a member clicking "Open analytics" gets an explanation
+  // instead of a blank JSON error.
+  if (auth.teamOwnerUserId !== null) {
+    return NextResponse.json(
+      { error: "Team analytics is available to team owners only." },
+      { status: 403 },
+    );
+  }
+
   const url = new URL(req.url);
   const rawRange = Number(url.searchParams.get("range") ?? "30");
   const range: Range = SUPPORTED_RANGES.includes(rawRange as Range)
