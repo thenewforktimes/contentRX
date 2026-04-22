@@ -1,0 +1,61 @@
+export const metadata = {
+  title: "Contributing · ContentRX docs",
+};
+
+# Contributing
+
+The content model is open and evolves through proposals against the
+[engine repository](https://github.com/thenewforktimes/contentRX). This
+page documents the contribution path for the two artifacts you're most
+likely to want to extend: a new standard or a new moment.
+
+## Propose a new standard
+
+A standard is a single, citable rule. Good standards are atomic,
+testable, and have at least one obvious failure mode. Vague rules ("be
+clear") belong in style guides, not the library.
+
+1. Open an issue with the title `[STANDARD] {short rule}` and a body
+   that includes:
+   - The proposed rule, in one sentence.
+   - One pass example and one fail example.
+   - The list of `relevant_content_types` you expect it to cover.
+   - The `rule_type`: `hard` (deterministic check possible) or
+     `nuanced` (requires LLM judgment).
+2. A maintainer responds within a week with feedback or merges to a
+   PR-track.
+3. The PR adds the standard to
+   `src/content_checker/standards/standards_library.json` with a new
+   ID (`{CATEGORY}-{NN}`), wires up any preprocessor logic if the rule
+   is `hard`, and adds a test case in `tests/`.
+4. The version in `__init__.py` is bumped per semver: a new standard is
+   a minor bump (4.6 → 4.7); a breaking change to an existing
+   standard's behavior is a major bump.
+
+## Propose a new moment
+
+Moments are universal UX primitives — adding one is a much higher bar
+than adding a standard. The 13 moments aim to cover any product surface
+without overlap. Before proposing a new one, please confirm:
+
+- It cannot be expressed as a sub-state of an existing moment.
+- It changes which standards apply or how they are weighted (a moment
+  that doesn't change rule selection isn't a moment).
+- You can name three real-world surfaces that would benefit from
+  recognizing it.
+
+## Versioning policy
+
+The library follows semver:
+
+- **Patch (4.6.1 → 4.6.2)**: typo fixes, non-behavioral content_type
+  notes additions, doc-only changes.
+- **Minor (4.6 → 4.7)**: new standards, new moments, new content types,
+  expanding `relevant_content_types` for an existing standard.
+- **Major (4.x → 5.0)**: removing a standard, narrowing
+  `relevant_content_types`, changing the verdict shape an evaluator
+  returns. Anything that could regress an existing integration.
+
+Every version stays addressable: `standards_library.json` carries a
+`version` field, the docs site reads it at build time, and historical
+spec pages live in git history.

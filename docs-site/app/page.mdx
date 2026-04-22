@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "ContentRX docs",
+};
+
+# ContentRX content model
+
+The executable spec behind the ContentRX evaluator. Every check that runs
+inside the Figma plugin, the CLI, the GitHub Action, and the API is
+defined here — same JSON, same versioning, same scoring.
+
+## What's inside
+
+- **8 content types** describe the surface a string lives on (button,
+  error message, tooltip, heading, …).
+- **13 moments** describe the user's intent at the point of contact
+  (browsing, in‑task, recovering from error, …).
+- **47 standards** describe the rules each string is graded against,
+  organized by category (clarity, voice & tone, structure, …).
+
+The evaluator picks a content type and moment for each string, then
+applies only the standards that are relevant to that pairing. The same
+string in a different moment can pass or fail differently — that's the
+point.
+
+## Where to start
+
+- **[Spec overview](/spec)** — high-level architecture of the model.
+- **[Standards](/spec/standards)** — the 47 rules with pass/fail
+  examples. Source of truth for every evaluator implementation.
+- **[Whitepaper](/whitepaper)** — why moment-aware evaluation exists.
+- **[Contributing](/contributing)** — how to propose a new standard.
+
+## Versioning
+
+This site reads from `standards_library.json` in the engine repo at
+build time. The version pill in the sidebar always matches the engine
+version that's currently in production. Older versions live in git
+history; semantic-versioning rules apply.

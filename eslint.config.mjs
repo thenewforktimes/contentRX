@@ -18,6 +18,13 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // docs-site is its own Next.js project with its own lint surface;
+      // running the main app's lint over its node_modules + generated
+      // files produces thousands of irrelevant findings.
+      "docs-site/**",
+      // Same for cli-client + github-action — separate sub-projects.
+      "cli-client/**",
+      "github-action/**",
     ],
   },
 ];

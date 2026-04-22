@@ -1,0 +1,58 @@
+export const metadata = {
+  title: "Whitepaper — Why moment-aware evaluation · ContentRX docs",
+};
+
+# Why moment-aware evaluation
+
+> **Status:** working draft. The full 2–3 page whitepaper lands before
+> v1.0. The argument below is the abstract.
+
+Most content linters treat a string as a string. They run readability
+math (Flesch, syllable counts), check for forbidden words, maybe flag
+title-case violations. They are linters in the same way `wc -l` is a
+linter for prose: technically correct, structurally indifferent.
+
+This is fine for a help center where most strings live in roughly the
+same context. It falls down at scale in product surfaces where the same
+phrase can be exactly right and disastrously wrong depending on the
+moment of contact.
+
+## Two examples
+
+**"Got it."** As a confirmation in a low-stakes settings flow: warm,
+quick, calibrated. As the headline of an error message after a payment
+fails: callous bordering on cruel.
+
+**"Save"** as a button on a routine form: invisible, correct. As the
+button on the dialog confirming you're about to overwrite a
+collaborator's edits: under-built; the moment calls for "Replace" or
+"Overwrite teammate's changes" so the user can register the gravity.
+
+A stringwise linter has no way to see this difference. It only sees the
+literal text.
+
+## What changes when you add moments
+
+Three things:
+
+1. **Rule selection.** A "show empathy in error states" rule (VT-05)
+   only fires when the moment is `error_recovery`. The same string
+   posted as a `confirmation` is not graded against it.
+2. **Suggestion shape.** A jargon flag (CLR-01) in `onboarding` suggests
+   a plain-language alternative; the same flag in `learning` may suggest
+   a glossary link instead.
+3. **Severity.** A length cap violation in `emergency` is a higher-
+   severity finding than the same violation in `browsing_discovery`.
+
+## How ContentRX implements it
+
+The engine classifies each string into a `(content_type, moment)` pair
+before any rule runs. Mechanical rules check what they can statically;
+nuanced rules go to an LLM with the standards library injected as the
+system prompt. The merge layer reconciles deterministic and LLM
+findings, deduplicates, and prioritizes by severity. Output is a
+violations list with rule citations — every finding traces back to a
+specific standard ID in this docs site.
+
+The full architecture, eval methodology, and v4.x changelog land in the
+1.0 whitepaper.
