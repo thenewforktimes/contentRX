@@ -61,6 +61,10 @@ const RequestSchema = z.object({
   audience: z.enum(AUDIENCES).optional(),
   moment: z.enum(MOMENTS).optional(),
   source: z.enum(["plugin", "cli", "action", "ditto"]).default("plugin"),
+  // Optional file_path, populated by the GitHub Action only. Upper
+  // bound guards against repo paths that could swell the violations
+  // table (typical paths are well under this).
+  file_path: z.string().min(1).max(512).optional(),
 });
 
 export async function POST(req: Request) {
@@ -77,7 +81,7 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { text, content_type, audience, moment, source } = parsed.data;
+  const { text, content_type, audience, moment, source, file_path } = parsed.data;
 
   const quota = monthlyQuota(auth.plan, auth.seats);
   const used = await getCurrentUsage(auth.user.id);
@@ -157,6 +161,7 @@ export async function POST(req: Request) {
       moment: (result.moment as string | undefined) ?? moment ?? null,
       text,
       violations: result.violations,
+      filePath: file_path ?? null,
     });
   } catch (err) {
     console.error("logViolations failed:", err);

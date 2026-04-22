@@ -21,7 +21,7 @@
  *     Until then the panel renders an empty state.
  */
 
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { resolveAuth } from "@/lib/auth";
 import { currentMonth } from "@/lib/quotas";
@@ -158,6 +158,29 @@ export async function GET(req: Request) {
     violations: row.violations,
   }));
 
+  // --- Panel 4: top files (populated once the GHA extractor passes
+  // file_path through /api/check). Empty for plugin/CLI-only teams. ---
+  const topFilesRaw = (await db
+    .select({
+      path: schema.violations.filePath,
+      violations: sql<number>`count(*)::int`,
+    })
+    .from(schema.violations)
+    .where(
+      and(
+        eq(schema.violations.teamId, teamId),
+        gte(schema.violations.createdAt, since),
+        isNotNull(schema.violations.filePath),
+      ),
+    )
+    .groupBy(schema.violations.filePath)
+    .orderBy(desc(sql`count(*)`))
+    .limit(10)) as Array<{ path: string | null; violations: number }>;
+
+  const top_files = topFilesRaw
+    .filter((r): r is { path: string; violations: number } => r.path !== null)
+    .map((r) => ({ path: r.path, violations: r.violations }));
+
   return NextResponse.json({
     plan: auth.plan,
     is_team: true,
@@ -175,8 +198,7 @@ export async function GET(req: Request) {
     top_standards: topStandardsRaw,
     daily,
     member_activity: memberActivity,
-    // Panel 4 placeholder — populated once violations.file_path lands.
-    top_files: [],
+    top_files,
   });
 }
 

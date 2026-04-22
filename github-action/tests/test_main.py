@@ -77,7 +77,11 @@ def test_main_posts_comment_when_violations_found(
     # Force the changed-files fallback (full tree scan) so we don't hit GitHub.
     monkeypatch.setattr(action_main, "_fetch_changed_from_api", _raise)
 
-    monkeypatch.setattr(action_main, "run_contentrx", lambda text, ct: _violation_response())
+    monkeypatch.setattr(
+        action_main,
+        "run_contentrx",
+        lambda text, ct, fp: _violation_response(),
+    )
     posted = {}
 
     def fake_post(body, repo, pull_number, token):
@@ -113,7 +117,11 @@ def test_main_strict_mode_returns_nonzero_on_violations(
     monkeypatch.setenv("CONTENTRX_CONTENT_TYPE", "button_cta")
 
     monkeypatch.setattr(action_main, "_fetch_changed_from_api", _raise)
-    monkeypatch.setattr(action_main, "run_contentrx", lambda text, ct: _violation_response())
+    monkeypatch.setattr(
+        action_main,
+        "run_contentrx",
+        lambda text, ct, fp: _violation_response(),
+    )
     monkeypatch.setattr(action_main, "post_comment", lambda **_: None)
 
     code = action_main.main()
@@ -137,7 +145,11 @@ def test_main_returns_zero_when_all_pass(
     monkeypatch.setenv("CONTENTRX_CONTENT_TYPE", "button_cta")
 
     monkeypatch.setattr(action_main, "_fetch_changed_from_api", _raise)
-    monkeypatch.setattr(action_main, "run_contentrx", lambda text, ct: _pass_response())
+    monkeypatch.setattr(
+        action_main,
+        "run_contentrx",
+        lambda text, ct, fp: _pass_response(),
+    )
     monkeypatch.setattr(action_main, "post_comment", lambda **_: None)
 
     code = action_main.main()
@@ -166,7 +178,7 @@ def test_main_no_matching_files_is_noop(
     monkeypatch.setattr(
         action_main,
         "run_contentrx",
-        lambda text, ct: pytest.fail("should not be called"),
+        lambda text, ct, fp: pytest.fail("should not be called"),
     )
 
     code = action_main.main()

@@ -25,6 +25,9 @@ type LogParams = {
   moment: string | null;
   text: string;
   violations: LoggableViolation[];
+  // Set only for CI-origin checks (GitHub Action). Left null for
+  // plugin/CLI calls where the string has no file context.
+  filePath?: string | null;
 };
 
 export function hashText(text: string): string {
@@ -47,6 +50,7 @@ export async function logViolations(params: LogParams): Promise<number> {
       severity: v.severity ?? "unknown",
       textHash,
       source: params.source,
+      filePath: params.filePath ?? null,
     }));
 
   if (rows.length === 0) return 0;

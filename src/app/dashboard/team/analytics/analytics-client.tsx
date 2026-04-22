@@ -322,33 +322,47 @@ function TopFilesPanel({
 }: {
   items: AnalyticsPayload["top_files"];
 }) {
+  const hasData = items.length > 0;
   return (
-    <section className="rounded-lg border border-dashed border-neutral-300 p-5 text-sm dark:border-neutral-700">
-      <header className="mb-2 flex items-center justify-between">
-        <h2 className="font-semibold">Top files</h2>
-        <span className="text-xs text-neutral-500">Coming soon</span>
+    <section
+      className={`rounded-lg border p-5 ${
+        hasData
+          ? "border-neutral-200 dark:border-neutral-800"
+          : "border-dashed border-neutral-300 dark:border-neutral-700"
+      }`}
+    >
+      <header className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Top files</h2>
+        {!hasData && (
+          <span className="text-xs text-neutral-500">Awaiting CI data</span>
+        )}
       </header>
-      {items.length === 0 ? (
-        <p className="text-neutral-500">
-          File paths land here once the GitHub Action&apos;s AST extractor
-          (the Session 15 upgrade) starts attaching them to violations.
-        </p>
-      ) : (
-        <table className="w-full text-xs">
+      {hasData ? (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-neutral-500">
+              <th className="pb-2 font-medium">Path</th>
+              <th className="pb-2 text-right font-medium">Violations</th>
+            </tr>
+          </thead>
           <tbody>
             {items.map((item) => (
               <tr
                 key={item.path}
                 className="border-t border-neutral-200 dark:border-neutral-800"
               >
-                <td className="py-1 pr-2 font-mono">{item.path}</td>
-                <td className="py-1 text-right text-neutral-500">
-                  {item.violations}
-                </td>
+                <td className="py-2 pr-2 font-mono text-xs">{item.path}</td>
+                <td className="py-2 text-right">{item.violations}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      ) : (
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          Files appear here once your GitHub Action runs on a pull
+          request — the action attaches a source-file path to each
+          violation.
+        </p>
       )}
     </section>
   );

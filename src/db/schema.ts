@@ -162,10 +162,16 @@ export const violations = pgTable(
     source: text("source", {
       enum: ["plugin", "cli", "action", "ditto"],
     }).notNull(),
+    // Source-file path for violations that originated from CI extraction
+    // (GitHub Action runs against a repo). Nullable because plugin and
+    // CLI checks have no file context. Powers the "Top files" panel in
+    // team analytics.
+    filePath: text("file_path"),
   },
   (t) => [
     index("violations_user_created_idx").on(t.userId, t.createdAt),
     index("violations_team_created_idx").on(t.teamId, t.createdAt),
+    index("violations_team_file_idx").on(t.teamId, t.filePath),
   ],
 );
 
