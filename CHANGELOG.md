@@ -10,6 +10,32 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4 + 5)
+
+Session 5 — held-out golden set carve-out:
+
+- New `evals/held_out/manifest.json` — 100-case reference list carved
+  from the annotated industry corpus. Stable, deterministic order. No
+  raw text duplicated — manifest stores `case_id` + selection
+  metadata; text stays in the (gitignored) source files.
+- New `evals/held_out/README.md` — selection criteria, retirement
+  rules, coverage-gap disclosure.
+- New `tools/select_held_out.py` — selection tool. Pass 1 covers every
+  moment with ≥5 eligible cases (≥5 slots each). Pass 2 covers every
+  standard with ≥3 eligible cases (≥3 slots each). Pass 3 fills to
+  target via source-proportional largest-remainder allocation. Pass 4
+  fills residual gaps in deterministic order. All passes respect the
+  budget so no destructive trim is ever needed.
+- New `tools/run_held_out.py` — runner that looks each manifest entry
+  up in `evals/industry/`, invokes the pipeline, and computes
+  Cohen's κ + agreement rate + per-case disagreement report. Exits
+  non-zero on any disagreement (Session 6 CI gate consumes this).
+  Exits 3 when the private corpus isn't available — "silent pass" is
+  not a supported state.
+- `case_id` synthesis: about one-third of eligible cases ship with
+  null `case_id`. The loader synthesizes `auto:<source_file>:<index>`
+  so they can be referenced. Corpus should grow real IDs over time.
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4)
 
 Session 4 — structured override reasons + session aggregation:
