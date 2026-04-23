@@ -251,6 +251,33 @@ Three or more overrides on the same standard inside one session collapse to a si
 
 Aggregation is pure-logic, done on read (see `src/lib/session-aggregation.ts`) — no extra table, no write-path branching. Grouping key is `${sessionKey}|${standardId}`.
 
+### Held-out golden set (human-eval build plan Session 5)
+
+The held-out set is a 100-case reference list carved from the annotated industry corpus at `evals/industry/` (gitignored private data). The manifest lives at `evals/held_out/manifest.json` and is committed; the raw case text stays in the source files.
+
+Two jobs:
+
+1. **Blocking CI gate (Session 6, pending).** `tools/run_held_out.py` executes the manifest against the engine and fails any disagreement. Approvals land as `held-out-update:`-prefixed commits that update the stored verdict with a reason.
+2. **`/accuracy` denominator (Session 24, pending).** Public κ + 95% CI over a fixed pool, reproducible and not cherry-picked.
+
+Distinct from `evals/novel_cases.json` — that's the library-regression gate (adversarial synthetic data testing *rules*; ≥98% threshold). Held-out tests the *engine* on production-like data with κ, not hit rate. Two gates, two failure modes, no duplication.
+
+**Selection (in `tools/select_held_out.py`):**
+
+- Eligibility: `human_confidence == "high"` AND `review_status in {approved, revised}`.
+- Pass 1: every moment with ≥5 eligible cases gets ≥5 slots (capped at budget).
+- Pass 2: every standard with ≥3 eligible cases gets ≥3 slots (capped at budget).
+- Pass 3: source-proportional largest-remainder allocation.
+- Pass 4: fill residual gaps in deterministic order.
+
+Deterministic by construction — same eligible pool + same args always produce the same manifest. Growth is stable: adding cases to the pool doesn't churn the existing selection (cases are sorted by `(source_file, case_id)` within each bucket).
+
+**Case_id synthesis.** About one-third of eligible cases (Wells Fargo, Robinhood, MEDVi) ship with null `case_id`. The loader synthesizes `auto:<source_file>:<1-based-index>` — stable as long as source files aren't reordered. The corpus should grow real IDs over time; the `auto:` prefix makes it auditable.
+
+**Coverage gaps as of 2026-04-23:** `compliance_disclosure`, `destructive_action`, `confirmation`, `empty_state`, `interruption` — zero eligible cases, so held-out can't represent them yet. The selection tool skips these moments rather than lowering the threshold; they re-enter automatically when annotation lands.
+
+**Retirement (not yet exercised):** bounded steady-state of 150 items; past that, retire 10 oldest low-signal items before adding new. Retired standards keep their held-out items as archive-flagged (queryable, non-gating). Taxonomy splits add one item per side to the manifest.
+
 ## Two entry points, two use cases
 
 `check(text, content_type, audience)` — full 5-stage pipeline. Used in production, the CLI, and the Figma plugin. Content-type-aware filtering and audience-aware gating reduce false positives. Audience defaults to `product_ui`.
