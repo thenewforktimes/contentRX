@@ -1,0 +1,119 @@
+name: Held-out eval gate
+
+# Human-eval build plan Session 6 — blocking CI gate against the
+# held-out golden set. Runs on every PR touching the engine, the
+# standards, or the held-out manifest.
+#
+# Two jobs:
+#   1. convention  — always runs on relevant PRs. Enforces the
+#      `held-out-update:` commit-message prefix on any commit that
+#      edits held-out data. Fast + free; no corpus required.
+#   2. held-out    — runs when the private industry corpus is
+#      available to CI. Fetches + runs `tools/run_held_out.py` and
+#      fails on any disagreement. Needs the HELD_OUT_CORPUS_TARBALL_URL
+#      secret + ANTHROPIC_API_KEY to execute the pipeline. Without
+#      either, the job emits a notice and exits cleanly so the gate
+#      is never silently bypassed.
+
+on:
+  pull_request:
+    paths:
+      - "src/content_checker/**"
+      - "api/evaluate.py"
+      - "evals/held_out/manifest.json"
+      - "evals/novel_cases.json"
+      - "tools/select_held_out.py"
+      - "tools/run_held_out.py"
+      - "scripts/check_held_out_convention.py"
+      - ".github/workflows/held_out.yml"
+  push:
+    branches: [main]
+
+concurrency:
+  group: held-out-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  convention:
+    name: held-out-update convention
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Need the full history (or at least the PR's commits) so the
+          # convention checker can walk every commit in base..head.
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Enforce commit-message convention
+        env:
+          HELD_OUT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HELD_OUT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/check_held_out_convention.py
+
+  held-out:
+    name: held-out gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install engine
+        # Full pipeline execution needs the Anthropic SDK, so use
+        # the [dev] extras even though we're not running pytest.
+        run: pip install -e ".[dev]"
+
+      - name: Check corpus availability
+        id: corpus
+        env:
+          HELD_OUT_CORPUS_TARBALL_URL: ${{ secrets.HELD_OUT_CORPUS_TARBALL_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$HELD_OUT_CORPUS_TARBALL_URL" ] || [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice ::Held-out gate skipped — configure HELD_OUT_CORPUS_TARBALL_URL and ANTHROPIC_API_KEY secrets to enable. See docs/HELD_OUT_GATE.md."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch corpus
+        if: steps.corpus.outputs.available == 'true'
+        env:
+          HELD_OUT_CORPUS_TARBALL_URL: ${{ secrets.HELD_OUT_CORPUS_TARBALL_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p evals/industry
+          curl --fail --silent --show-error --location \
+            "$HELD_OUT_CORPUS_TARBALL_URL" \
+            --output /tmp/industry.tar.gz
+          tar -xzf /tmp/industry.tar.gz -C evals/industry \
+            --strip-components=1
+          ls evals/industry
+
+      - name: Run held-out gate
+        if: steps.corpus.outputs.available == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 tools/run_held_out.py \
+            --report evals/held_out/ci_report.json
+
+      - name: Upload CI report
+        if: always() && steps.corpus.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: held-out-report
+          path: evals/held_out/ci_report.json
+          if-no-files-found: warn

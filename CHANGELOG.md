@@ -10,6 +10,27 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4 + 5 + 6)
+
+Session 6 — held-out eval as a second CI gate:
+
+- New `.github/workflows/held_out.yml` — two jobs. `convention`
+  enforces the `held-out-update:` commit-message prefix on any
+  commit that edits held-out data (fast, free, no corpus needed).
+  `held-out` fetches the private corpus via
+  `HELD_OUT_CORPUS_TARBALL_URL`, runs `tools/run_held_out.py`, and
+  fails on any disagreement. The gate is wired but **not enabled**
+  until the corpus secret + `ANTHROPIC_API_KEY` are configured —
+  workflow exits cleanly with a notice until then (no silent pass).
+- New `scripts/check_held_out_convention.py` — walks commits in the
+  PR range, requires `held-out-update:` prefix on any commit that
+  touches `evals/held_out/manifest.json` or `evals/industry/`.
+  Usable locally via `python3 scripts/check_held_out_convention.py`.
+- New `docs/HELD_OUT_GATE.md` — approval ceremony, local-run
+  instructions, corpus-in-CI setup steps, cost note.
+- 20 new tests for the convention checker (path matching, prefix
+  regex, end-to-end runs against a throwaway git repo).
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4 + 5)
 
 Session 5 — held-out golden set carve-out:
