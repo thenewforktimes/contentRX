@@ -30,6 +30,7 @@ import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
 import { hashText } from "@/lib/log-violations";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
 const CORS_HEADERS: Record<string, string> = {
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return withCors(
       NextResponse.json(
-        { error: "Invalid request", issues: parsed.error.issues },
+        { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
         { status: 400 },
       ),
     );

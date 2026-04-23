@@ -18,6 +18,7 @@ import { envelope } from "@/lib/api-envelope";
 import { getDb, schema } from "@/db";
 import { resolveAuth } from "@/lib/auth";
 import { findReDoSConcern } from "@/lib/team-rules";
+import { sanitizeZodIssues } from "@/lib/zod-errors";
 
 const OverrideFieldsSchema = z.object({
   rule: z.string().min(1).max(2000).optional(),
@@ -57,7 +58,7 @@ export async function PATCH(req: Request, context: RouteContext) {
   const parsed = PatchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid request", issues: parsed.error.issues },
+      { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
       { status: 400 },
     );
   }

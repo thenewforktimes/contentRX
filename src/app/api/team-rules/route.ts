@@ -24,6 +24,7 @@ import {
   nextCustomStandardId,
 } from "@/lib/team-rules";
 import { isKnownStandardId } from "@/lib/standards";
+import { sanitizeZodIssues } from "@/lib/zod-errors";
 
 const OverrideFieldsSchema = z
   .object({
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
   const parsed = CreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid request", issues: parsed.error.issues },
+      { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
       { status: 400 },
     );
   }

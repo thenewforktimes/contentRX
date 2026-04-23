@@ -31,6 +31,7 @@ import {
   recomputeVerdict,
 } from "@/lib/team-rules";
 import { claimQuotaSlot } from "@/lib/usage";
+import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { QuotaExhaustedEmail } from "@/emails/quota-exhausted";
 import { QuotaWarningEmail } from "@/emails/quota-warning";
 
@@ -81,7 +82,7 @@ export async function POST(req: Request) {
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
-      { error: "Invalid request", issues: parsed.error.issues },
+      { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
       { status: 400 },
     );
   }

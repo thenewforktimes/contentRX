@@ -26,6 +26,7 @@ import { z } from "zod";
 import { resolveAuth } from "@/lib/auth";
 import { classify } from "@/lib/evaluate";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { sanitizeZodIssues } from "@/lib/zod-errors";
 
 const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
     return json(
-      { error: "Invalid request", issues: parsed.error.issues },
+      { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
       { status: 400 },
     );
   }

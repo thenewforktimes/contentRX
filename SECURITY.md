@@ -80,7 +80,12 @@ are shown to users exactly once at mint/rotate time.
   user row is removed and all FK-linked rows cascade-deleted.
 - **Usage counters:** one row per `(user_id, month)`, retained
   indefinitely for billing history. No request-level data.
-- **Sentry errors:** 90-day retention on Sentry's platform.
+- **Sentry errors:** 90-day retention on Sentry's platform. In-code
+  sample rates (5% traces, 100% errors) and an `ignoreErrors`
+  allowlist cap ingestion to well under free-tier limits for normal
+  traffic. Operators should additionally set a **quota alert** at
+  Sentry → Settings → Subscription → Usage, threshold 75%, so a
+  runaway bug can't silently exhaust the month's events.
 - **Plausible analytics:** aggregate pageview counts and goal events
   (`signup`, `upgrade`). No individual-user attribution.
 

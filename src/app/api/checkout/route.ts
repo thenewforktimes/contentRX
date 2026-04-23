@@ -27,6 +27,7 @@ import {
   type Interval,
   type PaidPlan,
 } from "@/lib/stripe";
+import { sanitizeZodIssues } from "@/lib/zod-errors";
 
 const RequestSchema = z.object({
   plan: z.enum(["pro", "team"]),
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid request", issues: parsed.error.issues },
+      { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
       { status: 400 },
     );
   }
