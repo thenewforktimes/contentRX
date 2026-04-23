@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Guides · ContentRX docs",
+};
+
+# Guides
+
+Concrete walkthroughs showing ContentRX in real codebases. Each guide
+takes a specific stack (Next.js + shadcn, Figma + design system, etc.)
+and shows what installing ContentRX actually catches.
+
+If your stack isn't listed yet, the same patterns apply — pick the
+guide closest to your setup and the violations you'll see will be
+similar.
+
+## Available guides
+
+- **[Catching CTA violations in a Next.js + shadcn/ui app](/guides/nextjs-shadcn-buttons)** —
+  How ContentRX flags vague verbs and missing destinations in
+  `<Button>` children, with before/after code from a real component
+  refactor.
+
+- **[Reviewing error messages in Next.js App Router](/guides/error-messages)** —
+  Auditing `error.tsx`, `not-found.tsx`, and inline error toasts
+  against the `error_recovery` moment's standards. Shows the typical
+  violations and the rewrites.
+
+- **[Design-system copy review with the Figma plugin](/guides/figma-design-review)** —
+  How a designer + a single staff content reviewer can keep up with
+  hundreds of components by running the plugin on Figma frames
+  before handoff.
+
+## How to read these
+
+Every guide follows the same shape:
+
+1. **Setup** — what stack we're assuming, what surface to install.
+2. **What you'll see** — the actual violations ContentRX raises on
+   real example input.
+3. **Why each violation matters** — the standard ID + a one-line
+   rationale (full rule text on the standard's page).
+4. **The fix** — the rewritten code, plus a "what changed" line so
+   the diff reads at a glance.
+
+The goal isn't to teach you content design. It's to show you what
+ContentRX does and doesn't catch on code that looks like yours.
