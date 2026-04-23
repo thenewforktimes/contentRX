@@ -177,16 +177,18 @@ to fix immediately. Track these so they don't get forgotten.
    `/dashboard` or the Figma sign-in callback. `resolveAuth` hashes the
    incoming bearer before the DB lookup. The key body is a cuid2.
 
-2. **`getCurrentUsage` → `incrementUsage` race.** A user can fire up to
-   their rate-limit ceiling of concurrent requests through the quota
-   gate before any of them increment. Correct fix is an atomic
-   "claim a slot" upsert with a conditional `WHERE count < quota`.
-   **Target:** Session 10.
+2. ~~`getCurrentUsage` → `incrementUsage` race.~~ Resolved: `src/lib/usage.ts`
+   exposes `claimQuotaSlot(userId, quota)` which does an atomic upsert
+   with `setWhere: count < quota` on the update branch. Returns
+   `{granted: false, count}` when the guard rejects, so `/api/check`
+   can 402 without touching the engine. `getCurrentUsage` is now a
+   read-only helper for the dashboard.
 
-3. **Webhook idempotency.** `svix.Webhook.verify` enforces a 5-min
-   timestamp tolerance but within that window the same payload can
-   replay. **Fix:** track `svix-id` in a dedupe table (or Redis set)
-   before processing.
+3. ~~Webhook idempotency.~~ Resolved for Clerk webhooks: `src/app/api/webhooks/clerk/route.ts`
+   dedupes by `svix-id` via `redis.set(key, "1", { nx: true, ex: 24h })`
+   immediately after signature verification. Stripe webhooks have the
+   same pattern. Retries return `{ok: true, deduplicated: true}` without
+   re-applying side effects.
 
 4. **No DB-level CHECK constraints on enum columns.** Drizzle's
    `text("plan", { enum: [...] })` is TS-only. Use `pgEnum` if DB-level
@@ -211,6 +213,18 @@ to fix immediately. Track these so they don't get forgotten.
    closing the injection at this boundary. Engine-side hardening
    (sentinel delimiters around user text) is still worth doing when
    engine-level test coverage for it exists.
+
+9. **Figma plugin outbound `postMessage` target origin (PLG-H-01).**
+   Every `parent.postMessage()` in `figma-plugin/ui.html` uses `"*"`
+   as the target origin, including the `save-token` message that
+   carries the `cx_...` token. Defense-in-depth says set an explicit
+   target. Not fixed yet because changing to `"https://www.figma.com"`
+   risks silently breaking Figma Desktop (Electron's parent frame may
+   not match the target and the browser drops the message with no
+   error). **Fix:** test with both Figma web and Figma Desktop in a
+   live session, then change the `save-token` call (only — other
+   messages carry no secret). The incoming-message origin check at
+   `ui.html:3367` already closes the higher-severity PLG-C-01.
 
 ## Before every commit
 
