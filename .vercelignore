@@ -1,7 +1,13 @@
 # Sub-projects with their own Vercel projects / deploy targets.
 # Keeping them out of the main app's build context avoids accidental
 # inclusion in tsconfig walks and shrinks the upload bundle.
-docs-site
+#
+# docs-site is intentionally NOT excluded here — it has its own Vercel
+# project (contentrx-docs) that builds with Root Directory=docs-site,
+# and Vercel applies this repo-root .vercelignore to that project too.
+# Excluding docs-site here would strip the very files the docs project
+# needs to build. Main app is unaffected: tsconfig.json excludes it
+# and Next.js routing only looks at src/app/.
 cli-client
 github-action
 mcp-server
