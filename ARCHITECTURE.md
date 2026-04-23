@@ -289,6 +289,36 @@ The gate runs on every PR touching the engine, the standards, the held-out manif
 
 **No env-var bypass.** The only path past a failing gate is a real `held-out-update:` commit that resolves the disagreement by updating the verdict with a documented reason. Approval ceremony is documented in `docs/HELD_OUT_GATE.md`.
 
+### Quarterly self-drift check (human-eval build plan Session 7)
+
+Cohen's κ between past-Robo verdicts and a blind re-labeling pass on the same cases, quarterly. The resulting **measured ceiling** is the single most important number in the graduation ladder — Session 10's thresholds recalibrate as a ratio of the ceiling each cycle.
+
+Three-step cadence (one per quarter, all in `tools/drift_check.py`):
+
+1. **`build-panel`** — 80-case stratified sample from the eligible pool across `(moment, content_type)`. Largest-remainder allocation; deterministic; stable under corpus growth (same case_ids come out as the pool expands).
+2. **`export-blind`** — strips past verdicts + rationale so re-labeling isn't anchored. Keeps the task context (text + content_type + moment + standard_id). Session 8's review-queue UI consumes this format directly.
+3. **`score`** — computes κ + 95% CI via Fleiss standard-error, per-standard disagreement breakdown, implicated-standards list for the refinement-log triage, and the threshold regime.
+
+**Threshold ratios (plan-spec constants):**
+
+| Threshold | Formula | Value at 0.90 target |
+|---|---|---|
+| Autonomous κ | `0.94 × measured_ceiling` | 0.85 |
+| Batch-approval κ | `0.83 × measured_ceiling` | 0.75 |
+
+**Regime table (Session 10 branches on this):**
+
+| Measured ceiling | Regime | Consequence |
+|---|---|---|
+| ≥ 0.90 | `target_met` | Ship normally |
+| 0.85 – 0.90 | `maturing` | Taxonomy-stabilization review required before new autonomous graduations |
+| 0.80 – 0.85 | `graduation_frozen` | No new autonomous graduations |
+| < 0.80 | `degraded` | Existing autonomous standards re-reviewed next cycle |
+
+**Coverage gap:** the eligible pool is currently missing 4 moments (destructive_action, confirmation, empty_state, interruption). Drift measurement for those is impossible until annotation lands. Stratification skips missing moments rather than lowering the quota — the next `build-panel` run picks them up automatically when they appear.
+
+The panel, blind, and report files all live in `evals/drift/`. The README there is the canonical workflow doc for Robo's quarterly cycle.
+
 ## Two entry points, two use cases
 
 `check(text, content_type, audience)` — full 5-stage pipeline. Used in production, the CLI, and the Figma plugin. Content-type-aware filtering and audience-aware gating reduce false positives. Audience defaults to `product_ui`.

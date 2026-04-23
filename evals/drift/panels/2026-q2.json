@@ -1,0 +1,784 @@
+{
+  "description": "Quarterly self-drift panel for 2026-q2. Blind re-label this panel and pass the responses to `drift_check.py score` to compute the measured-ceiling κ.",
+  "schema_version": "1.0.0",
+  "quarter": "2026-q2",
+  "generated_at": "2026-04-23T23:32:01Z",
+  "corpus_dir": "/Users/rbxnoodle/Desktop/contentRX/evals/industry",
+  "panel_size_target": 80,
+  "stats": {
+    "eligible_pool": 363,
+    "selected": 80,
+    "buckets": {
+      "(none)|alt_text": 1,
+      "(none)|button_cta": 2,
+      "(none)|heading": 2,
+      "(none)|short_ui_copy": 5,
+      "(none)|ui_label": 2,
+      "browsing_discovery|button_cta": 4,
+      "browsing_discovery|heading": 13,
+      "browsing_discovery|short_ui_copy": 12,
+      "browsing_discovery|ui_label": 4,
+      "celebration|button_cta": 1,
+      "celebration|heading": 1,
+      "celebration|short_ui_copy": 1,
+      "celebration|ui_label": 2,
+      "compliance_disclosure|short_ui_copy": 1,
+      "decision_point|button_cta": 2,
+      "decision_point|heading": 1,
+      "decision_point|long_form_copy": 1,
+      "decision_point|short_ui_copy": 3,
+      "decision_point|tooltip_microcopy": 1,
+      "decision_point|ui_label": 1,
+      "error_recovery|error_message": 1,
+      "first_encounter|button_cta": 1,
+      "first_encounter|heading": 2,
+      "first_encounter|short_ui_copy": 1,
+      "first_encounter|ui_label": 1,
+      "task_execution|button_cta": 1,
+      "task_execution|heading": 2,
+      "task_execution|short_ui_copy": 2,
+      "task_execution|tooltip_microcopy": 1,
+      "task_execution|ui_label": 2,
+      "trust_permission|heading": 1,
+      "trust_permission|short_ui_copy": 1,
+      "trust_permission|tooltip_microcopy": 1,
+      "wayfinding|heading": 1,
+      "wayfinding|ui_label": 2
+    },
+    "skipped_moments": [],
+    "moments_covered": [
+      "(none)",
+      "browsing_discovery",
+      "celebration",
+      "compliance_disclosure",
+      "decision_point",
+      "error_recovery",
+      "first_encounter",
+      "task_execution",
+      "trust_permission",
+      "wayfinding"
+    ]
+  },
+  "entries": [
+    {
+      "case_id": "apple-001",
+      "source_file": "apple_eval_cases.json",
+      "moment": "wayfinding",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-002",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-003",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-004",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-005",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-006",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-007",
+      "source_file": "apple_eval_cases.json",
+      "moment": "decision_point",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-008",
+      "source_file": "apple_eval_cases.json",
+      "moment": "decision_point",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-010",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-011",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-012",
+      "source_file": "apple_eval_cases.json",
+      "moment": "first_encounter",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-013",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-014",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": "GRM-01",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-015",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-016",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": "GRM-01",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-017",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-018",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-019",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-020",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-021",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-022",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-023",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-024",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-025",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-026",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-027",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-030",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-031",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "button_cta",
+      "standard_id": "ACC-01",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-032",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "button_cta",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-033",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "button_cta",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-034",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "button_cta",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-041",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": "PRF-11",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-042",
+      "source_file": "apple_eval_cases.json",
+      "moment": "task_execution",
+      "content_type": "short_ui_copy",
+      "standard_id": "GRM-05",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-043",
+      "source_file": "apple_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-047",
+      "source_file": "apple_eval_cases.json",
+      "moment": "decision_point",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-048",
+      "source_file": "apple_eval_cases.json",
+      "moment": "decision_point",
+      "content_type": "long_form_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-051",
+      "source_file": "apple_eval_cases.json",
+      "moment": "decision_point",
+      "content_type": "short_ui_copy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "apple-056",
+      "source_file": "apple_eval_cases.json",
+      "moment": "first_encounter",
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT apple ACC-01 button_cta apple_card d20312bc",
+      "source_file": "apple_homepage_eval.json",
+      "moment": "decision_point",
+      "content_type": "button_cta",
+      "standard_id": "ACC-01",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT apple PASS button_cta apple_card 67a5d00e",
+      "source_file": "apple_homepage_eval.json",
+      "moment": "decision_point",
+      "content_type": "button_cta",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT ditto_roadmap CLR-01 short_ui_copy 4eaa33df",
+      "source_file": "ditto_roadmap_eval.json",
+      "moment": null,
+      "content_type": "short_ui_copy",
+      "standard_id": "CLR-01",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT ditto_roadmap GRM-01 short_ui_copy 4a592669",
+      "source_file": "ditto_roadmap_eval.json",
+      "moment": null,
+      "content_type": "short_ui_copy",
+      "standard_id": "GRM-01",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT ditto_roadmap GRM-01 short_ui_copy a88ecc1c",
+      "source_file": "ditto_roadmap_eval.json",
+      "moment": null,
+      "content_type": "short_ui_copy",
+      "standard_id": "GRM-01",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT ditto_roadmap GRM-05 short_ui_copy 515bc587",
+      "source_file": "ditto_roadmap_eval.json",
+      "moment": null,
+      "content_type": "short_ui_copy",
+      "standard_id": "GRM-05",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT ditto_roadmap GRM-05 short_ui_copy c2dc6340",
+      "source_file": "ditto_roadmap_eval.json",
+      "moment": null,
+      "content_type": "short_ui_copy",
+      "standard_id": "GRM-05",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT ditto_roadmap PASS button_cta ebb225e4",
+      "source_file": "ditto_roadmap_eval.json",
+      "moment": null,
+      "content_type": "button_cta",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT ditto_roadmap PRF-03 heading 46c74571",
+      "source_file": "ditto_roadmap_eval.json",
+      "moment": null,
+      "content_type": "heading",
+      "standard_id": "PRF-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT dribbble_forms None error_message 3bd869",
+      "source_file": "dribbble_forms_eval_phase2.json",
+      "moment": "error_recovery",
+      "content_type": "error_message",
+      "standard_id": "CLR-01",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT dribbble_forms None heading 0d6e02",
+      "source_file": "dribbble_forms_eval_phase2.json",
+      "moment": "task_execution",
+      "content_type": "heading",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT dribbble_forms None heading 9b7d4d",
+      "source_file": "dribbble_forms_eval_phase2.json",
+      "moment": "task_execution",
+      "content_type": "heading",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT dribbble_forms None tooltip_microcopy 2d9b71",
+      "source_file": "dribbble_forms_eval_phase2.json",
+      "moment": "task_execution",
+      "content_type": "tooltip_microcopy",
+      "standard_id": null,
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT dribbble_forms PRF-09 button_cta 48737a",
+      "source_file": "dribbble_forms_eval_phase2.json",
+      "moment": "task_execution",
+      "content_type": "button_cta",
+      "standard_id": "PRF-09",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT dribbble_forms PRF-09 ui_label 339494",
+      "source_file": "dribbble_forms_eval_phase2.json",
+      "moment": "task_execution",
+      "content_type": "ui_label",
+      "standard_id": "PRF-09",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT dribbble_forms PRF-09 ui_label 4ed152",
+      "source_file": "dribbble_forms_eval_phase2.json",
+      "moment": "task_execution",
+      "content_type": "ui_label",
+      "standard_id": "PRF-09",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT dribbble_forms PRF-10 short_ui_copy 9d5abb",
+      "source_file": "dribbble_forms_eval_phase2.json",
+      "moment": "task_execution",
+      "content_type": "short_ui_copy",
+      "standard_id": "PRF-10",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "dribbble-health-001",
+      "source_file": "dribbble_health_eval_cases.json",
+      "moment": "celebration",
+      "content_type": "heading",
+      "standard_id": "GRM-03",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "dribbble-health-002",
+      "source_file": "dribbble_health_eval_cases.json",
+      "moment": "celebration",
+      "content_type": "short_ui_copy",
+      "standard_id": "VT-02",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "dribbble-health-004",
+      "source_file": "dribbble_health_eval_cases.json",
+      "moment": "celebration",
+      "content_type": "ui_label",
+      "standard_id": "GRM-05",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "dribbble-health-005",
+      "source_file": "dribbble_health_eval_cases.json",
+      "moment": "celebration",
+      "content_type": "ui_label",
+      "standard_id": "CON-02",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "dribbble-health-007",
+      "source_file": "dribbble_health_eval_cases.json",
+      "moment": "celebration",
+      "content_type": "button_cta",
+      "standard_id": "ACT-01",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "dribbble-health-009",
+      "source_file": "dribbble_health_eval_cases.json",
+      "moment": "first_encounter",
+      "content_type": "heading",
+      "standard_id": "VT-02",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "edu-002",
+      "source_file": "edu_app_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "ui_label",
+      "standard_id": "GRM-02",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "edu-003",
+      "source_file": "edu_app_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "ui_label",
+      "standard_id": "GRM-05",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "edu-004",
+      "source_file": "edu_app_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "ui_label",
+      "standard_id": "CON-02",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "edu-007",
+      "source_file": "edu_app_eval_cases.json",
+      "moment": "first_encounter",
+      "content_type": "button_cta",
+      "standard_id": "CON-02",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "edu-011",
+      "source_file": "edu_app_eval_cases.json",
+      "moment": "browsing_discovery",
+      "content_type": "ui_label",
+      "standard_id": "CLR-01",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT kaiser_permanente ACC-01 button_cta d20312bc",
+      "source_file": "kp_homepage_eval.json",
+      "moment": null,
+      "content_type": "button_cta",
+      "standard_id": "ACC-01",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "SCREENSHOT kaiser_permanente ACC-01 heading 8d96c8d6",
+      "source_file": "kp_homepage_eval.json",
+      "moment": null,
+      "content_type": "heading",
+      "standard_id": "ACC-01",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "EXTRACT Mailchimp alt_text 0750d31c",
+      "source_file": "mailchimp_eval_cases.json",
+      "moment": null,
+      "content_type": "alt_text",
+      "standard_id": "ACC-05",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "EXTRACT Mailchimp ui_label 0fd373bd",
+      "source_file": "mailchimp_eval_cases.json",
+      "moment": null,
+      "content_type": "ui_label",
+      "standard_id": "GRM-05",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "EXTRACT Mailchimp ui_label 1a2836dc",
+      "source_file": "mailchimp_eval_cases.json",
+      "moment": null,
+      "content_type": "ui_label",
+      "standard_id": "ACT-01",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:medvi_eval_cases.json:13",
+      "source_file": "medvi_eval_cases.json",
+      "moment": "decision_point",
+      "content_type": "ui_label",
+      "standard_id": "GRM-05",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:medvi_eval_cases.json:21",
+      "source_file": "medvi_eval_cases.json",
+      "moment": "trust_permission",
+      "content_type": "heading",
+      "standard_id": "CLR-01",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:medvi_eval_cases.json:31",
+      "source_file": "medvi_eval_cases.json",
+      "moment": "compliance_disclosure",
+      "content_type": "short_ui_copy",
+      "standard_id": "VT-04",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:medvi_eval_cases.json:35",
+      "source_file": "medvi_eval_cases.json",
+      "moment": "trust_permission",
+      "content_type": "short_ui_copy",
+      "standard_id": "VT-02",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:medvi_eval_cases.json:7",
+      "source_file": "medvi_eval_cases.json",
+      "moment": "first_encounter",
+      "content_type": "ui_label",
+      "standard_id": "CLR-01",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:robinhood_eval_cases.json:23",
+      "source_file": "robinhood_eval_cases.json",
+      "moment": "wayfinding",
+      "content_type": "ui_label",
+      "standard_id": "CON-02",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:robinhood_eval_cases.json:25",
+      "source_file": "robinhood_eval_cases.json",
+      "moment": "wayfinding",
+      "content_type": "ui_label",
+      "standard_id": "CON-02",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:wellsfargo_eval_cases.json:14",
+      "source_file": "wellsfargo_eval_cases.json",
+      "moment": "decision_point",
+      "content_type": "tooltip_microcopy",
+      "standard_id": "VT-01",
+      "past_human_verdict": "fail",
+      "past_human_confidence": "high"
+    },
+    {
+      "case_id": "auto:wellsfargo_eval_cases.json:30",
+      "source_file": "wellsfargo_eval_cases.json",
+      "moment": "trust_permission",
+      "content_type": "tooltip_microcopy",
+      "standard_id": "VT-04",
+      "past_human_verdict": "pass",
+      "past_human_confidence": "high"
+    }
+  ]
+}

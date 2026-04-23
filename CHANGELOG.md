@@ -10,6 +10,34 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4 + 5 + 6 + 7)
+
+Session 7 — quarterly self-drift check:
+
+- New `tools/drift_check.py` with three subcommands: `build-panel`
+  (80-case stratified sample from the eligible pool, deterministic),
+  `export-blind` (strips past verdicts + rationale for unbiased
+  re-labeling), `score` (computes κ + 95% CI + per-standard
+  disagreement + threshold regime from re-labeled responses).
+- New `evals/drift/panels/2026-q2.json` — first quarterly panel, 80
+  cases stratified across 10 moments and 8 content-types.
+- New `evals/drift/README.md` — stratification, cadence, regime table,
+  schemas for panel / blind / responses / report.
+- Threshold-recalibration formula codified: `autonomous κ = 0.94 ×
+  ceiling`, `batch-approval κ = 0.83 × ceiling`. Regimes:
+  `target_met` (≥0.90), `maturing` (0.85–0.90), `graduation_frozen`
+  (0.80–0.85), `degraded` (<0.80). Session 10's graduation metrics
+  will read these values off the drift report.
+- 35 new pytest tests for regime classification, threshold
+  calibration, κ + 95% CI, stratified panel construction
+  (determinism, growth stability, budget respect), blind panel
+  export, and drift-report scoring.
+- Coverage gap documented in README: 4 moments (destructive_action,
+  confirmation, empty_state, interruption) have zero eligible cases
+  today — drift measurement for those is impossible until annotation
+  lands. The panel skips them; the regime classification accounts
+  for the gap.
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4 + 5 + 6)
 
 Session 6 — held-out eval as a second CI gate:
