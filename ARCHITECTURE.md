@@ -278,6 +278,17 @@ Deterministic by construction — same eligible pool + same args always produce 
 
 **Retirement (not yet exercised):** bounded steady-state of 150 items; past that, retire 10 oldest low-signal items before adding new. Retired standards keep their held-out items as archive-flagged (queryable, non-gating). Taxonomy splits add one item per side to the manifest.
 
+### Held-out CI gate (human-eval build plan Session 6)
+
+The gate runs on every PR touching the engine, the standards, the held-out manifest, or the held-out tooling. Two jobs (`.github/workflows/held_out.yml`):
+
+1. **Commit-message convention (`convention` job).** Fast + free, no corpus needed. Walks every commit in the PR. If a commit edits `evals/held_out/manifest.json` or anything under `evals/industry/`, the subject line must start with `held-out-update: <reason>`. Enforced by `scripts/check_held_out_convention.py`.
+2. **Held-out run (`held-out` job).** Fetches the private corpus from `HELD_OUT_CORPUS_TARBALL_URL` (GH Actions secret), invokes `tools/run_held_out.py`, fails on any disagreement. Requires `ANTHROPIC_API_KEY` for pipeline execution. Current state: wired but not enabled — the workflow emits a notice and exits cleanly when either secret is missing, so the gate is never silently bypassed.
+
+**Why two jobs, not one.** The convention job is the always-on enforcement — catches held-out verdict edits in seconds without touching the private corpus. The execution job is opt-in because it depends on ops work (corpus tarball URL, API key) the repo owner chooses when to enable. Decoupling means the convention check protects the manifest from day one; the execution check flips on when Robo is ready.
+
+**No env-var bypass.** The only path past a failing gate is a real `held-out-update:` commit that resolves the disagreement by updating the verdict with a documented reason. Approval ceremony is documented in `docs/HELD_OUT_GATE.md`.
+
 ## Two entry points, two use cases
 
 `check(text, content_type, audience)` — full 5-stage pipeline. Used in production, the CLI, and the Figma plugin. Content-type-aware filtering and audience-aware gating reduce false positives. Audience defaults to `product_ui`.
