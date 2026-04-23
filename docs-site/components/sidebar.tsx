@@ -16,6 +16,14 @@ export function Sidebar() {
       <ul className="mb-6 space-y-1">
         <li>
           <Link
+            href="/guides"
+            className="block rounded px-2 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-900"
+          >
+            Guides
+          </Link>
+        </li>
+        <li>
+          <Link
             href="/spec"
             className="block rounded px-2 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-900"
           >

@@ -1,0 +1,138 @@
+export const metadata = {
+  title: "Design-system copy review in Figma · ContentRX guides",
+};
+
+# Design-system copy review with the Figma plugin
+
+The bottleneck in most design-review cycles isn't the visual work —
+it's the words. A staff content designer reviewing copy across 40
+components for 12 product teams cannot scale. They miss things, they
+rush, they end up shipping "Submit" buttons they'd never have
+approved on a quiet Tuesday.
+
+The Figma plugin was built for this. A designer runs it on a frame
+before handoff; it grades every text layer against the 47 standards
+and highlights failures directly in the canvas. The staff reviewer
+spends their review cycle on the 15% ContentRX can't decide
+(strategic fit, brand-specific voice), not the 85% it can.
+
+This guide walks through what the plugin catches on a typical
+design-system component review, using a settings panel as the
+example.
+
+## Setup
+
+Assumed stack:
+
+- Figma with a design-system library (shared components used across
+  product files)
+- A designer with edit access to the design-system library
+- A ContentRX Free, Pro, or Team plan account
+
+Install the plugin from [figma.com/community](https://www.figma.com/community)
+(search for "ContentRX"), sign in with your dashboard account, and
+the plugin appears in `Menu → Plugins → ContentRX`.
+
+## What you'll see — a settings panel frame
+
+Open a settings panel frame with these elements:
+
+- **Heading:** "Account settings"
+- **Section title:** "Email preferences"
+- **Toggle label:** "Product updates"
+- **Description under toggle:** "We'll let you know when there are
+  updates to the product."
+- **Button:** "Submit"
+- **Secondary link:** "Click here to cancel account"
+
+Run the plugin. It scans every text layer and surfaces violations
+inline in the plugin panel, with "Go to layer" buttons that zoom the
+canvas to each flagged string.
+
+### Violation 1 — "Product updates"
+
+- **[STR-04](/spec/standards/STR-04)** `[warn]` — "Front-load key
+  information in tooltips and microcopy. Users may not read to the
+  end." Toggle labels are microcopy, and "Product updates" doesn't
+  front-load the user's relationship to the setting. Suggested
+  rewrite: **"Email me about product updates"** — the channel is
+  explicit, the opt-in is active.
+
+### Violation 2 — "We'll let you know when there are updates to the product."
+
+- **[CLR-03](/spec/standards/CLR-03)** `[info]` — Sentence is 13
+  words, fine on length. But combined with the toggle label it
+  repeats information (_"updates to the product"_ is
+  already on the toggle). The rule also covers redundancy at the
+  paragraph level.
+- **[VT-04](/spec/standards/VT-04)** `[info]` — "We'll let you know"
+  hedges. The rule asks for confident, direct statements. Rewrite:
+  **"We email about once a month."** — direct, specific, adds
+  frequency information the toggle label didn't carry.
+
+### Violation 3 — "Submit"
+
+- **[ACT-02](/spec/standards/ACT-02)** `[block]` — The single most
+  common violation in the library. The rule literally names it:
+  _"Prefer 'save,' 'send,' 'export' over 'submit' or 'process.'"_
+  Suggested rewrite: **"Save preferences"** — names both the verb
+  and the object.
+
+### Violation 4 — "Click here to cancel account"
+
+- **[ACC-01](/spec/standards/ACC-01)** `[block]` — "Never use 'click
+  here' or 'learn more' as standalone links." The rule is
+  unambiguous. Suggested rewrite: **"Cancel account"** (drop "click
+  here" entirely; the hyperlink already signals the action).
+
+## The fix
+
+After the plugin pass, the designer rewrites the strings:
+
+| Before | After |
+|---|---|
+| Toggle label: "Product updates" | "Email me about product updates" |
+| Description: "We'll let you know when there are updates to the product." | "We email about once a month." |
+| Button: "Submit" | "Save preferences" |
+| Link: "Click here to cancel account" | "Cancel account" |
+
+Re-run the plugin: zero blocking violations, a couple of `[info]`-
+level notes the designer and reviewer can discuss in the handoff
+meeting instead of relitigating every copy decision.
+
+## Why this scales
+
+A staff reviewer doing 8 component reviews a day, each 20 minutes,
+is looking at the wrong 160 minutes. The plugin takes 10 seconds per
+frame. The reviewer's time moves upstream: they set the voice + tone
++ brand guidelines in the standards library (or override them for
+their team in the `team_rules` table), and the plugin enforces that
+across 1,000 frames a week without anyone reading each one.
+
+## Running this on a whole library
+
+The plugin accepts page-level and selection-level scans. For a
+design-system library:
+
+1. Open the library file.
+2. Select the top-level page.
+3. Plugin → "Scan selection."
+4. Fix what's flagged.
+5. Re-scan; iterate.
+
+For production design files (the ones that use the library), run the
+plugin on each frame before handoff to engineering. Handoff notes
+should include the "ContentRX: 0 violations" status as a checkbox,
+same as you'd tick "accessibility reviewed."
+
+## Related standards
+
+- [ACC-01](/spec/standards/ACC-01) — Descriptive link text (no
+  "click here")
+- [ACT-02](/spec/standards/ACT-02) — Specific verbs beat vague ones
+- [CLR-03](/spec/standards/CLR-03) — Short, non-redundant sentences
+- [STR-04](/spec/standards/STR-04) — Front-load key information in
+  microcopy
+- [VT-04](/spec/standards/VT-04) — Confident, not arrogant
+- [Decision point moment](/spec/moments) — the moment most settings
+  interactions occur in

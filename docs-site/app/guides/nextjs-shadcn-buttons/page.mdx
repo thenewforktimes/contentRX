@@ -1,0 +1,155 @@
+export const metadata = {
+  title: "Next.js + shadcn/ui buttons · ContentRX guides",
+};
+
+# Catching CTA violations in a Next.js + shadcn/ui app
+
+Buttons are the single most common place content-design standards
+get broken. They're short, they pass lint, they compile fine, they
+just don't read well. "Click here" ships. "Submit" ships. "Learn
+more" ships three times on the same page pointing at three different
+places.
+
+This guide shows what ContentRX catches on a typical shadcn/ui
+`<Button>` in a Next.js App Router app, using real code you'd find
+in a hero section or a settings panel.
+
+## Setup
+
+Assumed stack:
+
+- Next.js 15 (App Router)
+- Tailwind + shadcn/ui `Button` component
+- A PR-based workflow with GitHub Actions
+
+Two ways to wire up ContentRX for this stack:
+
+**Option 1 — catch violations in PRs** via the GitHub Action. One
+workflow file, reports on every PR touching `.tsx` files:
+
+```yaml
+# .github/workflows/content-lint.yml
+name: Content lint
+on:
+  pull_request:
+    paths: ['**/*.tsx']
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: thenewforktimes/contentrx-action@v1
+        with:
+          api-key: ${{ secrets.CONTENTRX_API_KEY }}
+```
+
+**Option 2 — catch violations at write-time** via the MCP server in
+Claude Code or Cursor. Claude consults ContentRX before writing
+button labels:
+
+```bash
+claude mcp add contentrx -- uvx contentrx-mcp
+export CONTENTRX_API_KEY=cx_your_key
+```
+
+Both target the same rules. Option 1 blocks review noise at the PR;
+Option 2 prevents it from being written in the first place.
+
+## What you'll see — a real hero section
+
+Here's a `Hero.tsx` from a typical marketing page before review:
+
+```tsx
+import { Button } from "@/components/ui/button";
+
+export function Hero() {
+  return (
+    <section>
+      <h1>The analytics platform built for product teams</h1>
+      <p>Track what matters. Skip the noise.</p>
+      <div className="flex gap-3">
+        <Button>Click here to learn more</Button>
+        <Button variant="outline">Submit</Button>
+      </div>
+    </section>
+  );
+}
+```
+
+ContentRX flags these components against the `decision_point`
+moment and raises three violations:
+
+### Violation 1 — `<Button>Click here to learn more</Button>`
+
+- **[ACC-01](/spec/standards/ACC-01)** `[block]` — "Click here" is
+  explicitly called out: _"Never use 'click here' or 'learn more' as
+  standalone links."_ Both phrases appear here, in the same label.
+- **[ACT-02](/spec/standards/ACT-02)** `[warn]` — "Learn more" is
+  the canonical vague CTA. The rule prefers specific verbs like
+  "save," "send," "export." Apply the same pattern: **"Read the
+  case studies"** (specific object) or **"See pricing"** (specific
+  destination).
+
+### Violation 2 — `<Button variant="outline">Submit</Button>`
+
+- **[ACT-02](/spec/standards/ACT-02)** `[block]` — "Submit" is the
+  single most common violation of this rule. The standard literally
+  cites it: _"Prefer 'save,' 'send,' 'export' over 'submit' or
+  'process.'"_ Suggested rewrite: **"Create account"** or
+  **"Send message"** — whichever matches the form's actual purpose.
+
+## Why these matter
+
+The two `<Button>` labels on this hero carry 80% of the page's
+decision load. "Click here to learn more" adds four words and zero
+meaning. "Submit" is maximally generic — it's the browser's default
+for every form on the web.
+
+The rewrites below aren't cleverer — they're more specific.
+Specificity is the rule here, not concision.
+
+## The fix
+
+```tsx
+import { Button } from "@/components/ui/button";
+
+export function Hero() {
+  return (
+    <section>
+      <h1>The analytics platform built for product teams</h1>
+      <p>Track what matters. Skip the noise.</p>
+      <div className="flex gap-3">
+        <Button>Read the case studies</Button>
+        <Button variant="outline">Create account</Button>
+      </div>
+    </section>
+  );
+}
+```
+
+Two-word changes, zero remaining violations on the next PR run.
+
+## What ContentRX doesn't do here
+
+- **It won't tell you whether "case studies" is the right destination
+  for your product.** It verifies the CTA names a specific action or
+  destination, not that the destination is strategically correct.
+- **It won't flag every short button.** "Save," "Send," "Cancel" all
+  pass — they're specific verbs. "Submit," "Process," "Go" fail
+  because they're vague.
+- **Context matters.** `ACT-01` has an explicit exclusion for
+  confirmation and status messages: "Project created" and "Payment
+  sent" are not CTAs, so they don't need to start with a verb.
+
+## Related standards
+
+- [ACC-01](/spec/standards/ACC-01) — Descriptive link text (no "click
+  here," no "learn more")
+- [ACT-01](/spec/standards/ACT-01) — Button text starts with a verb
+- [ACT-02](/spec/standards/ACT-02) — Specific verbs beat vague ones
+- [Decision point moment](/spec/moments) — the moment most `<Button>`
+  clicks occur in
