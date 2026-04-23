@@ -16,6 +16,12 @@ const cuid = () =>
     .primaryKey()
     .$defaultFn(() => createId());
 
+// RLS is enabled on every table as defense-in-depth. ContentRX accesses
+// the DB only via the server-side `postgres` role (Supabase pooler),
+// which has BYPASSRLS — queries continue to work. Enabling RLS with no
+// policies locks the tables down for any other role (e.g. PostgREST's
+// anon/authenticated if that surface is ever enabled). Never rely on
+// RLS as the primary auth boundary — API routes still do that.
 export const users = pgTable("users", {
   id: cuid(),
   clerkId: text("clerk_id").notNull().unique(),
@@ -45,7 +51,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}).enableRLS();
 
 export const usage = pgTable(
   "usage",
@@ -61,7 +67,7 @@ export const usage = pgTable(
       .defaultNow(),
   },
   (t) => [uniqueIndex("usage_user_month_idx").on(t.userId, t.month)],
-);
+).enableRLS();
 
 export const subscriptions = pgTable(
   "subscriptions",
@@ -85,7 +91,7 @@ export const subscriptions = pgTable(
       .on(t.userId)
       .where(sql`status = 'active'`),
   ],
-);
+).enableRLS();
 
 export const teamMembers = pgTable(
   "team_members",
@@ -112,8 +118,12 @@ export const teamMembers = pgTable(
       t.teamOwnerUserId,
       t.memberUserId,
     ),
+    // FK index on member_user_id. Without this, "list all teams this
+    // user is a member of" scans the whole table. Owner-side is covered
+    // by the leading column of the composite unique index above.
+    index("team_members_member_idx").on(t.memberUserId),
   ],
-);
+).enableRLS();
 
 export const teamRules = pgTable(
   "team_rules",
@@ -139,7 +149,7 @@ export const teamRules = pgTable(
       t.action,
     ),
   ],
-);
+).enableRLS();
 
 export const violations = pgTable(
   "violations",
@@ -173,20 +183,28 @@ export const violations = pgTable(
     index("violations_team_created_idx").on(t.teamId, t.createdAt),
     index("violations_team_file_idx").on(t.teamId, t.filePath),
   ],
-);
+).enableRLS();
 
-export const dittoSyncs = pgTable("ditto_syncs", {
-  id: cuid(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  projectId: text("project_id").notNull(),
-  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
-  lastStatus: text("last_status"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const dittoSyncs = pgTable(
+  "ditto_syncs",
+  {
+    id: cuid(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    projectId: text("project_id").notNull(),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    lastStatus: text("last_status"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // FK index on user_id so "list a user's ditto syncs" hits an index
+    // instead of scanning the table.
+    index("ditto_syncs_user_idx").on(t.userId),
+  ],
+).enableRLS();
 
 // Violation overrides — Session 11 of BUILD_PLAN_v2.
 //
@@ -239,8 +257,12 @@ export const violationOverrides = pgTable(
       t.standardId,
       t.moment,
     ),
+    // FK index on violation_id. When a violation is deleted, PG has to
+    // find all overrides pointing at it to apply ON DELETE SET NULL —
+    // without this, that's a table scan.
+    index("violation_overrides_violation_idx").on(t.violationId),
   ],
-);
+).enableRLS();
 
 export type User = InferSelectModel<typeof users>;
 export type Usage = InferSelectModel<typeof usage>;
