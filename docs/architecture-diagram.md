@@ -26,7 +26,7 @@ graph TB
         CLI["CLI client 🟢<br/>(contentrx-cli on PyPI)<br/>engineers in terminals + CI"]
         FP["Figma Plugin 🟢<br/>(figma-plugin/ui.html)<br/>designers + PMs"]
         WEB["Web browser 🟢<br/>(landing + dashboard)<br/>admins"]
-        DOC["docs.contentrx.app 🟡<br/>(docs-site/, in-tree)<br/>v2 Phase 6: separate Vercel project"]
+        DOC["docs.contentrx.io 🟡<br/>(docs-site/, in-tree)<br/>v2 Phase 6: separate Vercel project"]
     end
 
     subgraph "Vercel — content-rx.vercel.app"
@@ -47,13 +47,13 @@ graph TB
 
     subgraph "External services — 🟡 wired, awaiting env vars"
         ST["Stripe<br/>(products + webhook +<br/>6 env vars TODO)"]
-        RS["Resend<br/>(API key + verify<br/>hello@contentrx.app)"]
+        RS["Resend<br/>(API key + verify<br/>hello@contentrx.io)"]
         SN["Sentry<br/>(DSN + auth token<br/>+ org/project)"]
         PL["Plausible<br/>(register site +<br/>NEXT_PUBLIC_PLAUSIBLE_DOMAIN)"]
     end
 
     subgraph "Future surfaces (v2)"
-        ACC["Accuracy page 🔴<br/>contentrx.app/accuracy<br/>v2 Session 15"]
+        ACC["Accuracy page 🔴<br/>contentrx.io/accuracy<br/>v2 Session 15"]
         SPEC["Public content-model spec 🔴<br/>github.com/contentrx/content-model<br/>v2 Session 20 (CC-BY 4.0)"]
         VSC["VS Code + Cursor extensions 🔴<br/>v2 Session 18 (LSP launchers)"]
     end
@@ -277,7 +277,7 @@ If you treat each flow above as a "real product moment" the user has to land, he
 
 | Flow / moment | Blocked on |
 |---|---|
-| Sign-up + welcome email arrives | Resend API key + verified `hello@contentrx.app` domain |
+| Sign-up + welcome email arrives | Resend API key + verified `hello@contentrx.io` domain |
 | Sign-up registers as Plausible goal | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` set in Vercel env |
 | Server crashes show in Sentry | `SENTRY_DSN` + 4 other Sentry env vars in Vercel env |
 | First scan from plugin → result back | ✅ already works in prod (Anthropic key is set) |
@@ -289,7 +289,7 @@ If you treat each flow above as a "real product moment" the user has to land, he
 | CLI auth + scan | ✅ ships on PyPI; user pastes cx_token from dashboard |
 | GitHub Action posts PR comments | Action needs to be split to its own public repo + Marketplace publish |
 | Real users (not Clerk test instance) | Clerk live keys (`pk_live_...` / `sk_live_...`) + new webhook secret |
-| docs.contentrx.app | New Vercel project, `Root directory: docs-site/`, bind domain |
+| docs.contentrx.io | New Vercel project, `Root directory: docs-site/`, bind domain |
 | Ditto integration | Was v1 Session 18 — **dropped from v2** (not in BUILD_PLAN_v2 phases). Was always blocked on a Ditto API account. |
 
 ---
@@ -300,7 +300,7 @@ Roughly cheapest → most setup work, and prerequisites first:
 
 1. **Plausible** (5 min) — register site, set 1 env var. Frees up signup/upgrade event tracking.
 2. **Sentry** (15 min) — create project, set 5 env vars. Critical *before* live traffic.
-3. **Resend** (30 min — DNS waits) — verify `hello@contentrx.app`, set 1 env var. Unlocks all 4 active email templates.
+3. **Resend** (30 min — DNS waits) — verify `hello@contentrx.io`, set 1 env var. Unlocks all 4 active email templates.
 4. **Stripe** (1–2 hr) — create 4 products, configure webhook, set 6 env vars. Unlocks payments + subscription email + Team flow.
 5. **Clerk live keys** (30 min) — production instance + new webhook. Switches off the test publishable key.
 6. **docs-site Vercel project** (15 min) — second Vercel project, root = docs-site/. Goes live.

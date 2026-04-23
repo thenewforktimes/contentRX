@@ -26,7 +26,7 @@ function client(): Resend | null {
 }
 
 function fromAddress(): string {
-  return process.env.EMAIL_FROM ?? "ContentRX <hello@contentrx.app>";
+  return process.env.EMAIL_FROM ?? "ContentRX <hello@contentrx.io>";
 }
 
 type SendArgs = {

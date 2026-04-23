@@ -52,8 +52,8 @@ class TestGetApiBaseUrl:
         assert get_api_base_url() == "https://content-rx.vercel.app"
 
     def test_custom_https_url(self, monkeypatch):
-        monkeypatch.setenv("CONTENTRX_API_URL", "https://staging.contentrx.app/")
-        assert get_api_base_url() == "https://staging.contentrx.app"
+        monkeypatch.setenv("CONTENTRX_API_URL", "https://staging.contentrx.io/")
+        assert get_api_base_url() == "https://staging.contentrx.io"
 
     def test_http_rejected_by_default(self, monkeypatch):
         monkeypatch.setenv("CONTENTRX_API_URL", "http://localhost:3000")

@@ -22,7 +22,7 @@ surfaces (MCP server, LSP server) land in BUILD_PLAN_v2 phases 1 and 5.
 5. **GitHub Action** — `github-action/` (in-tree today, splits to its
    own public repo in v2 Phase 2)
 6. **Docs site** — `docs-site/` (in-tree today, gets its own Vercel
-   project at `docs.contentrx.app` in v2 Phase 6)
+   project at `docs.contentrx.io` in v2 Phase 6)
 
 The Next.js app imports the Python engine at runtime via a Vercel Python
 function (`api/evaluate.py`); no vendored copy, no sync script — the
@@ -246,7 +246,7 @@ every API change, every new surface, every code review going forward.
 - All Anthropic clients have `max_retries=2`. (Lands in v2 Session 3.)
 - JS/Python parity is CI-gated; divergence blocks merge. (Lands in v2 Session 2.)
 - Every violation emitted includes a `docs_url` field pointing at the
-  rationale on docs.contentrx.app. (Lands in v2 Phase 6.)
+  rationale on docs.contentrx.io. (Lands in v2 Phase 6.)
 - Every verdict is one of `violation | review_recommended | pass`. (Lands in v2 Session 10.)
 - Override dismissals write to the `violation_overrides` table — never
   silently discarded. (Lands in v2 Session 11.)

@@ -40,7 +40,7 @@ events + browser pageview tracking.
 1. Go to https://plausible.io and sign up (or use your existing
    account).
 2. Create a new site. Domain: `content-rx.vercel.app` (use your
-   eventual `contentrx.app` once that exists; `content-rx.vercel.app`
+   eventual `contentrx.io` once that exists; `content-rx.vercel.app`
    works in the meantime).
 3. **Vercel env**: `NEXT_PUBLIC_PLAUSIBLE_DOMAIN=content-rx.vercel.app`
 4. Redeploy.
@@ -81,7 +81,7 @@ within a minute, with full stacktrace + source-map decoded line.
 
 ---
 
-## 3. Resend + `hello@contentrx.app` domain (30 min — DNS waits)
+## 3. Resend + `hello@contentrx.io` domain (30 min — DNS waits)
 
 **What it unblocks:** all transactional email — welcome, quota
 warning, quota exhausted, subscription confirmation. Templates ship
@@ -90,16 +90,16 @@ console instead of actually sending.
 
 **Steps:**
 1. Go to https://resend.com and sign up.
-2. **Add the domain** `contentrx.app` (or whichever domain you'll
+2. **Add the domain** `contentrx.io` (or whichever domain you'll
    send from). Resend gives you DNS records (SPF, DKIM, DMARC).
 3. Add those records to your DNS provider (Cloudflare, Namecheap,
-   wherever you registered `contentrx.app`). DNS propagation can
+   wherever you registered `contentrx.io`). DNS propagation can
    take 15 min – a few hours.
 4. Once Resend shows "Verified" next to the domain, generate an
    **API Key** (Settings → API Keys → Create).
 5. **Vercel env:**
    - `RESEND_API_KEY=re_...`
-   - `EMAIL_FROM=hello@contentrx.app` (already in `.env.local.example`
+   - `EMAIL_FROM=hello@contentrx.io` (already in `.env.local.example`
      with this default; only change if you want a different sender)
 6. Redeploy.
 
@@ -214,7 +214,7 @@ table via the webhook.
 
 ---
 
-## 6. docs.contentrx.app — second Vercel project (15 min)
+## 6. docs.contentrx.io — second Vercel project (15 min)
 
 **What it unblocks:** the spec site. The code is at `docs-site/` in
 the same repo, ready to build (57 SSG pages, all 47 standards).
@@ -230,10 +230,10 @@ the same repo, ready to build (57 SSG pages, all 47 standards).
 5. **Environment variables:** none required.
 6. Deploy.
 7. Once it's live, **add a custom domain**: Vercel project Settings →
-   Domains → `docs.contentrx.app`. Vercel gives you a CNAME record;
+   Domains → `docs.contentrx.io`. Vercel gives you a CNAME record;
    add it at your DNS provider.
 
-**How to test:** `curl https://docs.contentrx.app/spec/standards/CLR-01`
+**How to test:** `curl https://docs.contentrx.io/spec/standards/CLR-01`
 returns the rendered standard page. The sidebar should list all 9
 categories + 47 standards.
 
@@ -282,7 +282,7 @@ When you finish each item and let me know, I can:
 | Resend | Send a test email via the API; verify welcome arrives end-to-end |
 | Stripe | Walk a real upgrade flow; verify subscription row + plan flip + email |
 | Clerk live | Verify the prod hostname is no longer the dev `great-redfish-…`; check webhook |
-| docs.contentrx.app | Confirm DNS resolves; smoke-test routing |
+| docs.contentrx.io | Confirm DNS resolves; smoke-test routing |
 | GH Action | Smoke-test the published action against a sample repo |
 
 You don't have to wait for me — knock them out in any order. When

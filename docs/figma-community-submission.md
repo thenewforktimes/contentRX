@@ -99,7 +99,7 @@ Beat-by-beat script:
 | 0:08–0:14 | Click **Scan page**. Progress bar fills. | Watch the "Instant checks" → "AI evaluation" handoff. |
 | 0:14–0:22 | Results appear. Scroll through 2–3 violation cards. Expand one. | Standard ID + issue + suggestion on screen. |
 | 0:22–0:27 | Click "Go to layer" on a violation. Figma zooms to the layer. | Camera movement — always good. |
-| 0:27–0:30 | Cut back to plugin; end frame on quota "1 of 25 this month" counter and the tagline text overlay. | "Lint your UX copy — contentrx.app". |
+| 0:27–0:30 | Cut back to plugin; end frame on quota "1 of 25 this month" counter and the tagline text overlay. | "Lint your UX copy — contentrx.io". |
 
 Record at 1× speed; speed up only the browser-hop at 0:02–0:05 so the
 Clerk sign-in doesn't dominate the demo.
@@ -111,7 +111,7 @@ Clerk sign-in doesn't dominate the demo.
 Pre-req items that have to be real URLs/emails before Figma will accept:
 
 - [ ] **Privacy policy URL** — blocks on BUILD_PLAN §5 (Iubenda page).
-- [ ] **Support contact** — `hello@contentrx.app`, needs Resend inbound route from §13.
+- [ ] **Support contact** — `hello@contentrx.io`, needs Resend inbound route from §13.
 - [ ] **Plugin icon** — 128×128 PNG, dark + light variants if possible.
 - [ ] **Cover image** — 1920×1080, same vibe as screenshot #1.
 - [ ] `DEV_MODE = false` in ui.html.

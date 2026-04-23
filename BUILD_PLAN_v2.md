@@ -158,10 +158,10 @@ references to test mode), `src/middleware.ts` (verify still works).
 - Vercel production env has `CLERK_WEBHOOK_SECRET` rotated and set
 - Vercel production env has `RESEND_API_KEY`, `SENTRY_DSN`,
   `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` set
-- `hello@contentrx.app` sends a test welcome email to Robo's personal
+- `hello@contentrx.io` sends a test welcome email to Robo's personal
   inbox via Resend
 - Sentry receives a deliberate test error from production
-- Plausible dashboard shows a live visit to `contentrx.app`
+- Plausible dashboard shows a live visit to `contentrx.io`
 - ⚠ annotation removed from ARCHITECTURE.md
 
 **Why this matters.** This is the `.env` session. No new features. The
@@ -461,7 +461,7 @@ marketing/distribution session, not a code session.
 - Short-form writeup: "ContentRX for Claude Code: content-design
   review in the generation layer." Post to dev.to, Hacker News (pick
   the right time slot), Anthropic MCP directory submission.
-- `.mcp.json` snippet on `contentrx.app/mcp` as a copy-paste install
+- `.mcp.json` snippet on `contentrx.io/mcp` as a copy-paste install
 - Direct outreach: 5 MCP-active accounts on Twitter/X (Cursor team,
   Claude Code team, known MCP tool authors). Not promotion — sharing,
   asking for feedback.
@@ -470,7 +470,7 @@ marketing/distribution session, not a code session.
 - Video live on at least Twitter/X and LinkedIn
 - Writeup live on dev.to
 - Anthropic MCP directory submission in flight
-- `contentrx.app/mcp` page live with copy-paste install
+- `contentrx.io/mcp` page live with copy-paste install
 - At least 20 MCP server installs measurable via PyPI download stats
   within 72 hours of launch
 
@@ -532,7 +532,7 @@ moment the strategy memo calls for.
 - Post to Hacker News, dev.to, Reddit r/programming.
 
 **Acceptance.**
-- Report live on `contentrx.app/posts/state-of-oss-dev-tool-copy`
+- Report live on `contentrx.io/posts/state-of-oss-dev-tool-copy`
 - At least 2 PRs opened against OSS projects
 - Post submitted to Hacker News at a deliberate time (Tuesday–Thursday
   morning Pacific)
@@ -831,7 +831,7 @@ pricing level.
 ### Session 15 — Public accuracy page
 
 **Objective.** Publish quarterly accuracy numbers at
-`contentrx.app/accuracy`. Every competitor hides this. ContentRX
+`contentrx.io/accuracy`. Every competitor hides this. ContentRX
 publishes it.
 
 **Prereqs.** Session 14 complete.
@@ -866,7 +866,7 @@ Full held-out corpus: gated behind email signup
 ```
 
 **Acceptance.**
-- Page live at `contentrx.app/accuracy`
+- Page live at `contentrx.io/accuracy`
 - Report generated reproducibly from `tools/accuracy_report.py`
 - Held-out corpus is version-controlled but not used in preprocessor
   development (verified by git history)
@@ -992,16 +992,16 @@ Phase 6 is where the content model stops being a JSON file in the repo
 and becomes a public, versioned, browsable spec — the "Shopify Polaris
 of executable content rules" the strategy memo calls for.
 
-### Session 19 — docs.contentrx.app launch
+### Session 19 — docs.contentrx.io launch
 
-**Objective.** Ship the docs site at `docs.contentrx.app` with the
+**Objective.** Ship the docs site at `docs.contentrx.io` with the
 content model as the centerpiece.
 
 **Prereqs.** Phase 5 complete.
 
 **Files.**
 - `docs-site/` (already exists in repo, currently inert)
-- Second Vercel project binding `docs.contentrx.app`
+- Second Vercel project binding `docs.contentrx.io`
 - Content pages:
   - `/` — what is ContentRX, who it's for, 3-minute install
   - `/standards` — browsable standards library
@@ -1013,7 +1013,7 @@ content model as the centerpiece.
   - `/accuracy` — links to main site accuracy page
 
 **Acceptance.**
-- `docs.contentrx.app` resolves and renders
+- `docs.contentrx.io` resolves and renders
 - Standards library browsable, searchable, linkable
 - Each violation emitted by ContentRX (in any surface) includes a
   `docs_url` field pointing to the relevant standard page
