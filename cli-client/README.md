@@ -110,6 +110,88 @@ contentrx -v "Save changes"
 
 ---
 
+## Scenarios
+
+Three concrete things you can do with the CLI today.
+
+### 1. Ad-hoc check while writing copy
+
+You're writing a button label for a hero section. Is "Click here to
+learn more" actually good?
+
+```bash
+$ contentrx --content-type button_cta "Click here to learn more"
+✗ FAIL
+  Moment: decision_point
+  2 violations:
+    ACT-02 [block]  Vague CTA — "Click here" doesn't name the destination.
+                    Suggestion: Lead with verb+object: "Learn more" or "Read the docs".
+    CLR-03 [warn]   Redundant phrasing — "to learn more" duplicates the button's purpose.
+
+$ contentrx --content-type button_cta "Read the docs"
+✓ PASS
+  Moment: decision_point
+  Verb-first. Object named. Length appropriate for a CTA.
+```
+
+Takes <2 seconds per check. Free tier gives 25 checks/month for
+exactly this kind of exploration.
+
+### 2. Linting an i18n catalog during CI
+
+You have `locales/en.json` with every user-facing string. Lint it on
+every PR that touches it:
+
+```yaml
+# .github/workflows/copy-lint.yml
+on:
+  pull_request:
+    paths: ['locales/en.json']
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install contentrx-cli
+      - name: Convert en.json → ContentRX batch format
+        run: |
+          jq -r 'to_entries | map({text: .value}) | tostring' locales/en.json > strings.json
+      - name: Lint
+        env:
+          CONTENTRX_API_KEY: ${{ secrets.CONTENTRX_API_KEY }}
+        run: contentrx --batch strings.json
+```
+
+Exit code 1 on any violation fails the job and blocks the PR. Engineers
+get a terminal output they can scan in 10 seconds.
+
+### 3. Pre-commit hook on a specific file
+
+You only care about the canonical strings file, not every edit. One
+hook, scoped to that file:
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: contentrx
+        name: ContentRX
+        entry: contentrx --batch
+        language: system
+        files: ^content/strings\.json$
+        pass_filenames: true
+```
+
+Runs only when `content/strings.json` changes. Catches violations
+before they leave your laptop.
+
+---
+
 ## Exit codes
 
 Stable across versions — safe to pin on in CI.

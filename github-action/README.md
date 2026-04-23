@@ -104,6 +104,79 @@ to keep the comment signal-to-noise high.
 
 ---
 
+## Scenarios
+
+Three concrete ways this lands in a real engineering team.
+
+### 1. Catching vague CTAs in a component refactor PR
+
+A junior engineer opens a PR refactoring the pricing page. They
+update a button:
+
+```diff
+-<Button>See pricing</Button>
++<Button>Click here to see our pricing plans</Button>
+```
+
+The action posts this comment on the PR:
+
+> **ContentRX — 1 violation found**
+>
+> **`src/app/pricing/page.tsx`**
+>
+> - Line 47: `"Click here to see our pricing plans"`
+>   - **ACT-02** [block] — Vague CTA. "Click here" doesn't name the
+>     destination.
+>     _Suggestion: "See pricing plans" or "View pricing"._
+>
+> [See the ACT-02 standard](https://docs.contentrx.io/spec/standards/ACT-02)
+> for the full rule + examples.
+
+With `strict: false` (the default), the check still passes — the
+review is advisory. Engineer pushes a fix in the next commit; comment
+gets re-posted with 0 violations.
+
+### 2. Enforcing on merge for copy-critical teams
+
+Once the team's ready, flip `strict: true`:
+
+```yaml
+- uses: thenewforktimes/contentrx-action@v1
+  with:
+    api-key: ${{ secrets.CONTENTRX_API_KEY }}
+    strict: true
+```
+
+Now any PR with a new violation fails the check, blocking merge under
+a branch-protection rule. Useful for teams whose designer has signed
+off on the 47-standard library as a hard gate.
+
+### 3. Gradual rollout on a monorepo
+
+You want to dogfood the action on the design-system package before
+rolling it out to every app. Scope it by path:
+
+```yaml
+on:
+  pull_request:
+    paths:
+      - 'packages/design-system/**/*.tsx'
+
+jobs:
+  lint:
+    steps:
+      - uses: thenewforktimes/contentrx-action@v1
+        with:
+          api-key: ${{ secrets.CONTENTRX_API_KEY }}
+          paths: 'packages/design-system/**/*.tsx'
+          strict: false
+```
+
+Violations only surface on design-system changes. Expand the `paths`
+glob once the team agrees the signal is useful.
+
+---
+
 ## Development
 
 The action is a Python Docker action. To test locally:

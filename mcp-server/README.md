@@ -164,6 +164,72 @@ citations.
 
 Appears as a slash command in Claude desktop and Cursor.
 
+## Examples
+
+Three concrete scenarios showing how this surface fits into an AI-
+assisted coding workflow.
+
+### 1. Catching a vague CTA before it ships
+
+You ask Claude Code to add a button to a React component:
+
+> **You:** Add a "Click here to view pricing" button to the hero section.
+
+Claude Code calls `evaluate_copy` before writing the JSX:
+
+```text
+evaluate_copy(text="Click here to view pricing")
+
+→ overall_verdict: "fail"
+  content_type: "button_cta"
+  moment: "decision_point"
+  violations: [
+    {
+      standard_id: "ACT-02",
+      issue: "Vague CTA — 'Click here' doesn't name the destination",
+      suggestion: "Lead with the action verb + object: 'View pricing'",
+      severity: "block"
+    }
+  ]
+```
+
+Claude writes `<Button>View pricing</Button>` instead. Review that
+would have happened in a PR now happens before the first commit.
+
+### 2. Reviewing a whole component file via `/review_ui_copy`
+
+In Claude desktop with a file open in context:
+
+```text
+/review_ui_copy src/app/dashboard/subscription-panel.tsx
+```
+
+The prompt walks every UI string in the file: `classify_moment` →
+`evaluate_copy` → `explain_violation` for any failures. Returns a
+structured summary grouped by severity with rule citations and
+suggested rewrites. Typical output for a 200-line dashboard component
+surfaces 3–8 violations most human reviewers miss on skim.
+
+### 3. Planning copy for a destructive-action dialog
+
+You ask Claude for a confirmation dialog before shipping:
+
+> **You:** Write the copy for a "delete API key" confirmation.
+
+Claude calls `classify_moment` first so the content-type signal is
+locked in before drafting:
+
+```text
+classify_moment(text="Are you sure you want to delete this key?")
+→ content_type: "confirmation"
+  moment: "destructive_action"
+```
+
+Then `evaluate_copy` on candidate phrasings. The `destructive_action`
+moment weighs `CLR-02` (consequence clarity) and `TRS-01` (reversibility)
+more heavily — if the candidate doesn't mention "cannot be undone,"
+ContentRX flags it and Claude revises before you see the draft.
+
 ## Environment variables
 
 | Var | Default | Purpose |
