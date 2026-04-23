@@ -185,9 +185,19 @@ tool result is either a normal payload or:
 }
 ```
 
-`kind` values: `AuthError`, `AuthFailedError`, `QuotaExhaustedError`,
-`RateLimitError`, `ContentRXError`. MCP clients can branch on `kind`
-to retry, prompt the user to upgrade, or stop.
+### Error kinds
+
+| `kind` | What it means | Recommended action |
+|---|---|---|
+| `AuthError` | `CONTENTRX_API_KEY` is missing or malformed | Stop. Prompt the user to generate a key at https://contentrx.io/dashboard and set the env var. |
+| `AuthFailedError` | The API rejected the `cx_...` token (revoked, rotated, or typo) | Stop. Prompt the user to re-mint their key at the dashboard. |
+| `QuotaExhaustedError` | The user's monthly quota is at zero | Stop. Surface the included `upgrade_url` to the user. Don't retry. |
+| `RateLimitError` | Per-user sliding-window rate limit hit | Wait `retry_after_seconds`, then retry once. If the second attempt also 429s, surface the error and let the user decide. |
+| `ContentRXError` | Generic upstream failure (5xx, network blip, unexpected response shape) | Retry once with a short backoff (1–3s). If still failing, surface the error. |
+
+MCP clients can branch on `kind` to retry, prompt the user to upgrade,
+or stop. The `error` string is human-readable but not machine-stable —
+always key off `kind` for control flow.
 
 ## Development
 
