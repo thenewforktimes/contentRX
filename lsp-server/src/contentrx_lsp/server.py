@@ -34,6 +34,14 @@ from .client import (
     QuotaExhaustedError,
     RateLimitError,
     check,
+    mark_false_positive,
+    suggest_fix,
+)
+from .code_actions import (
+    CMD_APPLY_SUGGESTION,
+    CMD_MARK_FALSE_POSITIVE,
+    plan_actions_for_diagnostic,
+    plan_to_code_action,
 )
 from .diagnostics import LspDiagnostic, violations_to_diagnostics
 from .parser import extract_strings
@@ -109,6 +117,16 @@ def _initialize(
                 change=lsp.TextDocumentSyncKind.Incremental,
             ),
             position_encoding=lsp.PositionEncodingKind.Utf16,
+            code_action_provider=lsp.CodeActionOptions(
+                code_action_kinds=[lsp.CodeActionKind.QuickFix],
+                resolve_provider=False,
+            ),
+            execute_command_provider=lsp.ExecuteCommandOptions(
+                commands=[
+                    CMD_APPLY_SUGGESTION,
+                    CMD_MARK_FALSE_POSITIVE,
+                ],
+            ),
         ),
         server_info=lsp.InitializeResultServerInfoType(
             name="contentrx-lsp",
@@ -287,6 +305,160 @@ def _to_lsp_diagnostic(d: LspDiagnostic) -> lsp.Diagnostic:
         source=d.source,
         message=d.message,
         data=d.data,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Code actions (BUILD_PLAN_v2 Session 17)
+# ---------------------------------------------------------------------------
+
+
+@SERVER.feature(lsp.TEXT_DOCUMENT_CODE_ACTION)
+def _code_actions(
+    server: ContentRXLanguageServer, params: lsp.CodeActionParams
+) -> list[lsp.CodeAction]:
+    """Surface Quick Fix actions for every ContentRX diagnostic in range.
+
+    The editor calls this every time the cursor lands on a diagnostic.
+    We respond with the three actions per diagnostic (rewrite, show
+    rationale, mark false positive). No LLM call happens here — the
+    user invokes one of these from the lightbulb menu, which
+    triggers `workspace/executeCommand` (handled below).
+    """
+    out: list[lsp.CodeAction] = []
+    for diagnostic in params.context.diagnostics:
+        if diagnostic.source != "ContentRX":
+            continue
+        data = diagnostic.data if isinstance(diagnostic.data, dict) else {}
+        for plan in plan_actions_for_diagnostic(
+            data, params.text_document.uri
+        ):
+            out.append(plan_to_code_action(plan, diagnostic))
+    return out
+
+
+@SERVER.command(CMD_APPLY_SUGGESTION)
+async def _apply_suggestion(
+    server: ContentRXLanguageServer, args: list[dict[str, Any]]
+) -> None:
+    """Call /api/suggest-fix and apply the rewrite as a WorkspaceEdit."""
+    if not args:
+        return
+    payload = args[0]
+    uri = payload.get("uri")
+    text = payload.get("text") or ""
+    standard_id = payload.get("standard_id") or ""
+    if not uri or not text or not standard_id:
+        return
+
+    # Find the exact range of `text` in the live document. The client
+    # calls this on the current document state; we re-extract strings
+    # and locate the first match whose content equals `text`.
+    doc = server.workspace.get_text_document(uri)
+    source = doc.source
+    state = server.documents.get(uri)
+    if state:
+        # Prefer the server's cached text to stay consistent with the
+        # diagnostic that triggered the action.
+        source = state.text
+
+    range_obj = _find_range_for_text(source, text)
+    if range_obj is None:
+        server.show_message(
+            "ContentRX: couldn't locate the original text for rewrite — "
+            "the document changed under us.",
+            lsp.MessageType.Info,
+        )
+        return
+
+    try:
+        result = await suggest_fix(
+            text=text,
+            standard_id=standard_id,
+            rule=payload.get("rule") or None,
+            issue=payload.get("issue") or None,
+            current_suggestion=payload.get("current_suggestion") or None,
+        )
+    except (AuthFailedError, QuotaExhaustedError) as exc:
+        server.show_message(f"ContentRX: {exc}", lsp.MessageType.Warning)
+        return
+    except ContentRXError as exc:
+        server.show_message(
+            f"ContentRX: suggestion failed — {exc}",
+            lsp.MessageType.Warning,
+        )
+        return
+
+    if not result.rewritten:
+        server.show_message(
+            "ContentRX: the rewriter returned an empty response.",
+            lsp.MessageType.Warning,
+        )
+        return
+
+    edit = lsp.WorkspaceEdit(
+        changes={
+            uri: [
+                lsp.TextEdit(
+                    range=range_obj,
+                    new_text=result.rewritten,
+                )
+            ]
+        }
+    )
+    server.apply_edit(edit)
+
+
+@SERVER.command(CMD_MARK_FALSE_POSITIVE)
+async def _mark_false_positive(
+    server: ContentRXLanguageServer, args: list[dict[str, Any]]
+) -> None:
+    """POST the override to /api/violations/override."""
+    if not args:
+        return
+    payload = args[0]
+    text = payload.get("text") or ""
+    standard_id = payload.get("standard_id") or ""
+    if not text or not standard_id:
+        return
+    try:
+        await mark_false_positive(text=text, standard_id=standard_id)
+    except ContentRXError as exc:
+        server.show_message(
+            f"ContentRX: couldn't record override — {exc}",
+            lsp.MessageType.Warning,
+        )
+        return
+    server.show_message(
+        f"ContentRX: recorded {standard_id} as a false positive.",
+        lsp.MessageType.Info,
+    )
+
+
+def _find_range_for_text(source: str, text: str) -> lsp.Range | None:
+    """Locate `text` in `source` and return an LSP Range.
+
+    We use the first occurrence. Callers (the code-action path) have
+    already constrained the match by standard_id + extracted_text
+    pairing — if that winds up ambiguous (the same copy appears
+    twice), rewriting the first occurrence is the least surprising
+    behaviour.
+    """
+    idx = source.find(text)
+    if idx == -1:
+        return None
+    end_idx = idx + len(text)
+    # Defer to the diagnostics layer's existing byte→LSP mapping.
+    from .diagnostics import byte_range_to_lsp_range
+
+    # `str.find` returns character offset, but our helper wants byte
+    # offsets. Convert via utf-8 encoding length up to the index.
+    start_byte = len(source[:idx].encode("utf-8"))
+    end_byte = len(source[:end_idx].encode("utf-8"))
+    rng = byte_range_to_lsp_range(source, start_byte, end_byte)
+    return lsp.Range(
+        start=lsp.Position(line=rng.start_line, character=rng.start_char),
+        end=lsp.Position(line=rng.end_line, character=rng.end_char),
     )
 
 

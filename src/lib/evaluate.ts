@@ -210,3 +210,51 @@ export async function catalog(): Promise<CatalogResponse> {
 
   return (await res.json()) as CatalogResponse;
 }
+
+export type SuggestFixParams = {
+  text: string;
+  standard_id: string;
+  rule?: string;
+  issue?: string;
+  current_suggestion?: string;
+};
+
+export type SuggestFixResponse = {
+  result: { rewritten: string; standard_id: string };
+  latency_ms: number;
+  tokens: { input: number; output: number };
+};
+
+/**
+ * Suggest-fix call into the Python evaluator. Rewrites a flagged
+ * string to clear a specific standard's violation. BUILD_PLAN_v2
+ * Session 17 — backs the public `/api/suggest-fix` route consumed
+ * by the LSP code-action provider.
+ */
+export async function suggestFix(
+  params: SuggestFixParams,
+): Promise<SuggestFixResponse> {
+  const secret = process.env.INTERNAL_EVAL_SECRET;
+  if (!secret) {
+    throw new Error("INTERNAL_EVAL_SECRET is not set");
+  }
+
+  const res = await fetch(internalEvaluateUrl(), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-internal-secret": secret,
+    },
+    body: JSON.stringify({ ...params, mode: "suggest_fix" }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `Suggest-fix failed: ${res.status} ${res.statusText} ${body}`,
+    );
+  }
+
+  return (await res.json()) as SuggestFixResponse;
+}

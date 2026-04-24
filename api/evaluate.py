@@ -47,6 +47,7 @@ from content_checker.moments import (  # noqa: E402
     detect_moment,
 )
 from content_checker.standards.loader import load_standards  # noqa: E402
+from content_checker.suggest_fix import suggest_fix  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -109,6 +110,43 @@ class handler(BaseHTTPRequestHandler):
         text = body.get("text")
         if not isinstance(text, str) or not text:
             return self._respond(400, {"error": "text is required"})
+
+        # Suggest-fix mode: rewrite a flagged string to clear a specific
+        # standard. BUILD_PLAN_v2 Session 17 — consumed by the LSP's
+        # code-action provider and (eventually) the web dashboard's
+        # rewrite-in-place action.
+        if mode == "suggest_fix":
+            standard_id = body.get("standard_id")
+            if not isinstance(standard_id, str) or not standard_id:
+                return self._respond(
+                    400, {"error": "standard_id is required for mode=suggest_fix"}
+                )
+            try:
+                result = suggest_fix(
+                    text=text,
+                    standard_id=standard_id,
+                    rule=body.get("rule"),
+                    issue=body.get("issue"),
+                    current_suggestion=body.get("current_suggestion"),
+                )
+            except Exception:  # noqa: BLE001
+                traceback.print_exc()
+                return self._respond(500, {"error": "Suggestion failed"})
+
+            return self._respond(
+                200,
+                {
+                    "result": {
+                        "rewritten": result.rewritten,
+                        "standard_id": standard_id,
+                    },
+                    "latency_ms": result.latency_ms,
+                    "tokens": {
+                        "input": result.input_tokens,
+                        "output": result.output_tokens,
+                    },
+                },
+            )
 
         # Classify-only mode: cheap (~1 LLM call) helper used by the MCP
         # server's classify_moment tool. Skips the full check pipeline
