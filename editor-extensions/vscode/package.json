@@ -17,7 +17,11 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Linters", "Programming Languages", "Other"],
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Other"
+  ],
   "keywords": [
     "content",
     "ux-writing",
@@ -26,7 +30,6 @@
     "language-server",
     "contentrx"
   ],
-  "icon": "images/icon.png",
   "main": "./out/extension.js",
   "activationEvents": [
     "onLanguage:typescriptreact",
@@ -67,7 +70,11 @@
         },
         "contentrx.trace.server": {
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "description": "Trace LSP messages between the editor and the ContentRX server."
         }
@@ -86,6 +93,7 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.9.1",
     "typescript": "^5.4.0"
   }
 }
