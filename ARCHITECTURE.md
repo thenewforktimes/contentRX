@@ -327,6 +327,32 @@ Three-step cadence (one per quarter, all in `tools/drift_check.py`):
 
 The panel, blind, and report files all live in `evals/drift/`. The README there is the canonical workflow doc for Robo's quarterly cycle.
 
+### Annual taxonomy audit (human-eval build plan Session 36)
+
+Runs alongside the quarterly drift check, not instead of it. The two cadences answer different questions:
+
+| Cadence | Question | Sample | Source |
+|---|---|---|---|
+| Quarterly | "Is the graduation threshold correct for today?" | 80 cases, eligible pool, any age | `tools/drift_check.py` |
+| Annual | "Has the system overfit to the year's labeled data?" | 100 cases, eligible AND >1 year old | `tools/annual_audit_sample.py` + `tools/annual_audit_score.py` |
+
+The annual audit's age floor (default 365 days; plan-locked as `DEFAULT_MIN_AGE_DAYS`) is the distinguishing invariant — it forces the sample onto cases the current taxonomy has not recently trained on, which is what surfaces overfit the quarterly couldn't detect.
+
+The scored report covers five sections the plan specifies:
+
+1. **Standards with highest past/present disagreement** — flags intentional drift (standard was refined; check `version_history`) vs unintentional drift (overfit; flag for refinement-log review).
+2. **Moments with most evolution** — same three-way read (refined / overfit / small-n noise) applied to moments.
+3. **Retired standards that might deserve reinstatement** — historical panel verdicts invoke standards absent from the current library.
+4. **New-moment candidates** — cases where the historical moment is no longer in the taxonomy, or where re-label diverged on moment detection specifically.
+5. **Ceiling recommendation** — explicit statement per the plan's success criterion: whether the 0.90 design target remains appropriate. "Thresholds move with the measurement, not the target" — if κ falls below 0.90 and the 95% CI doesn't cover it, the report recommends lowering the target for graduation purposes.
+
+Audit bands (distinct from Session 10's threshold regimes):
+- κ ≥ 0.80 → `stable`
+- κ ≥ 0.65 → `watch`
+- κ < 0.65 → `material_drift`
+
+Output lands under `evals/annual_audit/`. The README there walks Robo through the one-cycle-per-year workflow.
+
 ### Production override review queue (human-eval build plan Session 8)
 
 Turns real-user override events (`violation_overrides`) into an ordered, batched queue that Robo reviews via the existing Phase 2 CLI (`tools/triage.py`). Target: 50 items in 60 minutes.
