@@ -1,0 +1,17 @@
+.vscode/**
+.vscode-test/**
+src/**
+.gitignore
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/.eslintrc.json
+**/*.map
+**/*.ts
+!out/*.js
+node_modules/**
+!node_modules/vscode-languageclient/lib/**
+!node_modules/vscode-languageserver-protocol/lib/**
+!node_modules/vscode-languageserver-types/lib/**
+!node_modules/vscode-jsonrpc/lib/**
+!node_modules/semver/**
