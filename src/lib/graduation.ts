@@ -47,6 +47,19 @@ export const LEVEL_CONSEQUENCES: Record<GraduationLevel, string> = {
  * security boundary.
  */
 export function canApproveGraduation(clerkUserId: string | null | undefined): boolean {
+  return isContentRXAdmin(clerkUserId);
+}
+
+/**
+ * General-purpose admin check. Anyone in `CONTENTRX_ADMIN_CLERK_IDS`
+ * is an admin for all internal surfaces (graduation approval,
+ * `/admin/rule-review`, future admin features). Kept in this file
+ * because graduation.ts was the first caller — other modules import
+ * from here rather than growing a parallel copy.
+ */
+export function isContentRXAdmin(
+  clerkUserId: string | null | undefined,
+): boolean {
   if (!clerkUserId) return false;
   const raw = process.env.CONTENTRX_ADMIN_CLERK_IDS ?? "";
   const ids = raw
