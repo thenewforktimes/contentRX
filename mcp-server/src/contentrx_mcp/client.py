@@ -10,7 +10,7 @@ Thin wrapper over `httpx.AsyncClient` that:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
@@ -54,6 +54,10 @@ class CheckResult:
     # v1.1.0 (BUILD_PLAN_v2 Session 10) — three-state verdict + reason.
     verdict: str = "pass"  # "pass" | "violation" | "review_recommended" | "error"
     review_reason: str | None = None
+    # v1.2.0 (human-eval build plan Session 1) — rationale chain hops.
+    # Passed through as opaque dicts so future additions to RationaleHop
+    # flow to MCP clients without requiring a client bump.
+    rationale_chain: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -166,6 +170,7 @@ class ContentRXClient:
             summary=result.get("summary"),
             verdict=result.get("verdict", result.get("overall_verdict", "pass")),
             review_reason=result.get("review_reason"),
+            rationale_chain=list(result.get("rationale_chain") or []),
         )
 
     async def classify(self, *, text: str) -> ClassifyResult:

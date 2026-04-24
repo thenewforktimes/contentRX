@@ -80,7 +80,10 @@ async def evaluate_copy(
     Returns:
         A dict with overall_verdict ("pass" | "fail" | "error"),
         content_type, moment, violations (list with standard_id + issue +
-        suggestion + severity), passes, and summary.
+        suggestion + severity), passes, summary, and rationale_chain
+        (ordered pipeline hops — each with step, inputs, output,
+        confidence, rule_versions, and ambiguity_flag). Use
+        rationale_chain to narrate "why this verdict" to the user.
     """
     _ = context
     try:
@@ -100,6 +103,11 @@ async def evaluate_copy(
         "violations": result.violations,
         "passes": result.passes,
         "summary": result.summary,
+        # human-eval build plan Session 21 — the full pipeline
+        # rationale chain. MCP clients (Claude Code, Cursor, …) can
+        # narrate "why this verdict" without a second API call. Empty
+        # list for responses pre-dating the v1.2.0 envelope.
+        "rationale_chain": result.rationale_chain,
     }
 
 

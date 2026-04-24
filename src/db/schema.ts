@@ -360,6 +360,79 @@ export const graduationStatus = pgTable(
   ],
 ).enableRLS();
 
+// Rationale-chain feedback — human-eval build plan Session 21.
+//
+// When a user surfaces the rationale chain on a verdict and disagrees
+// with one of its hops (most commonly the moment-detection hop),
+// clicking the "Not this <hop>?" button posts a row here. The plan's
+// acceptance criterion routes these into the review queue with
+// subtype `situation_ambiguity` — we tag the correction_type accordingly
+// so Session 8's review-queue reader can aggregate them alongside
+// pipeline-emitted situation_ambiguity signals.
+//
+// Privacy: only `textHash` is persisted. The corrected value is the
+// short identifier the user picked (e.g. a moment ID), not free-form
+// content — it's safe to store in plaintext. `note` is optional, user-
+// provided free-text and bounded at the route layer to 500 chars so
+// one mis-click can't dump a paragraph.
+export const rationaleFeedback = pgTable(
+  "rationale_feedback",
+  {
+    id: cuid(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    teamId: text("team_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    // sha256 of the user's text. Same convention as `violations.textHash`
+    // so an administrator can cross-reference feedback to the original
+    // check without either side holding plaintext.
+    textHash: text("text_hash").notNull(),
+    // Canonical pipeline hop names — mirrors VALID_HOPS in
+    // src/content_checker/models.py. The enum is not locked at the DB
+    // level because new hops might land without a schema migration;
+    // the route layer validates membership against the TS constant.
+    hopStep: text("hop_step").notNull(),
+    // The user-observed value the hop emitted. For moment-detection
+    // that's a moment ID; for classify it's a content_type ID; for
+    // scan/validate it's typically a standard_id that the user
+    // disagrees with being flagged.
+    originalValue: text("original_value").notNull(),
+    // Optional — the value the user thinks was correct. For
+    // moment-misdetection: the moment they would have picked. Nullable
+    // because "not this" alone is a useful signal even without a
+    // proposed correction.
+    correctedValue: text("corrected_value"),
+    // Maps this feedback to a review_reason subtype in the Python
+    // engine's vocabulary. The plan's explicit target is
+    // `situation_ambiguity`; `other` is a catch-all for future hop
+    // feedback (e.g. content_type misclassification) that's not
+    // about moments per se.
+    correctionType: text("correction_type", {
+      enum: ["situation_ambiguity", "other"],
+    }).notNull(),
+    note: text("note"),
+    source: text("source", {
+      enum: ["plugin", "cli", "action", "dashboard", "mcp"],
+    }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Aggregation hot path: counts per (correction_type, hop_step,
+    // original_value). Matches the review-queue "which moment gets
+    // misdetected most" drill-down.
+    index("rationale_feedback_type_hop_value_idx").on(
+      t.correctionType,
+      t.hopStep,
+      t.originalValue,
+    ),
+    index("rationale_feedback_user_created_idx").on(t.userId, t.createdAt),
+  ],
+).enableRLS();
+
 export type User = InferSelectModel<typeof users>;
 export type Usage = InferSelectModel<typeof usage>;
 export type Subscription = InferSelectModel<typeof subscriptions>;
@@ -369,3 +442,4 @@ export type Violation = InferSelectModel<typeof violations>;
 export type DittoSync = InferSelectModel<typeof dittoSyncs>;
 export type ViolationOverride = InferSelectModel<typeof violationOverrides>;
 export type GraduationStatus = InferSelectModel<typeof graduationStatus>;
+export type RationaleFeedback = InferSelectModel<typeof rationaleFeedback>;

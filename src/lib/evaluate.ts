@@ -16,21 +16,55 @@ export type EvaluateParams = {
   moment?: Moment;
 };
 
+/**
+ * One hop in the pipeline's reasoning chain. Mirrors the
+ * Python-side `RationaleHop` dataclass in
+ * `src/content_checker/models.py`. Added to the API envelope in
+ * schema v1.2.0 (human-eval build plan Session 1); Session 21 first
+ * typed it on the TS side.
+ */
+export type RationaleHop = {
+  step: string;
+  inputs: Record<string, unknown>;
+  output: Record<string, unknown>;
+  confidence: number | null;
+  rule_versions: Record<string, string>;
+  ambiguity_flag: string | null;
+};
+
+/** Three-state verdict (API v1.1.0+). */
+export type Verdict = "pass" | "violation" | "review_recommended" | "error";
+
 export type EvaluationResult = {
   content_type?: string;
+  /** Legacy two-state; prefer `verdict`. */
   overall_verdict: "pass" | "fail" | "error";
+  /** Three-state verdict (API v1.1.0+). */
+  verdict?: Verdict;
+  /** Typed subtype when verdict === "review_recommended" (API v1.1.0+). */
+  review_reason?: string | null;
   violations: Array<{
     standard_id: string;
     rule: string;
     issue: string;
     suggestion: string;
     source?: string;
+    /** Per-violation confidence (API v1.1.0+). */
+    confidence?: number;
+    /** Typed ambiguity signal (API v1.2.0+). */
+    ambiguity_flag?: string | null;
+    /** Snapshot of the rule text's version at scan time (API v1.2.0+). */
+    rule_version?: string;
+    /** Other standard IDs emitted together (API v1.2.0+). */
+    related_standards?: string[];
   }>;
   passes: Array<{ standard_id: string; rule: string }>;
   summary?: string;
   audience?: string;
   moment?: string;
   pipeline?: Record<string, number>;
+  /** Ordered pipeline hops (API v1.2.0+). */
+  rationale_chain?: RationaleHop[];
 };
 
 export type EvaluateResponse = {

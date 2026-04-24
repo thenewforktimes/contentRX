@@ -31,6 +31,7 @@ from contentrx.main import (
     _parse_txt_batch,
     load_batch_file,
     main,
+    print_rationale_chain,
     print_result,
 )
 
@@ -341,3 +342,59 @@ def test_print_result_verbose_includes_usage() -> None:
     out = buf.getvalue()
     assert "1 of 25" in out
     assert "123 ms" in out
+
+
+# ---------------------------------------------------------------------------
+# --explain — rationale chain output (human-eval build plan Session 21)
+# ---------------------------------------------------------------------------
+def test_print_rationale_chain_empty_is_no_op() -> None:
+    buf = io.StringIO()
+    print_rationale_chain(
+        {"result": {"rationale_chain": []}},
+        stream=buf,
+    )
+    assert buf.getvalue() == ""
+
+
+def test_print_rationale_chain_renders_hops_with_confidence_and_rules() -> None:
+    buf = io.StringIO()
+    print_rationale_chain(
+        {
+            "result": {
+                "rationale_chain": [
+                    {
+                        "step": "classify",
+                        "inputs": {"text": "Proceed?"},
+                        "output": {"content_type": "short_ui_copy"},
+                        "confidence": 0.9,
+                        "rule_versions": {},
+                        "ambiguity_flag": None,
+                    },
+                    {
+                        "step": "detect_moment",
+                        "inputs": {},
+                        "output": {"moment": "decision_point"},
+                        "confidence": 0.5,
+                        "rule_versions": {"CLR-01": "4.6.1"},
+                        "ambiguity_flag": "situation_uncertain",
+                    },
+                ]
+            }
+        },
+        stream=buf,
+    )
+    out = buf.getvalue()
+    assert "Rationale chain:" in out
+    assert "1. classify · 90%" in out
+    assert "content_type: short_ui_copy" in out
+    # Second hop includes confidence, ambiguity flag, and rule versions.
+    assert "2. detect_moment · 50% · flag=situation_uncertain" in out
+    assert "CLR-01=v4.6.1" in out
+
+
+def test_print_rationale_chain_missing_chain_key_is_safe() -> None:
+    # Pre-v1.2.0 responses don't carry `rationale_chain`. The helper
+    # should no-op rather than raise.
+    buf = io.StringIO()
+    print_rationale_chain({"result": {}}, stream=buf)
+    assert buf.getvalue() == ""

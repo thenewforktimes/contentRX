@@ -266,6 +266,48 @@ def print_result(
     return verdict in ("pass", "review_recommended")
 
 
+def print_rationale_chain(response: dict[str, Any], stream=None) -> None:
+    """Render the pipeline rationale_chain as a plaintext tree.
+
+    Human-eval build plan Session 21. Prints beneath the normal verdict
+    block when `--explain` is passed. No color codes — plain ASCII is
+    friendlier in CI logs.
+
+    Empty chain is a no-op (older API responses, unit-test direct
+    CheckResult construction). Missing chain is also a no-op — we
+    treat the field as optional by design so pre-v1.2.0 servers still
+    get a clean CLI experience.
+    """
+    stream = stream or sys.stdout
+    result = response.get("result", {})
+    chain = result.get("rationale_chain") or []
+    if not chain:
+        return
+
+    print("\n  Rationale chain:", file=stream)
+    for i, hop in enumerate(chain):
+        step = hop.get("step", "?")
+        confidence = hop.get("confidence")
+        suffix = ""
+        if isinstance(confidence, (int, float)):
+            suffix = f" · {int(round(confidence * 100))}%"
+        flag = hop.get("ambiguity_flag")
+        if flag:
+            suffix += f" · flag={flag}"
+        print(f"    {i + 1}. {step}{suffix}", file=stream)
+
+        output = hop.get("output") or {}
+        if output:
+            for key, val in output.items():
+                print(f"         {key}: {val}", file=stream)
+        rule_versions = hop.get("rule_versions") or {}
+        if rule_versions:
+            entries = ", ".join(
+                f"{std}=v{ver}" for std, ver in rule_versions.items()
+            )
+            print(f"         rules: {entries}", file=stream)
+
+
 def _stream_supports_color(stream) -> bool:
     # Respect NO_COLOR (https://no-color.org/) and CI without TTY.
     if os.environ.get("NO_COLOR"):
@@ -400,6 +442,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Include latency and quota usage.",
     )
     parser.add_argument(
+        "--explain",
+        action="store_true",
+        help=(
+            "Print the rationale chain after the verdict — every pipeline "
+            "hop with its confidence, rule versions, and ambiguity flags. "
+            "Useful for debugging why a string was flagged."
+        ),
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
@@ -453,6 +504,8 @@ def run(argv: list[str]) -> int:
         passed = response.get("result", {}).get("overall_verdict") == "pass"
     else:
         passed = print_result(args.text, response, verbose=args.verbose)
+        if args.explain:
+            print_rationale_chain(response)
 
     return EXIT_OK if passed else EXIT_VIOLATIONS
 

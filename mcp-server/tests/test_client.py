@@ -67,6 +67,82 @@ async def test_check_success():
 
 
 @pytest.mark.asyncio
+async def test_check_passes_through_rationale_chain():
+    """Human-eval build plan Session 21 — the rationale chain must
+    flow from /api/check all the way through to MCP clients so Claude
+    Code / Cursor can narrate "why this verdict" without a second call.
+    """
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "result": {
+                    "overall_verdict": "review_recommended",
+                    "verdict": "review_recommended",
+                    "review_reason": "situation_ambiguity",
+                    "content_type": "short_ui_copy",
+                    "moment": "decision_point",
+                    "violations": [],
+                    "passes": [],
+                    "summary": "",
+                    "rationale_chain": [
+                        {
+                            "step": "classify",
+                            "inputs": {"text": "Proceed?"},
+                            "output": {"content_type": "short_ui_copy"},
+                            "confidence": 0.9,
+                            "rule_versions": {},
+                            "ambiguity_flag": None,
+                        },
+                        {
+                            "step": "detect_moment",
+                            "inputs": {"text": "Proceed?"},
+                            "output": {"moment": "decision_point"},
+                            "confidence": 0.5,
+                            "rule_versions": {},
+                            "ambiguity_flag": "situation_uncertain",
+                        },
+                    ],
+                }
+            },
+        )
+
+    client = _client_with(httpx.MockTransport(handler))
+    async with client:
+        result = await client.check(text="Proceed?")
+    assert result.verdict == "review_recommended"
+    assert len(result.rationale_chain) == 2
+    assert result.rationale_chain[0]["step"] == "classify"
+    assert result.rationale_chain[1]["ambiguity_flag"] == "situation_uncertain"
+
+
+@pytest.mark.asyncio
+async def test_check_tolerates_missing_rationale_chain():
+    """Pre-v1.2.0 responses still work — rationale_chain defaults to []."""
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "result": {
+                    "overall_verdict": "pass",
+                    "content_type": "button_cta",
+                    "moment": "confirmation",
+                    "violations": [],
+                    "passes": [],
+                    "summary": "",
+                }
+            },
+        )
+
+    client = _client_with(httpx.MockTransport(handler))
+    async with client:
+        result = await client.check(text="OK")
+    assert result.rationale_chain == []
+
+
+@pytest.mark.asyncio
 async def test_classify_success():
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/api/classify"

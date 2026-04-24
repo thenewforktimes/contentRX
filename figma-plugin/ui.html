@@ -417,6 +417,75 @@
   .rationale-body {
     margin-top: 4px;
   }
+
+  /* Human-eval build plan Session 21 — "Why this verdict?" rationale
+   * chain. Renders per node-card (the whole check), not per-violation.
+   */
+  .rationale-chain {
+    margin-top: 10px;
+    padding: 6px 8px;
+    border: 1px solid var(--figma-color-border, #e6e6e6);
+    border-radius: 4px;
+    background: var(--figma-color-bg-secondary, #fafafa);
+    font-size: 10px;
+  }
+  .rationale-chain summary {
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .rationale-chain ol {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+  }
+  .rationale-chain li {
+    padding: 3px 0;
+    border-top: 1px solid var(--figma-color-border, #e6e6e6);
+  }
+  .rationale-chain li:first-child {
+    border-top: none;
+  }
+  .rationale-chain .hop-step {
+    font-family: monospace;
+    font-weight: 600;
+  }
+  .rationale-chain .hop-pct {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--figma-color-bg-tertiary, #eee);
+    font-size: 9px;
+    font-family: monospace;
+  }
+  .rationale-chain .hop-flag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 9px;
+    font-family: monospace;
+    text-transform: uppercase;
+  }
+  .btn-moment-feedback {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 6px;
+    border: 1px solid var(--figma-color-border, #e6e6e6);
+    background: var(--figma-color-bg, #fff);
+    border-radius: 3px;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .btn-moment-feedback:hover:not([disabled]) {
+    background: var(--figma-color-bg-hover, #f5f5f5);
+  }
+  .btn-moment-feedback[disabled] {
+    opacity: 0.6;
+    cursor: default;
+  }
   .stance-row {
     display: flex;
     gap: 4px;
@@ -2708,6 +2777,14 @@ async function runBatchScan(nodes, onProgress) {
       reviewReason: null,
       summary: "",
       error: item.apiError || null,
+      // Human-eval build plan Session 21 — rationale chain. Empty for
+      // preprocessor-only passes (no API round-trip) and for pre-
+      // v1.2.0 API responses.
+      rationaleChain: [],
+      // sha256 of the text, filled below. Used by the "Not <moment>?"
+      // feedback button so the POST to /api/feedback/rationale can
+      // reference the evaluation without shipping plaintext.
+      textHash: "",
     };
 
     const apiResult = item.apiData && item.apiData.result;
@@ -2750,6 +2827,26 @@ async function runBatchScan(nodes, onProgress) {
       if (apiResult.review_reason) {
         nodeResult.reviewReason = apiResult.review_reason;
       }
+      // Human-eval build plan Session 21 — pass the rationale chain
+      // through to the render layer. Kept as opaque objects so new
+      // fields on RationaleHop flow through without a plugin bump.
+      if (Array.isArray(apiResult.rationale_chain)) {
+        nodeResult.rationaleChain = apiResult.rationale_chain;
+      }
+    }
+
+    // Compute the text hash for any node we got a chain for so the
+    // "Not <moment>?" feedback POST can reference the evaluation
+    // without re-sending plaintext. We skip hashing otherwise to avoid
+    // the crypto.subtle round-trip on every preprocessor-only pass.
+    if (nodeResult.rationaleChain.length > 0 && nodeResult.text) {
+      try {
+        nodeResult.textHash = await sha256Hex(nodeResult.text);
+      } catch (_) {
+        // crypto.subtle unavailable (very old Figma Desktop?) — leave
+        // textHash empty, render suppresses the feedback button.
+        nodeResult.textHash = "";
+      }
     }
 
     results.push(nodeResult);
@@ -2790,6 +2887,24 @@ let currentFilter = "all";  // "all", "fail", "pass"
 // same-standard overrides from one scan into a standard_pushback
 // review-queue entry.
 let currentSessionId = "";
+
+/**
+ * sha256 helper — hex-encoded digest of a UTF-8 string.
+ *
+ * Human-eval build plan Session 21. The rationale-chain feedback POST
+ * references an evaluation by text_hash rather than re-sending the
+ * original text. Uses the same sha256 contract as the server-side
+ * `violations.text_hash` + `violation_overrides.text_hash` columns.
+ */
+async function sha256Hex(text) {
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 
 function generateSessionId() {
   // Figma's plugin sandbox doesn't guarantee crypto.randomUUID, but
@@ -2900,6 +3015,46 @@ function renderBatchResults(results) {
       parent.postMessage({
         pluginMessage: { type: "focus-node", nodeId: btn.dataset.nodeId }
       }, "*");
+    });
+  });
+
+  // Human-eval build plan Session 21 — rationale-chain moment-
+  // misdetection feedback. Clicks POST to /api/feedback/rationale with
+  // correction_type = situation_ambiguity; same bearer token as
+  // /api/check so no extra auth plumbing.
+  area.querySelectorAll(".btn-moment-feedback").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      if (btn.disabled) return;
+      const textHash = btn.dataset.textHash || "";
+      const moment = btn.dataset.moment || "";
+      if (!textHash || !moment) {
+        btn.disabled = true;
+        btn.textContent = "Unavailable";
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Sending…";
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/feedback/rationale`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${cxToken}`,
+          },
+          body: JSON.stringify({
+            text_hash: textHash,
+            hop_step: "detect_moment",
+            correction_type: "situation_ambiguity",
+            original_value: moment,
+            source: "plugin",
+          }),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        btn.textContent = "Thanks — routed to review";
+      } catch (_) {
+        btn.textContent = "Couldn’t send";
+      }
     });
   });
 
@@ -3301,8 +3456,79 @@ function renderNodeCard(result) {
     </div>`;
   }
 
+  // Human-eval build plan Session 21 — "Why this verdict?" rationale
+  // chain. Rendered as a collapsed <details> so users can expand on
+  // demand. Only shown when the API returned a chain (v1.2.0+).
+  if (result.rationaleChain && result.rationaleChain.length > 0) {
+    html += renderRationaleChain(result);
+  }
+
   html += `</div></div>`; // close node-card-body and node-card
   return html;
+}
+
+
+/**
+ * Render the rationale chain as a collapsible details block. Mirrors
+ * the React component in src/components/rationale-chain.tsx — same
+ * data contract, Figma-plugin-native rendering.
+ */
+function renderRationaleChain(result) {
+  const hops = result.rationaleChain || [];
+  const textHash = result.textHash || "";
+  const moment = result.moment || "";
+  const hopsHtml = hops
+    .map((hop, i) => {
+      const step = hop.step || "?";
+      const confidence = typeof hop.confidence === "number"
+        ? `<span class="hop-pct">${Math.round(hop.confidence * 100)}%</span>`
+        : "";
+      const flag = hop.ambiguity_flag
+        ? `<span class="hop-flag">${escapeHtml(hop.ambiguity_flag)}</span>`
+        : "";
+      const output = hop.output || {};
+      const outputLines = Object.entries(output)
+        .map(
+          ([k, v]) =>
+            `<div><span style="color:#888">${escapeHtml(k)}:</span> ${escapeHtml(
+              stringifyHopValue(v),
+            )}</div>`,
+        )
+        .join("");
+
+      let feedback = "";
+      if (step === "detect_moment" && moment && textHash) {
+        feedback = `<button class="btn-moment-feedback" type="button"
+            data-text-hash="${escapeHtml(textHash)}"
+            data-moment="${escapeHtml(moment)}">
+            Not ${escapeHtml(moment)}?
+          </button>`;
+      }
+
+      return `<li>
+        <span class="hop-step">${i + 1}. ${escapeHtml(step)}</span>${confidence}${flag}
+        ${outputLines ? `<div style="margin-top:2px;padding-left:10px;">${outputLines}</div>` : ""}
+        ${feedback}
+      </li>`;
+    })
+    .join("");
+
+  return `<details class="rationale-chain">
+    <summary>Why this verdict? (${hops.length} hop${hops.length === 1 ? "" : "s"})</summary>
+    <ol>${hopsHtml}</ol>
+  </details>`;
+}
+
+
+function stringifyHopValue(v) {
+  if (v === null || v === undefined) return "null";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  try {
+    return JSON.stringify(v);
+  } catch (_) {
+    return "[unserializable]";
+  }
 }
 
 
