@@ -12,8 +12,10 @@
 "use client";
 
 import { useState } from "react";
+import { MomentBanner } from "@/components/moment-banner";
 import { RationaleChain } from "@/components/rationale-chain";
 import type { EvaluationResult } from "@/lib/evaluate";
+import type { MomentWeightsSummary } from "@/lib/moment-metadata";
 
 type CheckEnvelope = {
   schema_version: string;
@@ -31,7 +33,18 @@ async function sha256Hex(text: string): Promise<string> {
     .join("");
 }
 
-export function ExplainClient() {
+export interface ExplainClientProps {
+  /**
+   * Precomputed emphasized/relaxed/suppressed counts per moment,
+   * keyed by moment ID. Built server-side from
+   * `src/content_checker/standards/moments_taxonomy.json` and passed
+   * through so the MomentBanner's correction dropdown can render
+   * "(N)" next to each option without a round-trip.
+   */
+  momentSummaries: Record<string, MomentWeightsSummary>;
+}
+
+export function ExplainClient({ momentSummaries }: ExplainClientProps) {
   const [text, setText] = useState(
     "Unable to complete operation. Please contact administrator.",
   );
@@ -101,6 +114,14 @@ export function ExplainClient() {
 
       {response && (
         <section className="space-y-4">
+          {response.result.moment && (
+            <MomentBanner
+              moment={response.result.moment}
+              summaries={momentSummaries}
+              textHash={textHash}
+              source="dashboard"
+            />
+          )}
           <VerdictHeader result={response.result} />
           {response.result.violations.length > 0 && (
             <ul className="space-y-2">

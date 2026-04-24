@@ -237,6 +237,14 @@ def print_result(
     if verdict == "review_recommended" and review_reason:
         print(f"  Reason: {review_reason}", file=stream)
     print(f"  Content type: {result.get('content_type', 'unknown')}", file=stream)
+    # Human-eval build plan Session 22 — surface the detected moment on
+    # every verdict, above the violations. The plan's language: "I
+    # noticed this looks like a destructive_action." Suppress the
+    # default browsing_discovery to avoid a noisy line on every call.
+    moment = result.get("moment") or ""
+    if moment and moment != "browsing_discovery":
+        counts = _moment_weight_suffix(moment)
+        print(f"  Moment: {moment}{counts}", file=stream)
     if result.get("summary"):
         print(f"  {result['summary']}", file=stream)
 
@@ -264,6 +272,43 @@ def print_result(
     # REVIEW counts as "passed" for exit-code purposes — REVIEW means
     # "look at this," not "this is wrong." Hard violations still fail.
     return verdict in ("pass", "review_recommended")
+
+
+# Human-eval build plan Session 22 — "Moment detected" weights summary
+# surfaced in the CLI's default output. Hand-mirrored counts from
+# src/content_checker/moments.py :: MOMENT_WEIGHTS. Only non-zero
+# counts are surfaced so silent moments stay quiet.
+_MOMENT_WEIGHT_COUNTS: dict[str, tuple[int, int, int]] = {
+    # (emphasized, relaxed, suppressed)
+    "first_encounter":    (4, 1, 0),
+    "browsing_discovery": (0, 1, 1),
+    "decision_point":     (4, 0, 1),
+    "task_execution":     (4, 0, 0),
+    "confirmation":       (0, 2, 0),
+}
+
+
+def _moment_weight_suffix(moment: str) -> str:
+    """Return a parenthesised counts suffix for the moment line.
+
+    Example: "  Moment: decision_point (4 emphasized, 1 suppressed)"
+    Empty string when the moment has no weighted standards. The CLI is
+    plain-ASCII and line-oriented; this keeps the signal tight.
+    """
+    counts = _MOMENT_WEIGHT_COUNTS.get(moment)
+    if not counts:
+        return ""
+    emp, rel, sup = counts
+    parts: list[str] = []
+    if emp:
+        parts.append(f"{emp} emphasized")
+    if rel:
+        parts.append(f"{rel} relaxed")
+    if sup:
+        parts.append(f"{sup} suppressed")
+    if not parts:
+        return ""
+    return f" ({', '.join(parts)})"
 
 
 def print_rationale_chain(response: dict[str, Any], stream=None) -> None:

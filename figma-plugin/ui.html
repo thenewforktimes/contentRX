@@ -228,6 +228,80 @@
     margin-left: 4px;
   }
 
+  /* Human-eval build plan Session 22 — "Moment detected" banner.
+   * Sits above the violation list so the user sees the detected
+   * moment before the flags. Replaces the small moment-badge for
+   * cards where a banner makes sense.
+   */
+  .moment-banner {
+    margin-top: 6px;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--figma-color-border, #e6e6e6);
+    border-radius: 4px;
+    background: var(--figma-color-bg-secondary, #fafafa);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .moment-banner-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--figma-color-text-tertiary, #888);
+  }
+  .moment-banner-situation {
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--figma-color-bg-tertiary, #eee);
+    color: var(--figma-color-text-secondary, #555);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .moment-banner-body {
+    margin-top: 4px;
+    color: var(--figma-color-text, #333);
+  }
+  .moment-banner-body code {
+    font-family: monospace;
+    font-weight: 600;
+    color: var(--figma-color-text, #000);
+  }
+  .moment-banner-counts {
+    margin-top: 2px;
+    font-size: 10px;
+    color: var(--figma-color-text-secondary, #777);
+  }
+  .moment-banner-actions {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn-moment-correct {
+    padding: 2px 8px;
+    border: 1px solid var(--figma-color-border, #e6e6e6);
+    background: transparent;
+    border-radius: 3px;
+    font-size: 10px;
+    color: var(--figma-color-text-brand, #4a7cff);
+    cursor: pointer;
+  }
+  .btn-moment-correct:hover:not([disabled]) {
+    background: var(--figma-color-bg-hover, #f0f0f0);
+  }
+  .moment-correct-picker {
+    padding: 2px;
+    font-size: 10px;
+    max-width: 100%;
+  }
+
   /* ------------------------------------------------------------------ */
   /* Batch results                                                       */
   /* ------------------------------------------------------------------ */
@@ -2888,6 +2962,107 @@ let currentFilter = "all";  // "all", "fail", "pass"
 // review-queue entry.
 let currentSessionId = "";
 
+// Human-eval build plan Session 22 — moment taxonomy embedded for the
+// in-plugin "Moment detected" banner. Hand-mirrored from
+// src/content_checker/moments.py. Kept short for bundle size; the
+// Python-side pytest (`tests/test_moment_metadata_ts_mirror.py`) only
+// enforces the TypeScript mirror, so this constant is a looser copy
+// — edit when moments.py adds a moment.
+const MOMENT_IDS = [
+  "first_encounter", "browsing_discovery", "decision_point",
+  "task_execution", "confirmation", "celebration",
+  "error_recovery", "destructive_action", "empty_state",
+  "interruption", "trust_permission", "wayfinding",
+  "compliance_disclosure",
+];
+
+const SITUATION_PROPERTY_BY_MOMENT = {
+  destructive_action: "destructive",
+  trust_permission: "permission-gated",
+  compliance_disclosure: "compliance",
+};
+
+// Emphasized/relaxed/suppressed counts per moment — derived from
+// MOMENT_WEIGHTS in moments.py. Refreshed when moments.py weights
+// change; displayed in the correction dropdown so the user sees
+// "task_execution (4)" while picking.
+const MOMENT_WEIGHT_COUNTS = {
+  first_encounter:       { emphasized: 4, relaxed: 1, suppressed: 0, total: 5 },
+  browsing_discovery:    { emphasized: 0, relaxed: 1, suppressed: 1, total: 2 },
+  decision_point:        { emphasized: 4, relaxed: 0, suppressed: 1, total: 5 },
+  task_execution:        { emphasized: 4, relaxed: 0, suppressed: 0, total: 4 },
+  confirmation:          { emphasized: 0, relaxed: 2, suppressed: 0, total: 2 },
+  celebration:           { emphasized: 0, relaxed: 0, suppressed: 0, total: 0 },
+  error_recovery:        { emphasized: 0, relaxed: 0, suppressed: 0, total: 0 },
+  destructive_action:    { emphasized: 0, relaxed: 0, suppressed: 0, total: 0 },
+  empty_state:           { emphasized: 0, relaxed: 0, suppressed: 0, total: 0 },
+  interruption:          { emphasized: 0, relaxed: 0, suppressed: 0, total: 0 },
+  trust_permission:      { emphasized: 0, relaxed: 0, suppressed: 0, total: 0 },
+  wayfinding:            { emphasized: 0, relaxed: 0, suppressed: 0, total: 0 },
+  compliance_disclosure: { emphasized: 0, relaxed: 0, suppressed: 0, total: 0 },
+};
+
+
+/**
+ * Render the "Moment detected" banner for a single node-card. Mirrors
+ * src/components/moment-banner.tsx (the React equivalent on the web
+ * app). Session 22.
+ */
+function renderMomentBanner(result) {
+  const moment = result.moment;
+  const situation = SITUATION_PROPERTY_BY_MOMENT[moment];
+  const counts = MOMENT_WEIGHT_COUNTS[moment] || { total: 0, emphasized: 0, relaxed: 0, suppressed: 0 };
+
+  const parts = [];
+  if (counts.emphasized > 0) parts.push(`${counts.emphasized} emphasized`);
+  if (counts.relaxed > 0) parts.push(`${counts.relaxed} relaxed`);
+  if (counts.suppressed > 0) parts.push(`${counts.suppressed} suppressed`);
+  const countsLine = parts.length > 0
+    ? `<div class="moment-banner-counts">I'm applying ${parts.join(", ")}.</div>`
+    : "";
+
+  const situationChip = situation
+    ? `<span class="moment-banner-situation">${escapeHtml(situation)}</span>`
+    : "";
+
+  const dropdownOptions = MOMENT_IDS
+    .filter((m) => m !== moment)
+    .map((m) => {
+      const c = MOMENT_WEIGHT_COUNTS[m];
+      const suffix = c && c.total > 0 ? ` (${c.total})` : "";
+      return `<option value="${m}">${m}${suffix}</option>`;
+    })
+    .join("");
+
+  const textHash = result.textHash || "";
+  const canCorrect = textHash.length > 0;
+
+  return `<div class="moment-banner" data-moment="${escapeHtml(moment)}"
+               data-text-hash="${escapeHtml(textHash)}">
+    <div class="moment-banner-head">
+      <span>Moment detected</span>
+      ${situationChip}
+    </div>
+    <div class="moment-banner-body">
+      I noticed this looks like <code>${escapeHtml(moment)}</code>.
+    </div>
+    ${countsLine}
+    ${canCorrect ? `
+    <div class="moment-banner-actions">
+      <button type="button" class="btn-moment-correct btn-moment-correct-toggle">Not ${escapeHtml(moment)}?</button>
+      <div class="moment-correct-form" hidden>
+        <select class="moment-correct-picker">
+          <option value="">Pick a moment…</option>
+          ${dropdownOptions}
+        </select>
+        <button type="button" class="btn-moment-correct btn-moment-correct-send" disabled>Send</button>
+        <button type="button" class="btn-moment-correct btn-moment-correct-cancel">Cancel</button>
+      </div>
+    </div>` : ""}
+  </div>`;
+}
+
+
 /**
  * sha256 helper — hex-encoded digest of a UTF-8 string.
  *
@@ -3015,6 +3190,72 @@ function renderBatchResults(results) {
       parent.postMessage({
         pluginMessage: { type: "focus-node", nodeId: btn.dataset.nodeId }
       }, "*");
+    });
+  });
+
+  // Human-eval build plan Session 22 — "Moment detected" banner
+  // correction flow. Toggle opens the dropdown; picking a moment
+  // enables Send; Send posts corrected_value and flips the banner
+  // into a thank-you state. Same bearer + rate-limit path as Session
+  // 21's feedback button; distinct signal (corrected_value is set).
+  area.querySelectorAll(".moment-banner").forEach(banner => {
+    const toggle = banner.querySelector(".btn-moment-correct-toggle");
+    const form = banner.querySelector(".moment-correct-form");
+    const picker = banner.querySelector(".moment-correct-picker");
+    const sendBtn = banner.querySelector(".btn-moment-correct-send");
+    const cancelBtn = banner.querySelector(".btn-moment-correct-cancel");
+    if (!toggle || !form || !picker || !sendBtn || !cancelBtn) return;
+
+    toggle.addEventListener("click", () => {
+      toggle.setAttribute("hidden", "");
+      form.removeAttribute("hidden");
+    });
+    cancelBtn.addEventListener("click", () => {
+      form.setAttribute("hidden", "");
+      toggle.removeAttribute("hidden");
+      picker.value = "";
+      sendBtn.disabled = true;
+    });
+    picker.addEventListener("change", () => {
+      sendBtn.disabled = !picker.value;
+    });
+    sendBtn.addEventListener("click", async () => {
+      const corrected = picker.value;
+      const textHash = banner.dataset.textHash || "";
+      const originalMoment = banner.dataset.moment || "";
+      if (!corrected || !textHash || !originalMoment) return;
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Sending…";
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/feedback/rationale`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${cxToken}`,
+          },
+          body: JSON.stringify({
+            text_hash: textHash,
+            hop_step: "detect_moment",
+            correction_type: "situation_ambiguity",
+            original_value: originalMoment,
+            corrected_value: corrected,
+            source: "plugin",
+          }),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        banner.querySelector(".moment-banner-actions").innerHTML =
+          `<span style="font-size:10px;color:var(--figma-color-text-secondary,#777);">
+            Thanks — corrected to <code>${escapeHtml(corrected)}</code>, routed to review.
+          </span>`;
+      } catch (_) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Send";
+        const err = document.createElement("span");
+        err.style.fontSize = "10px";
+        err.style.color = "#b91c1c";
+        err.textContent = "Couldn’t send. Try again later.";
+        form.appendChild(err);
+      }
     });
   });
 
@@ -3377,9 +3618,16 @@ function renderNodeCard(result) {
   // Full text preview
   html += `<div class="checked-text">"${escapeHtml(result.text)}"</div>`;
 
-  // Content type badge + moment badge
+  // Content type badge
   html += `<span class="content-type-badge">${escapeHtml(result.contentType)}</span>`;
+
+  // Human-eval build plan Session 22 — "Moment detected" banner. Shown
+  // whenever the API detected a non-default moment. Replaces the
+  // prior moment-badge. Default is browsing_discovery → fallback to a
+  // small badge so users still see the detected moment.
   if (result.moment && result.moment !== "browsing_discovery") {
+    html += renderMomentBanner(result);
+  } else if (result.moment) {
     const momentLabel = result.moment.replace(/_/g, " ");
     html += `<span class="moment-badge">${escapeHtml(momentLabel)}</span>`;
   }

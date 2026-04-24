@@ -398,3 +398,60 @@ def test_print_rationale_chain_missing_chain_key_is_safe() -> None:
     buf = io.StringIO()
     print_rationale_chain({"result": {}}, stream=buf)
     assert buf.getvalue() == ""
+
+
+# ---------------------------------------------------------------------------
+# Moment-detected line in the default verdict block — human-eval build plan
+# Session 22.
+# ---------------------------------------------------------------------------
+def test_print_result_includes_moment_line_for_non_default_moment() -> None:
+    buf = io.StringIO()
+    payload = {
+        "result": {
+            "content_type": "short_ui_copy",
+            "overall_verdict": "pass",
+            "violations": [],
+            "summary": "",
+            "moment": "decision_point",
+        }
+    }
+    print_result("Choose a plan", payload, verbose=False, stream=buf)
+    out = buf.getvalue()
+    assert "Moment: decision_point" in out
+    # decision_point has 4 emphasized + 1 suppressed in MOMENT_WEIGHTS
+    assert "4 emphasized" in out
+    assert "1 suppressed" in out
+
+
+def test_print_result_suppresses_moment_line_for_default() -> None:
+    buf = io.StringIO()
+    payload = {
+        "result": {
+            "content_type": "short_ui_copy",
+            "overall_verdict": "pass",
+            "violations": [],
+            "summary": "",
+            "moment": "browsing_discovery",
+        }
+    }
+    print_result("Welcome to ContentRX", payload, verbose=False, stream=buf)
+    assert "Moment:" not in buf.getvalue()
+
+
+def test_print_result_moment_line_without_weighted_counts_has_no_suffix() -> None:
+    """Moments without any weighted standards render without a suffix."""
+    buf = io.StringIO()
+    payload = {
+        "result": {
+            "content_type": "short_ui_copy",
+            "overall_verdict": "pass",
+            "violations": [],
+            "summary": "",
+            "moment": "celebration",
+        }
+    }
+    print_result("Milestone reached!", payload, verbose=False, stream=buf)
+    out = buf.getvalue()
+    assert "Moment: celebration\n" in out
+    # No parenthesised suffix for moments that carry no weights.
+    assert "Moment: celebration (" not in out

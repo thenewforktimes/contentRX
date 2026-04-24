@@ -117,6 +117,22 @@ async def test_check_passes_through_rationale_chain():
     assert result.rationale_chain[1]["ambiguity_flag"] == "situation_uncertain"
 
 
+def test_describe_moment_context_situation_and_default():
+    """Human-eval build plan Session 22 — situation-property lookup
+    for the MCP `moment_context` field. Three moments carry an
+    explicit situation (destructive / permission-gated / compliance);
+    everything else is default.
+    """
+    from contentrx_mcp.server import _describe_moment_context
+
+    assert _describe_moment_context("destructive_action") == "destructive"
+    assert _describe_moment_context("trust_permission") == "permission-gated"
+    assert _describe_moment_context("compliance_disclosure") == "compliance"
+    assert _describe_moment_context("browsing_discovery") == "default"
+    assert _describe_moment_context("") == "default"
+    assert _describe_moment_context(None) == "default"
+
+
 @pytest.mark.asyncio
 async def test_check_tolerates_missing_rationale_chain():
     """Pre-v1.2.0 responses still work — rationale_chain defaults to []."""

@@ -79,11 +79,14 @@ async def evaluate_copy(
 
     Returns:
         A dict with overall_verdict ("pass" | "fail" | "error"),
-        content_type, moment, violations (list with standard_id + issue +
-        suggestion + severity), passes, summary, and rationale_chain
-        (ordered pipeline hops — each with step, inputs, output,
-        confidence, rule_versions, and ambiguity_flag). Use
-        rationale_chain to narrate "why this verdict" to the user.
+        content_type, moment, moment_context (a string summarising the
+        situation the moment implies — "destructive", "permission-
+        gated", "compliance", or "default"), violations (list with
+        standard_id + issue + suggestion + severity), passes, summary,
+        and rationale_chain (ordered pipeline hops — each with step,
+        inputs, output, confidence, rule_versions, and ambiguity_flag).
+        Narrate the moment first (Session 22), then the verdict, then
+        the rationale chain on demand.
     """
     _ = context
     try:
@@ -100,6 +103,10 @@ async def evaluate_copy(
         "review_reason": result.review_reason,
         "content_type": result.content_type,
         "moment": result.moment,
+        # Human-eval build plan Session 22 — first-class "Moment
+        # detected" context. Lets the LLM open with "This looks like a
+        # destructive action" before narrating the verdict.
+        "moment_context": _describe_moment_context(result.moment),
         "violations": result.violations,
         "passes": result.passes,
         "summary": result.summary,
@@ -109,6 +116,24 @@ async def evaluate_copy(
         # list for responses pre-dating the v1.2.0 envelope.
         "rationale_chain": result.rationale_chain,
     }
+
+
+# Human-eval build plan Session 22 — situation-property lookup for the
+# moment context. Mirrors SITUATION_PROPERTY_BY_MOMENT in
+# tools/export_moments.py and src/lib/moment-metadata.ts. Three moments
+# carry an explicit situation that should shape the LLM's phrasing;
+# everything else is "default".
+_SITUATION_BY_MOMENT: dict[str, str] = {
+    "destructive_action": "destructive",
+    "trust_permission": "permission-gated",
+    "compliance_disclosure": "compliance",
+}
+
+
+def _describe_moment_context(moment: str | None) -> str:
+    if not moment:
+        return "default"
+    return _SITUATION_BY_MOMENT.get(moment, "default")
 
 
 @mcp.tool(
