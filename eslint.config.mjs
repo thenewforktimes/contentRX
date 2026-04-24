@@ -27,6 +27,10 @@ const eslintConfig = [
       "cli-client/**",
       "github-action/**",
       "mcp-server/**",
+      // LSP server (Python) and editor extensions (own tsconfig +
+      // compile target) ship independently of the main Next.js app.
+      "lsp-server/**",
+      "editor-extensions/**",
     ],
   },
 ];
