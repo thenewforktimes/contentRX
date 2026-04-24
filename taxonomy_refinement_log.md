@@ -26,6 +26,21 @@ Granularity gaps in the content type taxonomy, surfaced through real-world triag
 **Verdict:** Pending. Accumulate more triage cases to see if the distinction produces verdict-changing differences consistently, or only in edge cases.
 
 
+## Proposed refinements (auto-detected)
+
+(No auto-detected candidates at the last run.)
+
+Entries in this section are written by
+`tools/refinement_candidate_detector.py` (human-eval build plan
+Session 34) from the nightly signal dump. Each entry uses `REF-ANNN`
+ids so it can't collide with Robo-proposed `REF-NNN` ids. Robo triages
+these during the weekly review rhythm; approved candidates move to
+`## Approved refinements` below, declined ones to `## Declined
+refinements`, and the two-source minimum + verdict-impact test from
+the decision criterion still applies even when auto-detection has
+fired.
+
+
 ## Approved refinements
 
 (None yet.)
