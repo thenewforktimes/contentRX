@@ -24,6 +24,14 @@ export function Sidebar() {
         </li>
         <li>
           <Link
+            href="/model"
+            className="block rounded px-2 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-900"
+          >
+            The content model
+          </Link>
+        </li>
+        <li>
+          <Link
             href="/spec"
             className="block rounded px-2 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-900"
           >

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",
-    "prebuild": "node -e \"require('fs').cpSync(require('path').join(__dirname, '..', 'src', 'content_checker', 'standards', 'standards_library.json'), require('path').join(__dirname, 'lib', 'standards_library.json'))\"",
+    "prebuild": "node scripts/prebuild.mjs",
     "predev": "npm run prebuild",
     "build": "next build",
     "start": "next start --port 3001",

@@ -62,8 +62,23 @@
             "long_form_copy"
           ],
           "content_type_notes": {
-            "_global": "CLR-01 covers three distinct failure modes. Match your suggestion to the actual problem: (1) Jargon \u2014 domain-specific terms the audience won't know. Suggest a plain-language equivalent. (2) Non-standard English \u2014 unnecessarily complex words with simpler alternatives (e.g., 'utilize' \u2192 'use'). Name the simpler word. (3) Vacuous copy \u2014 filler phrases that add no meaning (e.g., 'in order to' \u2192 'to'). Suggest removing or tightening. (4) Domain-mainstream terminology \u2014 medical and financial terms that have entered mainstream awareness through cultural discourse (e.g., GLP-1, FDIC, 401(k)) do not violate plain language requirements. Evaluate jargon relative to the target audience and domain, not in absolute terms. Terms may also be required by regulatory constraints (e.g., GLP-1 is the correct generic term when brand names cannot be used pre-prescription)."
-          }
+            "_global": "CLR-01 covers three distinct failure modes. Match your suggestion to the actual problem: (1) Jargon — domain-specific terms the audience won't know. Suggest a plain-language equivalent. (2) Non-standard English — unnecessarily complex words with simpler alternatives (e.g., 'utilize' → 'use'). Name the simpler word. (3) Vacuous copy — filler phrases that add no meaning (e.g., 'in order to' → 'to'). Suggest removing or tightening. (4) Domain-mainstream terminology — medical and financial terms that have entered mainstream awareness through cultural discourse (e.g., GLP-1, FDIC, 401(k)) do not violate plain language requirements. Evaluate jargon relative to the target audience and domain, not in absolute terms. Terms may also be required by regulatory constraints (e.g., GLP-1 is the correct generic term when brand names cannot be used pre-prescription)."
+          },
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Mailchimp",
+            "GOV.UK Style Guide",
+            "18F Content Guide",
+            "Microsoft Writing Style Guide",
+            "USWDS"
+          ]
         },
         {
           "id": "CLR-02",
@@ -77,6 +92,18 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Mailchimp",
+            "GOV.UK Style Guide"
           ]
         },
         {
@@ -90,6 +117,18 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "GOV.UK Style Guide",
+            "Microsoft Writing Style Guide"
           ]
         },
         {
@@ -103,6 +142,18 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Atlassian Design System",
+            "Microsoft Writing Style Guide"
           ]
         },
         {
@@ -118,6 +169,18 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "GOV.UK Style Guide",
+            "18F Content Guide"
           ]
         }
       ]
@@ -145,7 +208,20 @@
             "confirmation": "Passive voice is acceptable in confirmations and system status messages. Only flag if the passive construction is unnecessarily complex or awkwardly names the actor (e.g., 'Changes have been saved by the system').",
             "heading": "Passive voice is acceptable when used to emphasize a trust signal, credential, or user benefit (e.g., \"Trusted by 10,000 patients,\" \"Handled by the pros\"). These constructions correctly foreground what matters to the user. Only flag passive voice when it obscures the actor in a way that reduces clarity or accountability.",
             "short_ui_copy": "Passive voice is acceptable when used to emphasize a trust signal, credential, or user benefit (e.g., \"Trusted by 10,000 patients,\" \"Handled by the pros\"). These constructions correctly foreground what matters to the user. Only flag passive voice when it obscures the actor in a way that reduces clarity or accountability."
-          }
+          },
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Microsoft Writing Style Guide",
+            "Mailchimp",
+            "Atlassian Design System"
+          ]
         },
         {
           "id": "VT-02",
@@ -163,7 +239,20 @@
           ],
           "content_type_notes": {
             "_global": "First-person 'We/Our' framing is acceptable when the sentence also addresses the user directly ('you', 'your') and when the company is making commitments about its own behavior or identifying its own resources (security, support, providers, service guarantees). This is a common organizational voice strategy. In healthcare contexts, 'Our physicians/providers' may be clearer than 'Your physician' when the user has not yet established a care relationship. The test: is the user the object or beneficiary of the sentence? If yes, the framing is user-centric despite the first-person subject."
-          }
+          },
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Mailchimp",
+            "GOV.UK Style Guide",
+            "Microsoft Writing Style Guide"
+          ]
         },
         {
           "id": "VT-03",
@@ -178,11 +267,23 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Atlassian Design System",
+            "Mailchimp"
           ]
         },
         {
           "id": "VT-04",
-          "rule": "Be confident, not arrogant. State things directly without hedging or over-qualifying. Qualification language is acceptable when making definitive claims would be misleading or legally inaccurate \u2014 for example, eligibility statements in healthcare, finance, or legal contexts where outcomes depend on individual circumstances.",
+          "rule": "Be confident, not arrogant. State things directly without hedging or over-qualifying. Qualification language is acceptable when making definitive claims would be misleading or legally inaccurate — for example, eligibility statements in healthcare, finance, or legal contexts where outcomes depend on individual circumstances.",
           "correct": "This will take about 5 minutes.",
           "incorrect": "This should probably take around maybe 5 minutes or so.",
           "rule_type": "nuanced",
@@ -193,6 +294,18 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Apple HIG",
+            "Mailchimp"
           ]
         },
         {
@@ -204,6 +317,19 @@
           "checkable_from": "plain_text",
           "relevant_content_types": [
             "error_message"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Mailchimp",
+            "Shopify Polaris",
+            "Atlassian Design System"
           ]
         }
       ]
@@ -223,7 +349,15 @@
             "short_ui_copy",
             "long_form_copy"
           ],
-          "requires_multi_snippet": true
+          "requires_multi_snippet": true,
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ]
         },
         {
           "id": "CON-02",
@@ -240,6 +374,21 @@
             "ui_label",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Mailchimp",
+            "GitHub Primer",
+            "Microsoft Writing Style Guide",
+            "Google Developer Documentation Style Guide",
+            "Apple HIG"
           ]
         },
         {
@@ -256,6 +405,14 @@
             "ui_label",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -269,7 +426,15 @@
             "short_ui_copy",
             "long_form_copy"
           ],
-          "requires_multi_snippet": true
+          "requires_multi_snippet": true,
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ]
         },
         {
           "id": "CON-05",
@@ -285,6 +450,14 @@
             "ui_label",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         }
       ]
@@ -304,6 +477,19 @@
             "button_cta",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "GOV.UK Style Guide",
+            "GitHub Primer",
+            "USWDS"
           ]
         },
         {
@@ -316,6 +502,14 @@
           "relevant_content_types": [
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -327,6 +521,14 @@
           "checkable_from": "plain_text",
           "relevant_content_types": [
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -340,6 +542,14 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -349,7 +559,15 @@
           "incorrect": "Body text at 11px in light gray on white background",
           "rule_type": "hard",
           "checkable_from": "visual",
-          "relevant_content_types": []
+          "relevant_content_types": [],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ]
         },
         {
           "id": "ACC-06",
@@ -361,7 +579,15 @@
           ],
           "rule_type": "hard",
           "checkable_from": "rich_text",
-          "relevant_content_types": []
+          "relevant_content_types": [],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ]
         },
         {
           "id": "ACC-07",
@@ -376,6 +602,14 @@
           "relevant_content_types": [
             "ui_label",
             "short_ui_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         }
       ]
@@ -386,7 +620,7 @@
       "standards": [
         {
           "id": "ACT-01",
-          "rule": "Start button and CTA text with a verb. Tell the user what will happen. Navigation labels, tabs, section headings, and confirmation or status messages are not CTAs \u2014 patterns like 'Project created' or 'Payment sent' are valid confirmation copy and should not be flagged.",
+          "rule": "Start button and CTA text with a verb. Tell the user what will happen. Navigation labels, tabs, section headings, and confirmation or status messages are not CTAs — patterns like 'Project created' or 'Payment sent' are valid confirmation copy and should not be flagged.",
           "correct": "Create account",
           "incorrect": "Account creation",
           "rule_type": "nuanced",
@@ -394,6 +628,20 @@
           "relevant_content_types": [
             "button_cta",
             "ui_label"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ],
+          "sources": [
+            "Apple HIG",
+            "Material Design",
+            "Shopify Polaris",
+            "Microsoft Writing Style Guide"
           ]
         },
         {
@@ -406,6 +654,14 @@
           "relevant_content_types": [
             "button_cta",
             "ui_label"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -419,6 +675,14 @@
             "error_message",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -433,6 +697,14 @@
             "confirmation",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         }
       ]
@@ -450,6 +722,14 @@
           "checkable_from": "plain_text",
           "relevant_content_types": [
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -462,6 +742,14 @@
           "relevant_content_types": [
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -474,6 +762,14 @@
           "relevant_content_types": [
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -486,6 +782,14 @@
           "relevant_content_types": [
             "tooltip_microcopy",
             "short_ui_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -497,6 +801,14 @@
           "checkable_from": "plain_text",
           "relevant_content_types": [
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -509,7 +821,15 @@
           ],
           "rule_type": "hard",
           "checkable_from": "rich_text",
-          "relevant_content_types": []
+          "relevant_content_types": [],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ]
         }
       ]
     },
@@ -523,7 +843,10 @@
           "correct": "You can send emails, build landing pages, and manage contacts.",
           "incorrect": "You can send emails, build landing pages and manage contacts.",
           "sources": [
-            "Mailchimp"
+            "Mailchimp",
+            "GitHub Primer",
+            "USWDS",
+            "Microsoft Writing Style Guide"
           ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
@@ -533,6 +856,14 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -548,6 +879,14 @@
           "relevant_content_types": [
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -556,7 +895,10 @@
           "correct": "Welcome to your new dashboard.",
           "incorrect": "Welcome to your new dashboard!!!",
           "sources": [
-            "Mailchimp"
+            "Mailchimp",
+            "Shopify Polaris",
+            "Microsoft Writing Style Guide",
+            "Apple HIG"
           ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
@@ -568,6 +910,14 @@
             "ui_label",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -588,6 +938,14 @@
             "ui_label",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -596,7 +954,9 @@
           "correct": "You have 3 invitations and 12 unread messages.",
           "incorrect": "You have three invitations and twelve unread messages.",
           "sources": [
-            "Mailchimp"
+            "Mailchimp",
+            "Microsoft Writing Style Guide",
+            "Chicago Manual of Style"
           ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
@@ -606,6 +966,14 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -622,6 +990,14 @@
             "tooltip_microcopy",
             "error_message",
             "confirmation"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         }
       ]
@@ -643,6 +1019,14 @@
           "relevant_content_types": [
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -658,6 +1042,14 @@
           "relevant_content_types": [
             "ui_label",
             "short_ui_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         }
       ]
@@ -682,6 +1074,14 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -700,6 +1100,14 @@
             "tooltip_microcopy",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -715,6 +1123,14 @@
           "relevant_content_types": [
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -735,8 +1151,16 @@
             "long_form_copy"
           ],
           "content_type_notes": {
-            "_global": "Flag slang, colloquial expressions, and culturally specific phrases that have clear plain-language alternatives (e.g., 'tap into' \u2192 'use', 'piece of cake' \u2192 'simple', 'let's go' \u2192 descriptive CTA). Do NOT flag widely understood metaphorical language that professional translators handle routinely, such as 'peace of mind,' 'take control,' or 'journey' used to describe a process. The test: would a professional translator working in this vertical need to look this phrase up, or would they translate it idiomatically without hesitation?"
-          }
+            "_global": "Flag slang, colloquial expressions, and culturally specific phrases that have clear plain-language alternatives (e.g., 'tap into' → 'use', 'piece of cake' → 'simple', 'let's go' → descriptive CTA). Do NOT flag widely understood metaphorical language that professional translators handle routinely, such as 'peace of mind,' 'take control,' or 'journey' used to describe a process. The test: would a professional translator working in this vertical need to look this phrase up, or would they translate it idiomatically without hesitation?"
+          },
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ]
         },
         {
           "id": "TRN-05",
@@ -755,6 +1179,14 @@
             "ui_label",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -772,6 +1204,14 @@
             "ui_label",
             "short_ui_copy",
             "long_form_copy"
+          ],
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
           ]
         },
         {
@@ -788,7 +1228,15 @@
             "short_ui_copy",
             "long_form_copy"
           ],
-          "requires_multi_snippet": true
+          "requires_multi_snippet": true,
+          "version": "4.6.1",
+          "version_history": [
+            {
+              "version": "4.6.1",
+              "date": "2026-04-23",
+              "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            }
+          ]
         }
       ]
     }
