@@ -129,7 +129,18 @@ export default function SourcesPage() {
         </ul>
       </section>
 
-      <section className="mt-16 rounded-lg border border-neutral-300 bg-neutral-50 p-6 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+      <section className="mt-12 rounded-md border border-neutral-200 bg-white p-4 text-sm dark:border-neutral-800 dark:bg-neutral-950">
+        <p className="text-neutral-700 dark:text-neutral-300">
+          The other half of ContentRX&apos;s accountability surface is{" "}
+          <Link href="/accuracy" className="underline underline-offset-2">
+            /accuracy
+          </Link>
+          : measured system κ with 95% CI, measured self-drift κ, and
+          the design target stated separately — no composite score.
+        </p>
+      </section>
+
+      <section className="mt-6 rounded-lg border border-neutral-300 bg-neutral-50 p-6 text-sm dark:border-neutral-700 dark:bg-neutral-900">
         <h2 className="text-base font-semibold">How to opt out</h2>
         <p className="mt-2 text-neutral-700 dark:text-neutral-300">
           If you maintain one of the sources above and don&apos;t want

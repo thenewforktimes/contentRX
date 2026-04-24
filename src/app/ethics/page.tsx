@@ -69,6 +69,15 @@ export default function EthicsPage() {
           training signal. Hidden contributions would be indistinguishable
           from theft; the page is the accountability surface.
         </p>
+        <p className="mt-3">
+          Calibration reporting is the other half:{" "}
+          <Link href="/accuracy" className="underline underline-offset-2">
+            /accuracy
+          </Link>{" "}
+          shows measured system κ and measured self-drift κ with 95%
+          confidence intervals, the design target stated separately, and
+          per-standard breakdowns. No composite &ldquo;accuracy score.&rdquo;
+        </p>
       </Section>
 
       <Section
