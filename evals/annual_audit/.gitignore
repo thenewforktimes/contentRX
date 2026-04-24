@@ -1,0 +1,4 @@
+# Blind re-label surfaces are transient — the source of truth is the
+# panel manifest + the labels file. Keep the blind surface ephemeral so
+# stale versions don't rot next to a fresh panel.
+blind/
