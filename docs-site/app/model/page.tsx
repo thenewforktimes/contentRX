@@ -104,6 +104,13 @@ export default function ModelIndexPage() {
         ))}
       </section>
 
+      <p>
+        See the{" "}
+        <Link href="/model/changelog">taxonomy changelog</Link> for every
+        change the model has published — standards added, retired, or
+        revised, plus approved refinements from the triage log.
+      </p>
+
       <hr />
       <p className="text-sm text-neutral-500">
         Library v{lib.version} · moments schema v

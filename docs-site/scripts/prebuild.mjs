@@ -34,6 +34,12 @@ const copies = [
     from: join(repoRoot, "evals", "examples_corpus", "pairs.json"),
     to: join(libDir, "examples_pairs.json"),
   },
+  // Human-eval build plan Session 23 — taxonomy changelog reads from
+  // this markdown log's `## Approved refinements` section.
+  {
+    from: join(repoRoot, "taxonomy_refinement_log.md"),
+    to: join(libDir, "taxonomy_refinement_log.md"),
+  },
 ];
 
 for (const { from, to } of copies) {

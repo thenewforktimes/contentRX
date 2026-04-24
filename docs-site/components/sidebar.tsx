@@ -29,6 +29,16 @@ export function Sidebar() {
           >
             The content model
           </Link>
+          <ul className="mt-1 ml-4 space-y-0.5">
+            <li>
+              <Link
+                href="/model/changelog"
+                className="block rounded px-2 py-0.5 text-xs text-neutral-600 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-900"
+              >
+                Changelog
+              </Link>
+            </li>
+          </ul>
         </li>
         <li>
           <Link
