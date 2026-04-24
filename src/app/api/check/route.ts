@@ -251,6 +251,8 @@ export async function POST(req: Request) {
       text,
       violations: result.violations,
       filePath: file_path ?? null,
+      reviewReasonSubtype:
+        (result as { review_reason?: string | null }).review_reason ?? null,
     });
   } catch (err) {
     console.error("logViolations failed:", err);

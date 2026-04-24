@@ -187,11 +187,31 @@ export const violations = pgTable(
     // CLI checks have no file context. Powers the "Top files" panel in
     // team analytics.
     filePath: text("file_path"),
+    // Session 34 activation (refinement-signals endpoint): groups every
+    // violation row from the same /api/check call so co-firing standards
+    // and standards_conflict clusters can be reconstructed. Cuid set at
+    // log time by the check route. Nullable on pre-migration rows; new
+    // rows always have it.
+    checkEventId: text("check_event_id"),
+    // Session 34 activation: captures CheckResult.review_reason (Session 2
+    // subtypes) when the engine flagged the whole evaluation for review.
+    // Enum at the app layer (engine emits one of the Session 2/13 values);
+    // not enforced at the DB level because new subtypes may ship without
+    // a migration.
+    reviewReasonSubtype: text("review_reason_subtype"),
   },
   (t) => [
     index("violations_user_created_idx").on(t.userId, t.createdAt),
     index("violations_team_created_idx").on(t.teamId, t.createdAt),
     index("violations_team_file_idx").on(t.teamId, t.filePath),
+    // Session 34: cluster reconstruction (standards_conflict,
+    // co-firing) needs to group by check.
+    index("violations_check_event_idx").on(t.checkEventId),
+    // Session 34: OOD / conflict clustering filters by subtype + window.
+    index("violations_subtype_created_idx").on(
+      t.reviewReasonSubtype,
+      t.createdAt,
+    ),
   ],
 ).enableRLS();
 
