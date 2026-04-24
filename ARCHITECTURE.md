@@ -466,7 +466,9 @@ Mines `(old_string, new_string)` copy-change pairs from a curated OSS allow-list
 
 **Ethics binding:** the miner identifies as `contentrx-research-bot` with a contact URL pointing at `/ethics`. Opt-outs land via `hello@contentrx.io` with `[OPTOUT] <source name>` subject; removal procedure in `external_signal/README.md`.
 
-**What Session 15 does NOT do:** DB ingest (the JSON output is the reviewer's workbench until the review workflow crystallizes), classifier routing for agreement/disagreement separation, intent tagging (Session 18). Running the crawler requires `GITHUB_TOKEN` configured; today's PR ships the pipeline, the first real crawl happens when Robo flips it on.
+**What Session 15 does NOT do:** DB ingest (the JSON output is the reviewer's workbench until the review workflow crystallizes), classifier routing for agreement/disagreement separation. Running the crawler requires `GITHUB_TOKEN` configured; today's PR ships the pipeline, the first real crawl happens when Robo flips it on.
+
+**Session 18 additions.** Each mined commit gets an intent category tag (`typo_fix` / `i18n_motivated` / `tone_shift` / `clarification` / `restructure` / `unknown`) from a priority-ordered regex classifier. Each repo gets a 0–3 `quality_score` from three allow-list-configured signals (has_content_designer, active_i18n, content_design_blog). Intent tags carry a *suggested* triage_category prior — a lens for Robo's review, not a gate. Higher-quality repos rank earlier; lower scores sort later but never block.
 
 ### Rollback + auto-demotion (human-eval build plan Session 12)
 

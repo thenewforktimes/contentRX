@@ -6,141 +6,293 @@
       "owner": "radix-ui",
       "name": "primitives",
       "license": "MIT",
-      "content_paths": ["packages/*/src", "packages/*/docs"],
-      "reason": "Headless component primitives with careful API copy."
+      "content_paths": [
+        "packages/*/src",
+        "packages/*/docs"
+      ],
+      "reason": "Headless component primitives with careful API copy.",
+      "quality_signals": {
+        "has_content_designer": false,
+        "active_i18n": false,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "shadcn-ui",
       "name": "ui",
       "license": "MIT",
-      "content_paths": ["apps/www/content", "apps/www/registry"],
-      "reason": "Component library with curated docs + examples."
+      "content_paths": [
+        "apps/www/content",
+        "apps/www/registry"
+      ],
+      "reason": "Component library with curated docs + examples.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": false,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "tailwindlabs",
       "name": "headlessui",
       "license": "MIT",
-      "content_paths": ["packages/*/src"],
-      "reason": "Accessible UI primitives with well-reviewed error messages."
+      "content_paths": [
+        "packages/*/src"
+      ],
+      "reason": "Accessible UI primitives with well-reviewed error messages.",
+      "quality_signals": {
+        "has_content_designer": false,
+        "active_i18n": false,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "vercel",
       "name": "next.js",
       "license": "MIT",
-      "content_paths": ["docs", "errors", "packages/next/src"],
-      "reason": "Vercel's flagship repo with active content review."
+      "content_paths": [
+        "docs",
+        "errors",
+        "packages/next/src"
+      ],
+      "reason": "Vercel's flagship repo with active content review.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": true,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "supabase",
       "name": "supabase",
       "license": "Apache-2.0",
-      "content_paths": ["apps/docs/content", "apps/studio"],
-      "reason": "Actively-maintained docs with content-designer review."
+      "content_paths": [
+        "apps/docs/content",
+        "apps/studio"
+      ],
+      "reason": "Actively-maintained docs with content-designer review.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": true,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "calcom",
       "name": "cal.com",
       "license": "AGPL-3.0",
-      "content_paths": ["apps/web/public/static/locales", "packages/*"],
-      "reason": "i18n-first product with translator feedback loop."
+      "content_paths": [
+        "apps/web/public/static/locales",
+        "packages/*"
+      ],
+      "reason": "i18n-first product with translator feedback loop.",
+      "quality_signals": {
+        "has_content_designer": false,
+        "active_i18n": true,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "raycast",
       "name": "extensions",
       "license": "MIT",
-      "content_paths": ["extensions/*/src"],
-      "reason": "Content-first extensions with Raycast's review bar."
+      "content_paths": [
+        "extensions/*/src"
+      ],
+      "reason": "Content-first extensions with Raycast's review bar.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": false,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "getsentry",
       "name": "sentry",
       "license": "BUSL-1.1",
-      "content_paths": ["src/sentry"],
-      "reason": "Error-UX-heavy product; mature error-copy conventions."
+      "content_paths": [
+        "src/sentry"
+      ],
+      "reason": "Error-UX-heavy product; mature error-copy conventions.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": true,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "PostHog",
       "name": "posthog",
       "license": "MIT",
-      "content_paths": ["frontend/src", "posthog/templates"],
-      "reason": "Product-analytics UI with strong content practice."
+      "content_paths": [
+        "frontend/src",
+        "posthog/templates"
+      ],
+      "reason": "Product-analytics UI with strong content practice.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": false,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "linear",
       "name": "linear",
       "license": "MIT",
-      "content_paths": ["docs", "packages/*"],
-      "reason": "Linear OSS artifacts — content reputation."
+      "content_paths": [
+        "docs",
+        "packages/*"
+      ],
+      "reason": "Linear OSS artifacts — content reputation.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": false,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "remix-run",
       "name": "remix",
       "license": "MIT",
-      "content_paths": ["docs", "packages/*/src"],
-      "reason": "Clean error messages + developer-copy discipline."
+      "content_paths": [
+        "docs",
+        "packages/*/src"
+      ],
+      "reason": "Clean error messages + developer-copy discipline.",
+      "quality_signals": {
+        "has_content_designer": false,
+        "active_i18n": false,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "stripe",
       "name": "stripe-js",
       "license": "MIT",
-      "content_paths": ["src"],
-      "reason": "Stripe's careful error + API copy."
+      "content_paths": [
+        "src"
+      ],
+      "reason": "Stripe's careful error + API copy.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": false,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "mui",
       "name": "material-ui",
       "license": "MIT",
-      "content_paths": ["docs/data", "packages/mui-material/src"],
-      "reason": "Material-UI docs with content-review process."
+      "content_paths": [
+        "docs/data",
+        "packages/mui-material/src"
+      ],
+      "reason": "Material-UI docs with content-review process.",
+      "quality_signals": {
+        "has_content_designer": false,
+        "active_i18n": true,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "withastro",
       "name": "astro",
       "license": "MIT",
-      "content_paths": ["packages/astro/src", "examples"],
-      "reason": "Astro's error messages + docs are content-reviewed."
+      "content_paths": [
+        "packages/astro/src",
+        "examples"
+      ],
+      "reason": "Astro's error messages + docs are content-reviewed.",
+      "quality_signals": {
+        "has_content_designer": false,
+        "active_i18n": true,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "ChilliCream",
       "name": "graphql-platform",
       "license": "MIT",
-      "content_paths": ["website/src/docs"],
-      "reason": "API-first docs with technical-writing care."
+      "content_paths": [
+        "website/src/docs"
+      ],
+      "reason": "API-first docs with technical-writing care.",
+      "quality_signals": {
+        "has_content_designer": false,
+        "active_i18n": false,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "TryGhost",
       "name": "Ghost",
       "license": "MIT",
-      "content_paths": ["ghost/core/core/server/web"],
-      "reason": "CMS product with content-layer discipline."
+      "content_paths": [
+        "ghost/core/core/server/web"
+      ],
+      "reason": "CMS product with content-layer discipline.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": true,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "mdn",
       "name": "content",
       "license": "CC-BY-SA-2.5",
-      "content_paths": ["files/en-us"],
-      "reason": "Mozilla Developer Network — documentation-first content."
+      "content_paths": [
+        "files/en-us"
+      ],
+      "reason": "Mozilla Developer Network — documentation-first content.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": true,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "zendeskgarden",
       "name": "react-components",
       "license": "Apache-2.0",
-      "content_paths": ["packages/*/src"],
-      "reason": "Zendesk's design-system UI copy conventions."
+      "content_paths": [
+        "packages/*/src"
+      ],
+      "reason": "Zendesk's design-system UI copy conventions.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": false,
+        "content_design_blog": false
+      }
     },
     {
       "owner": "primer",
       "name": "react",
       "license": "MIT",
-      "content_paths": ["packages/react/src"],
-      "reason": "GitHub's Primer — content-reviewed component library."
+      "content_paths": [
+        "packages/react/src"
+      ],
+      "reason": "GitHub's Primer — content-reviewed component library.",
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": false,
+        "content_design_blog": true
+      }
     },
     {
       "owner": "resend",
       "name": "react-email",
       "license": "MIT",
-      "content_paths": ["packages/*/src", "apps/docs/content"],
-      "reason": "Email component library with clear API copy."
+      "content_paths": [
+        "packages/*/src",
+        "apps/docs/content"
+      ],
+      "reason": "Email component library with clear API copy.",
+      "quality_signals": {
+        "has_content_designer": false,
+        "active_i18n": false,
+        "content_design_blog": true
+      }
     }
   ]
 }

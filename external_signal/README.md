@@ -125,6 +125,34 @@ Opt-out handling:
 2. Delete the corresponding output file from `external_signal/output/`.
 3. Best-effort remove any derived signal in the next release cycle.
 
+## Intent tagging + repo quality (Session 18)
+
+Each mined commit gets an `intent` category attached to its record:
+
+| Category | Match signal | Suggested triage_category |
+|---|---|---|
+| `typo_fix` | "typo", "spelling", "grammar", "punctuation" | `correct` |
+| `i18n_motivated` | `i18n:`/`l10n:` prefix or translator/locale mention | TRN-* family |
+| `tone_shift` | "tone", "voice", "soften", "friendlier", "approachable" | `missing_standard` |
+| `clarification` | "clarify", "simplify", "reword", "disambiguate" | `missing_standard` |
+| `restructure` | "rewrite", "reorganize", "consolidate" | `context_gap` |
+| `unknown` | nothing matched | (no prior) |
+
+Priority: i18n wins over typo wins over tone wins over clarification
+wins over restructure. The mapping is documented, **not enforced** —
+Robo reviews actual triage_category at review time.
+
+Each repo gets a `quality_score` (0..3) summed from three signals on
+the allow-list entry:
+
+- `has_content_designer` — acknowledged in CONTRIBUTORS / docs
+- `active_i18n` — `locales/` or `translations/` directory, active
+- `content_design_blog` — team writes about content publicly
+
+Higher-quality repos get earlier position in the review queue; lower
+scores don't block — they just sort later. Set signals manually in
+`allow_list.json`; auto-detection is a follow-up.
+
 ## What Session 15 does NOT do
 
 - **No DB ingest.** The spec calls for a separate `external_signal`

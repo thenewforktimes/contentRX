@@ -10,6 +10,33 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### Unreleased — 2026-04-23 (human-eval build plan Sessions 1–16, 18)
+
+Session 18 — commit-message intent tagging + repo quality scorer:
+
+- New `external_signal/intent_classifier.py` — regex-based 6-category
+  classifier: `typo_fix`, `i18n_motivated`, `tone_shift`,
+  `clarification`, `restructure`, `unknown`. Priority-ordered so more
+  specific signals (i18n prefix, typo keyword) win over general ones.
+- Documented intent → triage_category mapping (reference, not
+  enforced). `typo_fix` → `correct`; `i18n_motivated` → TRN-* family;
+  `tone_shift`/`clarification` → `missing_standard`; `restructure`
+  → `context_gap`.
+- New `external_signal/repo_quality.py` — 0–3 scorer from three
+  signals (`has_content_designer`, `active_i18n`, `content_design_blog`).
+  Produces a visible ranking for the review queue.
+- Extended `external_signal/allow_list.json` — every repo now carries
+  a `quality_signals` block with best-guess values based on public
+  project metadata. Robo's review adjusts these as warranted.
+- `external_signal/github_miner.py` tags each commit with
+  `intent` + `suggested_triage_category`, and each repo's output
+  file with `quality_score`. Output schema bumped 1.0.0 → 1.1.0.
+- 34 new pytest tests covering intent classification across all 6
+  categories + priority ordering, triage mapping, scorer math,
+  ranking stability, allow-list schema.
+
+Session 17 remains COLLAPSED into Session 16 per the plan.
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1–16)
 
 Session 16 — design-system sources attribution + examples corpus:
