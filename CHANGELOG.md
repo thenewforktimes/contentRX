@@ -10,6 +10,38 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### Unreleased — 2026-04-23 (human-eval build plan Sessions 1–11)
+
+Session 11 — graduation UI + approval workflow:
+
+- New `/dashboard/graduation` — server-rendered list of eligible
+  promotions (filtered from `evals/graduation/readiness.json`) plus a
+  read-only breakdown of every standard grouped by current level.
+  Shows key criteria pills (sample, κ, raw agreement, override rate)
+  and a "what changes" consequence line per target level.
+- New `/api/graduation/approve` — POST-only, admin-gated. Validates
+  the target is a strict promotion, appends an audit entry to
+  `graduation_status.history`, updates `level`. Uses
+  `recordLevelChange` (Session 10) so the history stays append-only.
+- Client island `approve-button.tsx` — one-click approve; prompts for
+  a reason that lands in the audit log. Hides when the user isn't
+  on the admin allow-list.
+- New `canApproveGraduation(clerkId)` helper — reads
+  `CONTENTRX_ADMIN_CLERK_IDS` env var (comma-separated). Unset = no
+  approvals possible (safe default in prod).
+- New `LEVEL_CONSEQUENCES` copy per level — shown in the UI so the
+  reviewer sees what changes (review queue behavior + rollback
+  trigger) before clicking.
+- 13 new vitest tests covering the helper + ladder ordering + consequence
+  copy + allow-list parsing.
+
+Deferred per dependencies:
+  - Auto-demotion monitor (Session 12 — 2-week override-rate breach)
+  - Manual demotion UI (same — Session 12)
+  - First actual graduation — requires real reviews + real production
+    overrides; today all 43 standards are at robo_labels and no
+    promotions are eligible
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10)
 
 Session 10 — graduation criteria + metric instrumentation:

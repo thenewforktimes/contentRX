@@ -22,6 +22,40 @@ export const GRADUATION_LEVELS = [
 
 export type GraduationLevel = (typeof GRADUATION_LEVELS)[number];
 
+/**
+ * What changes when a standard graduates — shown on the approval UI
+ * so Robo can confirm the consequences before clicking.
+ */
+export const LEVEL_CONSEQUENCES: Record<GraduationLevel, string> = {
+  robo_labels:
+    "Every verdict on this standard routes to Robo's review queue. Default for new standards.",
+  batch_approval:
+    "Verdicts ship in batches with Robo spot-checking samples. Reviews go from every case to a slice. Rollback trigger: 2-week override rate ≥ 10%.",
+  autonomous:
+    "Verdicts ship without Robo's review. A sampled audit pulls in a slice for calibration. Rollback trigger: 2-week override rate ≥ 5%.",
+};
+
+/**
+ * Admin gate for graduation approval. Today: a single-founder product
+ * — graduation decisions are Robo-only. The allow-list ships as an
+ * env-var-separated list of Clerk user IDs. Unset = no one can approve,
+ * which is the safe default if the env var is missing in prod.
+ *
+ * Future: move to a role system when the team grows. The API route
+ * enforces this; the UI additionally hides the approve button when
+ * the user is not an admin, but never relies on the hide as the
+ * security boundary.
+ */
+export function canApproveGraduation(clerkUserId: string | null | undefined): boolean {
+  if (!clerkUserId) return false;
+  const raw = process.env.CONTENTRX_ADMIN_CLERK_IDS ?? "";
+  const ids = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return ids.includes(clerkUserId);
+}
+
 export type GraduationStatus = InferSelectModel<typeof schema.graduationStatus>;
 
 export interface GraduationHistoryEntry {

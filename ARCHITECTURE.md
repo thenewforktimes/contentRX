@@ -408,6 +408,20 @@ Three levels per standard: `robo_labels` → `batch_approval` → `autonomous`. 
 
 **Today's baseline:** 43 standards evaluated, all at `robo_labels` (no production reviews yet). The committed `evals/graduation/readiness.json` gives downstream sessions a real input to develop against.
 
+### Graduation approval UI (human-eval build plan Session 11)
+
+One-screen approval surface for eligible promotions. Admin-gated via `CONTENTRX_ADMIN_CLERK_IDS` — a comma-separated allow-list of Clerk user IDs. Unset = no one can approve (safe default in prod).
+
+**Pages:**
+- `/dashboard/graduation` — server component. Reads the committed `evals/graduation/readiness.json` + current `graduation_status` rows from the DB. Renders eligible standards with criteria pills + consequence text; non-eligible standards grouped by current level in a read-only breakdown.
+
+**API:**
+- `POST /api/graduation/approve` — admin-gated. Validates the target is a strict promotion from the current level (not a demotion, not a no-op). Writes via `recordLevelChange` (Session 10) so history stays append-only.
+
+**Approval UX:** the approve button prompts for a short reason before posting. The reason + the full readiness snapshot land on the history entry for the audit trail.
+
+**Deferred:** auto-demotion (Session 12 watches the 2-week override rate and steps standards down when it breaches). Manual demotion UI lands in the same session.
+
 ## Two entry points, two use cases
 
 `check(text, content_type, audience)` — full 5-stage pipeline. Used in production, the CLI, and the Figma plugin. Content-type-aware filtering and audience-aware gating reduce false positives. Audience defaults to `product_ui`.
