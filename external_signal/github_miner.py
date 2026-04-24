@@ -64,6 +64,14 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Iterable
 
+# Lazy imports for intent_classifier + repo_quality — keeps the
+# CLI fast when only filter logic runs + avoids circular paths.
+from intent_classifier import (  # type: ignore[import-not-found]
+    classify_intent,
+    suggested_triage_category,
+)
+from repo_quality import score_repo  # type: ignore[import-not-found]
+
 
 # ---------------------------------------------------------------------------
 # Paths + defaults
@@ -507,11 +515,16 @@ def mine_repo(
             filtered_out += 1
             continue
 
+        # Session 18: tag each commit with its intent category +
+        # suggested triage prior. The intent is a lens, not a gate.
+        intent = classify_intent(message)
         mined.append({
             "sha": sha,
             "message": message.strip(),
             "committed_at": commit.get("committedDate"),
             "license": license,
+            "intent": intent,
+            "suggested_triage_category": suggested_triage_category(intent),
             "pairs": per_commit_pairs,
         })
 
@@ -526,10 +539,12 @@ def mine_repo(
 
     all_commits = mined + prior_commits
 
+    quality = score_repo(repo)  # Session 18 — rank-ready
     output = {
         "repo": f"{owner}/{name}",
         "license": license,
-        "schema_version": "1.0.0",
+        "quality_score": quality,
+        "schema_version": "1.1.0",  # added intent + quality fields
         "last_crawl_at": _dt.datetime.now(_dt.timezone.utc).strftime(
             "%Y-%m-%dT%H:%M:%SZ",
         ),
