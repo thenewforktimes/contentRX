@@ -10,6 +10,42 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### Unreleased — 2026-04-23 (human-eval build plan Sessions 1–16)
+
+Session 16 — design-system sources attribution + examples corpus:
+
+- `standards_library.json` — extended `sources` on 16 standards.
+  30/47 standards now carry attribution (was 17). Surgical additive
+  patch — no rule text changed, no schema structure touched.
+  Applied via `tools/patch_extend_sources.py` (conservative: only
+  principles demonstrably canonical across multiple public style
+  guides).
+- `moments.py` docstring — cites the 12 canonical design systems
+  that inform moment weights (was 5). No API change; prose only.
+- New `evals/examples_corpus/` — "this, not that" pairs artifact,
+  strictly separate from `standards_library.json` per the plan's
+  "guidance separate from examples" principle:
+  * `pairs.json` — 38 pairs across 14 standards + 15 source
+    systems, each cited to a specific source section.
+  * `disagreement_map.json` — 5 entries documenting where canonical
+    systems diverge (destructive button labels, confirmation voice,
+    heading capitalization, exclamation marks, empty-state tone)
+    and how ContentRX resolves.
+  * `README.md` — schema + canonical source list + growth rules +
+    opt-out path.
+- `tools/patch_extend_sources.py` — one-shot patch script; safe to
+  re-run (idempotent).
+- 17 new pytest tests covering pairs + disagreement-map schema
+  integrity + canonical-source-name enforcement + sources-field
+  coverage across the library.
+
+Reality-check notes:
+  - Plan targets 50 corpus pairs + every standard attributed; this
+    PR ships 38 + 30/47. Both grow as Robo's audit continues.
+  - PRF-* standards (preprocessor-only) aren't in
+    `standards_library.json`; the patch no-ops on them. The corpus
+    references them since they're legitimate standard IDs.
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1–15)
 
 Session 15 — GitHub mining pipeline:

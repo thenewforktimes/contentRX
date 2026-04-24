@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Session 16. Where canonical design systems give conflicting guidance + how ContentRX resolves. Feeds Session 35's `influences` sub-field work on standards.",
+  "generated_at": "2026-04-23T00:00:00Z",
+  "entries": [
+    {
+      "disagreement_id": "destructive-button-labels",
+      "topic": "What label should sit on a destructive-confirmation button?",
+      "positions": [
+        {
+          "source_system": "Apple HIG",
+          "position": "Use a specific verb naming what happens — 'Delete', 'Discard', 'Remove'. Avoid generic OK/Cancel on destructive alerts."
+        },
+        {
+          "source_system": "Material Design",
+          "position": "Specific verbs preferred; OK/Cancel is acceptable only when the question above the buttons is unambiguous."
+        },
+        {
+          "source_system": "Shopify Polaris",
+          "position": "Specific verb + the object: 'Delete order', 'Discard changes'."
+        }
+      ],
+      "contentrx_resolution": "Specific verbs, always. ACT-01 fires on generic button labels in destructive_action. CLR-01 reinforces this for the action-object specificity.",
+      "related_standards": ["ACT-01", "CLR-01"],
+      "related_moment": "destructive_action"
+    },
+    {
+      "disagreement_id": "confirmation-voice",
+      "topic": "Active or passive voice in confirmation messages?",
+      "positions": [
+        {
+          "source_system": "Microsoft Writing Style Guide",
+          "position": "Active voice by default — 'You saved the file.'"
+        },
+        {
+          "source_system": "Atlassian Design System",
+          "position": "Passive acceptable in confirmations — the state (not the actor) is the focus. 'Changes saved.'"
+        },
+        {
+          "source_system": "Mailchimp",
+          "position": "Passive acceptable; brevity beats voice consistency in confirmation moments."
+        }
+      ],
+      "contentrx_resolution": "VT-01 (active voice) relaxes in `confirmation` moment via moment weights. Passive is acceptable when the subject is the outcome, not the actor.",
+      "related_standards": ["VT-01"],
+      "related_moment": "confirmation"
+    },
+    {
+      "disagreement_id": "heading-capitalization",
+      "topic": "Sentence case or title case for headings?",
+      "positions": [
+        {
+          "source_system": "Apple HIG",
+          "position": "Sentence case for most UI text; title case only for specific navigation labels in iOS."
+        },
+        {
+          "source_system": "Microsoft Writing Style Guide",
+          "position": "Sentence case — 'more casual and easier to read'."
+        },
+        {
+          "source_system": "Mailchimp",
+          "position": "Sentence case throughout."
+        },
+        {
+          "source_system": "GitHub Primer",
+          "position": "Sentence case for all UI and docs."
+        },
+        {
+          "source_system": "Chicago Manual of Style",
+          "position": "Title case traditionally preferred for prose headings (not applied to UI)."
+        }
+      ],
+      "contentrx_resolution": "Sentence case. CON-02 enforces it; title case is a style-guide holdover that reads formal in modern product UI.",
+      "related_standards": ["CON-02"],
+      "related_moment": "wayfinding"
+    },
+    {
+      "disagreement_id": "exclamation-marks",
+      "topic": "When (if ever) are exclamation marks appropriate?",
+      "positions": [
+        {
+          "source_system": "Mailchimp",
+          "position": "Earned in celebration; avoid in error or neutral states."
+        },
+        {
+          "source_system": "Microsoft Writing Style Guide",
+          "position": "Use sparingly; never in errors."
+        },
+        {
+          "source_system": "Shopify Polaris",
+          "position": "Use only in true celebration — onboarding wins, milestones."
+        },
+        {
+          "source_system": "Apple HIG",
+          "position": "Rare; reserve for genuine enthusiasm, not standard confirmations."
+        }
+      ],
+      "contentrx_resolution": "Moment-weighted. GRM-03 suppresses in error_recovery, relaxes in celebration + first_encounter. The systems agree on the axis; they differ only on how liberally to allow exclamations in welcome moments.",
+      "related_standards": ["GRM-03"],
+      "related_moment": "celebration"
+    },
+    {
+      "disagreement_id": "empty-state-tone",
+      "topic": "What's the right tone for an empty state?",
+      "positions": [
+        {
+          "source_system": "Shopify Polaris",
+          "position": "Encouraging + action-oriented. Name what's missing, point at what to do."
+        },
+        {
+          "source_system": "Mailchimp",
+          "position": "Empty states are not blanks — they're opportunities. Explain, invite, maybe add personality."
+        },
+        {
+          "source_system": "Atlassian Design System",
+          "position": "Direct and helpful; avoid performative cheerfulness."
+        }
+      ],
+      "contentrx_resolution": "Empty_state moment weights push VT-05 (empathy) up and PRF-11 (dismissive language) down. The systems disagree on how much warmth is appropriate; ContentRX defers to the product's brand voice on warmth level but requires actionability.",
+      "related_standards": ["VT-05", "ACT-01"],
+      "related_moment": "empty_state"
+    }
+  ]
+}

@@ -71,6 +71,13 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Mailchimp",
+            "GOV.UK Style Guide",
+            "18F Content Guide",
+            "Microsoft Writing Style Guide",
+            "USWDS"
           ]
         },
         {
@@ -93,6 +100,10 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Mailchimp",
+            "GOV.UK Style Guide"
           ]
         },
         {
@@ -114,6 +125,10 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "GOV.UK Style Guide",
+            "Microsoft Writing Style Guide"
           ]
         },
         {
@@ -135,6 +150,10 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Atlassian Design System",
+            "Microsoft Writing Style Guide"
           ]
         },
         {
@@ -158,6 +177,10 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "GOV.UK Style Guide",
+            "18F Content Guide"
           ]
         }
       ]
@@ -193,6 +216,11 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Microsoft Writing Style Guide",
+            "Mailchimp",
+            "Atlassian Design System"
           ]
         },
         {
@@ -219,6 +247,11 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Mailchimp",
+            "GOV.UK Style Guide",
+            "Microsoft Writing Style Guide"
           ]
         },
         {
@@ -242,6 +275,10 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Atlassian Design System",
+            "Mailchimp"
           ]
         },
         {
@@ -265,6 +302,10 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Apple HIG",
+            "Mailchimp"
           ]
         },
         {
@@ -284,6 +325,11 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Mailchimp",
+            "Shopify Polaris",
+            "Atlassian Design System"
           ]
         }
       ]
@@ -336,6 +382,13 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Mailchimp",
+            "GitHub Primer",
+            "Microsoft Writing Style Guide",
+            "Google Developer Documentation Style Guide",
+            "Apple HIG"
           ]
         },
         {
@@ -432,6 +485,11 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "GOV.UK Style Guide",
+            "GitHub Primer",
+            "USWDS"
           ]
         },
         {
@@ -578,6 +636,12 @@
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
             }
+          ],
+          "sources": [
+            "Apple HIG",
+            "Material Design",
+            "Shopify Polaris",
+            "Microsoft Writing Style Guide"
           ]
         },
         {
@@ -779,7 +843,10 @@
           "correct": "You can send emails, build landing pages, and manage contacts.",
           "incorrect": "You can send emails, build landing pages and manage contacts.",
           "sources": [
-            "Mailchimp"
+            "Mailchimp",
+            "GitHub Primer",
+            "USWDS",
+            "Microsoft Writing Style Guide"
           ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
@@ -828,7 +895,10 @@
           "correct": "Welcome to your new dashboard.",
           "incorrect": "Welcome to your new dashboard!!!",
           "sources": [
-            "Mailchimp"
+            "Mailchimp",
+            "Shopify Polaris",
+            "Microsoft Writing Style Guide",
+            "Apple HIG"
           ],
           "rule_type": "hard",
           "checkable_from": "plain_text",
@@ -884,7 +954,9 @@
           "correct": "You have 3 invitations and 12 unread messages.",
           "incorrect": "You have three invitations and twelve unread messages.",
           "sources": [
-            "Mailchimp"
+            "Mailchimp",
+            "Microsoft Writing Style Guide",
+            "Chicago Manual of Style"
           ],
           "rule_type": "hard",
           "checkable_from": "plain_text",

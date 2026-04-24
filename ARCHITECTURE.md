@@ -428,7 +428,35 @@ One-screen approval surface for eligible promotions. Admin-gated via `CONTENTRX_
 
 **Approval UX:** the approve button prompts for a short reason before posting. The reason + the full readiness snapshot land on the history entry for the audit trail.
 
-### External signal pipeline (human-eval build plan Session 15)
+### Design-system attribution + examples corpus (human-eval build plan Session 16)
+
+Two artifacts + a doctrine:
+
+**`sources` on standards (in `standards_library.json`)** — each
+standard records which public style guides codify the same principle.
+Session 16 extended attribution from 17 to 30 of 47 standards using a
+conservative pass: only principles demonstrably canonical across
+multiple systems land here. `tools/patch_extend_sources.py` is the
+one-shot script (idempotent; safe to re-run). The remaining 17
+standards await Robo's domain-expertise audit.
+
+**`evals/examples_corpus/`** — the "this, not that" pairs artifact.
+Strictly separate from `standards_library.json` per the plan's
+"guidance separate from examples" principle. The library carries
+prescriptions (`rule` + `correct` + `incorrect`); this corpus carries
+worked examples attributed to specific source systems with license
+metadata. 38 pairs today across 14 standards + 15 source systems;
+grows as audits continue. Disagreement map (`disagreement_map.json`)
+documents where canonical systems diverge and how ContentRX resolves
+— feeds Session 35's `influences` sub-field work.
+
+**Doctrine:** the examples corpus is a **reference artifact, not a CI
+gate**. It never joins with `standards_library.json` at runtime, never
+blocks releases, never feeds the training-signal path. Robo reviews
+attributions and pairs before they go in; the ethics commitments at
+`/ethics` govern source treatment.
+
+
 
 Mines `(old_string, new_string)` copy-change pairs from a curated OSS allow-list as external training signal. **Strictly separated from production evaluations** — lives in its own directory at `external_signal/`, writes JSON output to a gitignored folder, never joins with `violations` / `violation_overrides` / `graduation_status` tables.
 

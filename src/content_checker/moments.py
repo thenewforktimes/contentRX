@@ -21,9 +21,34 @@ based on the detected moment. Weights are expressed as modifiers:
     "relax"      — minor deviations are acceptable in this moment
     "suppress"   — this standard rarely applies in this moment
 
-Initial weights are derived from content design best practices across
-GOV.UK, Mailchimp, Stripe, Apple HIG, and Microsoft Writing Guide.
-Human eval annotations will calibrate these over time.
+Initial weights are derived from content design best practices
+articulated in public style guides. Session 16 expanded the citation
+base — the following systems shape the weighting philosophy:
+
+    - Mailchimp Content Style Guide — voice + tone + empathy in errors
+    - GOV.UK Style Guide — plain language, active voice, link text
+    - 18F Content Guide — public-facing plain-language standards
+    - Microsoft Writing Style Guide — broad UI + technical copy
+    - Apple HIG — alerts, button labels, permission-request framing
+    - Material Design — button-label specificity, confirmation cadence
+    - Shopify Polaris — empty-state principles, destructive-action copy
+    - Atlassian Design System — voice (human, direct), one-idea-per-sentence
+    - GitHub Primer — accessibility, sentence-case, link patterns
+    - IBM Carbon — technical-audience writing, plain language in legal
+    - USWDS — federal plain language
+    - Google Developer Documentation Style Guide — sentence case, UI text
+
+The per-weight `rationale` strings state WHY the weight exists for
+that moment + standard; where a rationale leans heavily on a single
+system's guidance, the system is named inline. Where the weight
+reflects a shared principle across many systems, the rationale
+describes the principle without repeatedly citing every source.
+See `evals/examples_corpus/` for "this, not that" pairs that
+illustrate these systems' positions, and
+`evals/examples_corpus/disagreement_map.json` for where they differ.
+
+Human eval annotations continue to calibrate these weights — the
+sources above are the STARTING position, not the final one.
 """
 
 from __future__ import annotations
