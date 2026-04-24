@@ -1,0 +1,42 @@
+name: Case-study approval gate
+
+# Human-eval build plan Sessions 26–28. Every case study in the
+# docs-site registry must carry explicit maintainer approval
+# (`maintainer_approval: true`, `approved_by`, `approved_at`) and
+# at least three judgment calls. This gate blocks merges on any PR
+# that adds or modifies a registry entry missing those fields, or
+# registry entries whose slug doesn't match a real folder under
+# docs-site/app/case-studies/.
+#
+# The check runs on every PR touching the registry or the content
+# directory. It's fast (no deps, pure Python regex) so there's no
+# opt-in / secret gating the way Session 6's held-out gate has.
+
+on:
+  pull_request:
+    paths:
+      - "docs-site/lib/case-studies.ts"
+      - "docs-site/app/case-studies/**"
+      - "docs-site/content/case-studies/**"
+      - "scripts/check_case_study_approval.py"
+      - ".github/workflows/case_study_approval.yml"
+
+concurrency:
+  group: case-study-approval-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  approval:
+    name: case-study registry approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate case-study registry
+        run: python3 scripts/check_case_study_approval.py

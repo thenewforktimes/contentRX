@@ -38,6 +38,14 @@ export function Sidebar() {
                 Changelog
               </Link>
             </li>
+            <li>
+              <Link
+                href="/case-studies"
+                className="block rounded px-2 py-0.5 text-xs text-neutral-600 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-900"
+              >
+                Case studies
+              </Link>
+            </li>
           </ul>
         </li>
         <li>
