@@ -34,6 +34,7 @@ import {
   categorySiblings,
   getStandard,
   loadLibrary,
+  type InfluenceRelation,
   type VersionHistoryEntry,
 } from "@/lib/standards";
 import { examplesForStandard, type ExamplePair } from "@/lib/examples";
@@ -206,6 +207,37 @@ export default async function StandardPage({
         </section>
       )}
 
+      {std.influences && std.influences.length > 0 && (
+        <section>
+          <h2>Influences — how the sources relate</h2>
+          <p>
+            ContentRX&apos;s standards are syntheses, not weighted
+            averages of external guides. Where the influence is worth
+            naming explicitly — because the sources disagree, or
+            because the standard deliberately takes a third position —
+            it&apos;s recorded here. <em>Aligns with</em>,{" "}
+            <em>diverges from</em>, and <em>synthesizes</em> are the
+            three relationships the model uses.
+          </p>
+          <ul className="not-prose space-y-3">
+            {std.influences.map((inf) => (
+              <li
+                key={`${inf.source}-${inf.relation}`}
+                className="rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-800"
+              >
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <RelationBadge relation={inf.relation} />
+                  <span className="font-medium">{inf.source}</span>
+                </div>
+                <p className="mt-2 text-neutral-700 dark:text-neutral-300">
+                  {inf.note}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {std.version_history && std.version_history.length > 0 && (
         <section>
           <h2>Version history</h2>
@@ -293,5 +325,30 @@ function ExampleCard({ example }: { example: ExamplePair }) {
         </span>
       </p>
     </li>
+  );
+}
+
+function RelationBadge({ relation }: { relation: InfluenceRelation }) {
+  // Each relation gets a distinct visual signal. The colours stay
+  // modest on purpose — this is reference metadata, not an alert
+  // surface.
+  const style =
+    relation === "aligns_with"
+      ? "border-green-400 bg-green-50 text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-200"
+      : relation === "diverges_from"
+        ? "border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+        : "border-neutral-400 bg-neutral-50 text-neutral-800 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200";
+  const label =
+    relation === "aligns_with"
+      ? "Aligns with"
+      : relation === "diverges_from"
+        ? "Diverges from"
+        : "Synthesizes";
+  return (
+    <span
+      className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${style}`}
+    >
+      {label}
+    </span>
   );
 }

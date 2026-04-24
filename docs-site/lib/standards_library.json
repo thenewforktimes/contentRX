@@ -1,5 +1,5 @@
 {
-  "version": "4.6.1",
+  "version": "4.7.0",
   "total_standards": 47,
   "content_types": [
     {
@@ -64,12 +64,17 @@
           "content_type_notes": {
             "_global": "CLR-01 covers three distinct failure modes. Match your suggestion to the actual problem: (1) Jargon — domain-specific terms the audience won't know. Suggest a plain-language equivalent. (2) Non-standard English — unnecessarily complex words with simpler alternatives (e.g., 'utilize' → 'use'). Name the simpler word. (3) Vacuous copy — filler phrases that add no meaning (e.g., 'in order to' → 'to'). Suggest removing or tightening. (4) Domain-mainstream terminology — medical and financial terms that have entered mainstream awareness through cultural discourse (e.g., GLP-1, FDIC, 401(k)) do not violate plain language requirements. Evaluate jargon relative to the target audience and domain, not in absolute terms. Terms may also be required by regulatory constraints (e.g., GLP-1 is the correct generic term when brand names cannot be used pre-prescription)."
           },
-          "version": "4.6.1",
+          "version": "4.7.0",
           "version_history": [
             {
               "version": "4.6.1",
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            },
+            {
+              "version": "4.7.0",
+              "date": "2026-04-24",
+              "change_note": "Session 35 — added `influences` metadata showing CLR-01 synthesizes the plain-language positions across Mailchimp, GOV.UK, 18F, Microsoft, and USWDS. Rule text unchanged."
             }
           ],
           "sources": [
@@ -78,6 +83,23 @@
             "18F Content Guide",
             "Microsoft Writing Style Guide",
             "USWDS"
+          ],
+          "influences": [
+            {
+              "source": "Mailchimp",
+              "relation": "synthesizes",
+              "note": "Mailchimp's plain-language guidance drives the voice — 'write for everyone' — but treats jargon as a style issue. CLR-01 treats jargon as an audience-dependent judgment, which is a synthesis across the five sources rather than a direct adoption."
+            },
+            {
+              "source": "GOV.UK Style Guide",
+              "relation": "synthesizes",
+              "note": "GOV.UK's 'plain English' canon informs the hard-line phrasing (e.g. 'utilize' → 'use'). The audience-relative clause in CLR-01 generalizes GOV.UK's civic-audience assumption to product audiences that might include specialists."
+            },
+            {
+              "source": "18F Content Guide",
+              "relation": "aligns_with",
+              "note": "18F's 'plain language even in compliance contexts' position aligns directly; CLR-01's audience-relative exception picks up the same carve-out for domain-mainstream terminology (GLP-1, FDIC, 401(k))."
+            }
           ]
         },
         {
@@ -629,12 +651,17 @@
             "button_cta",
             "ui_label"
           ],
-          "version": "4.6.1",
+          "version": "4.7.0",
           "version_history": [
             {
               "version": "4.6.1",
               "date": "2026-04-23",
               "change_note": "Per-standard version tracking introduced. Every standard starts at the library version current at introduction; bump per-standard when the rule text, examples, or content_type_notes change."
+            },
+            {
+              "version": "4.7.0",
+              "date": "2026-04-24",
+              "change_note": "Session 35 — added `influences` metadata naming how ACT-01 relates to Apple HIG, Shopify Polaris, and Material Design. Rule text unchanged."
             }
           ],
           "sources": [
@@ -642,6 +669,23 @@
             "Material Design",
             "Shopify Polaris",
             "Microsoft Writing Style Guide"
+          ],
+          "influences": [
+            {
+              "source": "Shopify Polaris",
+              "relation": "aligns_with",
+              "note": "Polaris's 'start with a verb that describes the specific action' is the same call at the same specificity. Polaris is the closest phrasing match in the sources set."
+            },
+            {
+              "source": "Apple HIG",
+              "relation": "aligns_with",
+              "note": "HIG's preference for specific verbs over generic affirmatives on alerts (e.g. 'Delete' over 'OK' for destructive confirmations) is the same judgment applied to destructive buttons; ACT-01 generalizes it to all buttons, not just alerts."
+            },
+            {
+              "source": "Material Design",
+              "relation": "diverges_from",
+              "note": "Material's button guidance accepts OK/Cancel as a standard pair for confirmations. ACT-01 rejects that pair — OK carries no information about what comes next. When a confirmation needs a button, name the action. This is a deliberate divergence, not a disagreement with Material's broader system."
+            }
           ]
         },
         {

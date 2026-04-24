@@ -26,6 +26,30 @@ export type VersionHistoryEntry = {
   change_note: string;
 };
 
+/**
+ * Relationship between a standard and one of its named sources.
+ *
+ * - `aligns_with` — the standard and the source agree on the call
+ *   and roughly on the reasoning. The source's phrasing may have
+ *   influenced the standard's wording, which is why attribution is
+ *   here rather than only in `sources`.
+ * - `diverges_from` — the source takes a different position and
+ *   this standard deliberately takes another. The `note` must name
+ *   the reason.
+ * - `synthesizes` — the standard is a combination of two or more
+ *   sources whose positions alone don't capture what the standard
+ *   is doing. "Robo's synthesis, not weighted average."
+ *
+ * Human-eval build plan Session 35.
+ */
+export type InfluenceRelation = "aligns_with" | "diverges_from" | "synthesizes";
+
+export type InfluenceEntry = {
+  source: string;
+  relation: InfluenceRelation;
+  note: string;
+};
+
 export type Standard = {
   id: string;
   rule: string;
@@ -38,6 +62,14 @@ export type Standard = {
   version?: string;
   version_history?: VersionHistoryEntry[];
   sources?: string[];
+  /**
+   * Per-source relationship metadata. Additive to `sources`:
+   * `sources` says which style guides influenced the standard;
+   * `influences` says HOW each influence relates (align / diverge /
+   * synthesize). Present only on standards where the authorial
+   * judgment is explicit enough to be worth naming.
+   */
+  influences?: InfluenceEntry[];
 };
 
 export type Category = {
