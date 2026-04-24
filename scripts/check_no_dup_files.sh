@@ -33,12 +33,19 @@ cd "$REPO_ROOT"
 
 # Build the find command once; reused for both the check and the
 # fix-message.
+#
+# Both `.venv/` (canonical per CLAUDE.md) AND `venv/` (accidental
+# variant — discovered at `tools/venv/` post-PR#77) are excluded.
+# Virtualenv contents are library files with their own naming
+# hygiene; we match the gitignore convention instead of policing
+# them.
 FIND_EXCLUDES=(
   -not -path './.git/objects/*'
   -not -path './.git/logs/*'
   -not -path '*/node_modules/*'
   -not -path '*/.next/*'
   -not -path '*/.venv/*'
+  -not -path '*/venv/*'
   -not -path '*/.vercel/*'
   -not -path '*/.pytest_cache/*'
   -not -path '*/__pycache__/*'
@@ -65,9 +72,9 @@ echo "Fix:" >&2
 echo "  find . -type f -name '* *' \\" >&2
 echo "    -not -path './.git/objects/*' -not -path './.git/logs/*' \\" >&2
 echo "    -not -path '*/node_modules/*' -not -path '*/.next/*' \\" >&2
-echo "    -not -path '*/.venv/*' -not -path '*/.vercel/*' \\" >&2
-echo "    -not -path '*/.pytest_cache/*' -not -path '*/__pycache__/*' \\" >&2
-echo "    -not -path '*/dist/*' \\" >&2
+echo "    -not -path '*/.venv/*' -not -path '*/venv/*' \\" >&2
+echo "    -not -path '*/.vercel/*' -not -path '*/.pytest_cache/*' \\" >&2
+echo "    -not -path '*/__pycache__/*' -not -path '*/dist/*' \\" >&2
 echo "    -delete" >&2
 echo >&2
 echo "Root-cause: check iCloud Drive / Dropbox / OneDrive sync on your repo path." >&2
