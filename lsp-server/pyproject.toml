@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "contentrx-lsp"
+version = "0.1.0"
+description = "ContentRX Language Server — inline content-design diagnostics in any LSP-capable editor."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "ContentRX" }]
+keywords = ["lsp", "content", "linter", "ux-writing", "language-server", "vscode", "cursor"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+]
+# pygls is the canonical Python LSP framework (handles JSON-RPC,
+# initialize handshake, didOpen/didChange, publishDiagnostics, code
+# actions — all baked in). tree-sitter-typescript supplies the TSX
+# grammar we walk for string extraction. httpx mirrors the MCP +
+# CLI clients so every surface talks to /api/check the same way.
+dependencies = [
+  "pygls>=1.3.0",
+  "tree-sitter>=0.22.0",
+  "tree-sitter-typescript>=0.21.0",
+  "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+
+[project.urls]
+Homepage = "https://contentrx.io"
+Documentation = "https://github.com/thenewforktimes/contentRX/blob/main/lsp-server/README.md"
+Repository = "https://github.com/thenewforktimes/contentRX"
+Issues = "https://github.com/thenewforktimes/contentRX/issues"
+Changelog = "https://github.com/thenewforktimes/contentRX/releases"
+
+[project.scripts]
+contentrx-lsp = "contentrx_lsp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["contentrx_lsp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
