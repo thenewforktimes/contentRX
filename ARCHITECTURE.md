@@ -400,6 +400,27 @@ Admin API: `GET/POST /api/team-custom-examples` and `GET/PATCH/DELETE /api/team-
 
 MCP + CLI surfaces land in the follow-up session. The admin API is positioned as the primary ingestion path; the web surface (`/dashboard/team/custom-examples`) is audit-only (list + delete; no create-from-form).
 
+### Pairwise preference elicitation (human-eval build plan Session 31)
+
+A second precedent source for the auto-annotator, gathered from users via a 60-second weekly prompt at `/dashboard/calibrate`. Three hand-picked pairs per session; user picks *left*, *right*, or *neither*. Opt-out honored immediately. Answered pairs never re-surface for the same user.
+
+Tables (schema.ts):
+- `preference_pairs` — curated pool; `seedKey` keys the pair across DB rebuilds so `preferences` rows stay interpretable. Loaded from `evals/preference_pairs.json` via `tools/seed_preference_pairs.py`. Retired pairs stay in the table so historic responses keep meaning.
+- `preferences` — one row per (user, pair) answered. `(userId, pairId)` unique; the `onConflictDoNothing` insert path means duplicate submits silently collapse.
+- `users.preferenceOptedOutAt` — single nullable timestamp column; null = opted in. Keeps opt-out state in one place without a side table.
+
+Scheduling: pure helper `shouldPrompt` in `src/lib/preferences.ts`. Eligible if no opt-out and (no prior answers OR last answer ≥ 7 days ago). The gate runs server-side on the `/dashboard/calibrate` page load and on every `GET /api/preferences/session`; no background job. `selectSessionPairs` picks 3 unseen non-retired pairs, prioritising under-sampled `(standard, content_type)` tuples, with a seeded tie-break (seed = user id) for deterministic ordering.
+
+Auto-annotator integration (`tools/annotator_prompt.py`):
+- `aggregate_preference_signals` rolls a `/api/preferences/export` dump into per-`(standard, content_type)` signals: `aligned` (picked the author's side), `conflicting` (picked the other side), `neither`.
+- `_build_precedent_index` merges aligned responses into the existing `standard|content_type|pass` keys so a standards/content_type tuple with 3+ aligned picks reaches the same "high confidence" threshold 3+ human annotations would.
+- `_build_preference_conflict_index` surfaces contested tuples separately. The calibration prompt renders them in a `## Contested tuples` section so the annotator explicitly *lowers* confidence on rules with disputed preference signal — even when annotation precedent would otherwise be high.
+- `auto_annotate.py --preferences <export.json>` threads the file through the pipeline.
+
+Privacy: the pair texts are curated by Robo (not user-submitted). Responses store only `(user_id, pair_id, preferred_side, optional note, time_ms)`. The admin export route (`GET /api/preferences/export`) is gated by `CRON_SECRET` — same auth tier as the weekly-digest cron.
+
+**Deferred:** a second "opt back in" UI button for users who previously opted out (today they'd hit the API directly from the dashboard). Also deferred: admin UI for authoring new `preference_pairs` entries — the JSON file + seeder is the current authoring path.
+
 ### Review cadence dashboards (human-eval build plan Session 9)
 
 Three web surfaces under `/dashboard/cadence/*` plus a weekly email digest. Team-plan gated, admin-only (mirrors `/dashboard/overrides`).
