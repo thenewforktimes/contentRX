@@ -10,6 +10,45 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9)
+
+Session 9 — review cadence dashboards + weekly digest:
+
+- New `/dashboard/cadence` — daily 15-min landing. Top-of-queue
+  (N most-recent overrides), urgent flags (override-rate spikes + new
+  out-of-distribution clusters vs prior 7 days), pointers to this
+  week's moment + monthly calibration.
+- New `/dashboard/cadence/moment/[moment]` — weekly moment deep-
+  review, filtered to one of the 13 moments. 30-day window. Shows
+  override stream + top-overridden standards + refinement-log pointer.
+- New `/dashboard/cadence/calibration` — monthly calibration. Reads
+  the latest `evals/drift/reports/*.json` (from Session 7) and renders
+  measured κ + 95% CI + threshold regime. Links the moment-rotation
+  schedule.
+- New `/api/cron/weekly-digest` — sends the weekly digest to all
+  team-plan admins with a `(user, ISO-week)` Redis dedupe key. Auth
+  via `CRON_SECRET` header — no env-var bypass. Wire into Vercel Cron
+  when ready (sample `vercel.json` snippet in the route file).
+- New `src/emails/weekly-digest.tsx` — React email template. Renders
+  through the existing Resend pipeline + `_shell.tsx` layout.
+- New `src/lib/cadence.ts` — pure helpers: `momentForWeek`
+  (13-week rotation using ISO week), `detectUrgentFlags`
+  (spike-multiplier + min-absolute-count), `aggregateVelocity`
+  (recent-vs-prior-half trend), `buildWeeklyDigest`.
+- 20 new vitest tests covering moment rotation (all 13 surface in 13
+  weeks, determinism), ISO week math (including the year-rollback
+  edge case), urgent-flag detection (new-standard path, spike path,
+  minimum-count floor, custom multipliers), velocity aggregation,
+  weekly-digest delta math.
+
+Deferred per-scope:
+  - MCP surfacing of the cadence data — deliberately scoped out; can
+    land as a follow-up if the Claude-Code surface becomes priority.
+  - Vercel Cron activation — workflow is in place; user flips on
+    `vercel.json` + `CRON_SECRET` when ready.
+  - Pending-refinement count in the digest — needs a log parser
+    (Session 34 territory); today hard-coded to 0.
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8)
 
 Session 8 — production override review queue:

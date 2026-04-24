@@ -350,6 +350,29 @@ Batches are size-3 clusters matching `triage.py`'s agree/override/skip UI. They 
 
 **Deferred:** web review-queue surface (today CLI-only via `triage.py`); direct DB integration for the queue builder (today reads a JSON dump).
 
+### Review cadence dashboards (human-eval build plan Session 9)
+
+Three web surfaces under `/dashboard/cadence/*` plus a weekly email digest. Team-plan gated, admin-only (mirrors `/dashboard/overrides`).
+
+| Surface | Path | Cadence | What it shows |
+|---|---|---|---|
+| Daily | `/dashboard/cadence` | 15 min | Top-of-queue + urgent flags (last 24h vs prior 7-day average) + pointers to weekly + monthly |
+| Weekly | `/dashboard/cadence/moment/[moment]` | 60 min | Override stream for one moment; 13-week rotation auto-picks `momentForWeek(today)` |
+| Monthly | `/dashboard/cadence/calibration` | — | Latest drift report (κ + CI + regime from `evals/drift/reports/*.json`) |
+| Email | `/api/cron/weekly-digest` | Weekly | Team admins; Resend + Redis dedupe on `(team, ISO-week)` |
+
+Pure logic lives in `src/lib/cadence.ts`: `momentForWeek`, `detectUrgentFlags`, `aggregateVelocity`, `buildWeeklyDigest`. Server components handle SQL; no client-side data fetching. Vitest covers every helper.
+
+**Urgent-flag signals:**
+- **`override_rate_spike`** — today's count ≥ `spikeMultiplier` × prior-7-day daily average AND ≥ `minAbsoluteCount`. Defaults: 3×, 3 overrides.
+- **`new_out_of_distribution_cluster`** — standard has ≥3 overrides today and zero in the prior 7 days.
+
+**Moment rotation** uses ISO week + a year offset so January 2027 doesn't land on the same moment as January 2026. All 13 moments surface at least once every 13 weeks.
+
+**Cron enablement.** The workflow is in place; the user flips it on by adding `vercel.json` crons + a `CRON_SECRET` env var. Route exits 503 if the secret isn't configured — never silently pass.
+
+**Deferred:** MCP surfacing of the cadence data (separate future session); pending-refinement count in the digest (Session 34's auto-detector populates this).
+
 ## Two entry points, two use cases
 
 `check(text, content_type, audience)` — full 5-stage pipeline. Used in production, the CLI, and the Figma plugin. Content-type-aware filtering and audience-aware gating reduce false positives. Audience defaults to `product_ui`.
