@@ -138,13 +138,25 @@ def _format_example(case: dict, index: int) -> str:
     )
 
 
-def _build_precedent_index(annotated_cases: list[dict]) -> dict:
+def _build_precedent_index(
+    annotated_cases: list[dict],
+    preference_signals: list[dict] | None = None,
+) -> dict:
     """Build a lookup of annotation precedents by (standard_id, content_type, verdict).
 
     Used by the auto-annotator to determine confidence thresholds:
     - 3+ precedents for the same key → high confidence
     - 1-2 precedents or partial match → medium confidence
     - 0 precedents → low confidence
+
+    Human-eval build plan Session 31 adds `preference_signals` as a
+    second precedent source. Each signal is a dict with keys
+    `standard_id`, `content_type`, `aligned`, `conflicting`. Aligned
+    responses add to the precedent count for
+    `standard_id|content_type|pass` (the pair asks "which passes the
+    standard"). Conflicting responses don't add — they're surfaced
+    separately via `_build_preference_conflict_index` so the prompt
+    can explicitly mention contested tuples.
     """
     index: dict[str, int] = {}
     for case in annotated_cases:
@@ -152,12 +164,106 @@ def _build_precedent_index(annotated_cases: list[dict]) -> dict:
             continue
         key = f"{case['standard_id']}|{case['content_type']}|{case['human_verdict']}"
         index[key] = index.get(key, 0) + 1
+
+    if preference_signals:
+        for signal in preference_signals:
+            aligned = int(signal.get("aligned", 0))
+            if aligned <= 0:
+                continue
+            key = f"{signal['standard_id']}|{signal['content_type']}|pass"
+            index[key] = index.get(key, 0) + aligned
+
     return index
+
+
+def _build_preference_conflict_index(
+    preference_signals: list[dict] | None,
+) -> dict:
+    """Return `key → conflicting_count` for (standard, content_type) tuples
+    where the pairwise preference signal conflicts with the encoded
+    standard. Shape matches `_build_precedent_index` for easy rendering.
+
+    Human-eval build plan Session 31. A high conflicting count is a
+    signal the annotator should *lower* confidence, not raise it — the
+    auto-annotator prompt surfaces it as a "contested" list.
+    """
+    out: dict[str, int] = {}
+    if not preference_signals:
+        return out
+    for signal in preference_signals:
+        conflicting = int(signal.get("conflicting", 0))
+        if conflicting <= 0:
+            continue
+        key = f"{signal['standard_id']}|{signal['content_type']}"
+        out[key] = out.get(key, 0) + conflicting
+    return out
+
+
+def aggregate_preference_signals(export: dict) -> list[dict]:
+    """Aggregate a `/api/preferences/export` dump into per-
+    (standard_id, content_type) signals.
+
+    Input shape (from `src/app/api/preferences/export/route.ts`):
+        {
+          "items": [
+            {
+              "pair": {"standard_id": ..., "content_type": ..., "expected_preferred": "left" | "right" | null},
+              "responses": [{"preferred": "left" | "right" | "neither"}, ...]
+            }
+          ]
+        }
+
+    Output shape (consumed by `_build_precedent_index`):
+        [
+          {
+            "standard_id": ...,
+            "content_type": ...,
+            "aligned": int,       # responses aligning with expected_preferred
+            "conflicting": int,   # responses picking the weaker side
+            "neither": int,       # responses that chose "neither" or probes
+          }
+        ]
+    """
+    by_key: dict[tuple[str, str], dict] = {}
+    for item in export.get("items", []):
+        pair = item.get("pair", {})
+        std = pair.get("standard_id")
+        ctype = pair.get("content_type")
+        if not std or not ctype:
+            continue
+        expected = pair.get("expected_preferred")
+        key = (std, ctype)
+        bucket = by_key.setdefault(
+            key,
+            {
+                "standard_id": std,
+                "content_type": ctype,
+                "aligned": 0,
+                "conflicting": 0,
+                "neither": 0,
+            },
+        )
+        for r in item.get("responses", []):
+            preferred = r.get("preferred")
+            if preferred == "neither":
+                bucket["neither"] += 1
+            elif not expected:
+                # judgment probe — record as neither for alignment purposes
+                bucket["neither"] += 1
+            elif preferred == expected:
+                bucket["aligned"] += 1
+            else:
+                bucket["conflicting"] += 1
+    return sorted(
+        by_key.values(),
+        key=lambda s: (s["standard_id"], s["content_type"]),
+    )
 
 
 def build_calibration_prompt(
     annotated_cases: list[dict],
     max_examples: int = 10,
+    preference_signals: list[dict] | None = None,
 ) -> str:
     """Build the full calibration system prompt for the LLM annotator.
 
@@ -166,18 +272,43 @@ def build_calibration_prompt(
             and human_notes fields. These are the gold-standard annotations
             the LLM will learn from.
         max_examples: Maximum number of few-shot examples to include.
+        preference_signals: Optional list of per-(standard, content_type)
+            preference aggregates from pairwise elicitation (Session 31).
+            Each dict: `{standard_id, content_type, aligned, conflicting}`.
+            Aligned responses raise the precedent count; conflicting
+            responses surface a contested-tuples list in the prompt.
 
     Returns:
         A system prompt string ready to pass to the Anthropic API.
     """
     examples = select_examples(annotated_cases, max_examples)
-    precedent_index = _build_precedent_index(annotated_cases)
+    precedent_index = _build_precedent_index(annotated_cases, preference_signals)
+    conflict_index = _build_preference_conflict_index(preference_signals)
 
     examples_text = "\n".join(
         _format_example(case, i) for i, case in enumerate(examples)
     )
 
     precedent_summary = json.dumps(precedent_index, indent=2)
+    conflict_summary = (
+        json.dumps(conflict_index, indent=2) if conflict_index else None
+    )
+
+    conflict_section = (
+        f"""
+
+## Contested tuples (pairwise preference disagreement)
+
+These (standard, content_type) tuples have pairwise-preference
+responses that disagree with the encoded standard preference. A high
+count is a signal that the rule is genuinely contested — lower your
+confidence even when annotation precedent would otherwise be high.
+
+{conflict_summary}
+"""
+        if conflict_summary
+        else ""
+    )
 
     return f"""You are a calibrated human annotator for a content standards checker. Your job is to review extracted UI copy and the checker's machine verdict, then provide a human expert judgment.
 
@@ -205,10 +336,10 @@ For each case, you output exactly three fields:
 
 ## Precedent index
 
-This index shows how many existing annotations match each (standard, content_type, verdict) combination. Use it to calibrate your confidence level.
+This index shows how many existing annotations match each (standard, content_type, verdict) combination. Use it to calibrate your confidence level. Counts include both human-approved annotations and aligned pairwise-preference responses (Session 31).
 
 {precedent_summary}
-
+{conflict_section}
 ## Calibration examples
 
 These are real human annotations from the existing dataset. Match this voice and judgment pattern.
@@ -254,3 +385,19 @@ def load_annotated_cases(*file_paths: str | Path) -> list[dict]:
             if case.get("human_verdict") is not None:
                 annotated.append(case)
     return annotated
+
+
+def load_preference_signals(path: str | Path) -> list[dict]:
+    """Load a `/api/preferences/export` dump from disk and aggregate it
+    into per-(standard, content_type) signals.
+
+    Returns an empty list when the file is missing — this keeps
+    preference signal optional for auto-annotator runs that don't
+    need it.
+    """
+    p = Path(path)
+    if not p.exists():
+        return []
+    with open(p) as f:
+        export = json.load(f)
+    return aggregate_preference_signals(export)

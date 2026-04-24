@@ -49,6 +49,15 @@ export const users = pgTable("users", {
   // user re-subscribes later.
   stripeCustomerId: text("stripe_customer_id").unique(),
   dittoApiKeyEncrypted: text("ditto_api_key_encrypted"),
+  // Human-eval build plan Session 31. When set, the user opted out of
+  // pairwise-preference elicitation prompts. `/dashboard/calibrate`
+  // honors it immediately; weekly scheduler skips opted-out users.
+  // Null = opted in (default). The timestamp records when they opted
+  // out so we can distinguish "never asked" from "explicitly declined"
+  // in telemetry.
+  preferenceOptedOutAt: timestamp("preference_opted_out_at", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -526,6 +535,112 @@ export const teamCustomExamples = pgTable(
   ],
 ).enableRLS();
 
+// Pairwise-preference curation pool — human-eval build plan Session 31.
+//
+// Each row is a hand-picked pair of strings that ask a content-design
+// judgment call: given (moment, content_type, standard), which of
+// these two candidate strings is better? The `/dashboard/calibrate`
+// surface picks three unseen pairs per user per session (weekly) and
+// writes the user's answer into `preferences`.
+//
+// Seed pool ships as a JSON artifact (`evals/preference_pairs.json`)
+// and is loaded into the DB via `tools/seed_preference_pairs.py`. New
+// pairs can be appended without a migration — the JSON is the source
+// of truth, the DB is the cache for fast lookup.
+//
+// Privacy: both `leftText` and `rightText` are author-curated (Robo +
+// collaborators), not user-submitted. Nothing here is PII.
+export const preferencePairs = pgTable(
+  "preference_pairs",
+  {
+    id: cuid(),
+    // Stable cross-version identifier from the seed JSON. Lets the
+    // seeder re-run idempotently and keeps a pair's identity stable
+    // across DB re-creations so historic `preferences` rows remain
+    // interpretable.
+    seedKey: text("seed_key").notNull().unique(),
+    moment: text("moment").notNull(),
+    contentType: text("content_type").notNull(),
+    // The standard this pair is probing. Responses aggregate by
+    // (standard_id, content_type, verdict) into the precedent index
+    // the auto-annotator consults.
+    standardId: text("standard_id").notNull(),
+    leftText: text("left_text").notNull(),
+    rightText: text("right_text").notNull(),
+    // Which side the pair's author believes is the stronger answer.
+    // Optional — when unset, the pair is treated as a genuine judgment
+    // probe with no canonical answer. When set, we can compute a
+    // "percent aligned with author" rollup during review.
+    expectedPreferred: text("expected_preferred", {
+      enum: ["left", "right"],
+    }),
+    // Short prompt shown above the pair, e.g. "Which confirms a
+    // destructive action more clearly?" Optional.
+    prompt: text("prompt"),
+    // Admin-only flag for pairs that should be pulled from rotation
+    // without deleting the row (preserves historic responses).
+    retiredAt: timestamp("retired_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("preference_pairs_moment_content_idx").on(t.moment, t.contentType),
+    index("preference_pairs_standard_idx").on(t.standardId),
+  ],
+).enableRLS();
+
+// Pairwise-preference responses — human-eval build plan Session 31.
+//
+// One row per (user, pair) answered. The `preferred` enum captures
+// "left is better", "right is better", or "neither" (user explicitly
+// declined to prefer). Unanswered pairs don't land here.
+//
+// Aggregation: counts of (standard_id, content_type, preferred_verdict)
+// feed the auto-annotator's precedent index as a second source
+// alongside existing approved annotations. Mapping from preferred-side
+// to verdict depends on the pair metadata — if `expected_preferred`
+// is "left" and the user picked "left", that's alignment with the
+// standard-encoded preference (→ verdict maps to "fail" for the
+// other side / "pass" for the chosen side, depending on pair framing).
+// The library helper in `src/lib/preferences.ts` handles the mapping.
+export const preferences = pgTable(
+  "preferences",
+  {
+    id: cuid(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    teamId: text("team_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    pairId: text("pair_id")
+      .notNull()
+      .references(() => preferencePairs.id, { onDelete: "cascade" }),
+    preferred: text("preferred", {
+      enum: ["left", "right", "neither"],
+    }).notNull(),
+    // Optional free-text rationale. Bounded at route level.
+    note: text("note"),
+    // How long the user spent on the pair, ms. Short + "neither"
+    // ≈ skip; long + confident pick ≈ informed call. Powers a
+    // signal-quality lens on the preferences export.
+    timeMs: integer("time_ms"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // A user answers each pair at most once. Changing your mind later
+    // is a new pair, not a mutation of this row.
+    uniqueIndex("preferences_user_pair_unique").on(t.userId, t.pairId),
+    index("preferences_user_created_idx").on(t.userId, t.createdAt),
+    // Precedent-index hot path: aggregate by pair (which implies
+    // standard/content_type) without a join.
+    index("preferences_pair_idx").on(t.pairId),
+  ],
+).enableRLS();
+
 export type User = InferSelectModel<typeof users>;
 export type Usage = InferSelectModel<typeof usage>;
 export type Subscription = InferSelectModel<typeof subscriptions>;
@@ -537,3 +652,5 @@ export type ViolationOverride = InferSelectModel<typeof violationOverrides>;
 export type GraduationStatus = InferSelectModel<typeof graduationStatus>;
 export type RationaleFeedback = InferSelectModel<typeof rationaleFeedback>;
 export type TeamCustomExample = InferSelectModel<typeof teamCustomExamples>;
+export type PreferencePair = InferSelectModel<typeof preferencePairs>;
+export type Preference = InferSelectModel<typeof preferences>;

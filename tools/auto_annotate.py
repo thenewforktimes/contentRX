@@ -265,6 +265,7 @@ def annotate_cases(
     calibration_files: list[Path],
     model: str = ANNOTATION_MODEL,
     dry_run: bool = False,
+    preferences_file: Path | None = None,
 ) -> tuple[list[dict], dict]:
     """Run both annotation stages on a list of eval cases.
 
@@ -277,7 +278,7 @@ def annotate_cases(
     Returns:
         (annotated_cases, run_stats)
     """
-    from annotator_prompt import load_annotated_cases
+    from annotator_prompt import load_annotated_cases, load_preference_signals
 
     total_cases = len(cases)
     skipped = 0
@@ -289,9 +290,16 @@ def annotate_cases(
 
     # Load calibration data (needed for both dry-run reporting and real runs)
     existing_annotations = load_annotated_cases(*calibration_files)
+    preference_signals = (
+        load_preference_signals(preferences_file) if preferences_file else []
+    )
 
     _log(f"Starting annotation of {total_cases} cases")
     _log(f"Calibration examples: {len(existing_annotations)} annotated cases from {len(calibration_files)} files")
+    if preference_signals:
+        _log(
+            f"Preference signals: {len(preference_signals)} (standard, content_type) tuples from {preferences_file}"
+        )
     _log(f"Model: {model}")
     _log("")
 
@@ -323,7 +331,10 @@ def annotate_cases(
 
     standards_data = load_standards()
     category_map = _build_category_map(standards_data)
-    calibration_prompt = build_calibration_prompt(existing_annotations)
+    calibration_prompt = build_calibration_prompt(
+        existing_annotations,
+        preference_signals=preference_signals,
+    )
 
     for i, case in enumerate(cases):
         case_id = case.get("case_id", f"case-{i}")
@@ -533,6 +544,16 @@ def main() -> None:
         action="store_true",
         help="Show what would be annotated without making API calls.",
     )
+    parser.add_argument(
+        "--preferences",
+        dest="preferences_file",
+        help=(
+            "Path to a /api/preferences/export dump (Session 31). When "
+            "supplied, aligned pairwise-preference responses fold into "
+            "the precedent index and contested tuples are surfaced to "
+            "the annotator prompt."
+        ),
+    )
 
     args = parser.parse_args()
 
@@ -606,11 +627,13 @@ def main() -> None:
     _log(f"Found {len(cases)} cases\n")
 
     # Run annotation pipeline
+    preferences_path = Path(args.preferences_file) if args.preferences_file else None
     annotated_cases, stats = annotate_cases(
         cases,
         calibration_files=calibration_paths,
         model=args.model,
         dry_run=args.dry_run,
+        preferences_file=preferences_path,
     )
 
     # Build output

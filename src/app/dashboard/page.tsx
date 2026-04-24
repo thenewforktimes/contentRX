@@ -124,7 +124,32 @@ export default async function DashboardPage() {
           <OverridesLink isAdmin={user.teamOwnerUserId === null} />
         </>
       )}
+
+      <CalibrateLink optedOut={user.preferenceOptedOutAt !== null} />
     </div>
+  );
+}
+
+function CalibrateLink({ optedOut }: { optedOut: boolean }) {
+  return (
+    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+      <header className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Calibration</h2>
+        <span className="text-xs text-neutral-500">
+          {optedOut ? "Opted out" : "Weekly · 60 sec"}
+        </span>
+      </header>
+      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
+        Three pairwise judgment prompts a week, optional. Picks feed
+        the human-judgment signal behind the content model.
+      </p>
+      <Link
+        href="/dashboard/calibrate"
+        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+      >
+        {optedOut ? "Visit calibration settings" : "Open calibration prompt"}
+      </Link>
+    </section>
   );
 }
 
