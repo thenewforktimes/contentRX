@@ -32,22 +32,90 @@ type Props = {
   isAdmin: boolean;
 };
 
+type PreviewResult = {
+  action: string;
+  standard_id: string;
+  window_violations: number;
+  would_remove_violations: number;
+  would_add_violations: number | null;
+  would_convert_to_review: number;
+  sample_before: Array<{
+    id: string;
+    standard_id: string;
+    severity: string;
+    moment: string | null;
+    content_type: string;
+    text_hash: string;
+    created_at: string;
+  }>;
+  note: string | null;
+};
+
+type PendingDisable = {
+  standardId: string;
+  preview: PreviewResult | null;
+  loading: boolean;
+  error: string | null;
+};
+
 export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [localRules, setLocalRules] = useState<TeamRule[]>(rules);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // BUILD_PLAN_v2 Session 12 — inline preview before committing a
+  // disable. The commit button in the dialog only enables after the
+  // preview call returns (or errors with a specific message).
+  const [pendingDisable, setPendingDisable] =
+    useState<PendingDisable | null>(null);
 
   function byStandardId(id: string) {
     return localRules.filter((r) => r.standardId === id);
   }
   const customRules = localRules.filter((r) => r.action === "add");
 
-  async function disableStandard(standardId: string) {
+  async function requestDisable(standardId: string) {
     if (!isAdmin) return;
-    setBusyId(standardId);
     setError(null);
+    setPendingDisable({ standardId, preview: null, loading: true, error: null });
+    try {
+      const res = await fetch("/api/team-rules/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          change: { action: "disable", standard_id: standardId },
+          window: "30d",
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? "Failed to preview");
+      }
+      const body = await res.json();
+      const preview: PreviewResult = body?.result;
+      setPendingDisable({
+        standardId,
+        preview,
+        loading: false,
+        error: null,
+      });
+    } catch (err) {
+      setPendingDisable({
+        standardId,
+        preview: null,
+        loading: false,
+        error:
+          err instanceof Error
+            ? err.message
+            : "Could not load preview. Disable anyway?",
+      });
+    }
+  }
+
+  async function confirmDisable(standardId: string) {
+    setBusyId(standardId);
+    setPendingDisable(null);
     try {
       const res = await fetch("/api/team-rules", {
         method: "POST",
@@ -153,14 +221,69 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
                   onEnable={async () => {
                     if (disabledRule) await removeRule(disabledRule.id);
                   }}
-                  onDisable={() => disableStandard(std.id)}
+                  onDisable={() => requestDisable(std.id)}
                 />
               );
             })}
           </ul>
         </section>
       ))}
+
+      {pendingDisable && (
+        <DisablePreviewDialog
+          pending={pendingDisable}
+          onCancel={() => setPendingDisable(null)}
+          onConfirm={() => confirmDisable(pendingDisable.standardId)}
+        />
+      )}
     </div>
+  );
+}
+
+function DisablePreviewDialog({
+  pending,
+  onCancel,
+  onConfirm,
+}: {
+  pending: PendingDisable;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const preview = pending.preview;
+  const description = (() => {
+    if (pending.loading) {
+      return "Computing impact on the last 30 days of team evaluations…";
+    }
+    if (pending.error) {
+      return pending.error;
+    }
+    if (!preview) return "";
+    const removed = preview.would_remove_violations;
+    if (preview.window_violations === 0) {
+      return `No team violations logged in the last 30 days — disabling ${pending.standardId} is safe.`;
+    }
+    if (removed === 0) {
+      return (
+        preview.note ??
+        `${pending.standardId} hasn't fired on your team in the last 30 days. Disabling has no historical effect.`
+      );
+    }
+    return `Disabling ${pending.standardId} would have removed ${removed} violation${
+      removed === 1 ? "" : "s"
+    } from your team's evaluations in the last 30 days (out of ${preview.window_violations} total).`;
+  })();
+
+  return (
+    <AlertDialog
+      open
+      title={`Disable ${pending.standardId}?`}
+      description={description}
+      confirmLabel={pending.loading ? "Previewing…" : "Disable"}
+      cancelLabel="Keep it on"
+      tone="danger"
+      onConfirm={pending.loading ? () => {} : onConfirm}
+      onCancel={onCancel}
+    />
   );
 }
 
