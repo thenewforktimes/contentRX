@@ -10,6 +10,35 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### Unreleased — 2026-04-23 (human-eval build plan Sessions 1–14)
+
+Session 14 — ethical framework + /ethics page:
+
+- New `/ethics` public page — the five commitments that govern how
+  ContentRX collects, attributes, and uses external signal
+  (transparency, attribution, respect, license-awareness, PII
+  avoidance). Ships before Session 15's GitHub mining pipeline so
+  the opt-out path exists before any scraping.
+- New `/sources` stub — linked from `/ethics`'s transparency section.
+  Populated by Session 19 with per-source crawl timestamps + roles.
+  Stub points at the committed per-standard `sources` metadata in
+  `standards_library.json` as the interim accountability surface.
+- Opt-out path: `hello@contentrx.io` with `[OPTOUT] <source name>`
+  subject convention. Commitment: confirm within a week, stop fresh
+  crawls in the next cycle, best-effort remove derived signal in
+  the release after.
+
+**Copy note:** the voice is plain + first-person — Robo should edit
+these pages into his own voice before launch. The commitments
+themselves are locked to the plan spec; the prose around them is
+editable.
+
+Deferred per dependencies:
+  - `/sources` population — Session 19 (needs Session 15 crawler +
+    Session 16 consolidated attribution metadata)
+  - Attribution linting check (catches close-paraphrase without
+    attribution) — Session 35
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1–13)
 
 Session 13 — scan/validate disagreement as ensemble signal:
