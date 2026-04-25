@@ -1,0 +1,73 @@
+name: PUBLIC_TAXONOMY=true smoke
+
+# Runs the full Python and TypeScript test suites with the
+# `PUBLIC_TAXONOMY` feature flag flipped to `true`.
+#
+# Why this exists: the flag's default is `false`, so day-to-day CI
+# never exercises the public-taxonomy code paths. The
+# 2026-04-25 private-taxonomy pivot ADR commits to keeping those
+# paths in the codebase as reversibility insurance — but reversibility
+# insurance only works if it stays compilable and green. This workflow
+# is the smoke test that prevents the flag from silently rotting into
+# dead code.
+#
+# Today the flag has no gated branches; the suites pass identically
+# under both modes. As code paths get gated by `PUBLIC_TAXONOMY` in
+# later sessions, this job becomes a real reversibility check —
+# regressions in the public-taxonomy branch will fail this workflow
+# specifically while the default-mode CI stays green.
+#
+# See `decisions/2026-04-25-private-taxonomy-pivot.md`,
+# `src/content_checker/config.py`, and `src/lib/feature-flags.ts`.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: public-taxonomy-smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: pytest (PUBLIC_TAXONOMY=true)
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_TAXONOMY: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install engine
+        run: pip install -e ".[dev]"
+
+      - name: Run pytest with PUBLIC_TAXONOMY=true
+        run: python3 -m pytest tests/ -q
+
+  vitest:
+    name: vitest (PUBLIC_TAXONOMY=true)
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_TAXONOMY: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run vitest with PUBLIC_TAXONOMY=true
+        run: npm test
