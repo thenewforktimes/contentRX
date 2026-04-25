@@ -25,6 +25,7 @@ import {
   isValidHandoff,
 } from "@/lib/figma-handoff";
 import { getRedis } from "@/lib/redis";
+import { revokeAndReSignIn } from "./actions";
 
 type PageProps = {
   searchParams: Promise<{ handoff?: string }>;
@@ -153,7 +154,13 @@ export default async function FigmaCallbackPage({ searchParams }: PageProps) {
 
   // User already has an API key. We can't show it to them again (only the
   // hash is stored), and silently rotating it would break their CLI / GitHub
-  // Action sessions. Send them to /dashboard to rotate explicitly.
+  // Action sessions (audit H-02). Two recovery paths:
+  //   1. Inline "Revoke and sign in" — fastest path; revokes the existing
+  //      key in this same flow, then re-mints + stashes for the plugin.
+  //      Breaks any other sessions, but the user is consenting explicitly.
+  //   2. Cancel and rotate from /dashboard — preserves the key for the
+  //      user to manually paste into other sessions afterward (CLI,
+  //      GitHub Action). Slower but doesn't strand other clients.
   if (result === HAS_EXISTING_KEY) {
     return (
       <CallbackShell tone="error">
@@ -163,10 +170,27 @@ export default async function FigmaCallbackPage({ searchParams }: PageProps) {
           Action, or other sessions. Signing in from the Figma plugin
           can&apos;t recover it (we only store a hash).
         </p>
-        <p>
-          To use the plugin, head to <a href="/dashboard" className="underline">your dashboard</a>{" "}
-          and click <strong>Rotate key</strong>. You&apos;ll see the new key
-          once — copy it into the plugin and any other sessions that need it.
+        <p className="mb-4">
+          You can revoke the existing key now to complete plugin sign-in,
+          or cancel and rotate from your dashboard if you need the new key
+          in your CLI / GitHub Action too.
+        </p>
+        <form action={revokeAndReSignIn} className="mb-3">
+          <input type="hidden" name="handoff" value={handoff} />
+          <button
+            type="submit"
+            className="w-full rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90 dark:bg-white dark:text-black"
+          >
+            Revoke existing key and sign in to plugin
+          </button>
+        </form>
+        <p className="text-xs text-neutral-600 dark:text-neutral-400">
+          Revoking will immediately break any CLI or GitHub Action sessions
+          using the old key. Prefer to rotate manually?{" "}
+          <a href="/dashboard" className="underline">
+            Cancel and go to dashboard
+          </a>
+          .
         </p>
       </CallbackShell>
     );
