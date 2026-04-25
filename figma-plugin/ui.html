@@ -4400,8 +4400,16 @@ function hideQuotaIndicator() {
 }
 
 function buildQuotaHTML(usage) {
-  const { used, quota, plan } = usage;
-  const pct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
+  // Coerce numeric fields to integers before interpolating into innerHTML
+  // and into the inline `style="width:..."` attribute. Closes audit M-25:
+  // a buggy or compromised /api/check response with string `used` /
+  // `quota` could otherwise inject HTML or CSS through this template.
+  // `Number(x) | 0` is the JS idiom for "to-int with NaN→0" — works on
+  // strings, undefined, null, and floats.
+  const used = Number(usage.used) | 0;
+  const quota = Number(usage.quota) | 0;
+  const plan = usage.plan;
+  const pct = quota > 0 ? Math.min(100, Math.max(0, Math.round((used / quota) * 100))) : 0;
   const planLabel = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : "";
   return `
     <span>${used} of ${quota} this month</span>

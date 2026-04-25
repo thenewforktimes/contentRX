@@ -219,10 +219,32 @@ figma.ui.onmessage = async (msg) => {
     // -----------------------------------------------------------------------
     // Open a URL in the user's default browser. figma.openExternal is
     // sandbox-only; the UI iframe cannot call it directly.
+    //
+    // URL whitelist: a compromised or buggy UI iframe could send
+    // `javascript:`, `file:`, `data:`, or arbitrary phishing https://
+    // URLs — figma.openExternal is not gated by `networkAccess` in
+    // manifest.json. Only allow https:// URLs to our own domains.
     // -----------------------------------------------------------------------
     case "open-external": {
-      if (typeof msg.url === "string") {
+      if (typeof msg.url !== "string") break;
+      var ALLOWED_PREFIXES = [
+        "https://contentrx.io/",
+        "https://www.contentrx.io/",
+        "https://docs.contentrx.io/",
+        "https://content-rx.vercel.app/",
+        "https://www.figma.com/community/plugin/contentrx",
+      ];
+      var allowed = false;
+      for (var i = 0; i < ALLOWED_PREFIXES.length; i++) {
+        if (msg.url.indexOf(ALLOWED_PREFIXES[i]) === 0) {
+          allowed = true;
+          break;
+        }
+      }
+      if (allowed) {
         figma.openExternal(msg.url);
+      } else {
+        console.warn("open-external blocked unrecognized URL:", msg.url);
       }
       break;
     }
