@@ -7,6 +7,7 @@
  */
 
 import * as Sentry from "@sentry/nextjs";
+import { validateRequiredEnvAtStartup } from "@/lib/require-env";
 
 // Known-benign errors we don't want to fill the Sentry quota. These are
 // network / abort patterns that happen during normal usage, not bugs:
@@ -23,6 +24,14 @@ const SENTRY_IGNORE_ERRORS = [
 ];
 
 export async function register() {
+  // Fail loud at cold start in production if any required env var is
+  // missing or empty — Vercel surfaces this as a deployment error
+  // rather than letting individual handlers silently 5xx forever (the
+  // CLERK_WEBHOOK_SECRET="" incident on 2026-04-24).
+  if (process.env.NODE_ENV === "production") {
+    validateRequiredEnvAtStartup();
+  }
+
   const dsn = process.env.SENTRY_DSN;
   if (!dsn) return;
 

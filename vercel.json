@@ -1,9 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
+  "installCommand": "npm ci",
+  "regions": ["iad1"],
   "functions": {
     "api/evaluate.py": {
-      "includeFiles": "src/content_checker/**"
+      "includeFiles": "src/content_checker/**",
+      "maxDuration": 300
     }
   }
 }

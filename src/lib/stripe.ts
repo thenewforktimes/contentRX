@@ -15,15 +15,13 @@
  */
 
 import Stripe from "stripe";
+import { optionalEnv, requireEnv } from "./require-env";
 
 let _stripe: Stripe | null = null;
 
 export function getStripe(): Stripe {
   if (_stripe) return _stripe;
-  const secret = process.env.STRIPE_SECRET_KEY;
-  if (!secret) {
-    throw new Error("STRIPE_SECRET_KEY not set");
-  }
+  const secret = requireEnv("STRIPE_SECRET_KEY");
   _stripe = new Stripe(secret, {
     // Pin the API version so Stripe doesn't silently change response shapes
     // under us. Bump deliberately after reviewing migration notes.
@@ -47,7 +45,7 @@ export function priceIdFor(plan: PaidPlan, interval: Interval): string | null {
     return null;
   })();
   if (!key) return null;
-  return process.env[key] ?? null;
+  return optionalEnv(key) ?? null;
 }
 
 /**

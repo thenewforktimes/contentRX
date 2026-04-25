@@ -26,6 +26,7 @@ import { trackEvent } from "@/lib/analytics";
 import { appUrl, sendEmail } from "@/lib/email";
 import { monthlyQuota } from "@/lib/quotas";
 import { getRedis } from "@/lib/redis";
+import { requireEnv } from "@/lib/require-env";
 import {
   getStripe,
   isEntitled,
@@ -38,14 +39,9 @@ const DEDUPE_PREFIX = "stripe_event:";
 const DEDUPE_TTL_SECONDS = 24 * 60 * 60;
 
 export async function POST(req: Request) {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!secret) {
-    console.error("STRIPE_WEBHOOK_SECRET not set");
-    return NextResponse.json(
-      { error: "Webhook not configured" },
-      { status: 500 },
-    );
-  }
+  // requireEnv throws on missing OR empty — Next.js catches → 500 + Sentry.
+  // Same fix as the Clerk webhook (2026-04-24 incident).
+  const secret = requireEnv("STRIPE_WEBHOOK_SECRET");
 
   const signature = req.headers.get("stripe-signature");
   if (!signature) {

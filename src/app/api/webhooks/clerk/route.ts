@@ -5,6 +5,7 @@ import { getDb, schema } from "@/db";
 import { getRedis } from "@/lib/redis";
 import { trackEvent } from "@/lib/analytics";
 import { appUrl, sendEmail } from "@/lib/email";
+import { requireEnv } from "@/lib/require-env";
 import { WelcomeEmail } from "@/emails/welcome";
 
 const DEDUPE_PREFIX = "clerk_event:";
@@ -27,13 +28,10 @@ function primaryEmail(data: ClerkUserEvent["data"]): string | null {
 }
 
 export async function POST(req: Request) {
-  const secret = process.env.CLERK_WEBHOOK_SECRET;
-  if (!secret) {
-    return Response.json(
-      { error: "CLERK_WEBHOOK_SECRET not configured" },
-      { status: 500 },
-    );
-  }
+  // requireEnv throws on missing OR empty — Next.js catches → 500 + Sentry.
+  // Replaces the previous `if (!secret) return 500` which swallowed empty-
+  // string env vars silently (the actual prod incident on 2026-04-24).
+  const secret = requireEnv("CLERK_WEBHOOK_SECRET");
 
   const hdrs = await headers();
   const svixId = hdrs.get("svix-id");

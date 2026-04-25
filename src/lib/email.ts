@@ -13,20 +13,24 @@
 import { Resend } from "resend";
 import type { ReactElement } from "react";
 import { getRedis } from "./redis";
+import { optionalEnv } from "./require-env";
 
 const ONCE_PER_MONTH_TTL_SECONDS = 35 * 24 * 60 * 60;
 
 let cached: Resend | null = null;
 
 function client(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
+  // optionalEnv treats RESEND_API_KEY="" the same as missing — so a
+  // misconfigured prod env doesn't silently fall through to the dev
+  // no-op path. (instrumentation.ts also requires this var in prod.)
+  const key = optionalEnv("RESEND_API_KEY");
   if (!key) return null;
   if (!cached) cached = new Resend(key);
   return cached;
 }
 
 function fromAddress(): string {
-  return process.env.EMAIL_FROM ?? "ContentRX <hello@contentrx.io>";
+  return optionalEnv("EMAIL_FROM") ?? "ContentRX <hello@contentrx.io>";
 }
 
 type SendArgs = {
@@ -94,7 +98,6 @@ export async function sendEmail({
  * never link to localhost.
  */
 export function appUrl(): string {
-  const raw =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://contentrx.io";
+  const raw = optionalEnv("NEXT_PUBLIC_APP_URL") ?? "https://contentrx.io";
   return raw.replace(/\/$/, "");
 }

@@ -40,17 +40,14 @@ import {
   weightedOverrideCount,
   type GraduationLevel,
 } from "@/lib/graduation";
+import { requireEnv } from "@/lib/require-env";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function requireCronAuth(req: Request): NextResponse | null {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) {
-    return NextResponse.json(
-      { error: "CRON_SECRET not configured" },
-      { status: 503 },
-    );
-  }
+  // requireEnv throws on missing OR empty CRON_SECRET → Next.js catches → 500.
+  // The wrong-bearer case still returns 401 (auth failure, not config failure).
+  const expected = requireEnv("CRON_SECRET");
   const got = req.headers.get("authorization");
   if (got !== `Bearer ${expected}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

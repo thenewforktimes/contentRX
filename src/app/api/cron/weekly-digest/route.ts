@@ -24,18 +24,13 @@ import { and, desc, eq, gte, isNull, lt, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { buildWeeklyDigest, weekKey, momentForWeek } from "@/lib/cadence";
 import { sendEmail } from "@/lib/email";
+import { requireEnv } from "@/lib/require-env";
 import { WeeklyDigestEmail } from "@/emails/weekly-digest";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 function requireCronAuth(req: Request): NextResponse | null {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) {
-    return NextResponse.json(
-      { error: "CRON_SECRET not configured" },
-      { status: 503 },
-    );
-  }
+  const expected = requireEnv("CRON_SECRET");
   const got = req.headers.get("authorization");
   if (got !== `Bearer ${expected}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

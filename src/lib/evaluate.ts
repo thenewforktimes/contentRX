@@ -8,6 +8,7 @@
  */
 
 import type { Audience, ContentType, Moment } from "./engine-taxonomy";
+import { optionalEnv, requireEnv } from "./require-env";
 
 export type EvaluateParams = {
   text: string;
@@ -79,21 +80,16 @@ function internalEvaluateUrl(): string {
   // In production we REQUIRE an explicit INTERNAL_EVAL_URL. Falling back
   // to NEXT_PUBLIC_APP_URL lets a misconfigured hostname leak the
   // internal secret + user text to the wrong origin. Only the dev
-  // localhost fallback is allowed.
+  // localhost fallback is allowed. requireEnv treats "" as missing, so
+  // a blank-but-set value fails loud here instead of silently leaking.
   if (process.env.NODE_ENV === "production") {
-    const url = process.env.INTERNAL_EVAL_URL;
-    if (!url) {
-      throw new Error(
-        "INTERNAL_EVAL_URL must be set in production — refusing to fall " +
-          "back to NEXT_PUBLIC_APP_URL",
-      );
-    }
+    const url = requireEnv("INTERNAL_EVAL_URL");
     return `${url.replace(/\/$/, "")}/api/evaluate`;
   }
 
   const base =
-    process.env.INTERNAL_EVAL_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
+    optionalEnv("INTERNAL_EVAL_URL") ??
+    optionalEnv("NEXT_PUBLIC_APP_URL") ??
     "http://localhost:3000";
   return `${base.replace(/\/$/, "")}/api/evaluate`;
 }
@@ -101,10 +97,7 @@ function internalEvaluateUrl(): string {
 export async function evaluate(
   params: EvaluateParams,
 ): Promise<EvaluateResponse> {
-  const secret = process.env.INTERNAL_EVAL_SECRET;
-  if (!secret) {
-    throw new Error("INTERNAL_EVAL_SECRET is not set");
-  }
+  const secret = requireEnv("INTERNAL_EVAL_SECRET");
 
   const res = await fetch(internalEvaluateUrl(), {
     method: "POST",
@@ -140,10 +133,7 @@ export type ClassifyResponse = {
  * running a full evaluation purely to peek at the moment.
  */
 export async function classify(text: string): Promise<ClassifyResponse> {
-  const secret = process.env.INTERNAL_EVAL_SECRET;
-  if (!secret) {
-    throw new Error("INTERNAL_EVAL_SECRET is not set");
-  }
+  const secret = requireEnv("INTERNAL_EVAL_SECRET");
 
   const res = await fetch(internalEvaluateUrl(), {
     method: "POST",
@@ -188,10 +178,7 @@ export type CatalogResponse = {
  * (when filtered by moment) and the `contentrx://moments` resource.
  */
 export async function catalog(): Promise<CatalogResponse> {
-  const secret = process.env.INTERNAL_EVAL_SECRET;
-  if (!secret) {
-    throw new Error("INTERNAL_EVAL_SECRET is not set");
-  }
+  const secret = requireEnv("INTERNAL_EVAL_SECRET");
 
   const res = await fetch(internalEvaluateUrl(), {
     method: "POST",
@@ -236,10 +223,7 @@ export type SuggestFixResponse = {
 export async function suggestFix(
   params: SuggestFixParams,
 ): Promise<SuggestFixResponse> {
-  const secret = process.env.INTERNAL_EVAL_SECRET;
-  if (!secret) {
-    throw new Error("INTERNAL_EVAL_SECRET is not set");
-  }
+  const secret = requireEnv("INTERNAL_EVAL_SECRET");
 
   const res = await fetch(internalEvaluateUrl(), {
     method: "POST",

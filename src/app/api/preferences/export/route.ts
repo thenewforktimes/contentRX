@@ -19,18 +19,10 @@
 
 import { NextResponse } from "next/server";
 import { getDb, schema } from "@/db";
+import { requireEnv } from "@/lib/require-env";
 
 function requireCronAuth(req: Request): NextResponse | null {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) {
-    return NextResponse.json(
-      {
-        error:
-          "CRON_SECRET not configured — preferences export is unavailable.",
-      },
-      { status: 503 },
-    );
-  }
+  const expected = requireEnv("CRON_SECRET");
   const got = req.headers.get("authorization");
   if (got !== `Bearer ${expected}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

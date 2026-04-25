@@ -8,16 +8,22 @@
  */
 
 import { Redis } from "@upstash/redis";
+import { optionalEnv } from "./require-env";
 
 let _redis: Redis | null = null;
 
 export function getRedis(): Redis {
   if (_redis) return _redis;
 
+  // Either-or: UPSTASH_REDIS_REST_* (native) OR KV_REST_API_* (Vercel
+  // Marketplace integration). optionalEnv treats empty string the same
+  // as unset so an `X=""` env var doesn't silently win the ?? chain
+  // and pass an empty value to Redis().
   const url =
-    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+    optionalEnv("UPSTASH_REDIS_REST_URL") ?? optionalEnv("KV_REST_API_URL");
   const token =
-    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+    optionalEnv("UPSTASH_REDIS_REST_TOKEN") ??
+    optionalEnv("KV_REST_API_TOKEN");
   if (!url || !token) {
     throw new Error(
       "Redis credentials not set. Expected UPSTASH_REDIS_REST_URL + " +

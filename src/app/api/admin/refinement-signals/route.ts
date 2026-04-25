@@ -36,17 +36,12 @@ import { NextResponse } from "next/server";
 import { gte } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { buildSignalDump } from "@/lib/refinement-signals";
+import { requireEnv } from "@/lib/require-env";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function requireCronAuth(req: Request): NextResponse | null {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) {
-    return NextResponse.json(
-      { error: "CRON_SECRET not configured" },
-      { status: 503 },
-    );
-  }
+  const expected = requireEnv("CRON_SECRET");
   const got = req.headers.get("authorization");
   if (got !== `Bearer ${expected}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
