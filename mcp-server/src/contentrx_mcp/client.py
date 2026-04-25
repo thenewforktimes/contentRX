@@ -172,15 +172,17 @@ class ContentRXClient:
     ) -> CheckResult:
         """POST /api/check — full evaluation. Counts against monthly quota."""
         self._require_auth()
-        body: dict[str, Any] = {"text": text, "source": "plugin"}
+        body: dict[str, Any] = {"text": text, "source": "mcp"}
         if moment:
             body["moment"] = moment
         if content_type:
             body["content_type"] = content_type
-        # Note: source="plugin" rather than a new "mcp" enum value because
-        # the engine's source enum is locked at the schema level. Once
-        # the schema gets bumped (BUILD_PLAN_v2 Session 9 envelope) we can
-        # add "mcp" without breaking existing log queries.
+        # Closes audit M-26. Was source="plugin" because the engine's
+        # source enum was locked; we widened it across /api/check,
+        # /api/violations/override, log-violations.ts, and actor-role.ts
+        # to add "mcp" so MCP-originating activity is correctly
+        # attributed in analytics rollups instead of inflating the
+        # plugin numbers.
 
         resp = await self._client.post("/api/check", json=body)
         self._raise_for_typed_status(resp)

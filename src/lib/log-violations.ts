@@ -11,7 +11,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { createHash } from "node:crypto";
 import { getDb, schema } from "@/db";
 
-type ViolationSource = "plugin" | "cli" | "action" | "ditto" | "lsp";
+type ViolationSource = "plugin" | "cli" | "action" | "ditto" | "lsp" | "mcp";
 
 type LoggableViolation = {
   standard_id?: string;

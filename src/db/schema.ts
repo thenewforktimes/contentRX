@@ -211,7 +211,7 @@ export const violations = pgTable(
     severity: text("severity").notNull(),
     textHash: text("text_hash").notNull(),
     source: text("source", {
-      enum: ["plugin", "cli", "action", "ditto", "lsp"],
+      enum: ["plugin", "cli", "action", "ditto", "lsp", "mcp"],
     }).notNull(),
     // Source-file path for violations that originated from CI extraction
     // (GitHub Action runs against a repo). Nullable because plugin and
@@ -303,7 +303,7 @@ export const violationOverrides = pgTable(
     }).notNull(),
     overrideReason: text("override_reason"),
     source: text("source", {
-      enum: ["plugin", "cli", "action", "dashboard", "lsp"],
+      enum: ["plugin", "cli", "action", "dashboard", "lsp", "mcp"],
     }).notNull(),
     // Human-eval build plan Session 3 — richer override signal.
     //

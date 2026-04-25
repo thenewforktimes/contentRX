@@ -69,7 +69,7 @@ const RequestSchema = z.object({
   content_type: z.enum(CONTENT_TYPES).optional(),
   audience: z.enum(AUDIENCES).optional(),
   moment: z.enum(MOMENTS).optional(),
-  source: z.enum(["plugin", "cli", "action", "ditto", "lsp"]).default("plugin"),
+  source: z.enum(["plugin", "cli", "action", "ditto", "lsp", "mcp"]).default("plugin"),
   // Optional file_path, populated by the GitHub Action only. Upper
   // bound guards against repo paths that could swell the violations
   // table (typical paths are well under this).

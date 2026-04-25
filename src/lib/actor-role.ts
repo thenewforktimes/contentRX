@@ -14,7 +14,7 @@
  */
 
 export type ActorRole = "designer" | "engineer" | "pm" | "other";
-export type OverrideSource = "plugin" | "cli" | "action" | "dashboard";
+export type OverrideSource = "plugin" | "cli" | "action" | "dashboard" | "lsp" | "mcp";
 
 export const ACTOR_ROLES: readonly ActorRole[] = [
   "designer",
@@ -32,6 +32,11 @@ const SOURCE_ROLE_DEFAULTS: Record<OverrideSource, ActorRole> = {
   cli: "engineer",
   action: "engineer",
   dashboard: "pm",
+  // LSP runs in editor extensions (VS Code, Cursor, Neovim) — almost
+  // exclusively engineers. MCP servers are driven by Claude Code /
+  // Cursor / Claude desktop, again primarily engineers.
+  lsp: "engineer",
+  mcp: "engineer",
 };
 
 /**
