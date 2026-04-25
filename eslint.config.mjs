@@ -13,11 +13,27 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
+      // Recursive globs so build artifacts and dependency trees are
+      // skipped wherever they live, including inside git worktrees
+      // under `.claude/worktrees/<slug>/.next/` (which earlier surfaced
+      // ~22k false-positive findings on local `npm run lint`).
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/out/**",
+      "**/build/**",
+      "**/dist/**",
+      // Python venvs ship vendored JS (coverage HTML templates,
+      // docutils slide themes) we don't own and shouldn't lint.
+      "**/.venv/**",
+      "**/venv/**",
+      "**/__pycache__/**",
+      "**/.pytest_cache/**",
       "next-env.d.ts",
+      // git worktrees live under .claude/. Each worktree carries its
+      // own copy of the source — linting them duplicates findings and
+      // catches stale artifacts. Run lint in the worktree itself if
+      // you need to lint that branch.
+      ".claude/**",
       // docs-site is its own Next.js project with its own lint surface;
       // running the main app's lint over its node_modules + generated
       // files produces thousands of irrelevant findings.
