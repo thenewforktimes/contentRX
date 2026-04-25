@@ -19,7 +19,11 @@ export const FALLBACK_SESSION_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 export interface OverrideRow {
   id: string;
-  userId: string;
+  // Nullable as of audit H-08: a Clerk user.deleted event sets userId
+  // to null on the violation_overrides row (anonymized retention).
+  // Aggregations either skip null-userId rows or treat them as their
+  // own pseudo-session.
+  userId: string | null;
   standardId: string;
   sessionId: string | null;
   createdAt: Date | string;

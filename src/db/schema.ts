@@ -196,9 +196,16 @@ export const violations = pgTable(
   "violations",
   {
     id: cuid(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    // userId is nullable + set-null on delete (audit H-08): when a
+    // Clerk user.deleted event fires, the user identity is removed but
+    // the violation row stays with userId=null. Preserves anonymized
+    // training data for engine calibration without retaining personal
+    // attribution. GDPR-friendly default. teamId already follows the
+    // same pattern (team-id-as-user-id, owner deletion drops the team
+    // link but keeps the row).
+    userId: text("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     teamId: text("team_id").references(() => users.id, {
       onDelete: "set null",
     }),
@@ -285,9 +292,12 @@ export const violationOverrides = pgTable(
     teamId: text("team_id").references(() => users.id, {
       onDelete: "set null",
     }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    // userId is nullable + set-null on delete (audit H-08). Same
+    // rationale as violations.userId — preserve the override signal
+    // for engine calibration after the user is removed.
+    userId: text("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     // Optional pointer to the originating violations row, when the
     // override comes from a logged violation (plugin dismiss). PR-comment
     // ignores from CI may not have a single source row, so this stays
@@ -439,9 +449,11 @@ export const rationaleFeedback = pgTable(
   "rationale_feedback",
   {
     id: cuid(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    // userId nullable + set-null on delete (audit H-08). Anonymized
+    // rationale-correction signal preserved for engine calibration.
+    userId: text("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     teamId: text("team_id").references(() => users.id, {
       onDelete: "set null",
     }),
@@ -659,9 +671,11 @@ export const preferences = pgTable(
   "preferences",
   {
     id: cuid(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    // userId nullable + set-null on delete (audit H-08). Anonymized
+    // pairwise-preference signal preserved for engine training.
+    userId: text("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     teamId: text("team_id").references(() => users.id, {
       onDelete: "set null",
     }),

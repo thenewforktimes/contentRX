@@ -41,11 +41,14 @@ export async function GET(req: Request) {
     .from(schema.preferences);
 
   // Group responses by pair_id for easy consumption.
+  // user_id is nullable as of audit H-08 — preferences rows survive
+  // the user.deleted cascade with userId set to null (anonymized).
+  // Downstream consumers (auto-annotator) treat null as "anonymous".
   const byPair: Record<
     string,
     {
       pair_id: string;
-      user_id: string;
+      user_id: string | null;
       team_id: string | null;
       preferred: string;
       note: string | null;
