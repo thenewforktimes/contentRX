@@ -34,7 +34,9 @@ export interface ViolationRow {
 export interface OverrideRow {
   standardId: string;
   overrideReasonCode: string | null;
-  userId: string;
+  // Nullable as of audit H-08: anonymized after user.deleted.
+  // Per-user clustering treats null as "anonymous".
+  userId: string | null;
   actorRole: string | null;
   textHash: string;
   createdAt: Date;
@@ -245,7 +247,11 @@ export function buildOverrideClusters(
     const bucket =
       buckets.get(key) ?? { count: 0, actors: new Set(), samples: [] };
     bucket.count += 1;
-    bucket.actors.add(o.userId);
+    // userId is nullable post-audit-H-08 (anonymized after user.deleted).
+    // Skip null-userId rows from the distinct-actors count rather than
+    // collapsing them to a single "null" actor — keeps the actor count
+    // honest. Sample capture still runs since textHash is independent.
+    if (o.userId != null) bucket.actors.add(o.userId);
     if (bucket.samples.length < sampleCap && !bucket.samples.includes(o.textHash)) {
       bucket.samples.push(o.textHash);
     }
