@@ -300,7 +300,7 @@ class LLMResponse:
 
 def create_message(
     *,
-    system: str,
+    system: str | list[dict],
     user: str,
     model: str = DEFAULT_MODEL,
     max_tokens: int = DEFAULT_MAX_TOKENS,
@@ -314,7 +314,17 @@ def create_message(
     through here.
 
     Args:
-        system: System prompt content.
+        system: System prompt content. Either a string (simple case) or
+            a list of content blocks for prompt caching:
+                [
+                    {"type": "text", "text": "Static prefix..."},
+                    {"type": "text", "text": "Big static body...",
+                     "cache_control": {"type": "ephemeral"}},
+                    {"type": "text", "text": "Dynamic suffix..."}
+                ]
+            Cached blocks cost ~10% of normal input cost on hit. The
+            5-minute ephemeral cache is plenty for our scan workload.
+            Closes audit C-12.
         user: User message content.
         model: Model identifier.
         max_tokens: Maximum response tokens.

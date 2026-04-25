@@ -684,3 +684,98 @@ class TestMomentTaxonomyIntegrity:
             assert result in VALID_MOMENTS, (
                 f"detect_moment returned '{result}' for text='{text[:30]}', ct='{ct}'"
             )
+
+
+class TestPromptCachingBlocks:
+    """Tests for build_system_prompt_blocks (audit C-12 prompt caching)."""
+
+    def test_returns_three_blocks(self):
+        from content_checker.pipeline import build_system_prompt_blocks
+        from content_checker.audience import Audience
+        from content_checker.standards.loader import load_standards
+
+        blocks = build_system_prompt_blocks(
+            load_standards(), content_type="short_ui_copy",
+            audience=Audience.PRODUCT_UI, moment="error_recovery",
+        )
+        assert isinstance(blocks, list)
+        assert len(blocks) == 3
+        for block in blocks:
+            assert block["type"] == "text"
+            assert isinstance(block["text"], str)
+
+    def test_only_standards_block_is_cached(self):
+        """The middle (standards) block carries cache_control; intro and
+        tail blocks do NOT (they contain dynamic content_type/audience/
+        moment that varies per request)."""
+        from content_checker.pipeline import build_system_prompt_blocks
+        from content_checker.audience import Audience
+        from content_checker.standards.loader import load_standards
+
+        blocks = build_system_prompt_blocks(
+            load_standards(), content_type="short_ui_copy",
+            audience=Audience.PRODUCT_UI, moment="error_recovery",
+        )
+        assert "cache_control" not in blocks[0]
+        assert blocks[1]["cache_control"] == {"type": "ephemeral"}
+        assert "cache_control" not in blocks[2]
+
+    def test_standards_block_contains_standards_content(self):
+        """The cached block should be the standards library (the largest
+        static portion). Verify by checking for standard ID patterns."""
+        from content_checker.pipeline import build_system_prompt_blocks
+        from content_checker.audience import Audience
+        from content_checker.standards.loader import load_standards
+
+        blocks = build_system_prompt_blocks(
+            load_standards(), content_type="short_ui_copy",
+            audience=Audience.PRODUCT_UI, moment="",
+        )
+        standards_text = blocks[1]["text"]
+        # ACT-01 is one of the engine's earliest standard IDs; should be
+        # present in any non-empty standards library.
+        assert "ACT-01" in standards_text or "###" in standards_text
+        # The standards portion should be the largest by far — a sanity
+        # check that we put the right content in the cached block.
+        assert len(standards_text) > len(blocks[0]["text"])
+        assert len(standards_text) > len(blocks[2]["text"])
+
+    def test_dynamic_context_in_uncached_blocks(self):
+        """content_type/audience belong in the uncached intro block;
+        moment belongs in the uncached tail block. Verifying these
+        don't accidentally land in the cached standards block."""
+        from content_checker.pipeline import build_system_prompt_blocks
+        from content_checker.audience import Audience
+        from content_checker.standards.loader import load_standards
+
+        blocks = build_system_prompt_blocks(
+            load_standards(), content_type="error_message",
+            audience=Audience.PRODUCT_UI, moment="error_recovery",
+        )
+        # content_type appears in the intro (uncached)
+        assert "error_message" in blocks[0]["text"]
+        # moment appears in the tail (uncached)
+        assert "error recovery" in blocks[2]["text"].lower() or "Moment context" in blocks[2]["text"]
+        # Standards block (cached) should NOT contain per-request strings
+        # like the specific moment name — those vary across requests and
+        # would break the cache key if mixed in.
+        assert "error_message" not in blocks[1]["text"]
+
+    def test_string_version_still_works_for_backward_compat(self):
+        """build_system_prompt (string) must still return a string with
+        all sections concatenated — existing tests + any external callers
+        depend on the str return type."""
+        from content_checker.pipeline import build_system_prompt
+        from content_checker.audience import Audience
+        from content_checker.standards.loader import load_standards
+
+        prompt = build_system_prompt(
+            load_standards(), content_type="short_ui_copy",
+            audience=Audience.PRODUCT_UI, moment="error_recovery",
+        )
+        assert isinstance(prompt, str)
+        # The string version concatenates all three sections, so it
+        # should contain content from each.
+        assert "content standards checker" in prompt.lower()  # intro
+        assert "###" in prompt or "ACT-" in prompt  # standards
+        assert "How to evaluate" in prompt  # tail

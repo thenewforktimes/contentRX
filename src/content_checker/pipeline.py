@@ -103,16 +103,32 @@ def _stamp_rule_versions(
             v.rule_version = rule_versions.get(v.standard_id)
 
 
-def build_system_prompt(
-    standards_data: dict,
-    content_type: str | None = None,
-    audience: Audience = Audience.PRODUCT_UI,
-    moment: str = "",
+def _build_system_intro(
+    content_type: str | None,
+    audience: Audience,
 ) -> str:
-    """Build the system prompt with embedded standards.
+    """The pre-standards portion of the scan system prompt. Includes
+    dynamic content_type + audience context per request — NOT cached."""
+    content_type_line = ""
+    if content_type:
+        content_type_line = (
+            f"\nThis content has been classified as: **{content_type}**. "
+            "Evaluate it with this content type in mind.\n"
+        )
+    audience_line = f"\n{get_audience_prompt_context(audience)}\n"
+    return (
+        "You are a content standards checker for UX and UI copy. "
+        "You evaluate whether a piece of copy meets established content standards.\n"
+        f"{content_type_line}"
+        f"{audience_line}\n"
+        "Here are the standards you check against:\n"
+    )
 
-    Accepts either the full or filtered standards library.
-    Injects audience context and moment context to calibrate LLM judgment.
+
+def _build_standards_section(standards_data: dict) -> str:
+    """The standards library portion of the scan system prompt. Identical
+    across every request for the same standards data — this is the
+    portion we mark with cache_control for prompt caching (audit C-12).
     """
     standards_text = ""
     for cat in standards_data["categories"]:
@@ -121,29 +137,18 @@ def build_system_prompt(
             standards_text += f"\n### {std['id']}: {std['rule']}\n"
             standards_text += f"- Correct: {std['correct']}\n"
             standards_text += f"- Incorrect: {std['incorrect']}\n"
+    return standards_text
 
-    content_type_line = ""
-    if content_type:
-        content_type_line = (
-            f"\nThis content has been classified as: **{content_type}**. "
-            "Evaluate it with this content type in mind.\n"
-        )
 
-    # Audience context calibrates the LLM's judgment for the content surface
-    audience_line = f"\n{get_audience_prompt_context(audience)}\n"
-
+def _build_system_eval_rules(content_type: str | None, moment: str) -> str:
+    """The post-standards portion of the scan system prompt. Includes
+    dynamic moment context per request — NOT cached."""
     # Phase 3: Moment context calibrates the LLM for the experiential moment.
     # Returns empty string for the default moment (browsing_discovery)
     # so the system prompt is unchanged for the baseline case.
     moment_section = build_moment_prompt_section(moment) if moment else ""
-
     return (
-        "You are a content standards checker for UX and UI copy. "
-        "You evaluate whether a piece of copy meets established content standards.\n"
-        f"{content_type_line}"
-        f"{audience_line}\n"
-        f"Here are the standards you check against:\n{standards_text}\n\n"
-        f"{moment_section}"
+        f"\n\n{moment_section}"
         "## How to evaluate\n\n"
         "1. Check the content against the standards listed above, applying these rules:\n"
         "   - **Only flag clear, unambiguous violations.** If you are less than 90% "
@@ -195,6 +200,58 @@ def build_system_prompt(
     )
 
 
+def build_system_prompt(
+    standards_data: dict,
+    content_type: str | None = None,
+    audience: Audience = Audience.PRODUCT_UI,
+    moment: str = "",
+) -> str:
+    """Build the system prompt as a single string.
+
+    Backward-compatible signature; existing test_moments_pipeline tests
+    introspect the returned string. New callers (the LLM scan path) use
+    build_system_prompt_blocks instead, which returns content blocks with
+    cache_control on the standards section for prompt caching.
+    """
+    return (
+        _build_system_intro(content_type, audience)
+        + _build_standards_section(standards_data)
+        + _build_system_eval_rules(content_type, moment)
+    )
+
+
+def build_system_prompt_blocks(
+    standards_data: dict,
+    content_type: str | None = None,
+    audience: Audience = Audience.PRODUCT_UI,
+    moment: str = "",
+) -> list[dict]:
+    """Build the scan system prompt as content blocks with prompt caching.
+
+    Closes audit C-12. The standards library is the largest static
+    portion (~57KB) and is identical across every request for the same
+    standards version — perfect for ephemeral caching. Cache hits cost
+    ~10% of normal input cost. The standards block can be marked with
+    `cache_control: {"type": "ephemeral"}`; the dynamic intro
+    (content_type, audience) and tail (moment, evaluation rules) sit in
+    uncached blocks so they don't break the cache key.
+
+    Block layout:
+        [0] static intro + dynamic content_type/audience  (uncached)
+        [1] standards library                              (CACHED)
+        [2] dynamic moment + static evaluation rules      (uncached)
+    """
+    return [
+        {"type": "text", "text": _build_system_intro(content_type, audience)},
+        {
+            "type": "text",
+            "text": _build_standards_section(standards_data),
+            "cache_control": {"type": "ephemeral"},
+        },
+        {"type": "text", "text": _build_system_eval_rules(content_type, moment)},
+    ]
+
+
 def _llm_scan(
     text: str,
     standards_data: dict,
@@ -205,7 +262,10 @@ def _llm_scan(
 ) -> tuple[dict, float, TokenUsage]:
     """Run the LLM scan stage. Returns (parsed_result, latency, tokens)."""
     prompt_ct = None if content_type == "unfiltered" else content_type
-    system_prompt = build_system_prompt(
+    # Use the cached-blocks variant so the standards library (the largest
+    # static portion, ~57KB) gets prompt-cached at ~10% of normal input
+    # cost. Closes audit C-12.
+    system_prompt = build_system_prompt_blocks(
         standards_data, content_type=prompt_ct, audience=audience,
         moment=moment,
     )
