@@ -58,11 +58,26 @@ async function ensureApiKey(clerkId: string): Promise<EnsureKeyResult> {
   if (!row) {
     // Race: user just signed up and the webhook hasn't landed yet.
     // Insert a minimal row so the plugin isn't blocked on webhook latency.
-    const email = (await primaryEmail(clerkId)) ?? `${clerkId}@unknown.local`;
+    const email = await primaryEmail(clerkId);
+    if (!email) {
+      // No email visible from Clerk's Backend API yet (eventual
+      // consistency, network blip). Don't insert a synthetic
+      // placeholder address — the email column has a UNIQUE constraint
+      // and the placeholder would block a legitimate later insert for
+      // the real address.
+      throw new Error("Could not resolve email from Clerk");
+    }
+    // No target on the conflict clause — `users` has unique constraints
+    // on BOTH clerk_id and email. Targeting only clerk_id used to throw
+    // PostgresError: users_email_unique when this clerk_id collided
+    // with a stale row under the same email (e.g., a prior signup that
+    // never completed but did create a row). Bare onConflictDoNothing()
+    // lets either conflict pass; the re-select below tells us whether
+    // a row now exists for *our* clerk_id.
     await db
       .insert(schema.users)
       .values({ clerkId, email, plan: "free" })
-      .onConflictDoNothing({ target: schema.users.clerkId });
+      .onConflictDoNothing();
     [row] = await db
       .select()
       .from(schema.users)
@@ -71,6 +86,11 @@ async function ensureApiKey(clerkId: string): Promise<EnsureKeyResult> {
   }
 
   if (!row) {
+    // Most likely: an existing row claims this user's email under a
+    // different clerk_id, so the insert silently no-op'd and the
+    // re-select still finds nothing for our clerk_id. The caller
+    // catches and renders a "try again" page; admin can resolve the
+    // collision in the DB if it persists.
     throw new Error("Failed to provision user row");
   }
 
