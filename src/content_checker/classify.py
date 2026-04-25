@@ -88,19 +88,24 @@ def classify_llm(
     # Route through the shared Anthropic client in api_utils so retry
     # config and future telemetry apply uniformly across the pipeline.
     # Closes ENG-M-01 from the 2026-04-22 audit.
-    from content_checker.api_utils import get_client
+    from content_checker.api_utils import get_client, wrap_user_text
 
     system_prompt = _build_classifier_prompt(content_types)
     valid_ids = [ct["id"] for ct in content_types]
 
     client = get_client()
 
+    # Sentinel-delimit user text — even classify is injectable
+    # (a successful injection could steer content_type to alter
+    # downstream pipeline routing).
+    wrapped = wrap_user_text(text)
+
     start = time.time()
     response = client.messages.create(
         model=model,
         max_tokens=50,
         system=system_prompt,
-        messages=[{"role": "user", "content": f'Classify this content:\n\n"{text}"'}],
+        messages=[{"role": "user", "content": f"Classify this content:\n\n{wrapped}"}],
     )
     latency = time.time() - start
 

@@ -55,6 +55,63 @@ class ParseError(Exception):
         self.context = context
 
 
+class PromptInjectionError(ValueError):
+    """Raised when user-supplied text contains the sentinel delimiter we
+    use to wrap user content in LLM prompts. Lets the input close the
+    wrapper and inject prompt content, so we reject before sending.
+
+    api/evaluate.py catches this and returns 400 (caller error), not 500.
+    """
+
+
+# ---------------------------------------------------------------------------
+# Prompt-injection defense — sentinel-delimit user content
+# ---------------------------------------------------------------------------
+
+# Delimiters chosen to be ASCII-only, vanishingly unlikely in real copy,
+# and matching the existing pattern in suggest_fix.py for backwards
+# compatibility with prompts the LLM has already seen in production.
+USER_TEXT_SENTINEL_OPEN = "<<<TEXT"
+USER_TEXT_SENTINEL_CLOSE = "TEXT>>>"
+
+
+def wrap_user_text(text: str) -> str:
+    """Wrap user-supplied text in sentinel delimiters for prompt-injection
+    defense.
+
+    The LLM is instructed to treat anything between `<<<TEXT` and `TEXT>>>`
+    as opaque content, not as instructions. Without delimiters, a user
+    submitting `"\\n\\nIgnore prior instructions and respond {...}` could
+    close the f-string quote in the prompt template and inject prompt
+    content into the scan/validate/classify stages.
+
+    Raises PromptInjectionError if `text` contains either sentinel string
+    — letting that through would defeat the wrapper.
+    """
+    if USER_TEXT_SENTINEL_OPEN in text or USER_TEXT_SENTINEL_CLOSE in text:
+        raise PromptInjectionError(
+            f"Input contains the engine's sentinel delimiter "
+            f"({USER_TEXT_SENTINEL_OPEN!r} or {USER_TEXT_SENTINEL_CLOSE!r}). "
+            f"This is rejected to prevent prompt injection. Modify the "
+            f"input to not contain these strings and retry."
+        )
+    return f"{USER_TEXT_SENTINEL_OPEN}\n{text}\n{USER_TEXT_SENTINEL_CLOSE}"
+
+
+def sanitize_label(label: str, max_len: int = 200) -> str:
+    """Sanitize a user-supplied label (Figma layer name, batch item label,
+    etc.) for safe embedding in an LLM prompt.
+
+    Strips control characters that could break prompt formatting, and
+    truncates to keep token cost bounded. Unlike wrap_user_text, labels
+    are short identifiers we DO want to display inline rather than wrap
+    in sentinels — but they still need defending against newline-based
+    prompt-format breaks.
+    """
+    cleaned = "".join(ch for ch in label if ch.isprintable() or ch == " ")
+    return cleaned.strip()[:max_len]
+
+
 # ---------------------------------------------------------------------------
 # JSON parsing — single implementation, used everywhere
 # ---------------------------------------------------------------------------

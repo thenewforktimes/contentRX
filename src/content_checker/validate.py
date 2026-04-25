@@ -12,6 +12,7 @@ import time
 from content_checker.api_utils import (
     create_message,
     parse_llm_json,
+    wrap_user_text,
     ParseError,
     DEFAULT_MODEL,
 )
@@ -76,7 +77,11 @@ def validate_candidates(
     active_notes = active_notes or []
     system_prompt = _build_validation_prompt(content_type, active_notes)
 
-    candidate_text = f'Original content ({content_type}):\n"{text}"\n\nCandidate violations to validate:\n'
+    # Sentinel-delimit the user `text`. Candidate fields (issue,
+    # suggestion) are LLM-generated within the sentinel-defended scan
+    # stage and don't need re-wrapping here.
+    wrapped = wrap_user_text(text)
+    candidate_text = f"Original content ({content_type}):\n{wrapped}\n\nCandidate violations to validate:\n"
     for i, v in enumerate(candidates, 1):
         candidate_text += f"\n{i}. [{v.standard_id}] {v.rule}\n"
         candidate_text += f"   Issue: {v.issue}\n"

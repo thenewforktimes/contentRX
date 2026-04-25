@@ -15,6 +15,8 @@ import time
 from content_checker.api_utils import (
     create_message,
     parse_llm_json,
+    sanitize_label,
+    wrap_user_text,
     ParseError,
     DEFAULT_MODEL,
 )
@@ -101,11 +103,17 @@ def _check_consistency(
 
     system_prompt = _build_consistency_prompt(multi_standards)
 
-    # Build the user message with all strings
+    # Build the user message with all strings. Sentinel-delimit each
+    # item.text so a prompt-injected snippet can't break out and
+    # rewrite the consistency-check prompt. label is sanitized — it's
+    # often a Figma layer name, which is user-controlled and could
+    # contain newlines / control chars that break prompt formatting.
     items_text = "Here are the content strings to check for consistency:\n\n"
     for i, item in enumerate(items, 1):
-        label = item.label or f"String {i}"
-        items_text += f'{i}. [{label}] "{item.text}"\n'
+        raw_label = item.label or f"String {i}"
+        label = sanitize_label(raw_label)
+        wrapped = wrap_user_text(item.text)
+        items_text += f"{i}. [{label}]\n{wrapped}\n"
 
     start = time.time()
     llm_response = create_message(

@@ -23,6 +23,7 @@ import time
 from content_checker.api_utils import (
     create_message,
     parse_scan_response,
+    wrap_user_text,
     ParseError,
     DEFAULT_MODEL,
 )
@@ -207,10 +208,14 @@ def _llm_scan(
         moment=moment,
     )
 
+    # Sentinel-delimit user `text` so a prompt-injected payload can't
+    # break out of the surrounding instructions. wrap_user_text raises
+    # PromptInjectionError if the input contains the sentinel itself.
+    wrapped = wrap_user_text(text)
     if prompt_ct:
-        user_message = f'Check this {content_type} content against the standards:\n\n"{text}"'
+        user_message = f"Check this {content_type} content against the standards:\n\n{wrapped}"
     else:
-        user_message = f'Check this content against the standards:\n\n"{text}"'
+        user_message = f"Check this content against the standards:\n\n{wrapped}"
 
     start = time.time()
     llm_response = create_message(

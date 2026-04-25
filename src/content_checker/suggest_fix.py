@@ -134,14 +134,16 @@ def _build_user_prompt(
     text: str,
     current_suggestion: str | None,
 ) -> str:
-    # Sentinel-delimit the input text so the model can't be tricked
-    # into treating instructions embedded in the copy as its own
-    # system prompt.
+    # Sentinel-delimit the input text via the centralized helper. This
+    # also rejects (raises PromptInjectionError) inputs containing the
+    # sentinel itself — closing audit H-11 (sentinels were used here
+    # but escape wasn't validated, so a copy literally containing
+    # `TEXT>>>` could break out).
+    from content_checker.api_utils import wrap_user_text
+
     parts = [
         "Original copy to rewrite:",
-        "<<<TEXT",
-        text,
-        "TEXT>>>",
+        wrap_user_text(text),
     ]
     if current_suggestion:
         parts.append("")
