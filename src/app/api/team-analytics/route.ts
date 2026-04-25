@@ -68,9 +68,15 @@ export async function GET(req: Request) {
   const since = new Date(Date.now() - range * 24 * 60 * 60 * 1000);
 
   const db = getDb();
+  const month = currentMonth();
 
-  // --- Panel 1 part 1: total violations in window ---
-  const [{ violations_count = 0 } = {}] = (await db
+  // Closes audit H-18: was 6 sequential queries against the same
+  // (team_id, created_at) window. Each was an independent SQL round-
+  // trip → ~6×DB-RTT latency before TTFB. Now fan out in parallel.
+  // The (collectTeamUserIds → usage sum) and (memberActivity → emails)
+  // chains stay sequential within their own promises.
+
+  const violationsCountP = (db
     .select({ violations_count: sql<number>`count(*)::int` })
     .from(schema.violations)
     .where(
@@ -78,18 +84,12 @@ export async function GET(req: Request) {
         eq(schema.violations.teamId, teamId),
         gte(schema.violations.createdAt, since),
       ),
-    )) as Array<{ violations_count: number }>;
+    )
+    .then((rows) => (rows as Array<{ violations_count: number }>)[0]?.violations_count ?? 0));
 
-  // --- Panel 1 part 2: current-month evaluation count across the team ---
-  // The usage table is keyed by (user_id, month); we sum across every
-  // user.id tied to this team. Team invites aren't shipped yet, so in
-  // practice this is just the owner. Once invites land, team_members
-  // joins here without further changes.
-  const teamUserIds = await collectTeamUserIds(teamId);
-  const month = currentMonth();
-
-  let evaluations_count = 0;
-  if (teamUserIds.length > 0) {
+  // Panel 1 part 2 chain: team_user_ids → sum(usage.count) for current month.
+  const evaluationsCountP = collectTeamUserIds(teamId).then(async (teamUserIds) => {
+    if (teamUserIds.length === 0) return 0;
     const [{ total = 0 } = {}] = (await db
       .select({ total: sql<number>`coalesce(sum(${schema.usage.count}), 0)::int` })
       .from(schema.usage)
@@ -99,11 +99,11 @@ export async function GET(req: Request) {
           eq(schema.usage.month, month),
         ),
       )) as Array<{ total: number }>;
-    evaluations_count = total;
-  }
+    return total;
+  });
 
   // --- Panel 2: top standards in window ---
-  const topStandardsRaw = (await db
+  const topStandardsP = db
     .select({
       standard_id: schema.violations.standardId,
       count: sql<number>`count(*)::int`,
@@ -117,13 +117,13 @@ export async function GET(req: Request) {
     )
     .groupBy(schema.violations.standardId)
     .orderBy(desc(sql`count(*)`))
-    .limit(10)) as Array<{ standard_id: string; count: number }>;
+    .limit(10) as unknown as Promise<Array<{ standard_id: string; count: number }>>;
 
   // --- Panel 3: daily violations series ---
   // date_trunc('day', created_at) in UTC so every day bucket has the
   // same length regardless of viewer's timezone. Dashboard re-formats
   // for display.
-  const dailyRaw = (await db
+  const dailyP = db
     .select({
       day: sql<string>`date_trunc('day', ${schema.violations.createdAt})::date::text`,
       count: sql<number>`count(*)::int`,
@@ -136,16 +136,12 @@ export async function GET(req: Request) {
       ),
     )
     .groupBy(sql`date_trunc('day', ${schema.violations.createdAt})`)
-    .orderBy(sql`date_trunc('day', ${schema.violations.createdAt})`)) as Array<{
-    day: string;
-    count: number;
-  }>;
+    .orderBy(sql`date_trunc('day', ${schema.violations.createdAt})`) as unknown as Promise<
+      Array<{ day: string; count: number }>
+    >;
 
-  // Fill in zero days so the chart doesn't skip empty periods.
-  const daily = fillZeroDays(dailyRaw, since, range);
-
-  // --- Panel 5: per-member activity ---
-  const memberActivityRaw = (await db
+  // --- Panel 5 chain: per-member activity → email lookup ---
+  const memberActivityP = (db
     .select({
       user_id: schema.violations.userId,
       violations: sql<number>`count(*)::int`,
@@ -158,23 +154,19 @@ export async function GET(req: Request) {
       ),
     )
     .groupBy(schema.violations.userId)
-    .orderBy(desc(sql`count(*)`))) as Array<{
-    user_id: string;
-    violations: number;
-  }>;
-
-  const emailByUserId = await loadEmails(
-    memberActivityRaw.map((m) => m.user_id),
-  );
-  const memberActivity = memberActivityRaw.map((row) => ({
-    user_id: row.user_id,
-    email: emailByUserId.get(row.user_id) ?? null,
-    violations: row.violations,
-  }));
+    .orderBy(desc(sql`count(*)`)) as unknown as Promise<Array<{ user_id: string; violations: number }>>)
+    .then(async (rows) => {
+      const emailByUserId = await loadEmails(rows.map((m) => m.user_id));
+      return rows.map((row) => ({
+        user_id: row.user_id,
+        email: emailByUserId.get(row.user_id) ?? null,
+        violations: row.violations,
+      }));
+    });
 
   // --- Panel 4: top files (populated once the GHA extractor passes
   // file_path through /api/check). Empty for plugin/CLI-only teams. ---
-  const topFilesRaw = (await db
+  const topFilesP = db
     .select({
       path: schema.violations.filePath,
       violations: sql<number>`count(*)::int`,
@@ -189,7 +181,26 @@ export async function GET(req: Request) {
     )
     .groupBy(schema.violations.filePath)
     .orderBy(desc(sql`count(*)`))
-    .limit(10)) as Array<{ path: string | null; violations: number }>;
+    .limit(10) as unknown as Promise<Array<{ path: string | null; violations: number }>>;
+
+  const [
+    violations_count,
+    evaluations_count,
+    topStandardsRaw,
+    dailyRaw,
+    memberActivity,
+    topFilesRaw,
+  ] = await Promise.all([
+    violationsCountP,
+    evaluationsCountP,
+    topStandardsP,
+    dailyP,
+    memberActivityP,
+    topFilesP,
+  ]);
+
+  // Fill in zero days so the chart doesn't skip empty periods.
+  const daily = fillZeroDays(dailyRaw, since, range);
 
   const top_files = topFilesRaw
     .filter((r): r is { path: string; violations: number } => r.path !== null)

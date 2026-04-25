@@ -47,7 +47,13 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
+    // Skip static files (_next, file extensions) AND routes that verify
+    // their own signatures (api/webhooks, api/cron) or are intentionally
+    // public catalog endpoints (api/standards, api/moments) or are
+    // gated by INTERNAL_EVAL_SECRET (api/evaluate). Skipping clerk
+    // middleware on these saves the auth-resolution cost on every
+    // webhook delivery — meaningful at Stripe/Clerk volumes.
+    "/((?!_next|api/(?:webhooks|cron|standards|moments|evaluate)|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/trpc(.*)",
   ],
 };

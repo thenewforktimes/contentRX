@@ -2,7 +2,23 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Drop dead exports from barrel files at build time. Closes audit M-34.
+  // Recharts/Lucide/react-email all expose deep barrel files; without
+  // this, "import { Bar } from 'recharts'" pulls every chart kind into
+  // the bundle.
+  experimental: {
+    optimizePackageImports: [
+      "recharts",
+      "@react-email/components",
+      "lucide-react",
+    ],
+  },
+  // Server-only deps that don't need to be webpack-bundled. Trims
+  // server build time and silences the big-string serialization warnings.
+  serverExternalPackages: [
+    "postgres",
+    "stripe",
+  ],
 };
 
 export default withSentryConfig(nextConfig, {

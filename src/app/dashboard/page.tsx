@@ -51,11 +51,17 @@ export default async function DashboardPage() {
   }
 
   const plan = user.plan as Plan;
-  const seats = await loadSeats(user.id, plan, user.teamOwnerUserId);
+  // Closes audit H-17: was 4 sequential awaits. seats / used /
+  // activeSub are all independent of each other (each only needs
+  // user.id and the already-resolved plan), so fan them out in
+  // parallel. monthlyQuota stays synchronous after seats resolves.
+  const [seats, used, activeSub] = await Promise.all([
+    loadSeats(user.id, plan, user.teamOwnerUserId),
+    loadCurrentUsage(user.id),
+    loadActiveSubscription(user.id, user.teamOwnerUserId),
+  ]);
   const quota = monthlyQuota(plan, seats);
-  const used = await loadCurrentUsage(user.id);
   const usedPct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
-  const activeSub = await loadActiveSubscription(user.id, user.teamOwnerUserId);
 
   return (
     <div className="flex flex-col gap-6">
