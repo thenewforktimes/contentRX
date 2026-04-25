@@ -26,10 +26,29 @@ const cuid = () =>
 export const users = pgTable("users", {
   id: cuid(),
   clerkId: text("clerk_id").notNull().unique(),
-  email: text("email").notNull(),
+  // Unique to keep one users row per email. Closes audit H-07
+  // (Known Limitation #5). Clerk itself doesn't allow two accounts
+  // with the same primary email, so the only realistic source of a
+  // duplicate would be a Clerk-side delete + re-signup with the same
+  // address (which would otherwise create a second users row). With
+  // unique enforced, a duplicate user.created webhook would conflict
+  // and the existing onConflictDoNothing(target: clerkId) keeps
+  // dedupe by clerkId — meaning the re-signup would sit on the
+  // "finishing setting up" placeholder until backfill / manual
+  // cleanup. Acceptable trade-off vs. silently accumulating dup rows.
+  email: text("email").notNull().unique(),
   plan: text("plan", { enum: ["free", "pro", "team"] })
     .notNull()
     .default("free"),
+  // Team-id-as-user-id pattern: a "team" is just a user.id (the
+  // owner). Members store teamOwnerUserId pointing at the owner;
+  // the owner's own row has teamOwnerUserId = null. Per-team
+  // aggregations (violations.teamId, violation_overrides.teamId)
+  // all reference users.id. Documented per audit H-09. Trade-off:
+  // deleting a team owner cascades to every member's historical
+  // attribution, dropping their rows from per-team rollups. A future
+  // migration to a dedicated `teams` table would decouple lifecycle;
+  // intentionally not done yet because team-invite flow isn't shipped.
   teamOwnerUserId: text("team_owner_user_id"),
   // sha256(rawKey) hex digest. Raw cx_... tokens never persist — the key
   // shown to the user once at rotation/mint time is all they get. Unique
