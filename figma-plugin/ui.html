@@ -4157,10 +4157,16 @@ document.getElementById("btn-sign-out").addEventListener("click", () => {
 // string.
 // ====================================================================
 window.onmessage = async (event) => {
-  if (event.source !== window.parent) return;
+  // Accept either window.parent (pre-2026-04 Figma layout) or window.top
+  // (post-2026-04 layout where Figma wraps plugin UIs in an extra sandbox
+  // frame, so the host posts past our direct parent to the leaf iframe).
+  // Either way, the sender must be a known Figma host frame, which still
+  // rejects synthesized messages from sibling/child frames (PLG-C-01).
+  if (event.source !== window.parent && event.source !== window.top) return;
   if (!event.data || typeof event.data !== "object") return;
   const msg = event.data.pluginMessage;
   if (!msg || typeof msg !== "object" || typeof msg.type !== "string") return;
+
 
   switch (msg.type) {
 
