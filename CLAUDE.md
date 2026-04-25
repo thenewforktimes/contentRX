@@ -6,6 +6,13 @@ After this file, read [BUILD_PLAN_v2.md](BUILD_PLAN_v2.md) for the
 current canonical build plan (v5.0.0). The historical v1 plan is at
 [docs/build-plan-v1-archive.md](docs/build-plan-v1-archive.md).
 
+If a session involves a positioning-level decision (public/private boundary,
+moat hypothesis, wire-format break), also read
+[decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md)
+and any newer ADR. The current positioning is locked by that ADR — sessions
+that propose reversing it require a new ADR superseding it, not an
+in-session pivot.
+
 ## What this repo is
 
 One repo, one directory, one push cycle. Currently ships four things
@@ -21,8 +28,13 @@ surfaces (MCP server, LSP server) land in BUILD_PLAN_v2 phases 1 and 5.
    / `next.config.ts` / etc.
 5. **GitHub Action** — `github-action/` (in-tree today, splits to its
    own public repo in v2 Phase 2)
-6. **Docs site** — `docs-site/` (in-tree today, gets its own Vercel
-   project at `docs.contentrx.io` in v2 Phase 6)
+6. **MCP server** — `mcp-server/` (Python, stdio, ships via `uvx`)
+7. **LSP server** — `lsp-server/` (Python, stdio, ships via `uvx`) plus
+   editor extensions in `editor-extensions/` (VS Code etc.)
+8. **Docs site** — `docs-site/` (in-tree today, target deploy target is
+   `docs.contentrx.app` — but the public surface is now `/accuracy`,
+   `/calibration`, `/essays`, `/reports`, NOT a public taxonomy.
+   See [decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md).)
 
 The Next.js app imports the Python engine at runtime via a Vercel Python
 function (`api/evaluate.py`); no vendored copy, no sync script — the
@@ -32,6 +44,76 @@ into the Python function (see `vercel.json` → `functions.includeFiles`).
 Engine tests live in `tests/`. App tests will land next to the code
 (`*.test.ts` / `__tests__/`) as they get written — `testpaths = ["tests"]`
 in `pyproject.toml` keeps pytest scoped to the Python side.
+
+## Current positioning (locked by ADR 2026-04-25)
+
+The taxonomy is **private**. The 47 standards, 13 moments, per-standard
+versioning, `version_history`, the `influences` field, and the
+`rationale_chain` detail are internal artifacts only. They live in
+`src/content_checker/standards/standards_library.json` and the related
+substrate modules; they are never rendered to product users.
+
+The public surface — what customers and prospects actually see — is:
+
+- `/accuracy` — measured system kappa with 95% CI, measured self-drift
+  kappa with 95% CI, target ceiling stated separately. Generated nightly.
+- `/calibration` — weekly calibration log entries (kappa movement, drift
+  signals, override count, refinement-log activity). Generated automatically.
+- `/essays` — monthly named-expert essays in Robo's voice. Hand-written.
+- `/reports` — quarterly accuracy reports. Generated scaffold, hand-edited
+  narrative.
+
+The substrate (private taxonomy + override stream + refinement log) produces
+the report (public artifacts) through scheduled generators in `reports/`.
+Nothing outside reads substrate. This separation is the load-bearing
+architectural choice; see [ARCHITECTURE.md](ARCHITECTURE.md) for the
+substrate-vs-report contract and [decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md)
+for the rationale and rejected alternatives.
+
+**The moat is operational, not architectural.** If the calibration log goes
+stale for a quarter, the moat decays in public. The `reports/` module's
+staleness monitoring is P0 infrastructure, not marketing nice-to-have.
+
+## Wire format — schema_version 2.0.0
+
+The public Violation envelope ships only `issue`, `suggestion`, `severity`,
+and `confidence`. Top-level envelope carries `schema_version`, `verdict`,
+`review_reason`, and `warnings`. Removed entirely from the public envelope:
+`docs_url`, `related_standards`, `rationale_chain`. Stripped from
+user-visible surfaces but retained in internal substrate API responses
+(founder-auth only): `standard_id`, `rule_version`.
+
+Sessions that expose `standard_id` or `rule_version` to a user-facing
+surface — web app cards, MCP response payload, CLI output, Figma plugin
+UI, GitHub Action PR comment text, LSP diagnostic messages, editor
+extension UI — are wrong. Internal logging and the `/admin` dashboard see
+them; product users do not.
+
+The schema 2.0.0 cutover lands atomically (engine + all surfaces + snapshot
+tests in one PR) since ContentRX has zero paying customers at the time of
+the bump. No deprecation window; no email migration needed.
+
+## /admin founder dashboard
+
+`/admin/*` is the founder-authenticated substrate UI in `src/app/admin/`.
+Auth is enforced via Clerk role check at the layout level — every page
+under `/admin` redirects unauthenticated or non-founder requests to `/`.
+Pages: `/admin/model` (browsable taxonomy), `/admin/calibration` (kappa
+over time), `/admin/refinement-log` (refinement candidates UI),
+`/admin/queue` (review queue with subtype filters), `/admin/reports`
+(preview-before-publish gate), `/admin/essay-drafts` (cold-start scaffold).
+Single-user by design — no multi-tenancy, no admin-of-admins recursion.
+
+Lands in Phase B of the post-pivot build plan.
+
+## PUBLIC_TAXONOMY feature flag
+
+`PUBLIC_TAXONOMY` is the single env-var-controlled boundary between the
+private-taxonomy-default and the (preserved-but-off) public-taxonomy code
+paths. Default `false` everywhere. Code paths gated by it stay in the
+codebase even when off — they are reversibility insurance, not dead code.
+**Don't delete them.** A CI smoke job runs the test suite with the flag
+flipped to `true` so the path doesn't silently rot.
 
 ## Locked architectural decisions
 
@@ -251,29 +333,61 @@ to fix immediately. Track these so they don't get forgotten.
 1. **MCP server** (Python, stdio, via `uvx contentrx-mcp`) — engineers in
    Claude Code / Cursor / Claude desktop. **Lands in v2 Phase 1.**
 2. **LSP server** (Python, stdio, via `uvx contentrx-lsp`) — engineers
-   typing in any LSP client. **Lands in v2 Phase 5.**
+   typing in any LSP client. **Lands in v2 Phase 5.** Editor extensions
+   in `editor-extensions/` consume this surface.
 3. **GitHub Action** — engineers on PRs. (In-tree today; publishes to
    Marketplace in v2 Phase 2.)
 4. **CLI** — engineers in terminals and CI. (`contentrx-cli` on PyPI.)
 5. **Figma plugin** — designers and PMs working in Figma.
-6. **Web dashboard** — admins configuring teams.
+6. **Customer web dashboard** — `/dashboard` for paying customers (usage,
+   API keys, team rules if/when teams ship).
+7. **Founder `/admin` dashboard** — substrate UI for the daily review
+   rhythm, accuracy snapshots, calibration log, refinement-log, and
+   report publication gate. Single-user. **Critical-path post-pivot.**
 
-The plugin is no longer the headline. The MCP server is.
+The plugin is no longer the headline. The MCP server is. The privacy
+boundary applies to surfaces 1–5 (which render to product users) — they
+must never expose `standard_id` or `rule_version`. Surfaces 6 and 7 are
+allowed to render those fields under appropriate auth.
 
-## Non-negotiables (additions per BUILD_PLAN_v2)
+## Non-negotiables (additions per BUILD_PLAN_v2 + ADR 2026-04-25)
 
 These join the existing rules in "What not to do" above. They apply to
 every API change, every new surface, every code review going forward.
 
-- `schema_version` on every API response, semver'd. (Lands in v2 Session 9.)
+**From the original v2 plan (still live):**
+
+- `schema_version` on every API response, semver'd. (Lands in v2 Session 9.
+  Bumps to `2.0.0` at the post-pivot atomic cutover.)
 - All LLM JSON parses go through `parse_llm_json` in `api_utils.py`. (Lands in v2 Session 3.)
 - All Anthropic clients have `max_retries=2`. (Lands in v2 Session 3.)
 - JS/Python parity is CI-gated; divergence blocks merge. (Lands in v2 Session 2.)
-- Every violation emitted includes a `docs_url` field pointing at the
-  rationale on docs.contentrx.io. (Lands in v2 Phase 6.)
 - Every verdict is one of `violation | review_recommended | pass`. (Lands in v2 Session 10.)
 - Override dismissals write to the `violation_overrides` table — never
   silently discarded. (Lands in v2 Session 11.)
+
+**Added by ADR 2026-04-25 (private-taxonomy pivot):**
+
+- The public Violation envelope contains only `issue`, `suggestion`,
+  `severity`, `confidence`. **Never** `docs_url`, `related_standards`,
+  `rationale_chain`.
+- `standard_id` and `rule_version` are returned in internal substrate API
+  responses (founder-auth) but **never rendered** on user-facing surfaces
+  (web dashboard cards, MCP response, CLI output, Figma plugin UI, GitHub
+  Action PR comment, LSP diagnostic messages, editor extension UI).
+  Snapshot tests on each surface enforce this.
+- The `PUBLIC_TAXONOMY=false` feature flag is the single configurable
+  boundary between private and public taxonomy code paths. Default `false`
+  everywhere; CI exercises both modes. Code paths gated by it stay in the
+  codebase as reversibility insurance — don't delete them.
+- The substrate-vs-report split is structural. Substrate (private,
+  `standards_library.json`, override stream, refinement log) lives in
+  `src/content_checker/`, `evals/`, `src/db/`. Report (public, kappa
+  numbers, narrative) lives in `reports/`. Substrate produces report
+  through scheduled generators. Nothing outside reads substrate.
+- BUILD_PLAN_v2 sessions 7, 19, 20 (and Phase 6 in full) are DEFERRED.
+  Don't re-activate them without an ADR superseding the 2026-04-25 pivot.
+  See [BUILD_PLAN_v2.md](BUILD_PLAN_v2.md) for the deferred-section index.
 
 ## Banned shortcuts
 
@@ -287,5 +401,10 @@ every API change, every new surface, every code review going forward.
   and Pro must be self-serve end to end. Team can require a one-step
   upgrade flow but not a sales call.
 - **No accuracy claims without a link to the accuracy page.** Once
-  `/accuracy` lands (v2 Session 15), every customer-facing surface that
-  mentions accuracy links to it.
+  `/accuracy` lands (Phase C of the post-pivot plan), every
+  customer-facing surface that mentions accuracy links to it.
+- **No publishing the standards library.** The taxonomy is private per
+  ADR 2026-04-25. Don't add public routes that render standards or
+  moments by name; don't add a `docs_url` field to violations; don't
+  reactivate `scripts/generate-spec.mjs` or the `contentrx-standards`
+  repo without a new ADR superseding the pivot.

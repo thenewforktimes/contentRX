@@ -9,6 +9,63 @@ Version: v5.0.0 (this plan), supersedes BUILD_PLAN.md for all new work.
 
 ---
 
+## 🔄 Status update — 2026-04-25 (private-taxonomy pivot)
+
+The [private-taxonomy pivot ADR (2026-04-25)](decisions/2026-04-25-private-taxonomy-pivot.md)
+reshapes this plan. The taxonomy is now private; the public surface is
+`/accuracy`, `/calibration`, `/essays`, and `/reports`. The wire format
+ships at `schema_version: 2.0.0`. This means:
+
+**Deferred** (preserved in this doc, not deleted; do not re-activate without
+a new ADR superseding the 2026-04-25 pivot):
+
+- **Session 7** — GitHub Action marketplace publish (the action is no
+  longer paired with a public-taxonomy push; the underlying GitHub Action
+  work continues, but the marketplace + OSS-campaign packaging is on hold).
+- **Session 19** — `docs.contentrx.io` launch with browsable
+  `/standards` and `/moments` pages. Replaced by the docs site rendering
+  `/accuracy`, `/calibration`, `/essays`, and `/reports` instead.
+- **Session 20** — Versioned standards + OSS license + public
+  `contentrx-standards` repo. Replaced by the substrate keeping its full
+  versioning internally, with the `content-model/` directory in this repo
+  preserved as reversibility insurance but unreferenced by build scripts.
+- **Phase 6** — Content model as public spec (the entire phase).
+
+**Added** (post-pivot critical-path work; sequenced into this plan's
+Phase 0 successors as Phase A–E in the rolling build plan):
+
+- **Phase A** — Foundation. Land ADR, align root docs, scaffold
+  `PUBLIC_TAXONOMY=false` flag, atomic schema 2.0.0 wire-format cutover
+  with privacy snapshot tests on every user-facing surface.
+- **Phase B** — `/admin` founder dashboard at `src/app/admin/` (model,
+  calibration, refinement-log, queue, reports, essay-drafts).
+- **Phase C** — `reports/` module: nightly accuracy snapshot, weekly
+  Monday calibration log, quarterly report scaffold, staleness monitor
+  with paging alerts. Public `/accuracy` and `/calibration` pages
+  consume these artifacts.
+- **Phase D** — Site cleanup: remove `/standards`, `/moments`, `/model/[id]`
+  routes if scaffolded; remove `scripts/generate-spec.mjs` from the deploy
+  pipeline; add deferred-banner notices to `content-model/`.
+- **Phase E** — Reversibility hygiene: CI smoke job that flips
+  `PUBLIC_TAXONOMY=true` so the flag doesn't rot; document the four
+  trigger conditions for revisiting the ADR.
+
+**Wire-format changes** (atomic, single PR, zero customers in flight):
+
+- Public Violation envelope = `{issue, suggestion, severity, confidence}`.
+- Removed: `docs_url`, `related_standards`, `rationale_chain`.
+- Top-level envelope: `schema_version: "2.0.0"`, `verdict`,
+  `review_reason`, `warnings`.
+- `standard_id` and `rule_version` retained in internal substrate API
+  responses (founder-auth) but never rendered to product users.
+- The `docs_url` non-negotiable in **Appendix A** is removed below.
+
+This status block is the load-bearing summary; cross-references inside
+sessions still use original phrasing for traceability, but each affected
+section header carries a `🔒 DEFERRED — see ADR 2026-04-25` marker.
+
+---
+
 ## ⚠️ BEFORE EVERY SESSION: READ CLAUDE.md
 
 Unchanged from v1. Every Claude Code session begins with
@@ -124,15 +181,17 @@ doubt about a tradeoff, this list is the tiebreaker.
 |---|---|
 | **Phase 0** | Credibility floor — live keys, parity gate, retries, caches |
 | **Phase 1** | MCP server — the reposition |
-| **Phase 2** | GitHub Action publish + OSS campaign |
+| **Phase 2** | GitHub Action publish + OSS campaign 🔒 *Session 7 deferred per ADR 2026-04-25* |
 | **Phase 3** | Human-eval v1 — verdict states + override capture |
 | **Phase 4** | Human-eval v2 — dry-run, reports, golden set, accuracy page |
 | **Phase 5** | LSP server + editor extensions |
-| **Phase 6** | Content model as public spec |
+| **Phase 6** | ~~Content model as public spec~~ **🔒 DEFERRED IN FULL per ADR 2026-04-25** |
+| **Phase A–E** | Post-pivot rolling plan: private-taxonomy foundation → `/admin` dashboard → `reports/` module → site cleanup → reversibility hygiene. See "Status update — 2026-04-25" above. |
 
 Do them in order. Phase 0 is the floor and must come first. Phase 1
 is the reposition and should come second. Past that the order holds
-but the cadence is yours.
+but the cadence is yours. Phase A is the new pre-launch gate; it must
+land before any of Phases C+ ship the public report surface.
 
 ---
 
@@ -484,7 +543,9 @@ Phase 2 and the accuracy page in Phase 4.
 
 ## Phase 2 — GitHub Action publish + OSS campaign
 
-### Session 7 — GitHub Action marketplace publish
+### Session 7 — GitHub Action marketplace publish 🔒 DEFERRED — see ADR 2026-04-25
+
+> **Status: DEFERRED** per the [2026-04-25 private-taxonomy pivot](decisions/2026-04-25-private-taxonomy-pivot.md). The GitHub Action work itself continues in tree, but the marketplace publish + OSS-campaign packaging is on hold pending a new positioning. Original session block preserved below for full rationale and reversibility.
 
 **Objective.** Move the GitHub Action from 🟡 (in-tree, inert) to 🟢
 (public repo, marketplace listed).
@@ -986,13 +1047,15 @@ reach its audience.
 
 ---
 
-## Phase 6 — Content model as public spec
+## Phase 6 — Content model as public spec 🔒 DEFERRED — see ADR 2026-04-25
+
+> **Status: DEFERRED IN FULL** per the [2026-04-25 private-taxonomy pivot](decisions/2026-04-25-private-taxonomy-pivot.md). The taxonomy is now private; there is no public `/standards` or `/moments` route, no public `contentrx-standards` repo, no `docs_url` field on violations, no `scripts/generate-spec.mjs` in the deploy pipeline. The replacement public surface (`/accuracy`, `/calibration`, `/essays`, `/reports`) is built in **Phase C** of the post-pivot rolling build plan. Original Phase 6 sessions preserved below for full rationale and reversibility.
 
 Phase 6 is where the content model stops being a JSON file in the repo
 and becomes a public, versioned, browsable spec — the "Shopify Polaris
 of executable content rules" the strategy memo calls for.
 
-### Session 19 — docs.contentrx.io launch
+### Session 19 — docs.contentrx.io launch 🔒 DEFERRED — see ADR 2026-04-25
 
 **Objective.** Ship the docs site at `docs.contentrx.io` with the
 content model as the centerpiece.
@@ -1027,7 +1090,7 @@ standard ID is emitted but there is nowhere to go.
 
 ---
 
-### Session 20 — Versioned standards + OSS license
+### Session 20 — Versioned standards + OSS license 🔒 DEFERRED — see ADR 2026-04-25
 
 **Objective.** Version the standards library publicly. Release v1.0 of
 the content model under a permissive license.
@@ -1084,7 +1147,11 @@ The plugin is no longer the headline. The MCP server is.
 - All LLM JSON parses go through `parse_llm_json` in `api_utils.py`
 - All Anthropic clients have `max_retries=2`
 - JS/Python parity is CI-gated; divergence blocks merge
-- Every violation emitted includes a `docs_url`
+- ~~Every violation emitted includes a `docs_url`~~ **REMOVED by ADR
+  2026-04-25.** The public Violation envelope now contains only `issue`,
+  `suggestion`, `severity`, and `confidence`. `docs_url` is removed
+  entirely; the field would point at standards pages that no longer exist
+  in public.
 - Every verdict is one of `violation | review_recommended | pass`
 - Override dismissals write to `violation_overrides` table (never
   silently discarded)

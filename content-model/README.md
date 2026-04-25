@@ -1,5 +1,32 @@
 # ContentRX Content Model
 
+> **🔒 Status: DEFERRED — preserved as reversibility insurance.**
+>
+> Per the [2026-04-25 private-taxonomy pivot ADR](../decisions/2026-04-25-private-taxonomy-pivot.md),
+> the ContentRX taxonomy is private. This `content-model/` directory was
+> prepared to be split out as a public `contentrx-standards` repository
+> under CC BY 4.0 (BUILD_PLAN_v2 Sessions 19 and 20). That work is
+> deferred. The directory stays in the monorepo as reversibility
+> insurance: if the positioning pivots back, the publishable artifacts
+> are already shaped and ready to extract. Until that happens:
+>
+> - **The engine does not read from this directory.** The canonical
+>   substrate lives at `src/content_checker/standards/standards_library.json`.
+>   Do not edit anything in this directory by hand — it will drift.
+> - **Build scripts do not reference this directory.**
+>   `scripts/generate-spec.mjs` is removed from the deploy pipeline.
+> - **Nothing in this directory is published.** The CC BY 4.0 license
+>   below is held in place but inert; no public consumer of this content
+>   exists.
+> - **Don't delete anything in here.** If a future ADR reverses the
+>   pivot, this directory is the seed for the public repo.
+>
+> The text below is the original README for the planned public spec
+> repository. Read it as historical context for what the public-taxonomy
+> world would have looked like.
+
+---
+
 The public, versioned spec that ContentRX's engine evaluates against.
 Contains 13 situational **moments**, 8 **content types**, and 47
 **standards** describing what good UI copy looks like across the

@@ -1,9 +1,167 @@
 # Architecture
 
-**Version:** 4.6.1 — Last updated 2026-04-02
+**Version:** 4.6.1 — Last updated 2026-04-25 (post-pivot)
 **Counts:** 25 preprocessor checks · 47 standards · 9 categories · 13 moments · 8 content types
 
-Read this before writing any code. This document describes the package structure, module responsibilities, data flow, and conventions. If you're an AI assistant working on this project, this is your map.
+> **2026-04-25 — Private-taxonomy pivot.** This document was restructured following the [private-taxonomy pivot ADR](decisions/2026-04-25-private-taxonomy-pivot.md). The taxonomy is now private; the public surface is `/accuracy`, `/calibration`, `/essays`, and `/reports`. The wire format ships at `schema_version: 2.0.0`. New top sections describe the post-pivot system architecture; the original engine-internals reference is preserved below as **Engine internals — detailed reference**, unchanged. The version bumps to 4.7.0 at the schema cutover (a separate PR).
+
+Read this before writing any code. This document describes the system architecture, the substrate-vs-report separation, the wire format, the privacy boundary, the `/admin` founder dashboard, and the package structure. It is the technical companion to [CLAUDE.md](CLAUDE.md) (operating manual) and [decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md) (the ADR locking the current positioning).
+
+## The system at a glance
+
+ContentRX is a content design review system that evaluates UX strings against a private content model and reports findings through seven product surfaces: the customer web dashboard, the Claude Code/Cursor MCP server, the CLI, the Figma plugin, the GitHub Action, the LSP server (consumed by editor extensions), and the founder `/admin` dashboard. It runs as a Python evaluation engine (`src/content_checker/`) with a TypeScript Next.js application layer (`src/app/`, `src/lib/`, `src/db/`) for the web product, billing, and the founder dashboard.
+
+The system has two structurally separated halves:
+
+- **Substrate** (private): the standards library, the moment taxonomy, the override stream, the refinement log, and all internal evaluation telemetry. Founder-authenticated only.
+- **Report** (public): the `/accuracy` page, the weekly calibration log, monthly essays, and quarterly accuracy reports.
+
+Substrate produces report through scheduled generators in `reports/`. Nothing outside reads substrate. This separation is the load-bearing architectural choice — it is what makes the pivot from "public model first" to "private model with public evidence of work" reversible, maintainable, and operationally durable.
+
+## The pipeline (high-level)
+
+The evaluation pipeline runs in a fixed order: classify → filter → preprocess → LLM → merge. Each stage has a single responsibility and a typed output. See **Engine internals — detailed reference** below for the per-stage implementation.
+
+**Classify** identifies the content type (button, error, empty state, header, etc.) and the audience. **Filter** uses the moment classifier to detect which of the 13 moments applies and narrows the standards library to a small candidate set whose routing metadata matches the detected moment and audience. The LLM never sees standards that don't apply; this is the load-bearing scoping rule that keeps token cost bounded and reasoning focused. **Preprocess** runs deterministic mechanical checks against the candidate standards with VIOLATION / PASS / DEFER outcomes. The Figma plugin's JS preprocessor in `figma-plugin/ui.html` is kept in parity with the Python preprocessor; the two move together. **LLM** evaluates the DEFER cases against the candidate standards in a single batched call (Claude Sonnet 4 via the Anthropic API). **Merge** is the single point of suppression policy — audience gating, moment-conditional suppressions, and severity thresholds all apply here.
+
+The pipeline is reproducible: every evaluation event references the `rule_version` of each standard in effect at evaluation time, so an evaluation from 90 days ago can be re-run against the rules as they existed then. This reproducibility is what makes the self-drift kappa measurement meaningful.
+
+## The substrate
+
+The substrate is everything the founder needs to keep the model calibrated and improving. It is private, founder-authenticated, and not exposed to product users.
+
+`src/content_checker/standards/standards_library.json` is the canonical source of the 47 standards. Each standard carries a stable `id` (e.g., CLR-01), a `version` field that bumps when rule text or examples change, a `version_history` array tracking every revision with date and change note, an `influences` field documenting external sources of inspiration with the direction of influence noted ("aligns with Polaris; diverges from Material in preferring specific verbs over OK/Cancel"), routing metadata that connects the standard to moments and content types, content_type_notes for context-specific application, and `related_standards` references to adjacent rules. The file is never replaced wholesale; every schema change is a surgical additive patch.
+
+`src/content_checker/moments.py` defines the 13 canonical experiential contexts with their weights and modifiers (emphasize, relax, suppress).
+
+`evals/` contains the eval corpus across six brand sources (Kaiser, Stripe, Apple, Wells Fargo, Robinhood, MEDVi), the four-phase EVAL_PROTOCOL.md, and the override stream where every disagreement between the model and the founder's verdict is captured.
+
+`taxonomy_refinement_log.md` is the structured record of taxonomy candidates — proposed splits, retirements, new moments, new standards — with decision criterion, triggering case, and architectural consequence per entry. Splits only happen when the distinction changes downstream behavior, demonstrated by at least one past verdict flipping on the held-out golden set.
+
+The substrate is accessible to the founder through the `/admin` dashboard and to internal scripts. It is not accessible to product users, even paid ones.
+
+## The wire format — schema_version 2.0.0
+
+The public Violation envelope is intentionally narrow:
+
+```json
+{
+  "schema_version": "2.0.0",
+  "violations": [
+    {
+      "issue": "This destructive confirmation does not name what gets deleted.",
+      "suggestion": "Replace 'Are you sure?' with 'Delete the entire workspace? This cannot be undone.'",
+      "severity": "high",
+      "confidence": 0.92
+    }
+  ],
+  "verdict": "review_recommended",
+  "review_reason": "low_confidence",
+  "warnings": []
+}
+```
+
+What is no longer in the public envelope: `docs_url` (removed entirely), `related_standards` (was useful for `/model` navigation that no longer exists publicly), `rationale_chain` (the transparency goal it served is now served by `/accuracy` and the calibration log instead). The `rationale_chain` data structure is preserved internally for substrate-side debugging in the founder-only API responses.
+
+What is stripped from user-visible surfaces but retained in internal API responses for substrate use: `standard_id`, `rule_version`. These remain in the database and in API responses keyed to founder-authenticated sessions, but they are not rendered in the customer web dashboard cards, the MCP response payload, the CLI output, the Figma plugin UI, the GitHub Action PR comment text, the LSP diagnostic message, or the editor extension UI.
+
+The schema_version bump from 1.x to 2.0.0 is a major bump under semantic versioning because `docs_url` removal is breaking. CHANGELOG.md documents the migration field-by-field. With zero paying customers at the time of the bump, the cutover is atomic — no deprecation window, no email migration. (See [decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md).)
+
+The `EvaluationEnvelope` carries `schema_version` and `warnings` at the top level. The `warnings` field is the migration-friendly path for future additive changes — anything Claude Code or the engine wants to communicate to integrators without breaking schema goes there.
+
+## The substrate-to-report pipeline
+
+The `reports/` module is the bridge between private substrate and public surface. It runs scheduled generators that read from substrate and emit markdown/JSON artifacts that the docs site renders.
+
+The **weekly calibration log generator** (`reports/calibration/`) runs every Monday at 14:00 UTC via GitHub Action. It computes the week's measured kappa with 95% CI, the week's measured self-drift kappa with 95% CI, the override count by subtype, drift detection signals, and the most active refinement-log entries. It emits `reports/calibration/2026-WW.md`. The docs site picks up the file on next deploy. The narrative tone of the calibration log is templated, not hand-written, because consistency-of-format is what makes drift detectable across weeks.
+
+The **accuracy snapshot generator** (`reports/accuracy/`) runs nightly. It emits `reports/accuracy/latest.json`, consumed by the public `/accuracy` page. Numbers only; no narrative. The page reports measured system kappa with 95% CI, measured self-drift kappa with 95% CI, and the 0.90 design target stated separately — never a composite "accuracy score." This follows Mitchell et al. 2019 (Model Cards for Model Reporting) on honest metric reporting with intervals.
+
+The **quarterly report generator** (`reports/quarterly/`) runs on the first Monday of each quarter. It generates `reports/quarterly/YYYY-Q.md` as a scaffold with all the numbers populated and section headers in place. The narrative is hand-edited by the founder before publishing. The combination is the named-expert artifact: rigor in the numbers, voice in the narrative.
+
+**Monthly essays** are not generated. They live in `docs-site/essays/` as hand-written markdown. They include numbers from the latest accuracy report via Nextra includes so the cited numbers stay fresh; the narrative is entirely human. This is the load-bearing channel for the named-expert moat.
+
+The report generators must be operationally robust. They run on GitHub Actions with success/failure alerting to the founder's email. A staleness monitor checks the most recent timestamp on each report directory once per day; if a generator hasn't produced output in 8 days (one day past the cron cycle), it pages. Stale reports are worse than no reports for the named-expert moat — the moat depends on continuity of evidence, and a calibration log that stops mid-quarter signals abandonment.
+
+## The /admin founder dashboard
+
+`/admin` is the founder-authenticated substrate UI in `src/app/admin/`. Auth is enforced via Clerk role check at the layout level — every page under `/admin` redirects unauthenticated or non-founder requests to `/`.
+
+`/admin/model` is the browsable taxonomy: the 13 moments as cards, each linking to its standards, each standard linking to its current version, version_history changelog, examples corpus, sources, and influences. Per-standard permalinks are preserved (`/admin/model/moments/destructive-action/standards/CLR-01`) for internal cross-referencing in essays and refinement-log entries. This is also where standard updates are drafted before they ship — a draft mode that creates a candidate PR against `standards_library.json`.
+
+`/admin/calibration` visualizes kappa over time, drift detection signals, and the override stream. It is the substrate that produces the public `/accuracy` numbers and the weekly calibration log. Charts are interactive; clicking a kappa drop opens the override-stream view for the relevant week.
+
+`/admin/refinement-log` renders `taxonomy_refinement_log.md` as a UI with open/approved/declined organization. New refinement candidates are added through a form, not a markdown edit, which enforces the structured-entry format (current category, proposed split, triggering case, architectural consequence).
+
+`/admin/queue` is the review queue with subtype filters: `low_confidence`, `standards_conflict`, `situation_ambiguity`, `out_of_distribution`, `novel_pattern`. The daily 15-minute review rhythm runs here. Cases cluster in groups of 3 with agree/override/skip options; null verdicts are not allowed.
+
+`/admin/reports` is the preview surface. Generated reports surface here before publishing; the founder gates publication. This is the operational checkpoint that prevents an automation bug from publishing a wrong number publicly. Every public report goes through this gate.
+
+`/admin/essay-drafts` is the essay drafting workspace. It pulls the most recent calibration log entry, the latest `/accuracy` numbers, and the most active refinement-log entries, and produces a 200-word draft scaffold for a LinkedIn post or essay opening. The founder writes the actual essay; the scaffold removes the cold-start tax. Published essays are stored alongside the report that produced them, so the calibration log can link forward to the writing it generated.
+
+The admin surface is single-user by design. No multi-tenancy, no permissions complexity, no admin-of-admins recursion. It is a power tool, not a product.
+
+## The privacy boundary
+
+The privacy boundary is enforced at three layers.
+
+At the **data layer**, the `violations` table stores sha256 hashes of input strings, never plaintext. PII never enters logs. Substrate data (overrides, refinement log entries, version_history) lives in dedicated tables that are not exposed in any public API endpoint.
+
+At the **API layer**, every handler authenticates at the top via Clerk. Substrate endpoints check for the founder role specifically and return 403 to anyone else. Public endpoints return only `schema_version 2.0.0` fields.
+
+At the **rendering layer**, the seven product surfaces (customer web dashboard, MCP, CLI, Figma plugin, GitHub Action, LSP server, editor extensions) render only `issue`, `suggestion`, `severity`, and `confidence`. The `standard_id` and `rule_version`, even when present in API responses for power users with debug mode enabled, are not rendered to general users. This is enforced by code review and by snapshot tests that capture the rendered output of each surface. The founder `/admin` dashboard is allowed to render these fields under appropriate auth.
+
+The `PUBLIC_TAXONOMY=false` feature flag controls whether `standard_id` and `rule_version` populate on user-facing surfaces. Default is false. The flag is the single place the public/private boundary is configurable. Code paths gated by it remain in the codebase even when off — they are reversibility insurance.
+
+## The content flywheel
+
+The substrate-to-report pipeline closes a loop that keeps the named-expert moat compounding.
+
+**Substrate produces report.** Override stream and refinement-log activity from the week feed the calibration log generator. The accuracy snapshot generator pulls eval pipeline outputs into `latest.json`. The quarterly report scaffold pulls 13 weeks of calibration logs into a draft.
+
+**Report produces draft.** The `/admin/essay-drafts` workspace pulls the most recent report — calibration log entry, accuracy snapshot, refinement-log activity — and surfaces a 200-word starter. The founder writes the actual essay; the workspace removes the cold-start tax.
+
+**Draft produces published artifact.** Once a LinkedIn post or essay ships, the published URL gets stored alongside the report that produced it. The calibration log entry says "this week's analysis was discussed in [LinkedIn post link]." Every public report is connected to the writing it produced; every essay is grounded in a specific report.
+
+This is how the moat compounds in code rather than only in marketing copy. The pipeline is automatic where consistency matters (numbers, drift, dates) and manual where voice matters (narrative, point of view, examples). Nothing in the public surface can go stale silently because every artifact has a generator and a staleness monitor.
+
+## What the architecture does not do
+
+The engine does not read from a public spec repository. The earlier architectural plan (BUILD_PLAN_v2 session 20) had the engine cite a `contentrx-standards` repo as the source of truth. That decision is reversed; the local `standards_library.json` is the source of truth. The `content-model/` directory in this repo (which mirrored the engine's substrate for the would-be public repo) is preserved as reversibility insurance but is not referenced by build scripts.
+
+The docs site does not render the standards directly. It renders only generated reports and hand-written essays. There is no `/standards` route, no `/moments` route, no `/model/[id]` permalinks. The `scripts/generate-spec.mjs` build script is removed from the deploy pipeline.
+
+The wire format does not deep-link to public standard pages via `docs_url`. The field is removed from the schema entirely.
+
+The whitepaper, if it documents the 13 moments by name or walks through the 47 standards in any specificity, is redacted before publication. The methodology can be public (situation-aware classification, content-type routing, severity thresholds, audience gating); the rules cannot.
+
+These omissions are intentional and locked by the ADR. Sessions that propose adding any of them must supersede the ADR first.
+
+## Reversibility
+
+The architecture preserves reversibility deliberately. The `PUBLIC_TAXONOMY=false` feature flag, the DEFERRED-not-deleted status of BUILD_PLAN sessions 7/19/20, the archived-not-deleted status of any pushed `contentrx-standards` repository, the preserved `content-model/` directory, and the substrate that retains the full taxonomy intact are all costs paid up front to keep the pivot reversible. The named-expert positioning is the current bet, not the only possible bet, and the architecture does not assume permanence.
+
+Reversal, if it ever happens, is governed by a new ADR superseding `2026-04-25-private-taxonomy-pivot`. It is not an in-session decision.
+
+## Operational disciplines
+
+A handful of disciplines keep the architecture stable across sessions.
+
+**Substrate change discipline.** Every change to `standards_library.json` is a surgical additive patch. Per-standard `version` bumps and `version_history` entries are required. The library-level version stays as the package version.
+
+**Wire format change discipline.** Any change to the public Violation envelope or the EvaluationEnvelope is a `schema_version` bump. Major bumps for breaking changes; minor bumps for additive changes. CHANGELOG.md tracks every change.
+
+**Report change discipline.** Public report templates are version-controlled. Changes to a template require a regression check: regenerate the last four weeks of reports against the new template and visually inspect for unintended formatting drift. The goal is consistency-of-format across time, since drift detection depends on it.
+
+**Privacy discipline.** Snapshot tests capture the rendered output of each user-facing surface. Any new field surfaced to a user must pass through code review with explicit privacy-boundary justification.
+
+**Reversibility discipline.** Don't delete code paths gated by `PUBLIC_TAXONOMY`. Don't delete BUILD_PLAN sessions in DEFERRED. Don't delete archived repos or `content-model/`. The cost of carrying these is small; the cost of reconstructing them is large.
+
+---
+
+# Engine internals — detailed reference
+
+The remainder of this document is the original engine-internals reference. It describes the package structure, module-by-module conventions, the preprocessor design, the audience signal, the moment pipeline, and the triage / auto-annotator tools. None of this is changed by the 2026-04-25 pivot — the substrate is unchanged; only the report destination moves.
 
 ## Package structure
 
