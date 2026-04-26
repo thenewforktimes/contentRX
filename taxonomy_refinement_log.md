@@ -26,6 +26,46 @@ Granularity gaps in the content type taxonomy, surfaced through real-world triag
 **Verdict:** Pending. Accumulate more triage cases to see if the distinction produces verdict-changing differences consistently, or only in edge cases.
 
 
+### REF-004: PRF-03 — legal-entity-suffix exception in placeholder text
+
+**Current category:** PRF-03 (trailing period on heading / button_cta / ui_label).
+
+**Proposed refinement:** Suppress PRF-03 when the trailing period is part of a legal-entity-suffix abbreviation (`Inc.`, `LLC.`, `Co.`, `Ltd.`, `GmbH.`, `S.A.`, `B.V.`, `Pty.`, `Pte.`, etc.) AND the content_type is `short_ui_copy` or placeholder-flavored.
+
+**Triggering case:** PostHog case study iteration-1, 2026-04-26. Engine flagged "Acme Inc." — placeholder text on the org-name input in `frontend/src/scenes/organization/CreateOrganizationModal.tsx:71` — as a high-severity PRF-03 violation. The period is correct (legal-entity abbreviation); removing it ("Acme Inc") would be wrong. Recorded at `evals/case-studies/posthog/engine_results.jsonl`.
+
+**Architectural consequence:**
+- PRF-03 needs a targeted exception: a trailing period on a recognized legal-entity suffix is intentional.
+- Most impact lands on placeholder text (example company names) and brand references in microcopy.
+- Adjacent pattern worth thinking about: literal brand names with internal/trailing periods (Y.A.S., e.l.f., L.L.Bean) — same "the punctuation is correct" shape, different mechanism.
+- Implementation likely: a `LEGAL_ENTITY_SUFFIXES` frozenset in `preprocess.py` (mirrors `BRAND_AMPERSANDS` / `COMMON_ABBREVIATIONS`), checked before flagging PRF-03. Both Python and JS preprocessors need the same allowlist (CI parity gate covers it).
+
+**Date logged:** 2026-04-26
+
+**Verdict:** Pending — single triggering case so far. Accumulate at least one more independent case before adding the exception. Also worth checking: PostHog's other modals likely use "Acme Inc." or similar placeholder, which would be more cases of the same string and not independent. A separate target's similar placeholder (Stripe's "Acme Co.", Linear's "Acme, Inc.") would qualify.
+
+
+### REF-005: CON-02 — technical-reference proper-noun exception
+
+**Current category:** CON-02 (sentence case enforcement on heading / ui_label / button_cta).
+
+**Proposed refinement:** Add a relaxed branch on CON-02 when content_type is `ui_label` or `heading` AND the moment is `task_execution` (or audience is a technical role) AND the text is a recognized compound technical-noun-phrase (`Source Table`, `Primary Key`, `Foreign Key`, `Public IP`, `Private Subnet`, `Read Replica`, `Pull Request`, etc.).
+
+**Triggering case:** PostHog case study iteration-1, 2026-04-26. Engine flagged "Source Table" — column header in the Data Warehouse "View Link" modal at `frontend/src/scenes/data-warehouse/ViewLinkModal.tsx:106` — as a high-severity CON-02 violation. In data engineering, "Source Table" is a technical compound term referring to a specific database concept; Title Case is conventional for these references in technical UI. PostHog's choice is defensible.
+
+**Architectural consequence:**
+- CON-02 needs domain-aware relaxation. Three implementation paths:
+  1. Moment-based: `task_execution` + audience signal relaxes CON-02. Risk: too broad — most developer tools live in `task_execution`.
+  2. Allowlist-based: a `TECHNICAL_NOUN_PHRASES` frozenset (mirrors `CON02_SAFE_PHRASES`). Cleanest; explicit; trades coverage for precision.
+  3. Audience-based: when audience is `developer`, CON-02 is permissive on multi-word capitalized phrases. Riskiest; could mask real violations elsewhere in dev-tool UI.
+- Adjacent standards already use allowlists for this kind of exception (`KNOWN_ACRONYMS` for PRF-09, `BRAND_AMPERSANDS` for GRM-04, `CON02_SAFE_PHRASES` for CON-02 itself). Path 2 fits the existing pattern.
+- Failure mode to watch: the allowlist becomes a junk drawer of "this is technical so title case is fine" cases that bypass real CON-02 issues in dev tools. Mitigation: every entry needs a triggering case logged here.
+
+**Date logged:** 2026-04-26
+
+**Verdict:** Pending — single triggering case. Accumulate at least 3 distinct technical-reference disagreements (across at least 2 different products) before adding the exception. The cleanest implementation when the bar is met is allowlist-based (path 2) per the existing convention.
+
+
 ## Proposed refinements (auto-detected)
 
 (No auto-detected candidates at the last run.)

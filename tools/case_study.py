@@ -451,17 +451,39 @@ def _evaluate_via_engine(
 
 def _heuristic_content_type(row: dict) -> str:
     """Map the extractor's `kind` to a coarse content_type guess.
-    The engine's classifier will refine; this is the seed value."""
+    The engine's classifier will refine; this is the seed value.
+
+    Per `src/lib/engine-taxonomy.ts`, the eight valid content_types
+    are: button_cta, error_message, confirmation, tooltip_microcopy,
+    ui_label, short_ui_copy, long_form_copy, heading.
+
+    Placeholder attribute mapping note. `placeholder` is *example
+    text shown inside an empty input* — not a label. The PostHog
+    iteration-1 crawl flagged this when the engine flagged "Acme
+    Inc." (placeholder text on the org-name input) as a PRF-03
+    trailing-period violation. The actual bug there was that
+    "Acme Inc." is a legal-entity-suffix abbreviation and the trailing
+    period belongs; but the heuristic mapping (placeholder → ui_label)
+    also routes the string through PRF-03 unnecessarily strictly.
+    Placeholders are now mapped to short_ui_copy, which gets a more
+    permissive read.
+    """
     kind = row.get("kind", "")
     if kind.startswith("attr:"):
         attr = kind.split(":", 1)[1]
-        if attr in {"placeholder", "label"}:
+        if attr == "label":
             return "ui_label"
+        if attr == "placeholder":
+            # Was ui_label — corrected per case-study iteration-1
+            # finding (PostHog "Acme Inc." false positive).
+            return "short_ui_copy"
         if attr in {"alt", "title"}:
+            # `alt` labels images; `title` is a hover tooltip in HTML.
+            # Both are short, label-flavored copy.
             return "ui_label"
         if attr in {"description", "tooltip", "subtitle"}:
             return "tooltip_microcopy"
-        if attr in {"heading"}:
+        if attr == "heading":
             return "heading"
     # JSXText defaults: probably body or heading. The engine will
     # reclassify based on length + content.
