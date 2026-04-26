@@ -17,8 +17,13 @@ name: Case-study daily cron
 # When the secret is unset, the job emits a notice and exits cleanly
 # (mirrors `held_out.yml`). No silent bypass.
 #
-# Manual dispatch: pass `slug` to override the daily rotation pick;
-# useful when investigating a specific target outside the cycle.
+# Manual dispatch modes:
+#   - no inputs       -> daily rotation pick from the allow-list
+#   - slug=<allow-list slug>
+#                     -> spot-check a rotation target out of cycle
+#   - repo=<URL> + paths=<globs>
+#                     -> ad-hoc crawl of any repo, no allow-list
+#                        membership required. The human is the gate.
 
 on:
   schedule:
@@ -29,7 +34,15 @@ on:
   workflow_dispatch:
     inputs:
       slug:
-        description: "Allow-list slug to crawl (e.g. 'posthog-posthog'). Leave blank for daily rotation."
+        description: "Allow-list slug for explicit rotation override (e.g. 'mui-material-ui'). Leave blank for daily rotation. Ignored when `repo` is set (or used as the override slug for ad-hoc runs)."
+        required: false
+        type: string
+      repo:
+        description: "Ad-hoc repo URL (e.g. https://github.com/stripe/stripe-cli). Set with `paths` to crawl any repo without it being on the allow-list."
+        required: false
+        type: string
+      paths:
+        description: "Path globs for `repo`, space-separated (e.g. 'src/**/*.tsx docs/**/*.md'). Required when `repo` is set."
         required: false
         type: string
       limit:
@@ -81,11 +94,27 @@ jobs:
       - name: Pick today's target
         id: pick
         if: steps.keys.outputs.available == 'true'
+        env:
+          SLUG_INPUT: ${{ github.event.inputs.slug }}
+          REPO_INPUT: ${{ github.event.inputs.repo }}
+          PATHS_INPUT: ${{ github.event.inputs.paths }}
         run: |
           set -euo pipefail
-          SLUG_OVERRIDE="${{ github.event.inputs.slug }}"
-          if [ -n "$SLUG_OVERRIDE" ]; then
-            PICK_JSON="$(python3 tools/case_study_pick.py --slug "$SLUG_OVERRIDE")"
+          if [ -n "$REPO_INPUT" ]; then
+            # Ad-hoc dispatch: skip the allow-list. The picker still
+            # produces the JSON shape; we just hand it the URL directly.
+            if [ -z "$PATHS_INPUT" ]; then
+              echo "::error ::repo input requires paths input too"
+              exit 1
+            fi
+            read -ra PATHS_ARR <<<"$PATHS_INPUT"
+            ARGS=(--repo "$REPO_INPUT" --paths-raw "${PATHS_ARR[@]}")
+            if [ -n "$SLUG_INPUT" ]; then
+              ARGS+=(--slug "$SLUG_INPUT")
+            fi
+            PICK_JSON="$(python3 tools/case_study_pick.py "${ARGS[@]}")"
+          elif [ -n "$SLUG_INPUT" ]; then
+            PICK_JSON="$(python3 tools/case_study_pick.py --slug "$SLUG_INPUT")"
           else
             PICK_JSON="$(python3 tools/case_study_pick.py)"
           fi
@@ -103,7 +132,7 @@ jobs:
             echo ""
             echo "- **slug:** \`$(echo "$PICK_JSON" | jq -r .slug)\`"
             echo "- **repo:** $(echo "$PICK_JSON" | jq -r .repo)"
-            echo "- **license:** $(echo "$PICK_JSON" | jq -r .license)"
+            echo "- **license:** $(echo "$PICK_JSON" | jq -r '.license // "ad-hoc"')"
             echo "- **reason:** $(echo "$PICK_JSON" | jq -r .reason)"
           } >> "$GITHUB_STEP_SUMMARY"
 

@@ -26,8 +26,13 @@ Usage
 -----
 
     python3 tools/case_study_pick.py
-    python3 tools/case_study_pick.py --slug supabase   # explicit override
-    python3 tools/case_study_pick.py --date 2026-04-26  # pick for a specific day
+    python3 tools/case_study_pick.py --slug supabase-supabase   # explicit override
+    python3 tools/case_study_pick.py --date 2026-04-26          # specific day
+    # Ad-hoc mode — skip the allow-list entirely. Useful when the human
+    # is doing a Sunday-afternoon exploration of repos not yet curated.
+    python3 tools/case_study_pick.py \\
+        --repo https://github.com/stripe/stripe-cli \\
+        --paths-raw 'src/**/*.go' 'docs/**/*.md'
 """
 
 from __future__ import annotations
@@ -35,6 +40,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -57,14 +63,39 @@ def load_repos() -> list[dict]:
     return repos
 
 
+def _normalize_slug(owner: str, name: str) -> str:
+    raw = f"{owner.lower()}-{name.lower()}".replace("/", "-").replace(".", "")
+    # Strip non-[A-Za-z0-9_-] characters defensively.
+    return "".join(c for c in raw if c.isalnum() or c in "-_")
+
+
 def slug_for(repo: dict) -> str:
     """Repo identifier: lowercase owner-name. Drops dots and slashes
     so it round-trips through filesystem paths and URL segments."""
-    owner = (repo.get("owner") or "").lower()
-    name = (repo.get("name") or "").lower()
-    raw = f"{owner}-{name}".replace("/", "-").replace(".", "")
-    # Strip non-[A-Za-z0-9_-] characters defensively.
-    return "".join(c for c in raw if c.isalnum() or c in "-_")
+    return _normalize_slug(repo.get("owner") or "", repo.get("name") or "")
+
+
+# Matches `https://github.com/owner/name`, `git@github.com:owner/name`,
+# trailing `.git` and slash both optional. Anchored to end so a stray
+# path segment (`/tree/main`) doesn't get swallowed into `name`.
+_GH_URL_RE = re.compile(
+    r"github\.com[:/]([^/\s]+)/([^/\s.]+?)(?:\.git)?/?$"
+)
+
+
+def parse_repo_url(url: str) -> tuple[str, str]:
+    """Parse `https://github.com/owner/name` -> (`owner`, `name`).
+
+    Used by ad-hoc dispatch mode where the human supplies a repo URL
+    directly instead of a rotation slug. We don't try to handle non-
+    github URLs — the regex extractor is github-shaped."""
+    m = _GH_URL_RE.search(url.strip())
+    if m is None:
+        raise SystemExit(
+            f"can't parse owner/name from {url!r} — expected "
+            "`https://github.com/owner/name`"
+        )
+    return m.group(1), m.group(2)
 
 
 def rotation_index(date: dt.date, n: int) -> int:
@@ -101,14 +132,48 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--slug",
-        help="Explicit slug override; bypasses the rotation pick",
+        help="Explicit slug. In allow-list mode, looks up the matching "
+        "entry. In ad-hoc mode (with --repo), overrides the auto-derived "
+        "owner-name slug.",
     )
     parser.add_argument(
         "--date",
         help="ISO date for rotation pick (default: today UTC)",
         default=None,
     )
+    parser.add_argument(
+        "--repo",
+        help="Ad-hoc repo URL (e.g. https://github.com/owner/name). "
+        "Pairs with --paths-raw to skip the allow-list entirely — useful "
+        "for one-shot exploration of repos not yet in rotation.",
+    )
+    parser.add_argument(
+        "--paths-raw",
+        nargs="+",
+        help="Path globs for ad-hoc mode, passed through unchanged "
+        "(no `**/*.tsx` suffixing). Required with --repo.",
+    )
     args = parser.parse_args()
+
+    if args.repo:
+        if not args.paths_raw:
+            raise SystemExit("--repo requires --paths-raw")
+        owner, name = parse_repo_url(args.repo)
+        slug = args.slug or _normalize_slug(owner, name)
+        out = {
+            "slug": slug,
+            "owner": owner,
+            "name": name,
+            "repo": args.repo,
+            "paths": list(args.paths_raw),
+            "license": None,
+            "reason": "ad-hoc dispatch",
+        }
+        print(json.dumps(out, ensure_ascii=False))
+        return 0
+
+    if args.paths_raw:
+        raise SystemExit("--paths-raw only makes sense with --repo")
 
     if args.date:
         date = dt.date.fromisoformat(args.date)
