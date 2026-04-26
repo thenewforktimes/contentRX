@@ -1,19 +1,23 @@
 /**
  * `/admin/essay-drafts` — essay-drafting workspace.
  *
- * Phase B7 of the post-pivot rolling plan. Pulls the latest /accuracy
- * numbers, the most recent calibration-log entry, and active
- * refinement-log candidates to produce a ~200-word scaffold the
- * founder opens with. The founder writes the actual essay; this just
- * removes the cold-start tax.
+ * Phase B7 of the post-pivot rolling plan + B7b persistence layer.
+ * Pulls the latest /accuracy numbers, the most recent calibration-log
+ * entry, and active refinement-log candidates to produce a ~200-word
+ * scaffold the founder opens with. The founder writes the actual
+ * essay; the scaffold removes the cold-start tax.
  *
- * Read-only scaffold view in this PR. A persistence layer (drafts
- * stored alongside the report that produced them, per the architecture
- * doc) lands in B7b.
+ * Persistence (B7b): the founder edits the draft body in-page and
+ * saves to `essays/drafts/<filename>.md`. The save Server Action is
+ * the entire persistence layer — drafts ride through git as ordinary
+ * commits. Vercel runtime is read-only; saves only land in local
+ * checkouts (matches B4b refinement-form / B6b mark-reviewed
+ * caveats).
  *
  * Auth handled by `src/app/admin/layout.tsx`.
  */
 
+import Link from "next/link";
 import { sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { buildAccuracySnapshot } from "@/lib/accuracy-data";
@@ -23,6 +27,14 @@ import {
 } from "@/lib/admin-essay-scaffold";
 import { getRefinementLog } from "@/lib/admin-refinement-log.server";
 import { loadReports } from "@/lib/admin-reports.server";
+import {
+  draftFilenameForCalibration,
+  draftFilenameForCurrentWeek,
+  listDrafts,
+  loadDraft,
+  type DraftEntry,
+} from "@/lib/admin-essay-drafts.server";
+import { saveDraftAction } from "./actions";
 
 const OVERRIDE_WINDOW_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -51,6 +63,23 @@ export default async function AdminEssayDraftsPage() {
   };
 
   const scaffold = buildEssayScaffold(input);
+
+  // Pair the draft to the most recent calibration log entry, falling
+  // back to current ISO week when none exists yet (Phase C lands the
+  // generator).
+  const draftFilename =
+    draftFilenameForCalibration(recentCalibration?.filename ?? null) ??
+    draftFilenameForCurrentWeek();
+
+  const existingDraft = loadDraft(draftFilename);
+  const allDrafts = listDrafts();
+
+  // Initial textarea content: the saved draft if one exists, else
+  // the freshly-generated scaffold so the founder can save and start
+  // editing in one click.
+  const initialBody = existingDraft
+    ? existingDraft.contents
+    : `# ${scaffold.title}\n\n${scaffold.body}\n`;
 
   return (
     <div className="space-y-8">
@@ -120,36 +149,126 @@ export default async function AdminEssayDraftsPage() {
 
       <section className="space-y-3">
         <header className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-            Scaffold ({scaffold.word_count} words)
-          </h2>
-          <span className="font-mono text-[10px] text-neutral-500">
-            generated {scaffold.generated_at.replace("T", " ").slice(0, 16)} UTC
-          </span>
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              Draft
+            </h2>
+            <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+              Saving writes to{" "}
+              <code className="font-mono">
+                essays/drafts/{draftFilename}
+              </code>
+              .{" "}
+              {existingDraft
+                ? `Loaded from disk (${formatDate(existingDraft.modified_at)} UTC, ${existingDraft.size_bytes.toLocaleString()} bytes).`
+                : `New draft — pre-filled with the scaffold (${scaffold.word_count} words, generated ${formatDate(scaffold.generated_at)} UTC).`}
+            </p>
+          </div>
+          {existingDraft ? (
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+              draft on disk
+            </span>
+          ) : (
+            <span className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+              unsaved
+            </span>
+          )}
         </header>
-        <article className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-          <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-            {scaffold.title}
-          </h3>
-          <pre className="mt-3 whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
-{scaffold.body}
-          </pre>
-        </article>
-        <p className="text-xs text-neutral-500">
-          The scaffold is templated for consistency-of-format week to week —
-          consistency is what makes drift in the writing detectable. Open
-          with a specific decision the κ moved this week, not the metric
-          itself. The metric is evidence; the decision is the story.
-        </p>
+        <form action={saveDraftAction} className="space-y-3">
+          <input type="hidden" name="filename" value={draftFilename} />
+          <textarea
+            name="body"
+            defaultValue={initialBody}
+            spellCheck
+            rows={22}
+            className="w-full rounded-lg border border-neutral-300 bg-white p-4 font-mono text-xs leading-relaxed text-neutral-800 focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              className="rounded-md border border-neutral-900 bg-neutral-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+            >
+              Save draft
+            </button>
+            <p className="text-xs text-neutral-500">
+              Vercel is read-only — saves only land in local checkouts. Commit
+              the file alongside the calibration log entry it anchors to.
+            </p>
+          </div>
+        </form>
+      </section>
+
+      <section
+        aria-labelledby="drafts-heading"
+        className="space-y-3"
+      >
+        <header>
+          <h2
+            id="drafts-heading"
+            className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+          >
+            All drafts
+          </h2>
+          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+            Files under{" "}
+            <code className="font-mono">essays/drafts/</code>. Move a draft
+            into <code className="font-mono">contentrx-docs/essays/</code> to
+            publish it.
+          </p>
+        </header>
+        {allDrafts.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-neutral-300 bg-white px-4 py-3 text-xs text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+            No drafts yet. The first save creates one.
+          </p>
+        ) : (
+          <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+            {allDrafts.map((entry) => (
+              <DraftRow
+                key={entry.filename}
+                entry={entry}
+                isCurrent={entry.filename === draftFilename}
+              />
+            ))}
+          </ul>
+        )}
       </section>
 
       <p className="text-xs text-neutral-500">
-        Persistence (drafts saved alongside the report that produced them,
-        per the architecture doc) lands in B7b. For now, copy the scaffold
-        into the editor of your choice and link the published artifact back
-        to the report file.
+        Voice prompt: open with a specific decision the κ moved this week,
+        not the metric itself. The metric is evidence; the decision is the
+        story.
       </p>
     </div>
+  );
+}
+
+function DraftRow({
+  entry,
+  isCurrent,
+}: {
+  entry: DraftEntry;
+  isCurrent: boolean;
+}) {
+  return (
+    <li className="flex flex-wrap items-baseline justify-between gap-3 px-4 py-3">
+      <div className="flex items-baseline gap-3">
+        <Link
+          href={`/admin/essay-drafts/${encodeURIComponent(entry.filename)}`}
+          className="font-mono text-sm text-neutral-900 hover:underline dark:text-neutral-100"
+        >
+          {entry.filename}
+        </Link>
+        {isCurrent && (
+          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-900 dark:bg-blue-950 dark:text-blue-200">
+            this week
+          </span>
+        )}
+      </div>
+      <div className="flex items-baseline gap-4 font-mono text-[10px] text-neutral-500">
+        <span>{entry.size_bytes.toLocaleString()} bytes</span>
+        <span>{formatDate(entry.modified_at)}</span>
+      </div>
+    </li>
   );
 }
 
@@ -187,6 +306,10 @@ function kappaPretty(
   return `pending — ${k.reason}`;
 }
 
+function formatDate(iso: string): string {
+  return iso.replace("T", " ").slice(0, 16);
+}
+
 async function loadOverrideCount(): Promise<number> {
   const since = new Date(Date.now() - OVERRIDE_WINDOW_DAYS * DAY_MS);
   const db = getDb();
@@ -198,4 +321,3 @@ async function loadOverrideCount(): Promise<number> {
     );
   return Number(rows[0]?.count ?? 0);
 }
-
