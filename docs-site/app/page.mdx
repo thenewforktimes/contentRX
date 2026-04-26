@@ -2,40 +2,29 @@ export const metadata = {
   title: "ContentRX docs",
 };
 
-# ContentRX content model
+# ContentRX
 
-The executable spec behind the ContentRX evaluator. Every check that runs
-inside the Figma plugin, the CLI, the GitHub Action, and the API is
-defined here — same JSON, same versioning, same scoring.
+A content-design review system for engineering and product teams. The
+evaluator runs in the tools you already use — the Figma plugin, the
+CLI, the GitHub Action, the MCP server, and an API — and reports
+findings as plain-language guidance: an issue, a suggestion, a
+severity, a confidence.
 
-## What's inside
-
-- **8 content types** describe the surface a string lives on (button,
-  error message, tooltip, heading, …).
-- **13 moments** describe the user's intent at the point of contact
-  (browsing, in‑task, recovering from error, …).
-- **47 standards** describe the rules each string is graded against,
-  organized by category (clarity, voice & tone, structure, …).
-
-The evaluator picks a content type and moment for each string, then
-applies only the standards that are relevant to that pairing. The same
-string in a different moment can pass or fail differently — that's the
-point.
+The model behind the evaluator is private. The accuracy of the
+evaluator is public. See [/accuracy](/accuracy) for the headline κ
+numbers (with 95% confidence intervals, never combined into a
+composite score) and [/calibration](/calibration) for the weekly log
+that tracks how those numbers move.
 
 ## Where to start
 
 - **[Guides](/guides)** — "does this work on code I actually write?"
   Walkthroughs for Next.js + shadcn buttons, Next.js App Router error
   messages, and Figma design-system copy review.
-- **[Spec overview](/spec)** — high-level architecture of the model.
-- **[Standards](/spec/standards)** — the 47 rules with pass/fail
-  examples. Source of truth for every evaluator implementation.
-- **[Whitepaper](/whitepaper)** — why moment-aware evaluation exists.
-- **[Contributing](/contributing)** — how to propose a new standard.
-
-## Versioning
-
-This site reads from `standards_library.json` in the engine repo at
-build time. The version pill in the sidebar always matches the engine
-version that's currently in production. Older versions live in git
-history; semantic-versioning rules apply.
+- **[Whitepaper](/whitepaper)** — why situation-aware evaluation
+  exists.
+- **[Accuracy](/accuracy)** — measured system κ, self-drift κ, design
+  target. Updated nightly.
+- **[Calibration log](/calibration)** — weekly write-ups of κ
+  movement, drift signals, and active refinement candidates.
+- **[Contributing](/contributing)** — how to engage with the project.
