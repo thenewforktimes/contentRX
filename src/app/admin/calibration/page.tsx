@@ -1,22 +1,20 @@
 /**
  * `/admin/calibration` — substrate calibration view.
  *
- * Phase B5 of the post-pivot rolling plan. The substrate that
+ * Phase B5 + B5b of the post-pivot rolling plan. The substrate that
  * produces the public `/accuracy` page and the weekly calibration
  * log. Surfaces:
  *
  *   - Overall measured system κ + self-drift κ (with 95% CIs).
  *   - The 0.90 design target as a separate, never-combined number.
+ *   - System κ trend chart (B5b) — Recharts line chart of weekly κ
+ *     aggregated across measured standards. Reference lines for the
+ *     design target and the autonomous threshold.
  *   - Per-standard kappa table — one row per standard with current
  *     kappa, weekly trend (text sparkline), graduation level,
  *     prevalence.
  *   - Override-stream rollups by standard_id for the last 30 days,
  *     joined back to the kappa table where applicable.
- *
- * Read-only. Interactive Recharts charts are deferred to a follow-up
- * PR — Recharts is ~115kB and needs a client island; B5 ships the
- * server-rendered substrate and lets the founder use the page during
- * the daily review rhythm without paying for the chart bundle.
  *
  * Auth handled by `src/app/admin/layout.tsx`.
  */
@@ -29,6 +27,8 @@ import {
   type Kappa,
   type StandardAccuracy,
 } from "@/lib/accuracy-data";
+import { CalibrationCharts } from "./calibration-charts-client";
+import type { SystemKappaPoint } from "./charts";
 
 const OVERRIDE_WINDOW_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -41,6 +41,7 @@ export const metadata = {
 export default async function AdminCalibrationPage() {
   const snapshot = buildAccuracySnapshot();
   const overrideCounts = await loadOverrideCounts();
+  const systemKappaTrend = aggregateSystemKappaTrend(snapshot.standards);
 
   return (
     <div className="space-y-8">
@@ -68,6 +69,25 @@ export default async function AdminCalibrationPage() {
           kappa={snapshot.measured_self_drift}
         />
         <DesignTargetCard target={snapshot.design_target} />
+      </section>
+
+      <section aria-labelledby="trend" className="space-y-2">
+        <h2
+          id="trend"
+          className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+        >
+          System κ trend
+        </h2>
+        <p className="text-xs text-neutral-600 dark:text-neutral-400">
+          Weekly κ aggregated across all standards with measured weekly
+          values. Reference lines mark the autonomous threshold and the
+          0.90 design target.
+        </p>
+        <CalibrationCharts
+          points={systemKappaTrend}
+          designTarget={snapshot.design_target}
+          autonomousThreshold={snapshot.thresholds.autonomous}
+        />
       </section>
 
       <section aria-labelledby="thresholds" className="space-y-2">
@@ -308,6 +328,56 @@ function Sparkline({ values }: { values: Array<number | null> }) {
       })}
     </span>
   );
+}
+
+/**
+ * Aggregate per-standard weekly_kappa arrays into a system-level
+ * series. For each week index i, the system value is the simple
+ * mean of every standard's weekly_kappa[i] that is measured (non-null).
+ *
+ * The resulting `points` array is oldest-first: index 0 is the
+ * oldest week in the trailing window, the last entry is "this week"
+ * at week_offset=0.
+ */
+function aggregateSystemKappaTrend(
+  standards: StandardAccuracy[],
+): SystemKappaPoint[] {
+  let maxWeeks = 0;
+  for (const s of standards) {
+    if (s.weekly_kappa.length > maxWeeks) maxWeeks = s.weekly_kappa.length;
+  }
+  if (maxWeeks === 0) return [];
+
+  const points: SystemKappaPoint[] = [];
+  for (let i = 0; i < maxWeeks; i++) {
+    let sum = 0;
+    let count = 0;
+    let sampleSize = 0;
+    for (const s of standards) {
+      const v = s.weekly_kappa[i];
+      if (typeof v === "number" && Number.isFinite(v)) {
+        sum += v;
+        count += 1;
+        if (s.kappa.state === "measured") {
+          sampleSize += s.kappa.sample_size;
+        }
+      }
+    }
+    if (count === 0) continue;
+    // week_offset is 0 for the most recent week (last index), negative
+    // going back. So if maxWeeks=8 and i=0, week_offset = -7.
+    const weekOffset = i - (maxWeeks - 1);
+    points.push({
+      week_offset: weekOffset,
+      kappa: round3(sum / count),
+      sample_size: sampleSize,
+    });
+  }
+  return points;
+}
+
+function round3(n: number): number {
+  return Math.round(n * 1000) / 1000;
 }
 
 async function loadOverrideCounts(): Promise<Map<string, number>> {
