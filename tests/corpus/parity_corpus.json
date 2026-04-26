@@ -479,6 +479,51 @@
       "expected": "fail",
       "category": "Accessibility",
       "note": "Vague link text \u2014 both must catch."
+    },
+    {
+      "case_id": "PARITY PRF-03 heading trailing period",
+      "standard_id": "PRF-03",
+      "input": "Today's tasks.",
+      "content_type": "heading",
+      "expected": "fail",
+      "category": "Polish",
+      "note": "Audit 2026-04-26: JS missed \"heading\" content type. Drift would have shipped silently if this corpus case did not exist."
+    },
+    {
+      "case_id": "PARITY PRF-03 button trailing period",
+      "standard_id": "PRF-03",
+      "input": "Sign in.",
+      "content_type": "button_cta",
+      "expected": "fail",
+      "category": "Polish",
+      "note": "Trailing period on a button \u2014 both must catch."
+    },
+    {
+      "case_id": "PARITY GRM-02 Wi-Fi allowlist",
+      "standard_id": "GRM-02",
+      "input": "Connect to Wi-Fi to continue.",
+      "content_type": "short_ui_copy",
+      "expected": "pass",
+      "category": "Grammar",
+      "note": "Audit 2026-04-26: JS COMMON_ABBREVIATIONS was missing Wi-Fi / WIFI. Both should treat Wi-Fi as a known abbreviation and PASS."
+    },
+    {
+      "case_id": "PARITY GRM-04 Bed Bath & Beyond",
+      "standard_id": "GRM-04",
+      "input": "Buy at Bed Bath & Beyond today.",
+      "content_type": "long_form_copy",
+      "expected": "pass",
+      "category": "Grammar",
+      "note": "Audit 2026-04-26: JS BRAND_AMPERSANDS was missing Bed Bath & Beyond. Both should recognize this as a brand and PASS."
+    },
+    {
+      "case_id": "PARITY GRM-04 Standard & Poor's",
+      "standard_id": "GRM-04",
+      "input": "Tracked against Standard & Poor's index.",
+      "content_type": "long_form_copy",
+      "expected": "pass",
+      "category": "Grammar",
+      "note": "Audit 2026-04-26: JS BRAND_AMPERSANDS was missing Standard & Poor's. Both should recognize this as a brand and PASS."
     }
   ]
 }

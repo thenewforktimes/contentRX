@@ -1338,23 +1338,32 @@ const STANDARDS = {
 
 // Brand names that legitimately contain ampersands (GRM-04)
 const BRAND_AMPERSANDS = [
+  // Must mirror Python BRAND_AMPERSANDS (preprocess.py). Audit 2026-04-26
+  // flagged the "Ben & Jerrys" (no-apostrophe) variant, "EY",
+  // "Bed Bath & Beyond", "Liz Claiborne & Co", and "Standard & Poor's"
+  // as missing from this list.
   "AT&T", "H&M", "S&P", "D&G", "M&M", "M&Ms", "H&R Block",
   "Johnson & Johnson", "J&J", "Procter & Gamble", "P&G",
-  "Ben & Jerry's", "Dolce & Gabbana", "Tiffany & Co",
-  "Abercrombie & Fitch", "A&W", "B&H", "Barnes & Noble",
-  "Simon & Schuster", "Ernst & Young", "Arm & Hammer",
-  "Marks & Spencer", "R&B",
+  "Ben & Jerry's", "Ben & Jerrys", "Dolce & Gabbana",
+  "Tiffany & Co", "Abercrombie & Fitch", "A&W", "B&H",
+  "Barnes & Noble", "Simon & Schuster", "Ernst & Young", "EY",
+  "Arm & Hammer", "Bed Bath & Beyond", "Liz Claiborne & Co",
+  "Standard & Poor's", "Marks & Spencer", "R&B",
 ];
 
-// Universally known abbreviations that never need expansion (GRM-02)
+// Universally known abbreviations that never need expansion (GRM-02).
+// Must mirror Python COMMON_ABBREVIATIONS (preprocess.py). Audit 2026-04-26
+// flagged Wi-Fi / WIFI / R&D / Rx / CPR / EHR / EMR as missing from JS.
 const COMMON_ABBREVIATIONS = new Set([
   "API", "APIs", "SDK", "SDKs", "URL", "URLs", "HTML", "CSS", "PDF",
-  "USB", "GPS", "SaaS", "AI", "IT", "UI", "UX", "DNS", "HTTP", "HTTPS",
-  "FTP", "SQL", "CMS", "CDN", "RAM", "CPU", "GPU", "SSD", "OS", "iOS",
-  "VPN", "SSL", "TLS", "SSO", "OTP", "CEO", "CTO", "CFO", "COO", "HR",
-  "LLC", "IRS", "FAQ", "FAQs", "ID", "PIN", "ATM", "IPO", "ROI", "KPI",
-  "B2B", "B2C", "PR", "QA", "VP", "SVP", "EVP", "MBA", "CPA", "ESG",
-  "TTY", "ADA", "HIPAA", "ER", "ICU", "RN", "MD", "OTC", "FDA",
+  "USB", "GPS", "Wi-Fi", "WIFI", "SaaS", "AI", "IT", "UI", "UX", "DNS",
+  "HTTP", "HTTPS", "FTP", "SQL", "CMS", "CDN", "RAM", "CPU", "GPU",
+  "SSD", "OS", "iOS", "VPN", "SSL", "TLS", "SSO", "OTP",
+  "CEO", "CTO", "CFO", "COO", "HR", "LLC", "IRS", "FAQ", "FAQs",
+  "ID", "PIN", "ATM", "IPO", "ROI", "KPI", "B2B", "B2C", "PR", "QA",
+  "R&D", "VP", "SVP", "EVP", "MBA", "CPA", "ESG",
+  "TTY", "ADA", "HIPAA", "ER", "ICU", "RN", "MD", "OTC", "Rx",
+  "CPR", "EHR", "EMR", "FDA",
   "ACH", "FDIC", "FICO", "APR", "APY", "ETF", "IRA",
   "ZIP", "RSVP", "TV", "DVD", "AC", "AM", "PM", "USA", "UK", "EU",
   "UN", "NATO", "NASA", "ASAP", "ETA", "FYI", "DIY", "JPEG",
@@ -1706,8 +1715,11 @@ function checkPrf02RepeatedWords(text) {
 
 
 function checkPrf03TrailingPeriod(text, contentType) {
-  // Only check short, label-like content types
-  if (!["button_cta", "ui_label"].includes(contentType)) {
+  // Only check short, label-like content types. Must match Python
+  // (preprocess.py: check_prf03_trailing_period_on_headings) — "heading"
+  // belongs in the set; missing it produced silent JS-vs-Python drift
+  // because the parity corpus had no PRF-03 cases.
+  if (!["heading", "button_cta", "ui_label"].includes(contentType)) {
     return { standardId: "PRF-03", outcome: "defer" };
   }
   const stripped = text.trimEnd();
@@ -1991,23 +2003,16 @@ function checkPrf08PlaceholderText(text) {
 
 
 // Known acronyms that should NOT be flagged by the ALL CAPS check.
-// Matches the Python COMMON_ABBREVIATIONS allowlist plus common
-// marketing/UI patterns (FREE, SALE, NEW, BETA, PRO, VIP).
+// Mirrors Python `KNOWN_ACRONYMS = COMMON_ABBREVIATIONS | {marketing/dev}`.
+// Derived (not hand-mirrored) so adding to COMMON_ABBREVIATIONS up top
+// propagates here automatically — Python uses set union, JS spreads.
 const KNOWN_ACRONYMS = new Set([
-  "API","APIs","SDK","SDKs","URL","URLs","HTML","CSS","PDF","USB","GPS",
-  "SaaS","AI","IT","UI","UX","DNS","HTTP","HTTPS","FTP","SQL","CMS",
-  "CDN","RAM","CPU","GPU","SSD","iOS","VPN","SSL","TLS","SSO","OTP",
-  "CEO","CTO","CFO","COO","HR","LLC","IRS","FAQ","FAQs","ID","PIN",
-  "ATM","IPO","ROI","KPI","B2B","B2C","PR","QA","VP","SVP","EVP",
-  "MBA","CPA","ESG","TTY","ADA","HIPAA","ER","ICU","RN","MD","OTC",
-  "CPR","EHR","EMR","FDA","ACH","FDIC","FICO","APR","APY","ETF","IRA",
-  "ZIP","RSVP","TV","DVD","AC","AM","PM","USA","UK","EU","UN","NATO",
-  "NASA","ASAP","ETA","FYI","DIY","JPEG","PNG","GIF","MP3","MP4",
-  "WCAG","JSON","XML","YAML","CSV","REST","SMTP","IMAP","POP",
+  ...COMMON_ABBREVIATIONS,
+  "WCAG", "JSON", "XML", "YAML", "CSV", "REST", "SMTP", "IMAP", "POP",
   // Common marketing/UI patterns that aren't violations
-  "FREE","SALE","NEW","BETA","PRO","VIP",
+  "FREE", "SALE", "NEW", "BETA", "PRO", "VIP",
   // Dev markers caught by PRF-11 instead
-  "TODO","FIXME","TBD","WIP","DRAFT","PLACEHOLDER",
+  "TODO", "FIXME", "TBD", "WIP", "DRAFT", "PLACEHOLDER",
 ]);
 
 function checkPrf09AllCaps(text) {
