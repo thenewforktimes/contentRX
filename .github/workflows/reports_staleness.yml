@@ -1,0 +1,42 @@
+name: Reports staleness monitor
+
+# Phase C4 — daily watchdog over the report tree. Fails if any
+# generator subdirectory hasn't been updated within its expected
+# cadence threshold (mirrors the staleness logic in
+# src/lib/admin-reports.server.ts):
+#
+#   reports/accuracy/      — stale > 2 days
+#   reports/calibration/   — stale > 8 days
+#   reports/quarterly/     — stale > 95 days
+#
+# A workflow failure pages the maintainers via GitHub's standard
+# notification routing. The architecture doc's reasoning: "stale
+# reports are worse than no reports for the named-expert moat — the
+# moat depends on continuity of evidence."
+
+on:
+  schedule:
+    # 09:00 UTC daily — late enough that the 03:00 UTC accuracy cron
+    # has had a chance to write today's snapshot.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: reports-staleness-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  staleness:
+    name: check report staleness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+
+      - name: Run staleness check
+        run: python3 scripts/check_reports_staleness.py
