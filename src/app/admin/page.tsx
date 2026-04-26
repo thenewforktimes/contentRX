@@ -54,7 +54,7 @@ const ADMIN_LINKS: AdminLink[] = [
     title: "Calibration",
     description:
       "Kappa over time, drift detection, override stream. Substrate that produces /accuracy + the weekly calibration log.",
-    status: "planned",
+    status: "live",
   },
   {
     href: "/admin/reports",

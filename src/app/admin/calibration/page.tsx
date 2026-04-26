@@ -1,0 +1,332 @@
+/**
+ * `/admin/calibration` — substrate calibration view.
+ *
+ * Phase B5 of the post-pivot rolling plan. The substrate that
+ * produces the public `/accuracy` page and the weekly calibration
+ * log. Surfaces:
+ *
+ *   - Overall measured system κ + self-drift κ (with 95% CIs).
+ *   - The 0.90 design target as a separate, never-combined number.
+ *   - Per-standard kappa table — one row per standard with current
+ *     kappa, weekly trend (text sparkline), graduation level,
+ *     prevalence.
+ *   - Override-stream rollups by standard_id for the last 30 days,
+ *     joined back to the kappa table where applicable.
+ *
+ * Read-only. Interactive Recharts charts are deferred to a follow-up
+ * PR — Recharts is ~115kB and needs a client island; B5 ships the
+ * server-rendered substrate and lets the founder use the page during
+ * the daily review rhythm without paying for the chart bundle.
+ *
+ * Auth handled by `src/app/admin/layout.tsx`.
+ */
+
+import { desc, sql } from "drizzle-orm";
+import Link from "next/link";
+import { getDb, schema } from "@/db";
+import {
+  buildAccuracySnapshot,
+  type Kappa,
+  type StandardAccuracy,
+} from "@/lib/accuracy-data";
+
+const OVERRIDE_WINDOW_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export const metadata = {
+  title: "Calibration · ContentRX admin",
+  robots: { index: false, follow: false },
+};
+
+export default async function AdminCalibrationPage() {
+  const snapshot = buildAccuracySnapshot();
+  const overrideCounts = await loadOverrideCounts();
+
+  return (
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          Calibration
+        </h1>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          Substrate metrics that produce the public <code className="font-mono text-xs">/accuracy</code>{" "}
+          page and the weekly calibration log. The three κ numbers below stay
+          visually distinct on purpose — never combine them into a composite
+          score.
+        </p>
+      </header>
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        <KappaCard
+          label="Measured system κ"
+          subtitle="System verdicts vs Robo's golden labels"
+          kappa={snapshot.measured_system}
+        />
+        <KappaCard
+          label="Measured self-drift κ"
+          subtitle="Robo vs past-Robo on the held-out panel"
+          kappa={snapshot.measured_self_drift}
+        />
+        <DesignTargetCard target={snapshot.design_target} />
+      </section>
+
+      <section aria-labelledby="thresholds" className="space-y-2">
+        <h2
+          id="thresholds"
+          className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+        >
+          Graduation thresholds
+        </h2>
+        <dl className="grid gap-3 sm:grid-cols-3">
+          <ThresholdCard
+            label="Autonomous"
+            value={snapshot.thresholds.autonomous}
+            count={snapshot.by_level.autonomous}
+          />
+          <ThresholdCard
+            label="Batch approval"
+            value={snapshot.thresholds.batch_approval}
+            count={snapshot.by_level.batch_approval}
+          />
+          <ThresholdCard
+            label="Robo labels"
+            value={null}
+            count={snapshot.by_level.robo_labels}
+            note="No threshold — every verdict reviewed."
+          />
+        </dl>
+      </section>
+
+      <section aria-labelledby="standards-table" className="space-y-3">
+        <h2
+          id="standards-table"
+          className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+        >
+          Per-standard kappa
+        </h2>
+        {snapshot.standards.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-neutral-300 bg-white p-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+            No per-standard kappa available yet. Run{" "}
+            <code className="font-mono text-xs">tools/graduation_metrics.py</code>{" "}
+            and commit{" "}
+            <code className="font-mono text-xs">evals/graduation/readiness.json</code>.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+            <table className="min-w-full divide-y divide-neutral-200 text-sm dark:divide-neutral-800">
+              <thead className="text-xs uppercase tracking-wide text-neutral-500">
+                <tr>
+                  <th scope="col" className="px-3 py-2 text-left">Standard</th>
+                  <th scope="col" className="px-3 py-2 text-left">Level</th>
+                  <th scope="col" className="px-3 py-2 text-left">κ (95% CI)</th>
+                  <th scope="col" className="px-3 py-2 text-left">Weekly trend</th>
+                  <th scope="col" className="px-3 py-2 text-right">Overrides ({OVERRIDE_WINDOW_DAYS}d)</th>
+                  <th scope="col" className="px-3 py-2 text-right">Prevalence</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                {snapshot.standards.map((s) => (
+                  <StandardRow
+                    key={s.standard_id}
+                    standard={s}
+                    overrideCount={overrideCounts.get(s.standard_id) ?? 0}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function KappaCard({
+  label,
+  subtitle,
+  kappa,
+}: {
+  label: string;
+  subtitle: string;
+  kappa: Kappa;
+}) {
+  return (
+    <article className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+        {label}
+      </p>
+      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+        {subtitle}
+      </p>
+      <p className="mt-3">
+        {kappa.state === "measured" ? (
+          <>
+            <span className="font-mono text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+              {kappa.value.toFixed(3)}
+            </span>
+            <span className="ml-2 font-mono text-xs text-neutral-500">
+              [{kappa.ci_low.toFixed(3)}, {kappa.ci_high.toFixed(3)}]
+            </span>
+          </>
+        ) : (
+          <span className="text-sm italic text-neutral-500">
+            pending — {kappa.reason}
+          </span>
+        )}
+      </p>
+      {kappa.state === "measured" && (
+        <p className="mt-1 font-mono text-[10px] text-neutral-500">
+          n = {kappa.sample_size}
+        </p>
+      )}
+    </article>
+  );
+}
+
+function DesignTargetCard({ target }: { target: number }) {
+  return (
+    <article className="rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-950">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+        Design target
+      </p>
+      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+        Locked. A design assumption, not a measurement.
+      </p>
+      <p className="mt-3">
+        <span className="font-mono text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          {target.toFixed(2)}
+        </span>
+      </p>
+    </article>
+  );
+}
+
+function ThresholdCard({
+  label,
+  value,
+  count,
+  note,
+}: {
+  label: string;
+  value: number | null;
+  count: number;
+  note?: string;
+}) {
+  return (
+    <article className="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+          {label}
+        </span>
+        <span className="font-mono text-xs text-neutral-700 dark:text-neutral-300">
+          {count} standard{count === 1 ? "" : "s"}
+        </span>
+      </div>
+      {value !== null && (
+        <p className="mt-2 font-mono text-sm text-neutral-900 dark:text-neutral-100">
+          κ ≥ {value.toFixed(3)}
+        </p>
+      )}
+      {note && (
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          {note}
+        </p>
+      )}
+    </article>
+  );
+}
+
+function StandardRow({
+  standard,
+  overrideCount,
+}: {
+  standard: StandardAccuracy;
+  overrideCount: number;
+}) {
+  const k = standard.kappa;
+  return (
+    <tr className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+      <td className="px-3 py-2">
+        <Link
+          href={`/admin/model/standards/${standard.standard_id}`}
+          className="font-mono text-xs text-neutral-700 hover:underline dark:text-neutral-300"
+        >
+          {standard.standard_id}
+        </Link>
+      </td>
+      <td className="px-3 py-2 text-xs text-neutral-700 dark:text-neutral-300">
+        {standard.level.replace(/_/g, " ")}
+      </td>
+      <td className="px-3 py-2 font-mono text-xs">
+        {k.state === "measured" ? (
+          <span>
+            {k.value.toFixed(3)}
+            <span className="ml-1 text-[10px] text-neutral-500">
+              [{k.ci_low.toFixed(3)}, {k.ci_high.toFixed(3)}]
+            </span>
+          </span>
+        ) : (
+          <span className="italic text-neutral-500">pending</span>
+        )}
+      </td>
+      <td className="px-3 py-2 font-mono text-xs">
+        <Sparkline values={standard.weekly_kappa} />
+      </td>
+      <td className="px-3 py-2 text-right font-mono text-xs text-neutral-700 dark:text-neutral-300">
+        {overrideCount}
+      </td>
+      <td className="px-3 py-2 text-right font-mono text-xs text-neutral-700 dark:text-neutral-300">
+        {standard.prevalence === null ? "—" : standard.prevalence.toFixed(3)}
+      </td>
+    </tr>
+  );
+}
+
+/**
+ * Text sparkline using Unicode blocks. A pure-CSS Recharts replacement
+ * that works in server-rendered tables. Each value [0, 1] maps to one
+ * of eight block heights; nulls render as a thin dim mark.
+ */
+function Sparkline({ values }: { values: Array<number | null> }) {
+  if (values.length === 0) {
+    return <span className="text-neutral-400">—</span>;
+  }
+  const blocks = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
+  return (
+    <span className="font-mono text-base leading-none tracking-tight text-neutral-700 dark:text-neutral-300">
+      {values.map((v, i) => {
+        if (v === null) {
+          return (
+            <span key={i} className="text-neutral-300 dark:text-neutral-600">
+              ·
+            </span>
+          );
+        }
+        const clamped = Math.max(0, Math.min(1, v));
+        const idx = Math.min(blocks.length - 1, Math.floor(clamped * blocks.length));
+        return <span key={i}>{blocks[idx]}</span>;
+      })}
+    </span>
+  );
+}
+
+async function loadOverrideCounts(): Promise<Map<string, number>> {
+  const since = new Date(Date.now() - OVERRIDE_WINDOW_DAYS * DAY_MS);
+  const db = getDb();
+  const rows = await db
+    .select({
+      standardId: schema.violationOverrides.standardId,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(schema.violationOverrides)
+    .where(
+      sql`${schema.violationOverrides.createdAt} >= ${since.toISOString()}`,
+    )
+    .groupBy(schema.violationOverrides.standardId)
+    .orderBy(desc(sql`count(*)`));
+  const out = new Map<string, number>();
+  for (const r of rows) {
+    if (r.standardId) out.set(r.standardId, Number(r.count));
+  }
+  return out;
+}
