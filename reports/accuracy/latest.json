@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-04-26T04:09:22Z",
+  "measured_system": {
+    "state": "pending_measurement",
+    "reason": "no standards have completed the weekly \u03ba series"
+  },
+  "measured_self_drift": {
+    "state": "pending_measurement",
+    "reason": "Session 7 drift panel awaiting blind re-label + score"
+  },
+  "design_target": 0.9,
+  "by_level": {
+    "robo_labels": 43,
+    "batch_approval": 0,
+    "autonomous": 0
+  },
+  "standards_measured": 0,
+  "standards_total": 47
+}
