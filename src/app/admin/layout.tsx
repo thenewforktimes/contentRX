@@ -75,10 +75,15 @@ export default async function AdminLayout({
             <Link href="/admin/reports" className="hover:underline">
               Reports
             </Link>
+            <Link href="/admin/essay-drafts" className="hover:underline">
+              Essay drafts
+            </Link>
             <Link href="/admin/rule-review" className="hover:underline">
               Rule review
             </Link>
-            {/* Phase B sessions add: essay-drafts. */}
+            {/* Phase B mainline complete; follow-ups B3b/B4b/B5b/B6b/B7b
+                add decision-recording, form entry, charts, approvals,
+                and draft persistence. */}
           </nav>
         </div>
       </header>

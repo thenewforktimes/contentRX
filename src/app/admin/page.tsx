@@ -68,7 +68,7 @@ const ADMIN_LINKS: AdminLink[] = [
     title: "Essay drafts",
     description:
       "200-word scaffold drawn from the latest report — removes the cold-start tax on writing.",
-    status: "planned",
+    status: "live",
   },
 ];
 
