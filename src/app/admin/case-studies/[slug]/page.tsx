@@ -19,6 +19,7 @@ import {
   type EngineResultRow,
   type PublicCheckEnvelope,
 } from "@/lib/admin-case-studies.server";
+import { LogRefinementButton } from "./log-refinement-button";
 
 export const metadata = {
   title: "Case study · ContentRX admin",
@@ -251,17 +252,29 @@ function ResultRow({ row }: { row: EngineResultRow }) {
   const review_reason = !isError
     ? (resp as PublicCheckEnvelope).review_reason
     : null;
+  const verdict = !isError ? (resp as PublicCheckEnvelope).verdict : "error";
+
+  // Surface the inline "log refinement" form on rows worth triaging —
+  // anything the engine flagged. Passes don't carry a refinement button
+  // because the most common false-negative case is "engine missed
+  // something" which doesn't have row-level context to pre-fill from.
+  const showLogButton = verdict !== "pass";
 
   return (
     <li className="flex flex-col gap-2 px-4 py-3">
-      <div className="flex flex-wrap items-baseline gap-3">
-        <p className="font-sans text-sm text-neutral-900 dark:text-neutral-100">
-          {row.input.text}
-        </p>
-        {review_reason && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[10px] text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-            {review_reason}
-          </span>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <div className="flex flex-1 flex-wrap items-baseline gap-3">
+          <p className="font-sans text-sm text-neutral-900 dark:text-neutral-100">
+            {row.input.text}
+          </p>
+          {review_reason && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[10px] text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+              {review_reason}
+            </span>
+          )}
+        </div>
+        {showLogButton && (
+          <LogRefinementButton defaults={buildDefaults(row, verdict)} />
         )}
       </div>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[10px] text-neutral-500">
@@ -298,6 +311,80 @@ function ResultRow({ row }: { row: EngineResultRow }) {
       )}
     </li>
   );
+}
+
+/** Compose the pre-fill values for the inline refinement form from a
+ * single engine-result row. The triggering_case is rich enough to
+ * stand alone in the refinement log without the founder having to
+ * retype source location, head SHA, or the engine verdict; the
+ * current_category gets a best-effort hint from the violation's
+ * issue text. */
+function buildDefaults(
+  row: EngineResultRow,
+  verdict: string,
+): {
+  triggering_case: string;
+  current_category_hint: string;
+  title_hint: string;
+} {
+  const today = new Date().toISOString().slice(0, 10);
+  const isError = "error" in row.response;
+  const v0 =
+    !isError && (row.response as PublicCheckEnvelope).violations.length > 0
+      ? (row.response as PublicCheckEnvelope).violations[0]!
+      : null;
+  const review_reason = !isError
+    ? (row.response as PublicCheckEnvelope).review_reason
+    : null;
+
+  // Triggering case prose — same shape we'd write by hand for a
+  // refinement candidate. Includes target slug + source location +
+  // head SHA + verdict + (when present) issue text.
+  const lines: string[] = [];
+  lines.push(
+    `${row.input.target} case study, ${today}. Engine verdict: \`${verdict}\`${
+      review_reason ? ` (\`${review_reason}\`)` : ""
+    }.`,
+  );
+  lines.push(
+    `Text: "${row.input.text.slice(0, 240)}"${row.input.text.length > 240 ? "…" : ""}`,
+  );
+  lines.push(
+    `Source: ${row.input.source_file}:${row.input.line} (kind \`${row.input.kind}\`, head ${row.input.head_sha.slice(0, 7)}).`,
+  );
+  if (v0) {
+    lines.push(
+      `Engine reported: "${v0.issue}" — suggests "${v0.suggestion}". Severity ${v0.severity}, confidence ${(
+        v0.confidence ?? 0
+      ).toFixed(2)}.`,
+    );
+  }
+  if (isError) {
+    lines.push(
+      `Engine errored: ${(row.response as { error: string }).error}.`,
+    );
+  }
+
+  const triggering_case = lines.join(" ");
+
+  // Best-effort category hint. We don't have standard_id (privacy
+  // boundary) so the hint is the issue text itself, which the founder
+  // refines. For pass-but-flagged-as-review rows, use the review_reason.
+  let current_category_hint = "";
+  if (v0) {
+    current_category_hint = v0.issue;
+  } else if (review_reason) {
+    current_category_hint = `review_reason: ${review_reason}`;
+  }
+
+  // Title: short truncation of the row text, since the form's optional
+  // title is a header for the entry.
+  const title_hint =
+    row.input.text.length <= 60
+      ? row.input.text
+      : `${row.input.text.slice(0, 57)}…`;
+
+  return { triggering_case, current_category_hint, title_hint };
 }
 
 function SeverityBadge({
