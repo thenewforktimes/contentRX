@@ -131,6 +131,12 @@ export const subscriptions = pgTable(
     uniqueIndex("subscriptions_user_active_idx")
       .on(t.userId)
       .where(sql`status = 'active'`),
+    // FK index so cascade-delete on users doesn't full-scan this table.
+    // The partial unique above only covers status='active' rows; we need
+    // a plain index on user_id to make `DELETE FROM users WHERE id=?`
+    // proportional to the user's subscription history rather than the
+    // whole subscriptions table. Audit 2026-04-26 P1.
+    index("subscriptions_user_id_idx").on(t.userId),
   ],
 ).enableRLS();
 
