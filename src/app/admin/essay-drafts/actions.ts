@@ -15,7 +15,9 @@
 "use server";
 
 import fs from "node:fs";
+import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { isContentRXAdmin } from "@/lib/graduation";
 import {
   draftFilePath,
   ensureDraftsDir,
@@ -25,6 +27,7 @@ import {
 interface SaveResult {
   ok: boolean;
   error?:
+    | "not_authorised"
     | "invalid_filename"
     | "empty_body"
     | "body_too_large"
@@ -50,6 +53,14 @@ export async function saveDraft(
   filename: string,
   body: string,
 ): Promise<SaveResult> {
+  // Defense-in-depth: re-check the founder gate at the action boundary.
+  // The /admin layout enforces it on render, but Server Actions are
+  // independently POSTable so we cannot rely on the layout alone.
+  const { userId: clerkId } = await auth();
+  if (!isContentRXAdmin(clerkId)) {
+    return { ok: false, error: "not_authorised" };
+  }
+
   if (!isSafeDraftFilename(filename)) {
     return { ok: false, error: "invalid_filename" };
   }

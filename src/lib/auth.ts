@@ -96,6 +96,9 @@ async function enrichWithSeats(
 
   // Team member: seats come from the team OWNER's active subscription.
   // Team owner's own row has team_owner_user_id = null; members have it set.
+  // Filter on status='active' so a canceled team subscription stops granting
+  // seats immediately — without the filter, historical canceled rows would
+  // continue to enrich members until the row is deleted.
   const ownerId = user.teamOwnerUserId ?? user.id;
 
   const db = getDb();
@@ -106,6 +109,7 @@ async function enrichWithSeats(
       and(
         eq(schema.subscriptions.userId, ownerId),
         eq(schema.subscriptions.plan, "team"),
+        eq(schema.subscriptions.status, "active"),
       ),
     )
     .limit(1);

@@ -24,7 +24,9 @@
 "use server";
 
 import fs from "node:fs";
+import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { isContentRXAdmin } from "@/lib/graduation";
 import {
   isReportType,
   reviewSentinelPath,
@@ -35,6 +37,7 @@ interface ToggleResult {
   ok: boolean;
   reviewed: boolean;
   error?:
+    | "not_authorised"
     | "invalid_type"
     | "invalid_filename"
     | "report_not_found"
@@ -68,6 +71,14 @@ export async function toggleReviewed(
   filename: string,
   desired: boolean,
 ): Promise<ToggleResult> {
+  // Defense-in-depth: re-check the founder gate at the action boundary.
+  // The /admin layout enforces it on render, but Server Actions are
+  // independently POSTable so we cannot rely on the layout alone.
+  const { userId: clerkId } = await auth();
+  if (!isContentRXAdmin(clerkId)) {
+    return { ok: false, reviewed: false, error: "not_authorised" };
+  }
+
   if (!isReportType(typeRaw)) {
     return { ok: false, reviewed: false, error: "invalid_type" };
   }
