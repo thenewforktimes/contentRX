@@ -14,6 +14,7 @@
  */
 
 import { auth } from "@clerk/nextjs/server";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import fs from "node:fs";
@@ -58,15 +59,24 @@ interface Readiness {
   by_level?: Record<string, number>;
 }
 
-function readReadiness(): Readiness | null {
-  const p = path.join(process.cwd(), "evals", "graduation", "readiness.json");
-  try {
-    if (!fs.existsSync(p)) return null;
-    return JSON.parse(fs.readFileSync(p, "utf-8")) as Readiness;
-  } catch {
-    return null;
-  }
-}
+// Wrapped in unstable_cache so concurrent requests (and successive
+// renders) reuse the parsed JSON instead of re-reading + re-parsing
+// readiness.json on every navigation. The file is rewritten by a
+// nightly cron (tools/graduation_metrics.py); 1h revalidate is
+// well within freshness budget while collapsing typical traffic.
+const readReadiness = unstable_cache(
+  async (): Promise<Readiness | null> => {
+    const p = path.join(process.cwd(), "evals", "graduation", "readiness.json");
+    try {
+      if (!fs.existsSync(p)) return null;
+      return JSON.parse(fs.readFileSync(p, "utf-8")) as Readiness;
+    } catch {
+      return null;
+    }
+  },
+  ["dashboard-graduation-readiness"],
+  { revalidate: 3600 },
+);
 
 export default async function GraduationPage() {
   const { userId: clerkId } = await auth();
@@ -75,7 +85,7 @@ export default async function GraduationPage() {
   }
 
   const canApprove = canApproveGraduation(clerkId);
-  const readiness = readReadiness();
+  const readiness = await readReadiness();
   const dbRows = await listGraduationStatuses();
   const dbByStandard = new Map(dbRows.map((r) => [r.standardId, r]));
 

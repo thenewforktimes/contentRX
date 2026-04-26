@@ -12,6 +12,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import fs from "node:fs";
@@ -37,29 +38,42 @@ interface DriftReport {
   implicated_standards?: string[];
 }
 
-function readLatestDriftReport(): {
-  report: DriftReport | null;
-  filename: string | null;
-  mtime: Date | null;
-} {
-  const dir = path.join(process.cwd(), "evals", "drift", "reports");
-  try {
-    if (!fs.existsSync(dir)) return { report: null, filename: null, mtime: null };
-    const files = fs
-      .readdirSync(dir)
-      .filter((n) => n.endsWith(".json"))
-      .sort()
-      .reverse();
-    if (files.length === 0) return { report: null, filename: null, mtime: null };
-    const filename = files[0]!;
-    const p = path.join(dir, filename);
-    const raw = fs.readFileSync(p, "utf-8");
-    const mtime = fs.statSync(p).mtime;
-    return { report: JSON.parse(raw) as DriftReport, filename, mtime };
-  } catch {
-    return { report: null, filename: null, mtime: null };
-  }
-}
+// Wrapped in unstable_cache so quarterly-review renders skip the FS
+// read + JSON parse on every navigation. Drift reports are committed
+// quarterly; a 24h revalidate is well within freshness budget. The
+// cache layer JSON-serializes return values, so mtime is returned as
+// an ISO string rather than Date — the consumer slices it directly.
+const readLatestDriftReport = unstable_cache(
+  async (): Promise<{
+    report: DriftReport | null;
+    filename: string | null;
+    mtime_iso: string | null;
+  }> => {
+    const dir = path.join(process.cwd(), "evals", "drift", "reports");
+    try {
+      if (!fs.existsSync(dir)) {
+        return { report: null, filename: null, mtime_iso: null };
+      }
+      const files = fs
+        .readdirSync(dir)
+        .filter((n) => n.endsWith(".json"))
+        .sort()
+        .reverse();
+      if (files.length === 0) {
+        return { report: null, filename: null, mtime_iso: null };
+      }
+      const filename = files[0]!;
+      const p = path.join(dir, filename);
+      const raw = fs.readFileSync(p, "utf-8");
+      const mtime_iso = fs.statSync(p).mtime.toISOString();
+      return { report: JSON.parse(raw) as DriftReport, filename, mtime_iso };
+    } catch {
+      return { report: null, filename: null, mtime_iso: null };
+    }
+  },
+  ["dashboard-cadence-quarterly-drift"],
+  { revalidate: 86400 },
+);
 
 export default async function QuarterlyReviewPage() {
   const { userId: clerkId } = await auth();
@@ -76,7 +90,7 @@ export default async function QuarterlyReviewPage() {
     redirect("/dashboard/cadence");
   }
 
-  const { report, filename, mtime } = readLatestDriftReport();
+  const { report, filename, mtime_iso } = await readLatestDriftReport();
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,7 +108,7 @@ export default async function QuarterlyReviewPage() {
       </header>
 
       {report ? (
-        <ReportCard report={report} filename={filename} mtime={mtime} />
+        <ReportCard report={report} filename={filename} mtime_iso={mtime_iso} />
       ) : (
         <EmptyState />
       )}
@@ -181,11 +195,11 @@ export default async function QuarterlyReviewPage() {
 function ReportCard({
   report,
   filename,
-  mtime,
+  mtime_iso,
 }: {
   report: DriftReport;
   filename: string | null;
-  mtime: Date | null;
+  mtime_iso: string | null;
 }) {
   const k = report.kappa_summary?.kappa;
   const lo = report.kappa_summary?.ci_low;
@@ -203,9 +217,9 @@ function ReportCard({
             {report.quarter ?? filename ?? "—"}
           </p>
         </div>
-        {mtime && (
+        {mtime_iso && (
           <p className="text-xs text-neutral-500">
-            File mtime · {mtime.toISOString().slice(0, 10)}
+            File mtime · {mtime_iso.slice(0, 10)}
           </p>
         )}
       </div>

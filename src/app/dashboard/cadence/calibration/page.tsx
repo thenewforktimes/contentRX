@@ -10,6 +10,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
@@ -38,22 +39,31 @@ interface DriftReport {
   implicated_standards?: string[];
 }
 
-function readLatestDriftReport(): DriftReport | null {
-  const dir = path.join(process.cwd(), "evals", "drift", "reports");
-  try {
-    if (!fs.existsSync(dir)) return null;
-    const files = fs
-      .readdirSync(dir)
-      .filter((n) => n.endsWith(".json"))
-      .sort()
-      .reverse();
-    if (files.length === 0) return null;
-    const raw = fs.readFileSync(path.join(dir, files[0]!), "utf-8");
-    return JSON.parse(raw) as DriftReport;
-  } catch {
-    return null;
-  }
-}
+// Wrapped in unstable_cache so calibration page renders don't pay the
+// FS read + JSON parse on every request. Drift reports are emitted on
+// the weekly Monday cron; a 6h revalidate stays well under the cadence
+// while collapsing burst traffic. Cache key namespaces the dashboard
+// vs admin variants — never share a cache slot across tenants/views.
+const readLatestDriftReport = unstable_cache(
+  async (): Promise<DriftReport | null> => {
+    const dir = path.join(process.cwd(), "evals", "drift", "reports");
+    try {
+      if (!fs.existsSync(dir)) return null;
+      const files = fs
+        .readdirSync(dir)
+        .filter((n) => n.endsWith(".json"))
+        .sort()
+        .reverse();
+      if (files.length === 0) return null;
+      const raw = fs.readFileSync(path.join(dir, files[0]!), "utf-8");
+      return JSON.parse(raw) as DriftReport;
+    } catch {
+      return null;
+    }
+  },
+  ["dashboard-cadence-calibration-drift"],
+  { revalidate: 21600 },
+);
 
 export default async function CalibrationPage() {
   const { userId: clerkId } = await auth();
@@ -72,7 +82,7 @@ export default async function CalibrationPage() {
     redirect("/dashboard/cadence");
   }
 
-  const report = readLatestDriftReport();
+  const report = await readLatestDriftReport();
 
   return (
     <div className="flex flex-col gap-6">

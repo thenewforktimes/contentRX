@@ -11,6 +11,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import fs from "node:fs";
@@ -32,29 +33,42 @@ interface AnnualReport {
   retired_reinstatement_candidates?: string[];
 }
 
-function readLatestReport(): {
-  report: AnnualReport | null;
-  filename: string | null;
-  mtime: Date | null;
-} {
-  const dir = path.join(process.cwd(), "evals", "annual_audit", "reports");
-  try {
-    if (!fs.existsSync(dir)) return { report: null, filename: null, mtime: null };
-    const files = fs
-      .readdirSync(dir)
-      .filter((n) => n.endsWith(".json"))
-      .sort()
-      .reverse();
-    if (files.length === 0) return { report: null, filename: null, mtime: null };
-    const filename = files[0]!;
-    const p = path.join(dir, filename);
-    const raw = fs.readFileSync(p, "utf-8");
-    const mtime = fs.statSync(p).mtime;
-    return { report: JSON.parse(raw) as AnnualReport, filename, mtime };
-  } catch {
-    return { report: null, filename: null, mtime: null };
-  }
-}
+// Wrapped in unstable_cache so annual-audit renders skip the FS read
+// + JSON parse on every navigation. Reports are committed annually;
+// 24h revalidate is well within freshness budget. Returns mtime as
+// ISO string because the cache layer JSON-serializes return values
+// (Date round-trips through string).
+const readLatestReport = unstable_cache(
+  async (): Promise<{
+    report: AnnualReport | null;
+    filename: string | null;
+    mtime_iso: string | null;
+  }> => {
+    const dir = path.join(process.cwd(), "evals", "annual_audit", "reports");
+    try {
+      if (!fs.existsSync(dir)) {
+        return { report: null, filename: null, mtime_iso: null };
+      }
+      const files = fs
+        .readdirSync(dir)
+        .filter((n) => n.endsWith(".json"))
+        .sort()
+        .reverse();
+      if (files.length === 0) {
+        return { report: null, filename: null, mtime_iso: null };
+      }
+      const filename = files[0]!;
+      const p = path.join(dir, filename);
+      const raw = fs.readFileSync(p, "utf-8");
+      const mtime_iso = fs.statSync(p).mtime.toISOString();
+      return { report: JSON.parse(raw) as AnnualReport, filename, mtime_iso };
+    } catch {
+      return { report: null, filename: null, mtime_iso: null };
+    }
+  },
+  ["dashboard-cadence-annual-report"],
+  { revalidate: 86400 },
+);
 
 export default async function AnnualAuditPage() {
   const { userId: clerkId } = await auth();
@@ -71,7 +85,7 @@ export default async function AnnualAuditPage() {
     redirect("/dashboard/cadence");
   }
 
-  const { report, filename, mtime } = readLatestReport();
+  const { report, filename, mtime_iso } = await readLatestReport();
 
   return (
     <div className="flex flex-col gap-6">
@@ -89,7 +103,7 @@ export default async function AnnualAuditPage() {
       </header>
 
       {report ? (
-        <ReportCard report={report} filename={filename} mtime={mtime} />
+        <ReportCard report={report} filename={filename} mtime_iso={mtime_iso} />
       ) : (
         <EmptyState />
       )}
@@ -147,11 +161,11 @@ export default async function AnnualAuditPage() {
 function ReportCard({
   report,
   filename,
-  mtime,
+  mtime_iso,
 }: {
   report: AnnualReport;
   filename: string | null;
-  mtime: Date | null;
+  mtime_iso: string | null;
 }) {
   return (
     <section className="flex flex-col gap-4 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
@@ -164,9 +178,9 @@ function ReportCard({
             {report.year ?? filename ?? "—"}
           </p>
         </div>
-        {mtime && (
+        {mtime_iso && (
           <p className="text-xs text-neutral-500">
-            File mtime · {mtime.toISOString().slice(0, 10)}
+            File mtime · {mtime_iso.slice(0, 10)}
           </p>
         )}
       </div>
