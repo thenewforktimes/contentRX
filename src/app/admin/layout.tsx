@@ -78,6 +78,9 @@ export default async function AdminLayout({
             <Link href="/admin/essay-drafts" className="hover:underline">
               Essay drafts
             </Link>
+            <Link href="/admin/case-studies" className="hover:underline">
+              Case studies
+            </Link>
             <Link href="/admin/rule-review" className="hover:underline">
               Rule review
             </Link>
