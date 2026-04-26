@@ -684,6 +684,21 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* WCAG AA — honor user's reduced-motion preference. Disables the
+   * progress-bar fill transition (.progress-bar-fill, .progress-fill)
+   * and the spinner animation. Color and layout stay; just the motion
+   * pares back. PLG-L-01 closing pass. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* ------------------------------------------------------------------ */
   /* Summary (single check)                                              */
   /* ------------------------------------------------------------------ */
@@ -845,7 +860,7 @@
     <div class="progress-bar-track" role="progressbar" aria-label="Sign-in progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10">
       <div class="progress-bar-fill" id="signin-progress-fill" style="width: 10%;"></div>
     </div>
-    <div class="progress-status" id="signin-status">Opened your browser. Complete sign-in there...</div>
+    <div class="progress-status" id="signin-status" aria-live="polite">Opened your browser. Complete sign-in there...</div>
   </div>
   <button class="btn btn-secondary" id="btn-signin-retry">Re-open browser tab</button>
   <button class="btn btn-text" id="btn-signin-cancel" style="margin-top:4px;">Cancel</button>
@@ -896,8 +911,8 @@
     <div class="progress-bar-track" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
       <div class="progress-bar-fill" id="progress-fill"></div>
     </div>
-    <div class="progress-status" id="progress-status">Collecting text layers...</div>
-    <div class="progress-detail" id="progress-detail"></div>
+    <div class="progress-status" id="progress-status" aria-live="polite">Collecting text layers...</div>
+    <div class="progress-detail" id="progress-detail" aria-live="polite"></div>
     <button class="btn btn-danger" id="btn-cancel-scan" style="margin-top:12px;">Cancel scan</button>
   </div>
 </div>
@@ -3080,7 +3095,7 @@ function renderMomentBanner(result) {
     <div class="moment-banner-actions">
       <button type="button" class="btn-moment-correct btn-moment-correct-toggle">Not ${escapeHtml(moment)}?</button>
       <div class="moment-correct-form" hidden>
-        <select class="moment-correct-picker">
+        <select class="moment-correct-picker" aria-label="Correct moment">
           <option value="">Pick a moment…</option>
           ${dropdownOptions}
         </select>
