@@ -33,21 +33,12 @@ from content_checker.moments import (  # noqa: E402
     MOMENT_CONFIDENCE_THRESHOLD,
     MOMENT_TAXONOMY,
     MOMENT_WEIGHTS,
+    SITUATION_PROPERTY_BY_MOMENT,
 )
 
 OUTPUT_PATH = (
     REPO_ROOT / "src" / "content_checker" / "standards" / "moments_taxonomy.json"
 )
-
-# Moments that represent situation-like properties — flag for UI
-# filtering on the /model page. Mirrors the Session 20 scope:
-# "Filter by situation-like properties (destructive, permission-gated,
-# compliance)".
-SITUATION_PROPERTY_BY_MOMENT: dict[str, str] = {
-    "destructive_action": "destructive",
-    "trust_permission": "permission-gated",
-    "compliance_disclosure": "compliance",
-}
 
 
 def _weights_for(moment_id: str) -> list[dict[str, Any]]:

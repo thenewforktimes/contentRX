@@ -17,7 +17,10 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from content_checker.moments import MOMENT_TAXONOMY
+from content_checker.moments import (
+    MOMENT_TAXONOMY,
+    SITUATION_PROPERTY_BY_MOMENT,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TS_FILE = REPO_ROOT / "src" / "lib" / "moment-metadata.ts"
@@ -73,15 +76,13 @@ def test_ts_exports_all_thirteen_moments() -> None:
     assert len(_parse_descriptions()) == 13
 
 
-def test_situation_property_mapping_matches_exporter() -> None:
-    """The TS file also pins the three situation-property moments.
+def test_situation_property_mapping_matches_engine() -> None:
+    """The TS file also pins the situation-property moments.
 
-    Mirrors `tools/export_moments.py` :: SITUATION_PROPERTY_BY_MOMENT.
-    Adding a new situation-flagged moment is a two-file change; this
-    test makes sure both files stay coherent.
+    Pinned to `content_checker.moments.SITUATION_PROPERTY_BY_MOMENT`,
+    the canonical source of truth for which moments carry which
+    situation property. Adding a new situation-flagged moment is now
+    a one-place change in moments.py — this test catches the drift if
+    the TS hand-mirror falls behind.
     """
-    assert _parse_situation_properties() == {
-        "destructive_action": "destructive",
-        "trust_permission": "permission-gated",
-        "compliance_disclosure": "compliance",
-    }
+    assert _parse_situation_properties() == dict(SITUATION_PROPERTY_BY_MOMENT)

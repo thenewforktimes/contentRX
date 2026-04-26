@@ -59,8 +59,11 @@ export const MOMENT_DESCRIPTIONS: Record<Moment, string> = {
 
 /**
  * Human-readable labels for the `situation_property` attribute of
- * destructive / permission-gated / compliance moments. Mirrors
- * SITUATION_PROPERTY_BY_MOMENT in `tools/export_moments.py`.
+ * destructive / permission-gated / compliance moments. Hand-mirror of
+ * `SITUATION_PROPERTY_BY_MOMENT` in
+ * `src/content_checker/moments.py` (the engine-side canonical source).
+ * `tests/test_moment_metadata_ts_mirror.py` pins this against the
+ * Python definition so any drift fails CI.
  */
 export const SITUATION_PROPERTY_BY_MOMENT: Partial<Record<Moment, string>> = {
   destructive_action: "destructive",

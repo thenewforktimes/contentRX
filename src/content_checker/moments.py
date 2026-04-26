@@ -79,6 +79,17 @@ MOMENT_TAXONOMY: dict[str, str] = {
 
 VALID_MOMENTS = frozenset(MOMENT_TAXONOMY.keys())
 
+# Moments that represent situation-like properties — flag for UI
+# filtering on /admin/model and the moment banner. Single source of
+# truth: tools/export_moments.py imports this; the TS mirror in
+# src/lib/moment-metadata.ts is pinned to it via
+# tests/test_moment_metadata_ts_mirror.py.
+SITUATION_PROPERTY_BY_MOMENT: dict[str, str] = {
+    "destructive_action":    "destructive",
+    "trust_permission":      "permission-gated",
+    "compliance_disclosure": "compliance",
+}
+
 # The default moment when no pattern matches. Not shown in UI.
 DEFAULT_MOMENT = "browsing_discovery"
 
