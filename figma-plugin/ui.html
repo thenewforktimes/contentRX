@@ -145,13 +145,42 @@
     margin-bottom: 8px;
   }
 
+  /* Schema 2.0.0: standard-id is no longer rendered. Class kept for
+   * any stale references in the rationale-body markup. */
   .violation-card .standard-id {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--figma-color-text-secondary, #888);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
+    display: none;
+  }
+
+  .violation-card .violation-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Severity badges (high / medium / low) — schema 2.0.0               */
+  /* ------------------------------------------------------------------ */
+  .severity-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 8px;
+    letter-spacing: 0.4px;
+  }
+  .severity-badge.severity-high {
+    background: #fde0e0;
+    color: #962020;
+  }
+  .severity-badge.severity-medium {
+    background: #fdecc8;
+    color: #8c5a00;
+  }
+  .severity-badge.severity-low {
+    background: var(--figma-color-bg-secondary, #f0f0f0);
+    color: var(--figma-color-text-secondary, #666);
   }
 
   .violation-card .issue {
@@ -2705,7 +2734,10 @@ async function checkContentViaApi(text, contentType, moment, signal) {
     throw new Error("Received an unreadable response. Try scanning again.");
   }
 
-  if (!data || !data.result) {
+  // Schema 2.0.0 (ADR 2026-04-25): top-level shape. The response has
+  // `schema_version`, `violations`, `verdict`, `review_reason`, and
+  // `warnings` at the root — no `result` wrapper.
+  if (!data || !Array.isArray(data.violations)) {
     throw new Error("Received an unexpected response. Try scanning again.");
   }
 
@@ -2899,37 +2931,36 @@ async function runBatchScan(nodes, onProgress) {
       customExampleMatch: null,
     };
 
-    const apiResult = item.apiData && item.apiData.result;
+    // Schema 2.0.0 (ADR 2026-04-25): top-level shape. apiData carries
+    // `violations`, `verdict`, `review_reason`, `warnings` at the root.
+    // Substrate fields (standard_id, rule, rule_version, rationale_chain,
+    // moment, content_type, summary, passes) are stripped by /api/check
+    // and never reach the plugin. The local preprocessor still produces
+    // violations with standard_id internally for the suppressed-IDs
+    // dedup and for override-flow tracking; only those preprocessor
+    // violations carry standard_id in this plugin's data model.
+    const apiResult = item.apiData;
     if (apiResult) {
-      nodeResult.contentType = apiResult.content_type || item.contentType;
-      if (apiResult.moment) nodeResult.moment = apiResult.moment;
-
       for (const v of apiResult.violations || []) {
-        // Suppression: if the JS preprocessor passed this standard, skip
-        // the server-side violation for the same id. Preprocessor is the
-        // source of truth for the mechanical checks it covers.
-        if (item.suppressedIds.has(v.standard_id)) continue;
         nodeResult.violations.push({
-          standard_id: v.standard_id,
+          // Server violations no longer carry standard_id (substrate).
+          // Preprocessor violations are merged in elsewhere with
+          // standard_id intact.
+          standard_id: null,
           issue: v.issue,
           suggestion: v.suggestion,
-          source: v.source === "preprocessor" ? "preprocessor" : "ai",
+          severity: v.severity || "medium",
+          source: "ai",
           confidence: typeof v.confidence === "number" ? v.confidence : 1.0,
         });
       }
 
       if (nodeResult.violations.length > 0) {
         nodeResult.overallVerdict = "fail";
-        nodeResult.summary = apiResult.summary || "";
       } else {
         nodeResult.overallVerdict = "pass";
-        const serverSaidFail = apiResult.overall_verdict === "fail";
-        nodeResult.summary = serverSaidFail ? "" : (apiResult.summary || "");
       }
 
-      // Prefer the server's three-state verdict when present (v1.1.0+).
-      // Fall back to a local recompute from violation suppression so
-      // older API responses still get a sensible state.
       if (apiResult.verdict) {
         nodeResult.verdict = apiResult.verdict;
       } else {
@@ -2939,41 +2970,26 @@ async function runBatchScan(nodes, onProgress) {
       if (apiResult.review_reason) {
         nodeResult.reviewReason = apiResult.review_reason;
       }
-      // Human-eval build plan Session 21 — pass the rationale chain
-      // through to the render layer. Kept as opaque objects so new
-      // fields on RationaleHop flow through without a plugin bump.
-      if (Array.isArray(apiResult.rationale_chain)) {
-        nodeResult.rationaleChain = apiResult.rationale_chain;
-      }
 
-      // Human-eval build plan Session 30 PR B — detect a
-      // custom-example short-circuit. When `/api/check` matches a
-      // team's custom example, the rationale_chain has a single hop
-      // with step="custom_example_match"; we surface that as a
-      // small display-only tag on the card. No new CTA per the
-      // "4 CTAs is crazy-making" conversation — the stance triad
-      // is the only review action.
+      // Schema 2.0.0: rationale_chain is substrate; custom-example
+      // short-circuit detection (Session 30 PR B) was a debug-style tag
+      // built off the rationale chain. Without rationale_chain in the
+      // public envelope, the plugin can't tell if /api/check
+      // short-circuited. customExampleMatch stays null. The server
+      // still applies custom examples internally; they just don't
+      // surface as a UI tag here. Future: add a `custom_example` flag
+      // to the public envelope if the tag is worth re-introducing.
       nodeResult.customExampleMatch = null;
-      if (nodeResult.rationaleChain.length === 1 &&
-          nodeResult.rationaleChain[0].step === "custom_example_match") {
-        const hop = nodeResult.rationaleChain[0];
-        nodeResult.customExampleMatch = {
-          example_id: (hop.output && hop.output.matched_example_id) || "",
-          notes: (hop.output && hop.output.notes) || null,
-        };
-      }
     }
 
-    // Compute the text hash for any node we got a chain for so the
-    // "Not <moment>?" feedback POST can reference the evaluation
-    // without re-sending plaintext. We skip hashing otherwise to avoid
-    // the crypto.subtle round-trip on every preprocessor-only pass.
-    if (nodeResult.rationaleChain.length > 0 && nodeResult.text) {
+    // Compute the text hash whenever we got an API response so any
+    // future feedback POST can reference the evaluation without
+    // re-sending plaintext.
+    if (nodeResult.text && item.apiData) {
       try {
         nodeResult.textHash = await sha256Hex(nodeResult.text);
       } catch (_) {
-        // crypto.subtle unavailable (very old Figma Desktop?) — leave
-        // textHash empty, render suppresses the feedback button.
+        // crypto.subtle unavailable (very old Figma Desktop?)
         nodeResult.textHash = "";
       }
     }
@@ -3708,24 +3724,29 @@ function renderNodeCard(result) {
     </div>`;
   }
 
-  // Violation cards — human-eval build plan Session 3.
+  // Violation cards — schema 2.0.0 (ADR 2026-04-25).
   //
-  // Each card captures:
-  //   - Three-button stance (Agree / Disagree / Ship anyway)
-  //   - Rationale expand/collapse toggle (issue + suggestion hidden
-  //     by default; shown when user clicks "Why this was flagged")
-  //   - time_to_action_ms (wall-clock delta from render to first
-  //     stance click; stamped via data-surfaced-at)
-  // All four signals POST to /api/violations/override on stance click.
+  // The customer-facing card surfaces only public Violation fields:
+  // severity, issue, suggestion. Substrate fields (standard_id,
+  // rule_version, related_standards, rationale_chain) never reach
+  // this surface. The override stance triad and reason-picker were
+  // removed in 2.0.0 because they keyed on standard_id; see
+  // `decisions/2026-04-25-private-taxonomy-pivot.md`. They will return
+  // when /admin (Phase B) ships an opaque-token override flow.
   const surfacedAt = Date.now();
   for (const v of result.violations) {
     const sourceBadge = v.source === "preprocessor"
       ? `<span class="source-badge source-badge-instant">&#9889; Instant</span>`
       : `<span class="source-badge source-badge-ai">&#10024; AI</span>`;
 
-    const label = getDisplayLabel(v.standard_id);
+    const severity = v.severity || deriveSeverityFromConfidence(v.confidence);
+    const severityBadge = renderSeverityBadge(severity);
+
+    // Preprocessor violations carry standard_id locally; we hand it to
+    // enrichCasingSuggestion for grammar-aware fixes (CON-* casing
+    // rules) but never render it.
     const enrichedSuggestion = enrichCasingSuggestion(
-      v.standard_id, v.suggestion || "", result.text || "",
+      v.standard_id || "", v.suggestion || "", result.text || "",
     );
 
     const rationaleBody = enrichedSuggestion
@@ -3734,55 +3755,50 @@ function renderNodeCard(result) {
       : "";
 
     html += `<div class="violation-card"
-                  data-standard-id="${escapeHtml(v.standard_id)}"
                   data-text="${escapeHtml(result.text || "")}"
-                  data-moment="${escapeHtml(result.moment || "")}"
                   data-suggested-text="${escapeHtml(enrichedSuggestion || "")}"
                   data-surfaced-at="${surfacedAt}"
                   data-rationale-expanded="false">
-      <div class="standard-id">${escapeHtml(label)} ${sourceBadge}</div>
+      <div class="violation-header">${severityBadge} ${sourceBadge}</div>
       <div class="issue">${escapeHtml(v.issue)}</div>
       ${rationaleBody ? `<button class="btn-expand-rationale" type="button" aria-expanded="false">
         Why this was flagged
       </button>
       <div class="rationale-body" hidden>${rationaleBody}</div>` : ""}
-      <div class="stance-row" role="group" aria-label="How do you feel about this finding?">
-        <button class="btn-stance" type="button" data-stance="agree"
-                aria-label="Agree — dismiss this finding">Agree</button>
-        <button class="btn-stance" type="button" data-stance="disagree"
-                aria-label="Disagree — mark this as a false positive">Disagree</button>
-        <button class="btn-stance" type="button" data-stance="agree_but_overriding"
-                aria-label="Agree but shipping anyway">Ship anyway</button>
-      </div>
-      <div class="reason-picker" hidden>
-        <label for="reason-${escapeHtml(v.standard_id)}">Why?</label>
-        <select id="reason-${escapeHtml(v.standard_id)}" class="reason-select">
-          <option value="">Pick a reason…</option>
-          <option value="not_applicable_here">Not applicable here</option>
-          <option value="standard_too_strict">Too strict for this case</option>
-          <option value="fix_is_worse">Suggested fix is worse</option>
-          <option value="shipping_anyway">I agree — shipping anyway</option>
-          <option value="confusing_need_more_context">Confusing, need more context</option>
-        </select>
-      </div>
     </div>`;
   }
 
   if (violationCount === 0 && !result.error) {
     html += `<div style="font-size:11px; color:var(--figma-color-text-secondary,#888); padding:4px 0;">
-      No violations found. ${result.summary ? escapeHtml(result.summary) : ""}
+      No violations found.
     </div>`;
-  }
-
-  // Human-eval build plan Session 21 — "Why this verdict?" rationale
-  // chain. Rendered as a collapsed <details> so users can expand on
-  // demand. Only shown when the API returned a chain (v1.2.0+).
-  if (result.rationaleChain && result.rationaleChain.length > 0) {
-    html += renderRationaleChain(result);
   }
 
   html += `</div></div>`; // close node-card-body and node-card
   return html;
+}
+
+
+/** Schema 2.0.0 severity bands. Mirrors `derive_severity` in
+ * `src/content_checker/models.py`. Used as a local fallback when a
+ * preprocessor-source violation reaches the render layer without a
+ * pre-computed severity. */
+function deriveSeverityFromConfidence(confidence) {
+  const c = typeof confidence === "number" ? confidence : 1.0;
+  if (c >= 0.85) return "high";
+  if (c >= 0.65) return "medium";
+  return "low";
+}
+
+
+function renderSeverityBadge(severity) {
+  const tone = severity === "high"
+    ? "severity-high"
+    : severity === "medium"
+      ? "severity-medium"
+      : "severity-low";
+  const text = (severity || "medium").toUpperCase();
+  return `<span class="severity-badge ${tone}">${text}</span>`;
 }
 
 
