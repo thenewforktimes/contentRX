@@ -128,6 +128,31 @@ export default async function AdminQueuePage({
     .orderBy(desc(schema.violations.createdAt))
     .limit(MAX_ROWS_PER_SUBTYPE);
 
+  // Look up which of these rows have already been triaged via /admin/queue.
+  // We mark "decided" when there's a violation_overrides row keyed on the
+  // same violationId with source="dashboard" + actorRole="designer" — the
+  // marker the Server Action writes.
+  const rowIds = rows.map((r) => r.id);
+  const decidedStanceById = new Map<string, string>();
+  if (rowIds.length > 0) {
+    const decisions = await db
+      .select({
+        violationId: schema.violationOverrides.violationId,
+        overrideStance: schema.violationOverrides.overrideStance,
+      })
+      .from(schema.violationOverrides)
+      .where(
+        sql`${schema.violationOverrides.violationId} IN (${sql.raw(
+          rowIds.map((id) => `'${id.replace(/'/g, "''")}'`).join(","),
+        )}) AND ${schema.violationOverrides.source} = 'dashboard' AND ${schema.violationOverrides.actorRole} = 'designer'`,
+      );
+    for (const d of decisions) {
+      if (d.violationId && d.overrideStance) {
+        decidedStanceById.set(d.violationId, d.overrideStance);
+      }
+    }
+  }
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-baseline justify-between gap-3">
@@ -138,7 +163,10 @@ export default async function AdminQueuePage({
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
             Cases the engine flagged for review in the last {windowDays} days.
             Filter by subtype to focus the daily 15-minute review rhythm.
-            Decision recording (agree / override / skip) ships in B3b.
+            Click <strong>Agree</strong> to confirm the engine&apos;s
+            review-recommended verdict, <strong>Disagree</strong> to mark
+            it as a false positive, or <strong>Skip</strong> to defer.
+            Decisions persist into the override stream for calibration.
           </p>
         </div>
         <div className="text-sm text-neutral-700 dark:text-neutral-300">
@@ -181,7 +209,11 @@ export default async function AdminQueuePage({
       ) : (
         <ul className="space-y-2">
           {rows.map((row) => (
-            <QueueRow key={row.id} row={row} />
+            <QueueRow
+              key={row.id}
+              row={row}
+              decidedStance={decidedStanceById.get(row.id) ?? null}
+            />
           ))}
         </ul>
       )}
@@ -231,9 +263,22 @@ type QueueRowData = {
   reviewReasonSubtype: string | null;
 };
 
-function QueueRow({ row }: { row: QueueRowData }) {
+function QueueRow({
+  row,
+  decidedStance,
+}: {
+  row: QueueRowData;
+  decidedStance: string | null;
+}) {
+  const isDecided = decidedStance !== null;
   return (
-    <li className="rounded-lg border border-neutral-200 bg-white p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <li
+      className={`rounded-lg border p-3 text-sm ${
+        isDecided
+          ? "border-neutral-200 bg-neutral-50 opacity-60 dark:border-neutral-800 dark:bg-neutral-950"
+          : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+      }`}
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <div className="flex flex-wrap items-baseline gap-2">
           {row.standardId ? (
@@ -262,6 +307,17 @@ function QueueRow({ row }: { row: QueueRowData }) {
           {row.reviewReasonSubtype && (
             <span className="rounded bg-neutral-100 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
               {row.reviewReasonSubtype.replace(/_/g, " ")}
+            </span>
+          )}
+          {isDecided && (
+            <span
+              className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                decidedStance === "agree"
+                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                  : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+              }`}
+            >
+              {decidedStance === "agree" ? "✓ Agreed" : "✗ Disagreed"}
             </span>
           )}
         </div>
@@ -298,7 +354,56 @@ function QueueRow({ row }: { row: QueueRowData }) {
       <p className="mt-2 truncate font-mono text-[10px] text-neutral-400">
         text_hash · {row.textHash.slice(0, 16)}…
       </p>
+      {!isDecided && (
+        <div
+          className="mt-3 flex flex-wrap gap-2"
+          role="group"
+          aria-label="Triage decision"
+        >
+          <DecisionForm violationId={row.id} stance="agree" label="Agree" />
+          <DecisionForm
+            violationId={row.id}
+            stance="disagree"
+            label="Disagree"
+          />
+          <DecisionForm violationId={row.id} stance="skip" label="Skip" />
+        </div>
+      )}
     </li>
+  );
+}
+
+function DecisionForm({
+  violationId,
+  stance,
+  label,
+}: {
+  violationId: string;
+  stance: "agree" | "disagree" | "skip";
+  label: string;
+}) {
+  const cls =
+    stance === "agree"
+      ? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900"
+      : stance === "disagree"
+        ? "border-red-300 bg-red-50 text-red-900 hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
+        : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800";
+
+  async function handle() {
+    "use server";
+    const { recordQueueDecision } = await import("./actions");
+    await recordQueueDecision(violationId, stance);
+  }
+
+  return (
+    <form action={handle}>
+      <button
+        type="submit"
+        className={`rounded-md border px-3 py-1.5 text-xs font-medium transition ${cls}`}
+      >
+        {label}
+      </button>
+    </form>
   );
 }
 
