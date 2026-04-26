@@ -81,10 +81,13 @@ def render_markdown(reports: Iterable[FileReport], total_strings: int) -> str:
             snippet = _truncate(entry["text"], 80)
             lines.append(f"- **{label}** — `{_escape_backticks(snippet)}`")
             for v in violations:
-                std = v.get("standard_id", "?")
+                # Schema 2.0.0 — public Violation fields only.
+                # standard_id is substrate; the user-visible artifact is
+                # severity + issue + suggestion. ADR 2026-04-25.
+                severity = v.get("severity", "medium").upper()
                 issue = v.get("issue", "").strip()
                 suggestion = v.get("suggestion", "").strip()
-                lines.append(f"  - **{std}**: {issue}")
+                lines.append(f"  - **{severity}**: {issue}")
                 if suggestion:
                     lines.append(f"    - _suggestion:_ {suggestion}")
         lines.append("")
@@ -93,7 +96,6 @@ def render_markdown(reports: Iterable[FileReport], total_strings: int) -> str:
     lines.append("")
     lines.append(
         "*Run by the [ContentRX](https://contentrx.io) GitHub Action. "
-        "Violations cite specific [content standards](https://contentrx.io/docs/standards). "
         "Rotate your API key at the [dashboard](https://contentrx.io/dashboard).*"
     )
 

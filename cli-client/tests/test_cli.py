@@ -31,7 +31,6 @@ from contentrx.main import (
     _parse_txt_batch,
     load_batch_file,
     main,
-    print_rationale_chain,
     print_result,
 )
 
@@ -189,13 +188,13 @@ class _FakeResponse:
 
 
 def test_main_pass_returns_zero(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
+    # Schema 2.0.0 — top-level shape, no `result` wrapper.
     payload = {
-        "result": {
-            "content_type": "button_cta",
-            "overall_verdict": "pass",
-            "violations": [],
-            "summary": "Looks good.",
-        },
+        "schema_version": "2.0.0",
+        "verdict": "pass",
+        "review_reason": None,
+        "violations": [],
+        "warnings": [],
         "usage": {"used": 1, "quota": 25, "remaining": 24, "plan": "free"},
     }
     monkeypatch.setattr(
@@ -209,18 +208,18 @@ def test_main_pass_returns_zero(monkeypatch: pytest.MonkeyPatch, capsys) -> None
 
 def test_main_fail_returns_violations_code(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
     payload = {
-        "result": {
-            "content_type": "button_cta",
-            "overall_verdict": "fail",
-            "violations": [
-                {
-                    "standard_id": "ACC-01",
-                    "issue": "Contains 'click here'",
-                    "suggestion": "Use descriptive link text.",
-                }
-            ],
-            "summary": "Accessibility issue.",
-        },
+        "schema_version": "2.0.0",
+        "verdict": "violation",
+        "review_reason": None,
+        "violations": [
+            {
+                "issue": "Contains 'click here'",
+                "suggestion": "Use descriptive link text.",
+                "severity": "high",
+                "confidence": 0.9,
+            }
+        ],
+        "warnings": [],
         "usage": {"used": 1, "quota": 25},
     }
     monkeypatch.setattr(
@@ -229,12 +228,19 @@ def test_main_fail_returns_violations_code(monkeypatch: pytest.MonkeyPatch, caps
     code = main(["Click here"])
     assert code == EXIT_VIOLATIONS
     out = capsys.readouterr().out
-    assert "ACC-01" in out
+    # Substrate IDs (ACC-01 etc.) MUST NOT render. Issue text + severity do.
+    assert "ACC-01" not in out
+    assert "Contains 'click here'" in out
+    assert "[HIGH]" in out
 
 
 def test_main_json_mode_emits_raw_response(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
     payload = {
-        "result": {"overall_verdict": "pass", "violations": [], "content_type": "button_cta"},
+        "schema_version": "2.0.0",
+        "verdict": "pass",
+        "review_reason": None,
+        "violations": [],
+        "warnings": [],
         "usage": {},
     }
     monkeypatch.setattr(
@@ -244,7 +250,8 @@ def test_main_json_mode_emits_raw_response(monkeypatch: pytest.MonkeyPatch, caps
     assert code == EXIT_OK
     out = capsys.readouterr().out.strip()
     parsed = json.loads(out)
-    assert parsed["result"]["overall_verdict"] == "pass"
+    assert parsed["verdict"] == "pass"
+    assert parsed["schema_version"] == "2.0.0"
 
 
 def test_main_missing_api_key_reports_auth(
@@ -282,21 +289,26 @@ def test_main_batch_mode_iterates_strings(
     responses = iter(
         [
             {
-                "result": {
-                    "content_type": "button_cta",
-                    "overall_verdict": "pass",
-                    "violations": [],
-                    "summary": "",
-                },
+                "schema_version": "2.0.0",
+                "verdict": "pass",
+                "review_reason": None,
+                "violations": [],
+                "warnings": [],
                 "usage": {},
             },
             {
-                "result": {
-                    "content_type": "button_cta",
-                    "overall_verdict": "fail",
-                    "violations": [{"standard_id": "X", "issue": "bad"}],
-                    "summary": "",
-                },
+                "schema_version": "2.0.0",
+                "verdict": "violation",
+                "review_reason": None,
+                "violations": [
+                    {
+                        "issue": "bad",
+                        "suggestion": "",
+                        "severity": "high",
+                        "confidence": 0.9,
+                    }
+                ],
+                "warnings": [],
                 "usage": {},
             },
         ]
@@ -315,26 +327,53 @@ def test_main_batch_mode_iterates_strings(
 def test_print_result_returns_true_for_pass() -> None:
     buf = io.StringIO()
     payload = {
-        "result": {
-            "content_type": "button_cta",
-            "overall_verdict": "pass",
-            "violations": [],
-            "summary": "OK",
-        }
+        "schema_version": "2.0.0",
+        "verdict": "pass",
+        "review_reason": None,
+        "violations": [],
+        "warnings": [],
     }
     assert print_result("Save", payload, verbose=False, stream=buf) is True
     assert "PASS" in buf.getvalue()
 
 
+def test_print_result_renders_severity_and_issue_only() -> None:
+    """Schema 2.0.0 — substrate fields (standard_id, rule_version,
+    rationale_chain, moment) MUST NOT appear in the CLI output. The
+    user sees severity + issue + suggestion."""
+    buf = io.StringIO()
+    payload = {
+        "schema_version": "2.0.0",
+        "verdict": "violation",
+        "review_reason": None,
+        "violations": [
+            {
+                "issue": "Generic CTA",
+                "suggestion": "Use a specific verb.",
+                "severity": "high",
+                "confidence": 0.9,
+            }
+        ],
+        "warnings": [],
+    }
+    print_result("Click here", payload, verbose=False, stream=buf)
+    out = buf.getvalue()
+    assert "[HIGH]" in out
+    assert "Generic CTA" in out
+    assert "Use a specific verb." in out
+    # Substrate must never leak.
+    for forbidden in ("ACT-01", "CLR-01", "rule_version", "Moment:"):
+        assert forbidden not in out
+
+
 def test_print_result_verbose_includes_usage() -> None:
     buf = io.StringIO()
     payload = {
-        "result": {
-            "content_type": "button_cta",
-            "overall_verdict": "pass",
-            "violations": [],
-            "summary": "",
-        },
+        "schema_version": "2.0.0",
+        "verdict": "pass",
+        "review_reason": None,
+        "violations": [],
+        "warnings": [],
         "usage": {"used": 1, "quota": 25},
         "latency_ms": 123,
     }
@@ -344,114 +383,19 @@ def test_print_result_verbose_includes_usage() -> None:
     assert "123 ms" in out
 
 
-# ---------------------------------------------------------------------------
-# --explain — rationale chain output (human-eval build plan Session 21)
-# ---------------------------------------------------------------------------
-def test_print_rationale_chain_empty_is_no_op() -> None:
-    buf = io.StringIO()
-    print_rationale_chain(
-        {"result": {"rationale_chain": []}},
-        stream=buf,
-    )
-    assert buf.getvalue() == ""
-
-
-def test_print_rationale_chain_renders_hops_with_confidence_and_rules() -> None:
-    buf = io.StringIO()
-    print_rationale_chain(
-        {
-            "result": {
-                "rationale_chain": [
-                    {
-                        "step": "classify",
-                        "inputs": {"text": "Proceed?"},
-                        "output": {"content_type": "short_ui_copy"},
-                        "confidence": 0.9,
-                        "rule_versions": {},
-                        "ambiguity_flag": None,
-                    },
-                    {
-                        "step": "detect_moment",
-                        "inputs": {},
-                        "output": {"moment": "decision_point"},
-                        "confidence": 0.5,
-                        "rule_versions": {"CLR-01": "4.6.1"},
-                        "ambiguity_flag": "situation_uncertain",
-                    },
-                ]
-            }
-        },
-        stream=buf,
-    )
-    out = buf.getvalue()
-    assert "Rationale chain:" in out
-    assert "1. classify · 90%" in out
-    assert "content_type: short_ui_copy" in out
-    # Second hop includes confidence, ambiguity flag, and rule versions.
-    assert "2. detect_moment · 50% · flag=situation_uncertain" in out
-    assert "CLR-01=v4.6.1" in out
-
-
-def test_print_rationale_chain_missing_chain_key_is_safe() -> None:
-    # Pre-v1.2.0 responses don't carry `rationale_chain`. The helper
-    # should no-op rather than raise.
-    buf = io.StringIO()
-    print_rationale_chain({"result": {}}, stream=buf)
-    assert buf.getvalue() == ""
-
-
-# ---------------------------------------------------------------------------
-# Moment-detected line in the default verdict block — human-eval build plan
-# Session 22.
-# ---------------------------------------------------------------------------
-def test_print_result_includes_moment_line_for_non_default_moment() -> None:
+def test_print_result_review_recommended_shows_reason() -> None:
+    """Schema 2.0.0 surfaces typed review_reason at the top level."""
     buf = io.StringIO()
     payload = {
-        "result": {
-            "content_type": "short_ui_copy",
-            "overall_verdict": "pass",
-            "violations": [],
-            "summary": "",
-            "moment": "decision_point",
-        }
+        "schema_version": "2.0.0",
+        "verdict": "review_recommended",
+        "review_reason": "low_confidence",
+        "violations": [],
+        "warnings": [],
     }
-    print_result("Choose a plan", payload, verbose=False, stream=buf)
+    passed = print_result("Maybe?", payload, verbose=False, stream=buf)
     out = buf.getvalue()
-    assert "Moment: decision_point" in out
-    # decision_point has 4 emphasized + 1 suppressed in MOMENT_WEIGHTS
-    assert "4 emphasized" in out
-    assert "1 suppressed" in out
-
-
-def test_print_result_suppresses_moment_line_for_default() -> None:
-    buf = io.StringIO()
-    payload = {
-        "result": {
-            "content_type": "short_ui_copy",
-            "overall_verdict": "pass",
-            "violations": [],
-            "summary": "",
-            "moment": "browsing_discovery",
-        }
-    }
-    print_result("Welcome to ContentRX", payload, verbose=False, stream=buf)
-    assert "Moment:" not in buf.getvalue()
-
-
-def test_print_result_moment_line_without_weighted_counts_has_no_suffix() -> None:
-    """Moments without any weighted standards render without a suffix."""
-    buf = io.StringIO()
-    payload = {
-        "result": {
-            "content_type": "short_ui_copy",
-            "overall_verdict": "pass",
-            "violations": [],
-            "summary": "",
-            "moment": "celebration",
-        }
-    }
-    print_result("Milestone reached!", payload, verbose=False, stream=buf)
-    out = buf.getvalue()
-    assert "Moment: celebration\n" in out
-    # No parenthesised suffix for moments that carry no weights.
-    assert "Moment: celebration (" not in out
+    assert "REVIEW" in out
+    assert "low_confidence" in out
+    # REVIEW counts as passed for exit-code purposes.
+    assert passed is True

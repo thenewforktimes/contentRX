@@ -43,21 +43,18 @@ class RateLimitError(ContentRXError):
 
 @dataclass
 class CheckResult:
-    """Subset of /api/check response surfaced to MCP clients."""
+    """Subset of /api/check response surfaced to MCP clients.
 
-    overall_verdict: str  # legacy: "pass" | "fail" | "error"
-    content_type: str | None
-    moment: str | None
+    Schema 2.0.0 (ADR 2026-04-25). Substrate fields (`standard_id`,
+    `rule`, `rule_version`, `related_standards`, `rationale_chain`,
+    `moment`, `passes`, `content_type`, `summary`) are stripped at the
+    /api/check boundary and never reach this client.
+    """
+
+    verdict: str  # "pass" | "violation" | "review_recommended" | "error"
+    review_reason: str | None
     violations: list[dict[str, Any]]
-    passes: list[dict[str, Any]]
-    summary: str | None
-    # v1.1.0 (BUILD_PLAN_v2 Session 10) — three-state verdict + reason.
-    verdict: str = "pass"  # "pass" | "violation" | "review_recommended" | "error"
-    review_reason: str | None = None
-    # v1.2.0 (human-eval build plan Session 1) — rationale chain hops.
-    # Passed through as opaque dicts so future additions to RationaleHop
-    # flow to MCP clients without requiring a client bump.
-    rationale_chain: list[dict[str, Any]] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -187,17 +184,14 @@ class ContentRXClient:
         resp = await self._client.post("/api/check", json=body)
         self._raise_for_typed_status(resp)
         data = resp.json()
-        result = data.get("result", {})
+        # Schema 2.0.0 — top-level shape. No `result` wrapper; violations,
+        # verdict, review_reason, warnings live alongside schema_version
+        # at the top of the response. See `src/lib/api-envelope.ts`.
         return CheckResult(
-            overall_verdict=result.get("overall_verdict", "unknown"),
-            content_type=result.get("content_type"),
-            moment=result.get("moment"),
-            violations=list(result.get("violations") or []),
-            passes=list(result.get("passes") or []),
-            summary=result.get("summary"),
-            verdict=result.get("verdict", result.get("overall_verdict", "pass")),
-            review_reason=result.get("review_reason"),
-            rationale_chain=list(result.get("rationale_chain") or []),
+            verdict=data.get("verdict", "pass"),
+            review_reason=data.get("review_reason"),
+            violations=list(data.get("violations") or []),
+            warnings=list(data.get("warnings") or []),
         )
 
     async def classify(self, *, text: str) -> ClassifyResult:

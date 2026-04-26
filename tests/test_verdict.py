@@ -32,10 +32,11 @@ from content_checker.models import (
 
 
 class TestSchemaVersionBump:
-    def test_schema_version_is_1_7_0(self):
-        # BUILD_PLAN_v2 Appendix A non-negotiable: every Violation
-        # carries a `docs_url`. Bumped from 1.6.0; still additive.
-        assert SCHEMA_VERSION == "1.7.0"
+    def test_schema_version_is_2_0_0(self):
+        # ADR 2026-04-25 (private-taxonomy pivot): public Violation
+        # envelope reduced to {issue, suggestion, severity, confidence};
+        # docs_url removed entirely. Major bump from 1.x is breaking.
+        assert SCHEMA_VERSION == "2.0.0"
 
 
 class TestVerdictConstants:

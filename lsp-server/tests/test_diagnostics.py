@@ -68,10 +68,10 @@ def test_violations_emit_warning_severity():
         _extracted(),
         [
             {
-                "standard_id": "ACT-01",
-                "rule": "Use a specific verb",
                 "issue": "Generic CTA",
                 "suggestion": "Use 'Start free trial'",
+                "severity": "high",
+                "confidence": 0.9,
             }
         ],
         verdict="violation",
@@ -79,10 +79,16 @@ def test_violations_emit_warning_severity():
     assert len(diagnostics) == 1
     d = diagnostics[0]
     assert d.severity == 2  # warning
-    assert d.code == "ACT-01"
+    # Schema 2.0.0 — `code` is the severity band, not the substrate
+    # standard_id. Editors render `code` visibly in the problem panel,
+    # so it cannot leak the rule taxonomy.
+    assert d.code == "HIGH"
     assert d.source == "ContentRX"
     assert "Generic CTA" in d.message
     assert "Start free trial" in d.message
+    # Substrate fields must NEVER appear in the message — editors
+    # render that string inline in the editor.
+    assert "ACT-01" not in d.message
 
 
 def test_review_recommended_emit_info_severity():
@@ -110,18 +116,38 @@ def test_pass_verdict_emits_no_diagnostics():
     assert diagnostics == []
 
 
-def test_diagnostic_carries_docs_url_in_data():
+def test_diagnostic_data_carries_only_public_fields():
+    """Schema 2.0.0: the `data` blob attached to each diagnostic must
+    not carry standard_id, rule, rule_version, related_standards,
+    docs_url, or any other substrate field. The apply-suggestion code
+    action keys on issue+suggestion+byte offsets only.
+    """
     diagnostics = violations_to_diagnostics(
         "Click here",
         _extracted(),
         [
-            {"standard_id": "ACT-01", "rule": "r", "issue": "i", "suggestion": "s"},
+            {
+                "issue": "i",
+                "suggestion": "s",
+                "severity": "medium",
+                "confidence": 0.7,
+            }
         ],
         verdict="violation",
     )
-    assert diagnostics[0].data["docs_url"] == (
-        "https://docs.contentrx.io/model/standards/ACT-01"
-    )
+    data = diagnostics[0].data
+    assert data["issue"] == "i"
+    assert data["suggestion"] == "s"
+    assert data["severity"] == "medium"
+    for forbidden in (
+        "standard_id",
+        "rule",
+        "rule_version",
+        "related_standards",
+        "docs_url",
+        "violation",
+    ):
+        assert forbidden not in data, f"{forbidden} leaked into LSP data"
 
 
 def test_multiple_violations_become_multiple_diagnostics():
@@ -129,9 +155,20 @@ def test_multiple_violations_become_multiple_diagnostics():
         "Click here",
         _extracted(),
         [
-            {"standard_id": "ACT-01", "rule": "r1", "issue": "i1"},
-            {"standard_id": "TN-03", "rule": "r2", "issue": "i2"},
+            {
+                "issue": "i1",
+                "suggestion": "s1",
+                "severity": "high",
+                "confidence": 0.9,
+            },
+            {
+                "issue": "i2",
+                "suggestion": "s2",
+                "severity": "medium",
+                "confidence": 0.7,
+            },
         ],
         verdict="violation",
     )
-    assert {d.code for d in diagnostics} == {"ACT-01", "TN-03"}
+    # `code` is the severity band, not the standard_id.
+    assert {d.code for d in diagnostics} == {"HIGH", "MEDIUM"}

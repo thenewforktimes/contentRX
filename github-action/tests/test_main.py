@@ -96,7 +96,9 @@ def test_main_posts_comment_when_violations_found(
     # workflows that want the v1 advisory-only behavior should set
     # `fail-on: none`.
     assert code == 1
-    assert "ACC-01" in posted["body"]
+    # Schema 2.0.0 — substrate IDs are stripped; the PR comment surfaces
+    # the issue text instead of the standard_id badge.
+    assert "ACC-01" not in posted["body"]
     assert posted["repo"] == "owner/repo"
     assert posted["pull_number"] == 42
     output = output_file.read_text()

@@ -2,26 +2,25 @@
 
 Defines typed contracts for violations, check results, and pipeline metadata.
 Every function in the package uses these instead of raw dicts.
+
+Privacy boundary (post-pivot, schema 2.0.0). The Violation and CheckResult
+dataclasses carry the full substrate set internally — `standard_id`, `rule`,
+`rule_version`, `related_standards`, `rationale_chain`, etc. The PUBLIC
+emission of these objects strips substrate fields down to the four-field
+public envelope (issue, suggestion, severity, confidence) by default.
+Substrate-mode emission is gated behind the `PUBLIC_TAXONOMY` env var
+(see `src/content_checker/config.py`). The boundary is enforced via the
+explicit `to_public_dict()` / `to_substrate_dict()` split — call sites
+MUST choose. There is no ambiguous `to_dict()` that silently leaks.
+See `decisions/2026-04-25-private-taxonomy-pivot.md`.
 """
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from typing import Any
 
-
-def standard_docs_url(standard_id: str) -> str:
-    """Return the canonical docs URL for a standard.
-
-    `CONTENTRX_DOCS_URL` env var overrides the base (staging, self-
-    hosted, or a local docs site during dev). Trailing slashes are
-    trimmed so callers always get `…/model/standards/<id>`.
-    """
-    base = os.environ.get("CONTENTRX_DOCS_URL", "").strip()
-    if not base:
-        base = DEFAULT_DOCS_BASE_URL
-    return f"{base.rstrip('/')}/model/standards/{standard_id}"
+from content_checker.config import is_public_taxonomy_enabled
 
 
 # ---------------------------------------------------------------------------
@@ -63,12 +62,22 @@ def standard_docs_url(standard_id: str) -> str:
 # 1.7.0 — every Violation carries a `docs_url` pointing at the
 #         standard's page on docs.contentrx.io (BUILD_PLAN_v2
 #         Appendix A non-negotiable). Derived at serialization time
-#         from `standard_id` — no call site has to populate it, no
-#         schema migration, and the base URL is overridable via the
-#         `CONTENTRX_DOCS_URL` env var for staging/self-hosting.
-SCHEMA_VERSION = "1.7.0"
-
-DEFAULT_DOCS_BASE_URL = "https://docs.contentrx.io"
+#         from `standard_id`.
+# 2.0.0 — **Breaking.** Private-taxonomy pivot (ADR 2026-04-25).
+#         Public Violation envelope is reduced to four fields: `issue`,
+#         `suggestion`, `severity`, `confidence`. Removed entirely from
+#         the public envelope: `docs_url`, `related_standards`,
+#         `rationale_chain`. Stripped from user-visible surfaces but
+#         retained in substrate API responses (founder-auth only):
+#         `standard_id`, `rule`, `rule_version`, `source`,
+#         `ambiguity_flag`, `validate_rejection_reason`. New top-level
+#         shape: `{schema_version, verdict, review_reason, warnings,
+#         violations: [public]}`. Substrate emission gated behind the
+#         `PUBLIC_TAXONOMY` env var (default `false`).
+#         New: `severity` field on Violation, derived from `confidence`
+#         (>=0.85 → "high", >=0.65 → "medium", else "low"). Override
+#         points: team-rules per-standard severity (TS-side).
+SCHEMA_VERSION = "2.0.0"
 
 
 # Ambiguity-flag vocabulary (human-eval build plan Session 1).
@@ -179,6 +188,34 @@ DEFAULT_CONFIDENCE_PREPROCESSOR = 1.0
 DEFAULT_CONFIDENCE_LLM = 0.85
 
 
+# Severity vocabulary (schema 2.0.0 — ADR 2026-04-25).
+#
+# Public field on every Violation. Three-state, ordered: high > medium >
+# low. Default derivation from confidence:
+#   confidence >= 0.85 → "high"   (the LLM default — most violations land here)
+#   confidence >= 0.65 → "medium" (between threshold and default)
+#   else                 "low"    (already triggers low_confidence review)
+# Team-rules can override severity per standard at the API boundary
+# (`src/lib/team-rules.ts`).
+SEVERITY_HIGH = "high"
+SEVERITY_MEDIUM = "medium"
+SEVERITY_LOW = "low"
+
+VALID_SEVERITIES = frozenset({SEVERITY_HIGH, SEVERITY_MEDIUM, SEVERITY_LOW})
+
+SEVERITY_HIGH_THRESHOLD = 0.85
+SEVERITY_MEDIUM_THRESHOLD = 0.65
+
+
+def derive_severity(confidence: float) -> str:
+    """Map a confidence score to the three-state severity band."""
+    if confidence >= SEVERITY_HIGH_THRESHOLD:
+        return SEVERITY_HIGH
+    if confidence >= SEVERITY_MEDIUM_THRESHOLD:
+        return SEVERITY_MEDIUM
+    return SEVERITY_LOW
+
+
 @dataclass
 class EvaluationEnvelope:
     """Wrapping shape for any public API response.
@@ -198,8 +235,18 @@ class EvaluationEnvelope:
     warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
+        """Substrate envelope — full result + schema_version + warnings.
+
+        Preserved for internal substrate API responses (founder-auth)
+        and for engine-level tools (eval pipeline harness). Public API
+        callers should construct the envelope from the new top-level
+        public shape (see `CheckResult.to_public_envelope`) rather than
+        wrapping a CheckResult in this envelope.
+        """
         result = self.result
-        if hasattr(result, "to_dict"):
+        if hasattr(result, "to_substrate_dict"):
+            result = result.to_substrate_dict()
+        elif hasattr(result, "to_dict"):
             result = result.to_dict()
         return {
             "schema_version": self.schema_version,
@@ -219,21 +266,33 @@ class Violation:
     default. Violations with confidence < CONFIDENCE_THRESHOLD flip the
     overall CheckResult.verdict to "review_recommended".
 
-    v1.2.0 additions (human-eval build plan Session 1):
+    `severity` (schema 2.0.0+) is the public-surface severity band
+    (`high` / `medium` / `low`) derived from `confidence` at construction
+    time when not explicitly set. Team-rules can override per-standard
+    at the API boundary.
+
+    Substrate-only fields — present on the dataclass for internal
+    pipelines and the founder `/admin` substrate API, but NEVER rendered
+    on user-facing surfaces and NEVER serialized into the schema 2.0.0
+    public envelope:
+
+    `standard_id` — the rule's identifier (e.g., CLR-01). Substrate.
+
+    `rule` — the literal rule text from the standard. Substrate.
+
+    `source` — "deterministic" or "llm". Substrate (debug-only).
 
     `related_standards` — standard IDs the LLM considered as adjacent
-    candidates and either rejected or applied. Gives reviewers context
-    on overlapping rules (e.g., CLR-01 overlapping with PRF-11 on
-    dismissive language). Empty list when no adjacents were considered
-    or when the source is deterministic preprocessing.
+    candidates and either rejected or applied. Substrate.
 
     `ambiguity_flag` — typed reason for uncertainty on this specific
-    violation. One of VALID_AMBIGUITY_FLAGS or None.
+    violation. Substrate.
 
     `rule_version` — the per-standard version of the standard that was
-    in effect when this violation was emitted (see `version` field in
-    standards_library.json). Makes every violation reproducible as of a
-    specific rule revision.
+    in effect when this violation was emitted. Substrate (reproducibility).
+
+    `validate_rejection_reason` — when scan proposed this violation but
+    validate rejected it, validate's reasoning. Substrate (review queue).
     """
 
     standard_id: str
@@ -257,7 +316,56 @@ class Violation:
     # violations (no LLM second pass).
     validate_rejection_reason: str | None = None
 
-    def to_dict(self) -> dict:
+    # schema 2.0.0 addition (ADR 2026-04-25): public severity band.
+    # Defaulted from confidence at __post_init__ time when None.
+    severity: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.severity is None:
+            self.severity = derive_severity(self.confidence)
+
+    def to_public_dict(self) -> dict:
+        """Public-facing serialization — schema 2.0.0 four-field shape.
+
+        Returns the user-visible Violation: `issue`, `suggestion`,
+        `severity`, `confidence`. Substrate fields (standard_id, rule,
+        rule_version, related_standards, ambiguity_flag, source,
+        validate_rejection_reason) are stripped — they never reach the
+        web dashboard, MCP, CLI, Figma plugin, GitHub Action, LSP, or
+        editor extensions.
+
+        When `PUBLIC_TAXONOMY=true` (reversibility insurance, default
+        false), substrate fields are included alongside the public ones
+        for downstream rendering. The flag is read at call time, so
+        tests and request-scoped contexts can flip it without re-import.
+        """
+        public: dict[str, Any] = {
+            "issue": self.issue,
+            "suggestion": self.suggestion,
+            "severity": self.severity,
+            "confidence": self.confidence,
+        }
+        if is_public_taxonomy_enabled():
+            public.update({
+                "standard_id": self.standard_id,
+                "rule": self.rule,
+                "source": self.source,
+                "related_standards": list(self.related_standards),
+                "ambiguity_flag": self.ambiguity_flag,
+                "rule_version": self.rule_version,
+                "validate_rejection_reason": self.validate_rejection_reason,
+            })
+        return public
+
+    def to_substrate_dict(self) -> dict:
+        """Substrate serialization — the full Violation including all
+        substrate-only fields. For founder-authenticated `/admin` API
+        responses and for internal-only pipelines (logging, override
+        review queue, eval harness). Never returned by `/api/check`.
+
+        Note: `docs_url` is removed entirely in schema 2.0.0; the
+        public taxonomy that page would have linked to is private now.
+        """
         return {
             "standard_id": self.standard_id,
             "rule": self.rule,
@@ -265,15 +373,23 @@ class Violation:
             "suggestion": self.suggestion,
             "source": self.source,
             "confidence": self.confidence,
+            "severity": self.severity,
             "related_standards": list(self.related_standards),
             "ambiguity_flag": self.ambiguity_flag,
             "rule_version": self.rule_version,
             "validate_rejection_reason": self.validate_rejection_reason,
-            # BUILD_PLAN_v2 Appendix A non-negotiable (API v1.7.0).
-            # Derived at serialize time so every Violation gets a
-            # URL without every call site having to remember to set it.
-            "docs_url": standard_docs_url(self.standard_id),
         }
+
+    def to_dict(self) -> dict:
+        """Backwards-compatible alias for `to_substrate_dict`.
+
+        Internal callers (eval harness, engine CLI, tools/) continue to
+        work unchanged — they receive the substrate dict (minus the
+        removed `docs_url` field). New callers SHOULD use the explicit
+        `to_substrate_dict` or `to_public_dict` to make the privacy
+        intent visible at the call site.
+        """
+        return self.to_substrate_dict()
 
 
 @dataclass
@@ -454,12 +570,18 @@ class CheckResult:
     # caller bypasses the pipeline (direct CheckResult construction).
     rationale_chain: list[RationaleHop] = field(default_factory=list)
 
-    def to_dict(self) -> dict:
+    def to_substrate_dict(self) -> dict:
+        """Substrate serialization — full CheckResult including substrate
+        fields like `moment`, `passes`, `pipeline`, `rationale_chain`.
+        For founder-authenticated `/admin` API responses and engine-
+        internal callers (eval harness, engine CLI). Never returned by
+        the public `/api/check`.
+        """
         return {
             "content_type": self.content_type,
             "overall_verdict": self.overall_verdict,
             "verdict": self.verdict,
-            "violations": [v.to_dict() for v in self.violations],
+            "violations": [v.to_substrate_dict() for v in self.violations],
             "passes": [p.to_dict() for p in self.passes],
             "summary": self.summary,
             "audience": self.audience,
@@ -467,6 +589,50 @@ class CheckResult:
             "review_reason": self.review_reason,
             "pipeline": self.pipeline.to_dict(),
             "rationale_chain": [h.to_dict() for h in self.rationale_chain],
+        }
+
+    def to_dict(self) -> dict:
+        """Backwards-compatible alias for `to_substrate_dict`.
+
+        Internal callers (eval harness, engine CLI, tools/) keep working
+        unchanged. New callers SHOULD use the explicit
+        `to_substrate_dict` or `to_public_envelope` to make the privacy
+        intent visible.
+        """
+        return self.to_substrate_dict()
+
+    def to_public_envelope(self, *, warnings: list[str] | None = None) -> dict:
+        """Public-facing schema 2.0.0 envelope.
+
+        Top-level shape per ADR 2026-04-25:
+
+            {
+                "schema_version": "2.0.0",
+                "violations": [...public violations...],
+                "verdict": "...",
+                "review_reason": "..." | None,
+                "warnings": [...]
+            }
+
+        Substrate-only fields are stripped. The customer web dashboard,
+        MCP, CLI, Figma plugin, GitHub Action, LSP, and editor
+        extensions all consume this shape directly. The TS layer at
+        `/api/check` may add API-usage siblings (`latency_ms`, `tokens`,
+        `usage`) at the top level — those are about request metadata,
+        not taxonomy, so they live alongside this envelope rather than
+        inside it.
+
+        Note that `passes`, `pipeline`, `rationale_chain`, `moment`,
+        `audience`, `content_type`, `summary`, and the legacy
+        `overall_verdict` are all OMITTED. Engine-internal consumers
+        that need them call `to_substrate_dict()` instead.
+        """
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "violations": [v.to_public_dict() for v in self.violations],
+            "verdict": self.verdict,
+            "review_reason": self.review_reason,
+            "warnings": list(warnings) if warnings else [],
         }
 
 

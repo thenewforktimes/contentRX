@@ -38,6 +38,8 @@ def _client_with(transport: httpx.MockTransport) -> ContentRXClient:
 
 @pytest.mark.asyncio
 async def test_check_success():
+    """Schema 2.0.0 — top-level shape, public Violation fields only."""
+
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"
         assert request.url.path == "/api/check"
@@ -46,65 +48,49 @@ async def test_check_success():
         return httpx.Response(
             200,
             json={
-                "result": {
-                    "overall_verdict": "fail",
-                    "content_type": "button_cta",
-                    "moment": "decision_point",
-                    "violations": [{"standard_id": "ACC-01", "issue": "vague"}],
-                    "passes": [],
-                    "summary": "Vague link text.",
-                }
+                "schema_version": "2.0.0",
+                "verdict": "violation",
+                "review_reason": None,
+                "violations": [
+                    {
+                        "issue": "Link text is too vague.",
+                        "suggestion": "Replace with the destination.",
+                        "severity": "high",
+                        "confidence": 0.9,
+                    }
+                ],
+                "warnings": [],
             },
         )
 
     client = _client_with(httpx.MockTransport(handler))
     async with client:
         result = await client.check(text="Click here")
-    assert result.overall_verdict == "fail"
-    assert result.content_type == "button_cta"
-    assert result.moment == "decision_point"
-    assert result.violations[0]["standard_id"] == "ACC-01"
+    assert result.verdict == "violation"
+    assert result.review_reason is None
+    assert len(result.violations) == 1
+    assert result.violations[0]["issue"] == "Link text is too vague."
+    assert result.violations[0]["severity"] == "high"
+    # Substrate fields must NEVER leak through the MCP boundary.
+    assert "standard_id" not in result.violations[0]
+    assert "rule_version" not in result.violations[0]
 
 
 @pytest.mark.asyncio
-async def test_check_passes_through_rationale_chain():
-    """Human-eval build plan Session 21 — the rationale chain must
-    flow from /api/check all the way through to MCP clients so Claude
-    Code / Cursor can narrate "why this verdict" without a second call.
-    """
+async def test_check_review_recommended_passes_review_reason():
+    """The typed `review_reason` subtype flows through the public
+    envelope so MCP clients can route low-confidence cases differently
+    from confirmed violations."""
 
     def handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
             json={
-                "result": {
-                    "overall_verdict": "review_recommended",
-                    "verdict": "review_recommended",
-                    "review_reason": "situation_ambiguity",
-                    "content_type": "short_ui_copy",
-                    "moment": "decision_point",
-                    "violations": [],
-                    "passes": [],
-                    "summary": "",
-                    "rationale_chain": [
-                        {
-                            "step": "classify",
-                            "inputs": {"text": "Proceed?"},
-                            "output": {"content_type": "short_ui_copy"},
-                            "confidence": 0.9,
-                            "rule_versions": {},
-                            "ambiguity_flag": None,
-                        },
-                        {
-                            "step": "detect_moment",
-                            "inputs": {"text": "Proceed?"},
-                            "output": {"moment": "decision_point"},
-                            "confidence": 0.5,
-                            "rule_versions": {},
-                            "ambiguity_flag": "situation_uncertain",
-                        },
-                    ],
-                }
+                "schema_version": "2.0.0",
+                "verdict": "review_recommended",
+                "review_reason": "situation_ambiguity",
+                "violations": [],
+                "warnings": [],
             },
         )
 
@@ -112,50 +98,29 @@ async def test_check_passes_through_rationale_chain():
     async with client:
         result = await client.check(text="Proceed?")
     assert result.verdict == "review_recommended"
-    assert len(result.rationale_chain) == 2
-    assert result.rationale_chain[0]["step"] == "classify"
-    assert result.rationale_chain[1]["ambiguity_flag"] == "situation_uncertain"
-
-
-def test_describe_moment_context_situation_and_default():
-    """Human-eval build plan Session 22 — situation-property lookup
-    for the MCP `moment_context` field. Three moments carry an
-    explicit situation (destructive / permission-gated / compliance);
-    everything else is default.
-    """
-    from contentrx_mcp.server import _describe_moment_context
-
-    assert _describe_moment_context("destructive_action") == "destructive"
-    assert _describe_moment_context("trust_permission") == "permission-gated"
-    assert _describe_moment_context("compliance_disclosure") == "compliance"
-    assert _describe_moment_context("browsing_discovery") == "default"
-    assert _describe_moment_context("") == "default"
-    assert _describe_moment_context(None) == "default"
+    assert result.review_reason == "situation_ambiguity"
 
 
 @pytest.mark.asyncio
-async def test_check_tolerates_missing_rationale_chain():
-    """Pre-v1.2.0 responses still work — rationale_chain defaults to []."""
-
+async def test_check_pass_verdict():
     def handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
             json={
-                "result": {
-                    "overall_verdict": "pass",
-                    "content_type": "button_cta",
-                    "moment": "confirmation",
-                    "violations": [],
-                    "passes": [],
-                    "summary": "",
-                }
+                "schema_version": "2.0.0",
+                "verdict": "pass",
+                "review_reason": None,
+                "violations": [],
+                "warnings": [],
             },
         )
 
     client = _client_with(httpx.MockTransport(handler))
     async with client:
         result = await client.check(text="OK")
-    assert result.rationale_chain == []
+    assert result.verdict == "pass"
+    assert result.violations == []
+    assert result.warnings == []
 
 
 @pytest.mark.asyncio

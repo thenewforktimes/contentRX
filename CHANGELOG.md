@@ -10,6 +10,69 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### 4.7.0 — 2026-04-25 (private-taxonomy pivot, ADR 2026-04-25)
+
+**Breaking** — wire format bumps to `schema_version: "2.0.0"`. With
+zero paying customers at the time of the bump, the cutover is atomic:
+no deprecation window, no field-level shim, no email migration. See
+[`decisions/2026-04-25-private-taxonomy-pivot.md`](decisions/2026-04-25-private-taxonomy-pivot.md).
+
+**Public Violation envelope reduced to four fields:**
+
+- `issue` (kept) — the user-visible description of what's wrong.
+- `suggestion` (kept) — the user-visible recommended fix.
+- `severity` (**new**) — `"high" | "medium" | "low"`, auto-derived
+  from `confidence` (`>=0.85 → high`, `>=0.65 → medium`, else `low`).
+  Team-rules can override per standard at the API boundary.
+- `confidence` (kept) — engine self-rated certainty in [0, 1].
+
+**Removed entirely** (no longer in any envelope, public or substrate):
+
+- `docs_url` — the public taxonomy pages this would link to no longer
+  exist. `standard_docs_url()` and the `CONTENTRX_DOCS_URL` env-var
+  override are removed from `models.py`.
+
+**Stripped from public envelope but kept in substrate API responses
+(founder-auth `/admin` only):**
+
+- `standard_id`, `rule`, `rule_version`, `source`, `related_standards`,
+  `ambiguity_flag`, `validate_rejection_reason`. These remain on the
+  in-memory `Violation` dataclass and emit through
+  `Violation.to_substrate_dict()`. The new `Violation.to_public_dict()`
+  serializes only the four public fields when `PUBLIC_TAXONOMY=false`
+  (default); when the flag is `true` (reversibility insurance), the
+  substrate fields surface alongside.
+
+**Top-level CheckResult envelope shape** (returned by
+`CheckResult.to_public_envelope()`):
+
+```json
+{
+  "schema_version": "2.0.0",
+  "violations": [...public violations...],
+  "verdict": "...",
+  "review_reason": null,
+  "warnings": []
+}
+```
+
+Dropped from public: `passes`, `pipeline`, `rationale_chain`,
+`moment`, `audience`, `content_type`, `summary`, `overall_verdict`.
+Substrate emission via `to_substrate_dict()` still includes them all
+for engine-internal callers (eval harness, `/admin` API).
+
+**Migration notes:**
+
+- `Violation.to_dict()` is preserved as a backwards-compatible alias
+  for `to_substrate_dict()`. Internal callers (eval harness, engine
+  CLI, tools/) keep working unchanged. New callers should use the
+  explicit `to_substrate_dict` / `to_public_dict` so the privacy
+  intent is visible at the call site.
+- `tests/test_docs_url.py` deleted — no `docs_url` to test.
+- New 24-test `tests/test_public_envelope.py` locks the privacy
+  boundary at the engine layer (severity derivation, public/substrate
+  dict shapes under both `PUBLIC_TAXONOMY` modes).
+
 ### Unreleased — 2026-04-23 (human-eval build plan Sessions 1–16, 18)
 
 Session 18 — commit-message intent tagging + repo quality scorer:

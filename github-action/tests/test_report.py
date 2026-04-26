@@ -50,10 +50,15 @@ def test_violations_rollup_counts() -> None:
     assert "2 files" in md
     assert "12 strings" in md
     assert "`src/Button.tsx`" in md
-    assert "ACC-01" in md
-    assert "ACT-02" in md
-    assert "ACT-01" in md
+    # Schema 2.0.0 — substrate IDs (ACC-01, ACT-01, etc.) are NEVER
+    # rendered to PR comments. The PR comment surfaces issue +
+    # suggestion + severity only.
+    assert "ACC-01" not in md
+    assert "ACT-02" not in md
+    assert "ACT-01" not in md
     assert "Click here to learn more" in md
+    assert "Avoid click here." in md
+    assert "Be descriptive." in md
 
 
 def test_reports_with_only_non_violating_entries_are_hidden() -> None:

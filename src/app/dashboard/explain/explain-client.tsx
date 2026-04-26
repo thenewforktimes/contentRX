@@ -1,57 +1,48 @@
 /**
  * /dashboard/explain client island.
  *
- * Posts to /api/check via fetch, renders the three-state verdict,
- * violations, and the rationale-chain component. Client-side sha256
- * hashes the input text before handing it to the RationaleChain
- * component so the feedback POST doesn't need to re-send the raw text.
+ * Posts to /api/check via fetch, renders the schema 2.0.0 public
+ * envelope: violations carry only `issue`, `suggestion`, `severity`,
+ * and `confidence`. Substrate fields (`standard_id`, `rule_version`,
+ * `rationale_chain`, `moment`, etc.) are stripped at the API boundary
+ * per ADR 2026-04-25 and never reach this component.
  *
- * Human-eval build plan Session 21.
+ * Founder substrate visibility lives at `/admin` (Phase B), not here.
+ *
+ * Human-eval build plan Session 21; rewritten for schema 2.0.0
+ * (ADR 2026-04-25).
  */
 
 "use client";
 
 import { useState } from "react";
-import { MomentBanner } from "@/components/moment-banner";
-import { RationaleChain } from "@/components/rationale-chain";
-import type { EvaluationResult } from "@/lib/evaluate";
-import type { MomentWeightsSummary } from "@/lib/moment-metadata";
+import type { PublicCheckEnvelope } from "@/lib/api-envelope";
 
-type CheckEnvelope = {
-  schema_version: string;
-  warnings: string[];
-  result: EvaluationResult;
+type CheckEnvelope = PublicCheckEnvelope & {
   latency_ms: number;
 };
 
-async function sha256Hex(text: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 export interface ExplainClientProps {
   /**
-   * Precomputed emphasized/relaxed/suppressed counts per moment,
-   * keyed by moment ID. Built server-side from
-   * `src/content_checker/standards/moments_taxonomy.json` and passed
-   * through so the MomentBanner's correction dropdown can render
-   * "(N)" next to each option without a round-trip.
+   * Kept in the props for compatibility with the page-server-component
+   * call site; the post-pivot dashboard does not render moment context
+   * because `moment` is substrate-only. The page can pass an empty
+   * object here.
    */
-  momentSummaries: Record<string, MomentWeightsSummary>;
+  momentSummaries?: Record<string, unknown>;
 }
 
-export function ExplainClient({ momentSummaries }: ExplainClientProps) {
+export function ExplainClient(_props: ExplainClientProps = {}) {
+  // _props is retained in the signature for API compatibility with the
+  // page-server-component caller; the post-pivot dashboard does not
+  // render moment context (substrate-only) so the prop goes unused.
+  void _props;
   const [text, setText] = useState(
     "Unable to complete operation. Please contact administrator.",
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<CheckEnvelope | null>(null);
-  const [textHash, setTextHash] = useState<string>("");
 
   async function onCheck() {
     setLoading(true);
@@ -69,7 +60,6 @@ export function ExplainClient({ momentSummaries }: ExplainClientProps) {
       }
       const data = (await res.json()) as CheckEnvelope;
       setResponse(data);
-      setTextHash(await sha256Hex(text));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -114,27 +104,19 @@ export function ExplainClient({ momentSummaries }: ExplainClientProps) {
 
       {response && (
         <section className="space-y-4">
-          {response.result.moment && (
-            <MomentBanner
-              moment={response.result.moment}
-              summaries={momentSummaries}
-              textHash={textHash}
-              source="dashboard"
-            />
-          )}
-          <VerdictHeader result={response.result} />
-          {response.result.violations.length > 0 && (
+          <VerdictHeader
+            verdict={response.verdict}
+            reviewReason={response.review_reason}
+          />
+          {response.violations.length > 0 && (
             <ul className="space-y-2">
-              {response.result.violations.map((v, i) => (
+              {response.violations.map((v, i) => (
                 <li
-                  key={`${v.standard_id}-${i}`}
+                  key={i}
                   className="rounded-md border border-neutral-200 bg-white p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900"
                 >
-                  <p className="font-mono text-xs text-neutral-500">
-                    {v.standard_id}
-                    {v.rule_version ? ` v${v.rule_version}` : null}
-                  </p>
-                  <p className="mt-1 text-neutral-900 dark:text-neutral-100">
+                  <SeverityBadge severity={v.severity} />
+                  <p className="mt-2 text-neutral-900 dark:text-neutral-100">
                     {v.issue}
                   </p>
                   {v.suggestion && (
@@ -146,11 +128,6 @@ export function ExplainClient({ momentSummaries }: ExplainClientProps) {
               ))}
             </ul>
           )}
-          <RationaleChain
-            result={response.result}
-            textHash={textHash}
-            source="dashboard"
-          />
           <p className="text-xs text-neutral-500">
             Evaluated in {response.latency_ms} ms.
           </p>
@@ -160,8 +137,13 @@ export function ExplainClient({ momentSummaries }: ExplainClientProps) {
   );
 }
 
-function VerdictHeader({ result }: { result: EvaluationResult }) {
-  const verdict = result.verdict ?? result.overall_verdict;
+function VerdictHeader({
+  verdict,
+  reviewReason,
+}: {
+  verdict: string;
+  reviewReason: string | null;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-3">
       <span
@@ -175,16 +157,27 @@ function VerdictHeader({ result }: { result: EvaluationResult }) {
       >
         {verdict}
       </span>
-      {result.moment && (
+      {reviewReason && (
         <span className="text-sm text-neutral-600 dark:text-neutral-400">
-          moment <span className="font-mono">{result.moment}</span>
-        </span>
-      )}
-      {result.content_type && (
-        <span className="text-sm text-neutral-600 dark:text-neutral-400">
-          type <span className="font-mono">{result.content_type}</span>
+          {reviewReason.replace(/_/g, " ")}
         </span>
       )}
     </div>
+  );
+}
+
+function SeverityBadge({ severity }: { severity: string }) {
+  const tone =
+    severity === "high"
+      ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+      : severity === "medium"
+        ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+        : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
+  return (
+    <span
+      className={`inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${tone}`}
+    >
+      {severity}
+    </span>
   );
 }

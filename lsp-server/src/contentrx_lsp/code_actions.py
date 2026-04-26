@@ -1,23 +1,24 @@
 """LSP code actions for ContentRX diagnostics.
 
-BUILD_PLAN_v2 Session 17. For every ContentRX diagnostic, we expose
-three actions:
+BUILD_PLAN_v2 Session 17; restructured for schema 2.0.0 (ADR
+2026-04-25). For every ContentRX diagnostic, we expose two actions:
 
 1. **Replace with suggested rewrite** (Quick Fix). Calls
    `/api/suggest-fix` and applies the returned text as a
-   `WorkspaceEdit` on the diagnostic's range. This is a *deferred*
-   action — the suggest-fix call happens when the user invokes the
-   action, not at diagnostic-emit time, so we don't burn LLM tokens
-   on actions nobody clicks.
+   `WorkspaceEdit` on the diagnostic's range. Deferred — the
+   suggest-fix call happens when the user invokes the action, not at
+   diagnostic-emit time, so we don't burn LLM tokens on actions
+   nobody clicks.
 
-2. **Show standard rationale**. Opens the standard's `docs_url`
-   (populated in `diagnostics.py`) in the user's browser via the
-   standard LSP command `vscode.open` (VS Code / Cursor) or the
-   editor's own open-external-URL equivalent.
-
-3. **Mark as false positive**. Posts to `/api/violations/override`
+2. **Mark as false positive**. Posts to `/api/violations/override`
    with `override_type: mark_false_positive`. Reuses the override
    capture infrastructure from BUILD_PLAN_v2 Session 11.
+
+The pre-pivot "Show standard rationale" action was removed in 2.0.0
+because the public `docs.contentrx.io/model/standards/<id>` pages no
+longer exist — the taxonomy is private. False-positive overrides
+still work without a `standard_id`; the override is keyed on the
+rendered text + extracted byte range.
 
 This module stays pure — no network I/O. The server wires the
 actions to actual HTTP calls + workspace edits. Lets us unit-test
@@ -57,40 +58,37 @@ class ActionPlan:
 def plan_actions_for_diagnostic(
     diagnostic_data: dict[str, Any], document_uri: str
 ) -> list[ActionPlan]:
-    """Derive the three ActionPlans for a given diagnostic.
+    """Derive the ActionPlans for a given diagnostic.
 
     `diagnostic_data` is the `data` field on the LSP diagnostic the
     server emitted — same shape as `LspDiagnostic.data` in
-    `diagnostics.py`. We read `standard_id`, `docs_url`, and
-    `extracted_text` from it.
+    `diagnostics.py`. Schema 2.0.0 strips `standard_id` and `docs_url`
+    from that dict; we operate on `issue`, `suggestion`, and
+    `extracted_text` plus the byte offsets.
 
-    Review-recommended diagnostics (`code == "REVIEW"`) don't get a
-    rewrite action — there's no specific standard to target. They
-    still get the "mark as false positive" action so a reviewer can
-    dismiss noise.
+    Both the "rewrite" and "mark as false positive" actions key on the
+    rendered issue+text rather than a substrate `standard_id`. Review-
+    recommended diagnostics emit only the false-positive action.
     """
-    standard_id = diagnostic_data.get("standard_id")
-    docs_url = diagnostic_data.get("docs_url")
+    issue = diagnostic_data.get("issue") or ""
+    suggestion = diagnostic_data.get("suggestion") or ""
     extracted_text = diagnostic_data.get("extracted_text") or ""
 
     plans: list[ActionPlan] = []
 
-    if standard_id:
+    has_actionable_violation = bool(issue or suggestion)
+
+    if has_actionable_violation:
         plans.append(
             ActionPlan(
-                title=f"Rewrite to clear {standard_id}",
+                title="Rewrite with ContentRX suggestion",
                 kind=lsp.CodeActionKind.QuickFix.value,
                 command=CMD_APPLY_SUGGESTION,
                 arguments=[
                     {
                         "uri": document_uri,
-                        "standard_id": standard_id,
-                        "rule": diagnostic_data.get("rule") or "",
-                        "issue": diagnostic_data.get("issue") or "",
-                        "current_suggestion": diagnostic_data.get(
-                            "suggestion"
-                        )
-                        or "",
+                        "issue": issue,
+                        "current_suggestion": suggestion,
                         "text": extracted_text,
                         # Forward the diagnostic's original byte offsets
                         # so apply_suggestion targets the exact JSX node
@@ -103,34 +101,20 @@ def plan_actions_for_diagnostic(
             )
         )
 
-    if docs_url:
-        plans.append(
-            ActionPlan(
-                title="Show standard rationale",
-                kind=lsp.CodeActionKind.QuickFix.value,
-                # VS Code + Cursor both respond to `vscode.open` with a
-                # URL argument. Other editors generally understand the
-                # same command or ignore it gracefully.
-                command="vscode.open",
-                arguments=[docs_url],
-            )
+    plans.append(
+        ActionPlan(
+            title="Mark as false positive",
+            kind=lsp.CodeActionKind.QuickFix.value,
+            command=CMD_MARK_FALSE_POSITIVE,
+            arguments=[
+                {
+                    "uri": document_uri,
+                    "issue": issue,
+                    "text": extracted_text,
+                }
+            ],
         )
-
-    if standard_id:
-        plans.append(
-            ActionPlan(
-                title=f"Mark as false positive ({standard_id})",
-                kind=lsp.CodeActionKind.QuickFix.value,
-                command=CMD_MARK_FALSE_POSITIVE,
-                arguments=[
-                    {
-                        "uri": document_uri,
-                        "standard_id": standard_id,
-                        "text": extracted_text,
-                    }
-                ],
-            )
-        )
+    )
 
     return plans
 

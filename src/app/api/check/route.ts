@@ -15,7 +15,7 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { envelope } from "@/lib/api-envelope";
+import { publicCheckEnvelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
 import {
   findMatchingExample,
@@ -275,21 +275,29 @@ export async function POST(req: Request) {
     console.error("recordTokenUsage failed:", err);
   }
 
-  return json(
-    envelope({
-      result,
-      latency_ms: evalResponse.latency_ms,
-      tokens: evalResponse.tokens,
-      usage: {
-        plan: auth.plan,
-        used: newUsed,
-        quota,
-        remaining: Math.max(0, quota - newUsed),
-        month: currentMonth(),
-        text_hash: hashText(text),
-      },
-    }),
-  );
+  // Public envelope (schema 2.0.0). `result` is the substrate
+  // CheckResult shape returned by the Python engine; we project it
+  // down to the four-field public Violation envelope and drop
+  // substrate top-level fields (`passes`, `pipeline`, `moment`,
+  // `audience`, `content_type`, `summary`, `overall_verdict`,
+  // `rationale_chain`). The PUBLIC_TAXONOMY env var (default false)
+  // controls whether substrate Violation fields surface inline for
+  // reversibility — see `decisions/2026-04-25-private-taxonomy-pivot.md`.
+  // API-usage telemetry (`latency_ms`, `tokens`, `usage`) is request
+  // metadata, not taxonomy, and lives alongside the envelope.
+  return json({
+    ...publicCheckEnvelope(result),
+    latency_ms: evalResponse.latency_ms,
+    tokens: evalResponse.tokens,
+    usage: {
+      plan: auth.plan,
+      used: newUsed,
+      quota,
+      remaining: Math.max(0, quota - newUsed),
+      month: currentMonth(),
+      text_hash: hashText(text),
+    },
+  });
 }
 
 function appUrl(): string {

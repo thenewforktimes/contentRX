@@ -119,32 +119,34 @@ def violations_to_diagnostics(
     )
 
     if violations:
-        severity = 2 if verdict == "violation" else 3
+        # Schema 2.0.0 (ADR 2026-04-25): only public Violation fields
+        # surface in the LSP message. `code` is now severity-derived,
+        # not `standard_id` — the rule taxonomy is private. `data` no
+        # longer carries `standard_id`, `rule`, or `docs_url`; the
+        # apply-suggestion command operates on `suggestion` + byte
+        # offsets alone.
+        lsp_severity = 2 if verdict == "violation" else 3
         for v in violations:
-            std = v.get("standard_id") or "UNKNOWN"
-            rule = v.get("rule") or ""
             issue = v.get("issue") or ""
             suggestion = v.get("suggestion") or ""
-            message_parts = [issue or rule]
+            sev_band = v.get("severity") or "medium"
+            message_parts: list[str] = []
+            if issue:
+                message_parts.append(issue)
             if suggestion:
                 message_parts.append(f"Try: {suggestion}")
-            message = " ".join(p for p in message_parts if p).strip()
-            if not message:
-                message = rule or f"{std} fired"
+            message = " ".join(message_parts).strip() or "ContentRX flagged this string."
             out.append(
                 LspDiagnostic(
                     range=lsp_range,
-                    severity=severity,
-                    code=std,
+                    severity=lsp_severity,
+                    code=sev_band.upper(),
                     source="ContentRX",
                     message=message,
                     data={
-                        "standard_id": std,
-                        "rule": rule,
                         "issue": issue,
                         "suggestion": suggestion,
-                        "docs_url": f"{_STANDARDS_URL_BASE}/{std}",
-                        "violation": v,
+                        "severity": sev_band,
                         "extracted_text": extracted.text,
                         # Original byte offsets so the apply-suggestion
                         # command can use them directly instead of

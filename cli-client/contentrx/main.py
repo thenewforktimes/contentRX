@@ -216,16 +216,18 @@ def print_result(
     `fail-on: review` input.
     """
     stream = stream or sys.stdout
-    result = response.get("result", {})
-    # Prefer the new three-state verdict; fall back to overall_verdict
-    # for older API versions that haven't shipped the v1.1.0 envelope.
-    verdict = result.get("verdict") or result.get("overall_verdict", "pass")
-    review_reason = result.get("review_reason")
+    # Schema 2.0.0 (ADR 2026-04-25). The /api/check response carries
+    # `verdict`, `review_reason`, `violations`, and `warnings` at the
+    # top level — no `result` wrapper, no `moment`, `content_type`,
+    # `summary`, or `rationale_chain` (those are substrate). Each
+    # violation has `issue`, `suggestion`, `severity`, `confidence`.
+    verdict = response.get("verdict") or "pass"
+    review_reason = response.get("review_reason")
     if verdict == "pass":
         icon, color, label = "✓", "\033[32m", "PASS"
     elif verdict == "review_recommended":
         icon, color, label = "⚠", "\033[33m", "REVIEW"
-    else:  # violation, fail, error
+    else:  # violation, error
         icon, color, label = "✗", "\033[31m", verdict.upper()
     reset = "\033[0m"
     use_color = _stream_supports_color(stream)
@@ -236,26 +238,14 @@ def print_result(
     print(f"\n{verdict_line}", file=stream)
     if verdict == "review_recommended" and review_reason:
         print(f"  Reason: {review_reason}", file=stream)
-    print(f"  Content type: {result.get('content_type', 'unknown')}", file=stream)
-    # Human-eval build plan Session 22 — surface the detected moment on
-    # every verdict, above the violations. The plan's language: "I
-    # noticed this looks like a destructive_action." Suppress the
-    # default browsing_discovery to avoid a noisy line on every call.
-    moment = result.get("moment") or ""
-    if moment and moment != "browsing_discovery":
-        counts = _moment_weight_suffix(moment)
-        print(f"  Moment: {moment}{counts}", file=stream)
-    if result.get("summary"):
-        print(f"  {result['summary']}", file=stream)
 
-    violations = result.get("violations", []) or []
+    violations = response.get("violations", []) or []
     if violations:
         print(f"\n  Violations ({len(violations)}):", file=stream)
         for v in violations:
-            print(
-                f"    - {v.get('standard_id', '?')}: {v.get('issue', '')}",
-                file=stream,
-            )
+            severity = (v.get("severity") or "medium").upper()
+            issue = v.get("issue", "")
+            print(f"    - [{severity}] {issue}", file=stream)
             if v.get("suggestion"):
                 print(f"        suggestion: {v['suggestion']}", file=stream)
 
@@ -272,85 +262,6 @@ def print_result(
     # REVIEW counts as "passed" for exit-code purposes — REVIEW means
     # "look at this," not "this is wrong." Hard violations still fail.
     return verdict in ("pass", "review_recommended")
-
-
-# Human-eval build plan Session 22 — "Moment detected" weights summary
-# surfaced in the CLI's default output. Hand-mirrored counts from
-# src/content_checker/moments.py :: MOMENT_WEIGHTS. Only non-zero
-# counts are surfaced so silent moments stay quiet.
-_MOMENT_WEIGHT_COUNTS: dict[str, tuple[int, int, int]] = {
-    # (emphasized, relaxed, suppressed)
-    "first_encounter":    (4, 1, 0),
-    "browsing_discovery": (0, 1, 1),
-    "decision_point":     (4, 0, 1),
-    "task_execution":     (4, 0, 0),
-    "confirmation":       (0, 2, 0),
-}
-
-
-def _moment_weight_suffix(moment: str) -> str:
-    """Return a parenthesised counts suffix for the moment line.
-
-    Example: "  Moment: decision_point (4 emphasized, 1 suppressed)"
-    Empty string when the moment has no weighted standards. The CLI is
-    plain-ASCII and line-oriented; this keeps the signal tight.
-    """
-    counts = _MOMENT_WEIGHT_COUNTS.get(moment)
-    if not counts:
-        return ""
-    emp, rel, sup = counts
-    parts: list[str] = []
-    if emp:
-        parts.append(f"{emp} emphasized")
-    if rel:
-        parts.append(f"{rel} relaxed")
-    if sup:
-        parts.append(f"{sup} suppressed")
-    if not parts:
-        return ""
-    return f" ({', '.join(parts)})"
-
-
-def print_rationale_chain(response: dict[str, Any], stream=None) -> None:
-    """Render the pipeline rationale_chain as a plaintext tree.
-
-    Human-eval build plan Session 21. Prints beneath the normal verdict
-    block when `--explain` is passed. No color codes — plain ASCII is
-    friendlier in CI logs.
-
-    Empty chain is a no-op (older API responses, unit-test direct
-    CheckResult construction). Missing chain is also a no-op — we
-    treat the field as optional by design so pre-v1.2.0 servers still
-    get a clean CLI experience.
-    """
-    stream = stream or sys.stdout
-    result = response.get("result", {})
-    chain = result.get("rationale_chain") or []
-    if not chain:
-        return
-
-    print("\n  Rationale chain:", file=stream)
-    for i, hop in enumerate(chain):
-        step = hop.get("step", "?")
-        confidence = hop.get("confidence")
-        suffix = ""
-        if isinstance(confidence, (int, float)):
-            suffix = f" · {int(round(confidence * 100))}%"
-        flag = hop.get("ambiguity_flag")
-        if flag:
-            suffix += f" · flag={flag}"
-        print(f"    {i + 1}. {step}{suffix}", file=stream)
-
-        output = hop.get("output") or {}
-        if output:
-            for key, val in output.items():
-                print(f"         {key}: {val}", file=stream)
-        rule_versions = hop.get("rule_versions") or {}
-        if rule_versions:
-            entries = ", ".join(
-                f"{std}=v{ver}" for std, ver in rule_versions.items()
-            )
-            print(f"         rules: {entries}", file=stream)
 
 
 def _stream_supports_color(stream) -> bool:
@@ -487,15 +398,6 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Include latency and quota usage.",
     )
     parser.add_argument(
-        "--explain",
-        action="store_true",
-        help=(
-            "Print the rationale chain after the verdict — every pipeline "
-            "hop with its confidence, rule versions, and ambiguity flags. "
-            "Useful for debugging why a string was flagged."
-        ),
-    )
-    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
@@ -554,11 +456,10 @@ def run(argv: list[str]) -> int:
     if args.json_output:
         json.dump(response, sys.stdout, indent=2)
         print()
-        passed = response.get("result", {}).get("overall_verdict") == "pass"
+        # Schema 2.0.0 — verdict is at the top level, no `result` wrapper.
+        passed = response.get("verdict") in ("pass", "review_recommended")
     else:
         passed = print_result(args.text, response, verbose=args.verbose)
-        if args.explain:
-            print_rationale_chain(response)
 
     return EXIT_OK if passed else EXIT_VIOLATIONS
 
@@ -595,8 +496,11 @@ def _run_batch(
             passed = print_result(item["text"], response, verbose=verbose)
             all_passed = all_passed and passed
         if json_output:
-            verdict = response.get("result", {}).get("overall_verdict")
-            all_passed = all_passed and (verdict == "pass")
+            # Schema 2.0.0 — verdict is at the top level.
+            verdict = response.get("verdict")
+            all_passed = all_passed and (
+                verdict in ("pass", "review_recommended")
+            )
     if json_output:
         json.dump(collected, sys.stdout, indent=2)
         print()
