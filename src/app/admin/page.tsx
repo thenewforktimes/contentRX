@@ -40,7 +40,7 @@ const ADMIN_LINKS: AdminLink[] = [
     title: "Review queue",
     description:
       "Daily 15-minute review rhythm. Cases cluster by review_reason subtype with agree/override/skip.",
-    status: "planned",
+    status: "live",
   },
   {
     href: "/admin/refinement-log",
