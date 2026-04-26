@@ -555,57 +555,9 @@
     margin-top: 4px;
   }
 
-  /* Human-eval build plan Session 21 — "Why this verdict?" rationale
-   * chain. Renders per node-card (the whole check), not per-violation.
-   */
-  .rationale-chain {
-    margin-top: 10px;
-    padding: 6px 8px;
-    border: 1px solid var(--figma-color-border, #e6e6e6);
-    border-radius: 4px;
-    background: var(--figma-color-bg-secondary, #fafafa);
-    font-size: 10px;
-  }
-  .rationale-chain summary {
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .rationale-chain ol {
-    list-style: none;
-    margin: 6px 0 0;
-    padding: 0;
-  }
-  .rationale-chain li {
-    padding: 3px 0;
-    border-top: 1px solid var(--figma-color-border, #e6e6e6);
-  }
-  .rationale-chain li:first-child {
-    border-top: none;
-  }
-  .rationale-chain .hop-step {
-    font-family: monospace;
-    font-weight: 600;
-  }
-  .rationale-chain .hop-pct {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 1px 4px;
-    border-radius: 3px;
-    background: var(--figma-color-bg-tertiary, #eee);
-    font-size: 9px;
-    font-family: monospace;
-  }
-  .rationale-chain .hop-flag {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 1px 4px;
-    border-radius: 3px;
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 9px;
-    font-family: monospace;
-    text-transform: uppercase;
-  }
+  /* `.rationale-chain` rules removed in audit-deferred PR-D. The
+   * renderRationaleChain function was dead code post-pivot; deleting
+   * the CSS too removes the orphan styles. */
   .btn-moment-feedback {
     display: inline-block;
     margin-top: 4px;
@@ -2922,10 +2874,11 @@ async function runBatchScan(nodes, onProgress) {
       reviewReason: null,
       summary: "",
       error: item.apiError || null,
-      // Human-eval build plan Session 21 — rationale chain. Empty for
-      // preprocessor-only passes (no API round-trip) and for pre-
-      // v1.2.0 API responses.
-      rationaleChain: [],
+      // `rationaleChain` removed in audit-deferred PR-D. Schema 2.0.0
+      // strips `rationale_chain` from the public envelope; the field
+      // was always [] post-pivot. The text-hash + moment-feedback
+      // shape below survives because the "Not <moment>?" feedback
+      // POST still uses them.
       // sha256 of the text, filled below. Used by the "Not <moment>?"
       // feedback button so the POST to /api/feedback/rationale can
       // reference the evaluation without shipping plaintext.
@@ -3807,69 +3760,15 @@ function renderSeverityBadge(severity) {
 }
 
 
-/**
- * Render the rationale chain as a collapsible details block. Mirrors
- * the React component in src/components/rationale-chain.tsx — same
- * data contract, Figma-plugin-native rendering.
- */
-function renderRationaleChain(result) {
-  const hops = result.rationaleChain || [];
-  const textHash = result.textHash || "";
-  const moment = result.moment || "";
-  const hopsHtml = hops
-    .map((hop, i) => {
-      const step = hop.step || "?";
-      const confidence = typeof hop.confidence === "number"
-        ? `<span class="hop-pct">${Math.round(hop.confidence * 100)}%</span>`
-        : "";
-      const flag = hop.ambiguity_flag
-        ? `<span class="hop-flag">${escapeHtml(hop.ambiguity_flag)}</span>`
-        : "";
-      const output = hop.output || {};
-      const outputLines = Object.entries(output)
-        .map(
-          ([k, v]) =>
-            `<div><span style="color:#888">${escapeHtml(k)}:</span> ${escapeHtml(
-              stringifyHopValue(v),
-            )}</div>`,
-        )
-        .join("");
-
-      let feedback = "";
-      if (step === "detect_moment" && moment && textHash) {
-        feedback = `<button class="btn-moment-feedback" type="button"
-            data-text-hash="${escapeHtml(textHash)}"
-            data-moment="${escapeHtml(moment)}">
-            Not ${escapeHtml(moment)}?
-          </button>`;
-      }
-
-      return `<li>
-        <span class="hop-step">${i + 1}. ${escapeHtml(step)}</span>${confidence}${flag}
-        ${outputLines ? `<div style="margin-top:2px;padding-left:10px;">${outputLines}</div>` : ""}
-        ${feedback}
-      </li>`;
-    })
-    .join("");
-
-  return `<details class="rationale-chain">
-    <summary>Why this verdict? (${hops.length} hop${hops.length === 1 ? "" : "s"})</summary>
-    <ol>${hopsHtml}</ol>
-  </details>`;
-}
-
-
-function stringifyHopValue(v) {
-  if (v === null || v === undefined) return "null";
-  if (typeof v === "string") return v;
-  if (typeof v === "number" || typeof v === "boolean") return String(v);
-  try {
-    return JSON.stringify(v);
-  } catch (_) {
-    return "[unserializable]";
-  }
-}
-
+// renderRationaleChain + stringifyHopValue removed in audit-deferred
+// PR-D (2026-04-26). Schema 2.0.0 (ADR 2026-04-25) stripped
+// `rationale_chain` from the public Violation envelope, so the
+// plugin's `rationaleChain: []` field was always empty post-pivot.
+// The function was unreachable code that nonetheless interpolated
+// `hop.ambiguity_flag` (a substrate field) into rendered HTML. The
+// static substrate-leak fence in
+// `src/lib/figma-plugin-substrate-fence.test.ts` will fail if a
+// future regression reintroduces this shape.
 
 /**
  * Filter the visible node cards by verdict.
