@@ -78,5 +78,6 @@ CREATE TABLE violations (
   review_reason text,
   review_reason_subtype text,
   check_event_id text,
+  file_path text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
