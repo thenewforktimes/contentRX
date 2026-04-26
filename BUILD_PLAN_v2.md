@@ -40,7 +40,8 @@ a new ADR superseding the 2026-04-25 pivot):
 | **B** | ✅ Shipped | `/admin` founder dashboard end-to-end. B1 layout + index (#117), B2 model browser (#118), B3 review queue (#119), B4 refinement log (#120), B5 calibration (#121), B6 reports preview-before-publish (#122), B7 essay-drafts scaffold (#123). |
 | **C** | ✅ Shipped | `reports/` module + cron + public consumers. C1 accuracy snapshot generator (#124), C2 calibration log generator (#125), C3 quarterly report scaffold (#126), C4 GitHub Actions cron + staleness watchdog (#127), C5/C6 public `/accuracy` + `/calibration` pages (#128). |
 | **D** | ✅ Shipped | Docs-site cleanup. Removed `/spec/*` and `/model/*` routes + their loaders + substrate JSON copies; redacted whitepaper; rewrote `/contributing` for the private-taxonomy posture (#129). |
-| **E** | ⏳ This PR | Reversibility hygiene wrap-up — explicit trigger-conditions callout, status block update, follow-up tracking. |
+| **E** | ✅ Shipped | Reversibility hygiene wrap-up — explicit trigger-conditions callout, status block update, follow-up tracking ([#130](https://github.com/thenewforktimes/contentRX/pull/130)). |
+| **B follow-ups** | ✅ Shipped | B3b–B7b polish round: queue decisions wired, refinement-log form, calibration interactive chart, reports mark-reviewed sentinel, essay-draft persistence ([#131](https://github.com/thenewforktimes/contentRX/pull/131)–[#135](https://github.com/thenewforktimes/contentRX/pull/135)). |
 
 **Wire-format changes** (atomic, shipped in A3):
 
@@ -85,15 +86,30 @@ Reversal, if it happens, is governed by a new ADR superseding
 decision. None of the four triggers can fire without explicit human
 review.
 
-**Phase B follow-ups still queued** (polish, not load-bearing):
+**Phase B follow-ups — ✅ all shipped (2026-04-26):**
 
-- B3b — queue decision recording (agree/override/skip wired to
-  `/api/violations/override`)
-- B4b — refinement-log form-based entry
-- B5b — `/admin/calibration` interactive Recharts charts (client island)
-- B6b — `/admin/reports` approval UI (publish-or-flag-as-broken)
-- B7b — essay-draft persistence (drafts saved alongside the report
-  that produced them)
+- B3b ✅ — queue decision recording wired to
+  `violation_overrides` (`source="dashboard"`, `actorRole="designer"`)
+  via Server Actions ([#131](https://github.com/thenewforktimes/contentRX/pull/131))
+- B4b ✅ — `/admin/refinement-log` form-based entry; markdown
+  writer is pure + tested ([#132](https://github.com/thenewforktimes/contentRX/pull/132))
+- B5b ✅ — `/admin/calibration` interactive Recharts trend chart
+  (client island, dynamic-imported) with autonomous threshold +
+  design target reference lines
+  ([#133](https://github.com/thenewforktimes/contentRX/pull/133))
+- B6b ✅ — `/admin/reports` mark-reviewed sentinel toggle; review
+  state ships through git as `reports/<type>/.<filename>.reviewed`
+  ([#134](https://github.com/thenewforktimes/contentRX/pull/134))
+- B7b ✅ — `/admin/essay-drafts` editable textarea + save button
+  writing to `essays/drafts/<filename>.md`; drafts ride through git
+  as ordinary commits, paired by filename to the calibration log
+  entry they anchor to
+  ([#135](https://github.com/thenewforktimes/contentRX/pull/135))
+
+The Vercel-runtime caveat (FS read-only) is documented inline on the
+B4b form, B6b sentinel toggle, and B7b draft save — saves only land
+in local checkouts, which matches the founder's local-first writing
+workflow.
 
 This status block is the load-bearing summary; cross-references inside
 sessions still use original phrasing for traceability, but each affected
