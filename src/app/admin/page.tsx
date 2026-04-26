@@ -33,7 +33,7 @@ const ADMIN_LINKS: AdminLink[] = [
     title: "Model",
     description:
       "Browsable taxonomy — moments, standards, version history, examples corpus, influences.",
-    status: "planned",
+    status: "live",
   },
   {
     href: "/admin/queue",

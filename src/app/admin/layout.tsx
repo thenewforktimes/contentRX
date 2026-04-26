@@ -60,10 +60,13 @@ export default async function AdminLayout({
             aria-label="Admin sections"
             className="flex gap-4 text-sm text-neutral-600 dark:text-neutral-400"
           >
+            <Link href="/admin/model" className="hover:underline">
+              Model
+            </Link>
             <Link href="/admin/rule-review" className="hover:underline">
               Rule review
             </Link>
-            {/* Phase B sessions add: model, queue, refinement-log,
+            {/* Phase B sessions add: queue, refinement-log,
                 calibration, reports, essay-drafts. */}
           </nav>
         </div>
