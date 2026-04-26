@@ -21,6 +21,7 @@ import {
   type RefinementEntry,
   type RefinementStatus,
 } from "@/lib/admin-refinement-log.server";
+import { addRefinement } from "./actions";
 
 const SECTION_ORDER: Array<{
   status: RefinementStatus;
@@ -94,6 +95,19 @@ export default function AdminRefinementLogPage() {
           <Stat label="Declined" value={totals.declined} />
         </dl>
       </header>
+
+      <details className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <summary className="cursor-pointer text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          Add a refinement candidate
+        </summary>
+        <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+          Adds a structured entry to the <code className="font-mono">## Open refinements</code>{" "}
+          section of the markdown log. The next REF-NNN id is assigned automatically.
+          The action writes the file in place — works in local dev, fails in the
+          read-only Vercel runtime; commit + push the change to publish.
+        </p>
+        <RefinementForm />
+      </details>
 
       {SECTION_ORDER.map((section) => (
         <section
@@ -195,6 +209,110 @@ function Field({
       </dd>
     </div>
   );
+}
+
+function RefinementForm() {
+  return (
+    <form action={addRefinement} className="mt-4 space-y-3">
+      <FormField
+        label="Title (optional)"
+        name="title"
+        placeholder="ui_label → ui_label + section_header"
+      />
+      <FormField
+        label="Current category"
+        name="current_category"
+        required
+        placeholder="ui_label"
+      />
+      <FormField
+        label="Proposed split"
+        name="proposed_split"
+        required
+        textarea
+        placeholder="Distinguish component-level labels from section-level headers."
+      />
+      <FormField
+        label="Triggering case"
+        name="triggering_case"
+        required
+        textarea
+        placeholder="SCAN-2026-04-25-001 — 'Today's focus'"
+      />
+      <FormField
+        label="Architectural consequence"
+        name="architectural_consequence"
+        required
+        textarea
+        placeholder="PRF-03 applies to section headers but not to component labels."
+      />
+      <FormField label="Note (optional)" name="note" textarea />
+      <FormField
+        label="Date logged"
+        name="date_logged"
+        type="date"
+        defaultValue={todayIso()}
+      />
+      <button
+        type="submit"
+        className="rounded-md bg-neutral-900 px-4 py-2 text-xs font-medium text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-100"
+      >
+        Add candidate
+      </button>
+    </form>
+  );
+}
+
+function FormField({
+  label,
+  name,
+  type = "text",
+  textarea,
+  required,
+  placeholder,
+  defaultValue,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  textarea?: boolean;
+  required?: boolean;
+  placeholder?: string;
+  defaultValue?: string;
+}) {
+  const inputClass =
+    "mt-1 block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100";
+  return (
+    <label className="block text-xs">
+      <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+        {label}
+        {required && <span className="ml-1 text-red-500">*</span>}
+      </span>
+      {textarea ? (
+        <textarea
+          name={name}
+          required={required}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          rows={2}
+          className={inputClass}
+        />
+      ) : (
+        <input
+          type={type}
+          name={name}
+          required={required}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          className={inputClass}
+        />
+      )}
+    </label>
+  );
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
