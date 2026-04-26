@@ -14,10 +14,8 @@
  * is identifiable here. Only standard_id counts + rates are shown.
  */
 
-import { auth } from "@clerk/nextjs/server";
 import { and, gte, isNotNull, sql } from "drizzle-orm";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
 import { getDb, schema } from "@/db";
 import {
   aggregateRuleReview,
@@ -26,7 +24,6 @@ import {
   DEFAULT_MIN_VIOLATIONS_PER_TEAM,
   type TeamCount,
 } from "@/lib/admin-rule-review";
-import { isContentRXAdmin } from "@/lib/graduation";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -40,15 +37,10 @@ type PageProps = {
 };
 
 export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
-  const { userId: clerkId } = await auth();
-  if (!clerkId) {
-    redirect("/sign-in?redirect_url=/admin/rule-review");
-  }
-  if (!isContentRXAdmin(clerkId)) {
-    // 404 rather than 403 — don't confirm the existence of the
-    // admin surface to non-admins.
-    notFound();
-  }
+  // Auth gate is at `src/app/admin/layout.tsx` (Phase B1). The layout
+  // calls `isContentRXAdmin()` and either redirects unauthenticated
+  // requests to /sign-in or 404s non-founders. By the time this page
+  // renders, we know the request is from a founder.
 
   const params = await searchParams;
   const windowDays = clampInt(params.window, 30, 7, 180);
