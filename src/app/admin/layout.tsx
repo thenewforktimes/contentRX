@@ -66,11 +66,13 @@ export default async function AdminLayout({
             <Link href="/admin/queue" className="hover:underline">
               Queue
             </Link>
+            <Link href="/admin/refinement-log" className="hover:underline">
+              Refinement log
+            </Link>
             <Link href="/admin/rule-review" className="hover:underline">
               Rule review
             </Link>
-            {/* Phase B sessions add: refinement-log, calibration,
-                reports, essay-drafts. */}
+            {/* Phase B sessions add: calibration, reports, essay-drafts. */}
           </nav>
         </div>
       </header>

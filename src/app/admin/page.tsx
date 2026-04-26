@@ -47,7 +47,7 @@ const ADMIN_LINKS: AdminLink[] = [
     title: "Refinement log",
     description:
       "Taxonomy refinement candidates — proposed splits, retirements, new moments, new standards.",
-    status: "planned",
+    status: "live",
   },
   {
     href: "/admin/calibration",
