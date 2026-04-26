@@ -61,7 +61,7 @@ const ADMIN_LINKS: AdminLink[] = [
     title: "Reports",
     description:
       "Preview-before-publish gate. Generated weekly + quarterly reports surface here before going to docs.",
-    status: "planned",
+    status: "live",
   },
   {
     href: "/admin/essay-drafts",
