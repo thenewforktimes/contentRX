@@ -31,26 +31,18 @@ a new ADR superseding the 2026-04-25 pivot):
   preserved as reversibility insurance but unreferenced by build scripts.
 - **Phase 6** — Content model as public spec (the entire phase).
 
-**Added** (post-pivot critical-path work; sequenced into this plan's
-Phase 0 successors as Phase A–E in the rolling build plan):
+**Added** (post-pivot rolling build plan; all five phases shipped on
+2026-04-25):
 
-- **Phase A** — Foundation. Land ADR, align root docs, scaffold
-  `PUBLIC_TAXONOMY=false` flag, atomic schema 2.0.0 wire-format cutover
-  with privacy snapshot tests on every user-facing surface.
-- **Phase B** — `/admin` founder dashboard at `src/app/admin/` (model,
-  calibration, refinement-log, queue, reports, essay-drafts).
-- **Phase C** — `reports/` module: nightly accuracy snapshot, weekly
-  Monday calibration log, quarterly report scaffold, staleness monitor
-  with paging alerts. Public `/accuracy` and `/calibration` pages
-  consume these artifacts.
-- **Phase D** — Site cleanup: remove `/standards`, `/moments`, `/model/[id]`
-  routes if scaffolded; remove `scripts/generate-spec.mjs` from the deploy
-  pipeline; add deferred-banner notices to `content-model/`.
-- **Phase E** — Reversibility hygiene: CI smoke job that flips
-  `PUBLIC_TAXONOMY=true` so the flag doesn't rot; document the four
-  trigger conditions for revisiting the ADR.
+| Phase | Status | What landed |
+|---|---|---|
+| **A** | ✅ Shipped | ADR + root docs aligned (#113), `PUBLIC_TAXONOMY=false` flag + CI smoke (#114), atomic schema 2.0.0 cutover for engine + 6 surfaces (#115), Figma plugin substrate-strip (#116). Engine version 4.6.1 → 4.7.0. |
+| **B** | ✅ Shipped | `/admin` founder dashboard end-to-end. B1 layout + index (#117), B2 model browser (#118), B3 review queue (#119), B4 refinement log (#120), B5 calibration (#121), B6 reports preview-before-publish (#122), B7 essay-drafts scaffold (#123). |
+| **C** | ✅ Shipped | `reports/` module + cron + public consumers. C1 accuracy snapshot generator (#124), C2 calibration log generator (#125), C3 quarterly report scaffold (#126), C4 GitHub Actions cron + staleness watchdog (#127), C5/C6 public `/accuracy` + `/calibration` pages (#128). |
+| **D** | ✅ Shipped | Docs-site cleanup. Removed `/spec/*` and `/model/*` routes + their loaders + substrate JSON copies; redacted whitepaper; rewrote `/contributing` for the private-taxonomy posture (#129). |
+| **E** | ⏳ This PR | Reversibility hygiene wrap-up — explicit trigger-conditions callout, status block update, follow-up tracking. |
 
-**Wire-format changes** (atomic, single PR, zero customers in flight):
+**Wire-format changes** (atomic, shipped in A3):
 
 - Public Violation envelope = `{issue, suggestion, severity, confidence}`.
 - Removed: `docs_url`, `related_standards`, `rationale_chain`.
@@ -59,6 +51,49 @@ Phase 0 successors as Phase A–E in the rolling build plan):
 - `standard_id` and `rule_version` retained in internal substrate API
   responses (founder-auth) but never rendered to product users.
 - The `docs_url` non-negotiable in **Appendix A** is removed below.
+
+**Reversibility insurance still in place:**
+
+- `PUBLIC_TAXONOMY=false` env var (default everywhere). Flipping to `true`
+  surfaces substrate fields back inline. CI exercises both modes via
+  `.github/workflows/public_taxonomy_smoke.yml`. Code paths gated by it
+  stay in the codebase — they are reversibility insurance, not dead code.
+- BUILD_PLAN_v2 sessions 7, 19, 20 and Phase 6 stay in this doc with full
+  rationale; deferred-marker headers point at the ADR.
+- `content-model/` directory preserved with a top-of-file deferred banner.
+- The Python engine's substrate retains the full taxonomy; only the
+  report destination moves.
+
+**Triggers for revisiting** (from the ADR; reproduced here so they're
+visible to anyone reading the build plan):
+
+1. By week 12 of launch, paying customer count is below 25 *and*
+   customer-development calls surface "lack of public taxonomy as
+   credibility signal" as a recurring objection (≥3 mentions across
+   the 25 calls).
+2. A competitor publishes a similar private-taxonomy tool with
+   measurable traction and the named-expert moat alone is no longer
+   sufficient differentiation.
+3. Acquisition interest from Ditto, Figma, GitHub, or another strategic
+   acquirer materializes and a public taxonomy is part of the deal value.
+4. Robo's bandwidth changes (e.g., leaves PayPal, hires a collaborator)
+   such that maintaining both a writing flywheel and a public spec
+   becomes feasible.
+
+Reversal, if it happens, is governed by a new ADR superseding
+`decisions/2026-04-25-private-taxonomy-pivot.md`. Not an in-session
+decision. None of the four triggers can fire without explicit human
+review.
+
+**Phase B follow-ups still queued** (polish, not load-bearing):
+
+- B3b — queue decision recording (agree/override/skip wired to
+  `/api/violations/override`)
+- B4b — refinement-log form-based entry
+- B5b — `/admin/calibration` interactive Recharts charts (client island)
+- B6b — `/admin/reports` approval UI (publish-or-flag-as-broken)
+- B7b — essay-draft persistence (drafts saved alongside the report
+  that produced them)
 
 This status block is the load-bearing summary; cross-references inside
 sessions still use original phrasing for traceability, but each affected
