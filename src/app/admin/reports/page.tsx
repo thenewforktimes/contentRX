@@ -21,6 +21,7 @@ import {
   type ReportEntry,
   type ReportType,
 } from "@/lib/admin-reports.server";
+import { toggleReviewedAction } from "./actions";
 
 const TYPE_INFO: Record<
   ReportType,
@@ -130,6 +131,15 @@ function ReportRow({ entry }: { entry: ReportEntry }) {
         >
           {entry.filename}
         </Link>
+        {entry.reviewed ? (
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+            reviewed
+          </span>
+        ) : (
+          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+            pending review
+          </span>
+        )}
         {entry.is_stale && (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-950 dark:text-amber-200">
             stale
@@ -139,8 +149,27 @@ function ReportRow({ entry }: { entry: ReportEntry }) {
       <div className="flex items-baseline gap-4 font-mono text-[10px] text-neutral-500">
         <span>{entry.size_bytes.toLocaleString()} bytes</span>
         <span>{formatDate(entry.modified_at)}</span>
+        <ToggleReviewForm entry={entry} />
       </div>
     </li>
+  );
+}
+
+function ToggleReviewForm({ entry }: { entry: ReportEntry }) {
+  const desired = entry.reviewed ? "false" : "true";
+  const label = entry.reviewed ? "Unmark" : "Mark reviewed";
+  return (
+    <form action={toggleReviewedAction}>
+      <input type="hidden" name="type" value={entry.type} />
+      <input type="hidden" name="filename" value={entry.filename} />
+      <input type="hidden" name="desired" value={desired} />
+      <button
+        type="submit"
+        className="rounded-md border border-neutral-300 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+      >
+        {label}
+      </button>
+    </form>
   );
 }
 

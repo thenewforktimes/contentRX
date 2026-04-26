@@ -35,6 +35,11 @@ export interface ReportEntry {
   modified_at: string;
   size_bytes: number;
   is_stale: boolean;
+  /** Whether the founder has marked this report reviewed via /admin/reports.
+   * Backed by a sentinel file `reports/<type>/.<filename>.reviewed` (see
+   * `reviewSentinelPath`). The sentinel travels with the report through
+   * git, so the review state is the same in every checkout. */
+  reviewed: boolean;
 }
 
 export interface ReportsByType {
@@ -78,6 +83,7 @@ export function loadReportFile(
   contents: string;
   modified_at: string;
   size_bytes: number;
+  reviewed: boolean;
 } | null {
   if (!isSafeFilename(filename)) return null;
   const file = path.join(REPORTS_DIR, type, filename);
@@ -89,9 +95,41 @@ export function loadReportFile(
       contents,
       modified_at: stat.mtime.toISOString(),
       size_bytes: stat.size,
+      reviewed: isReviewed(type, filename),
     };
   } catch {
     return null;
+  }
+}
+
+/** Resolve the sentinel-file path for a (type, filename) pair, after
+ * validating both inputs against {@link isReportType} / {@link isSafeFilename}.
+ * Returns null on invalid inputs so callers can fail closed without
+ * touching the filesystem. */
+export function reviewSentinelPath(
+  type: ReportType,
+  filename: string,
+): string | null {
+  if (!isSafeFilename(filename)) return null;
+  // Source-of-truth file must exist; we don't track review state for
+  // non-existent reports.
+  const reportFile = path.join(REPORTS_DIR, type, filename);
+  try {
+    const stat = fs.statSync(reportFile);
+    if (!stat.isFile()) return null;
+  } catch {
+    return null;
+  }
+  return path.join(REPORTS_DIR, type, `.${filename}.reviewed`);
+}
+
+function isReviewed(type: ReportType, filename: string): boolean {
+  const sentinel = reviewSentinelPath(type, filename);
+  if (sentinel === null) return false;
+  try {
+    return fs.statSync(sentinel).isFile();
+  } catch {
+    return false;
   }
 }
 
@@ -121,6 +159,7 @@ function scanType(type: ReportType, now: Date): ReportEntry[] {
       modified_at: stat.mtime.toISOString(),
       size_bytes: stat.size,
       is_stale: ageDays > STALE_THRESHOLD_DAYS[type],
+      reviewed: isReviewed(type, name),
     });
   }
   // Newest first.

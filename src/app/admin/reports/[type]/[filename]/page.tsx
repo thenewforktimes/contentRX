@@ -8,8 +8,9 @@
  * automation bugs, not about pretty rendering); JSON files render as
  * formatted JSON.
  *
- * Decision UI (approve / mark needing-fix) is deferred to a follow-up.
- * This PR ships the read-only preview; B6b adds the publication gate.
+ * Decision UI (mark reviewed / unmark) lives in the header — backed by
+ * a sentinel file (`reports/<type>/.<filename>.reviewed`) the founder
+ * commits alongside the report.
  *
  * Auth handled by `src/app/admin/layout.tsx`.
  */
@@ -22,6 +23,7 @@ import {
   STALE_THRESHOLD_DAYS,
   type ReportType,
 } from "@/lib/admin-reports.server";
+import { toggleReviewedAction } from "../../actions";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -86,6 +88,32 @@ export default async function AdminReportPreviewPage({
             </span>
           )}
         </dl>
+        <div className="mt-4 flex items-center gap-3">
+          {report.reviewed ? (
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+              reviewed
+            </span>
+          ) : (
+            <span className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+              pending review
+            </span>
+          )}
+          <form action={toggleReviewedAction}>
+            <input type="hidden" name="type" value={typeRaw} />
+            <input type="hidden" name="filename" value={filename} />
+            <input
+              type="hidden"
+              name="desired"
+              value={report.reviewed ? "false" : "true"}
+            />
+            <button
+              type="submit"
+              className="rounded-md border border-neutral-300 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+            >
+              {report.reviewed ? "Unmark reviewed" : "Mark reviewed"}
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
@@ -98,10 +126,17 @@ export default async function AdminReportPreviewPage({
       </div>
 
       <p className="text-xs text-neutral-500">
-        Decision UI (approve / mark needing fix) ships in B6b. For now, copy
-        the file path and edit on disk if the preview surfaces a generator
-        bug:{" "}
-        <code className="font-mono">reports/{typeRaw}/{filename}</code>.
+        Marking reviewed writes a sentinel at{" "}
+        <code className="font-mono">
+          reports/{typeRaw}/.{filename}.reviewed
+        </code>{" "}
+        — commit it alongside the report so the publication gate
+        travels through git. If a generator bug surfaces, edit{" "}
+        <code className="font-mono">
+          reports/{typeRaw}/{filename}
+        </code>{" "}
+        on disk before re-marking. Vercel runtime is read-only, so use
+        a local checkout.
       </p>
     </div>
   );
