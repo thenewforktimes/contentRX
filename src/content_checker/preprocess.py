@@ -273,10 +273,15 @@ def check_grm04_ampersands(text: str, content_type: str) -> PreprocessResult:
     return PreprocessResult(standard_id="GRM-04", outcome=Outcome.DEFER)
 
 
+_GRM01_CONJUNCTION_RES: tuple[tuple[str, "re.Pattern[str]"], ...] = (
+    ("and", re.compile(r"\s+and\s+", re.IGNORECASE)),
+    ("or", re.compile(r"\s+or\s+", re.IGNORECASE)),
+)
+
+
 def check_grm01_oxford_comma(text: str) -> PreprocessResult:
     """GRM-01: Flag missing Oxford comma in clear 3+ item lists."""
-    for conjunction in ("and", "or"):
-        conj_re = re.compile(r"\s+" + conjunction + r"\s+", re.IGNORECASE)
+    for conjunction, conj_re in _GRM01_CONJUNCTION_RES:
         match = conj_re.search(text)
         if not match:
             continue

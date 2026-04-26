@@ -114,6 +114,79 @@ def test_truncates_long_snippets() -> None:
     assert "x" * 200 not in md
 
 
+def test_substrate_fields_never_appear_in_rendered_output() -> None:
+    """Audit 2026-04-26 fence — guarantee no substrate field name leaks
+    onto the public PR-comment surface.
+
+    The schema 2.0.0 contract is: PR comments render only `issue`,
+    `suggestion`, `severity` (the public envelope shape). The internal
+    fields `standard_id`, `rule_version`, `related_standards`,
+    `rationale_chain`, `docs_url`, `ambiguity_flag`,
+    `validate_rejection_reason`, `source` must never appear in the
+    Markdown body — neither as field names nor as keys/values.
+
+    This test feeds the renderer a kitchen-sink violation that includes
+    every substrate field, then scans the output for each field name.
+    A future regression that adds e.g. `**Standard:** ACC-01` to the
+    output blows up here loudly instead of slipping past triage.
+    """
+    substrate = {
+        "standard_id": "PRF-11",
+        "rule_version": "1.4.0",
+        "rule": "Substrate-only rule text",
+        "related_standards": ["ACC-01", "GRM-01"],
+        "rationale_chain": [{"step": 1, "decision": "fired"}],
+        "docs_url": "https://example.invalid/standards/PRF-11",
+        "ambiguity_flag": None,
+        "validate_rejection_reason": None,
+        "source": "llm",
+        # Public fields the renderer is allowed to surface.
+        "issue": "Avoid jargon in error copy.",
+        "suggestion": "Rephrase in plain language.",
+        "severity": "high",
+    }
+    reports = [
+        _report(
+            "src/Comp.tsx",
+            [
+                {
+                    "text": "Authentication terminated due to session timeout.",
+                    "line": 17,
+                    "kind": "jsx-text",
+                    "violations": [substrate],
+                }
+            ],
+        ),
+    ]
+    md = render_markdown(reports, total_strings=1)
+
+    # Public fields must reach the comment.
+    assert "Avoid jargon in error copy." in md
+    assert "Rephrase in plain language." in md
+
+    # Substrate field NAMES must never appear in the rendered output.
+    forbidden_names = (
+        "standard_id",
+        "rule_version",
+        "related_standards",
+        "rationale_chain",
+        "docs_url",
+        "ambiguity_flag",
+        "validate_rejection_reason",
+    )
+    for name in forbidden_names:
+        assert name not in md, (
+            f"substrate field name {name!r} leaked into PR-comment markdown"
+        )
+
+    # Substrate VALUES that would identify the private taxonomy must
+    # also be absent. PRF-11 is the standard_id, ACC-01/GRM-01 are
+    # related_standards values.
+    assert "PRF-11" not in md
+    assert "1.4.0" not in md  # rule_version
+    assert "https://example.invalid" not in md  # docs_url
+
+
 def test_overlong_report_is_truncated_under_github_limit() -> None:
     """A PR with hundreds of violating files must not blow past
     GitHub's 65,536-char comment-body cap (GHA-C-01)."""

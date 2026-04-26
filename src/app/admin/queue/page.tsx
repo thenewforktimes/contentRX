@@ -20,7 +20,7 @@
  * Auth handled by `src/app/admin/layout.tsx`.
  */
 
-import { desc, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
 
@@ -131,7 +131,10 @@ export default async function AdminQueuePage({
   // Look up which of these rows have already been triaged via /admin/queue.
   // We mark "decided" when there's a violation_overrides row keyed on the
   // same violationId with source="dashboard" + actorRole="designer" — the
-  // marker the Server Action writes.
+  // marker the Server Action writes. Audit 2026-04-26 P2: switched from
+  // sql.raw with manual escape to Drizzle's inArray() for type safety
+  // (the IDs are server-derived cuid2 strings — never user input — so
+  // there was no real injection risk, but inArray is cleaner).
   const rowIds = rows.map((r) => r.id);
   const decidedStanceById = new Map<string, string>();
   if (rowIds.length > 0) {
@@ -142,9 +145,11 @@ export default async function AdminQueuePage({
       })
       .from(schema.violationOverrides)
       .where(
-        sql`${schema.violationOverrides.violationId} IN (${sql.raw(
-          rowIds.map((id) => `'${id.replace(/'/g, "''")}'`).join(","),
-        )}) AND ${schema.violationOverrides.source} = 'dashboard' AND ${schema.violationOverrides.actorRole} = 'designer'`,
+        and(
+          inArray(schema.violationOverrides.violationId, rowIds),
+          eq(schema.violationOverrides.source, "dashboard"),
+          eq(schema.violationOverrides.actorRole, "designer"),
+        ),
       );
     for (const d of decisions) {
       if (d.violationId && d.overrideStance) {
