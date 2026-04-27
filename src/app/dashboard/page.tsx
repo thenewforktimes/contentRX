@@ -73,15 +73,16 @@ export default async function DashboardPage() {
   }
 
   const plan = user.plan as Plan;
-  const [seats, used, activeSub, surfaceActivity, insights, activatedSource] =
+  const [seats, used, activeSub, sourceStats, insights] =
     await Promise.all([
       loadSeats(user.id, plan, user.teamOwnerUserId),
       loadCurrentUsage(user.id),
       loadActiveSubscription(user.id, user.teamOwnerUserId),
-      loadSurfaceActivity(user.id, user.teamOwnerUserId),
+      loadSourceStats(user.id, user.teamOwnerUserId),
       loadWeeklyInsights(user.id, user.teamOwnerUserId),
-      loadRecentlyActivatedSurface(user.id, user.teamOwnerUserId),
     ]);
+  const surfaceActivity = sourceStats.activity;
+  const activatedSource = sourceStats.recentlyActivated;
   const quota = monthlyQuota(plan, seats);
   const usedPct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
   const usageTone: UsageTone =
@@ -598,48 +599,60 @@ async function loadCurrentUsage(userId: string): Promise<number> {
 }
 
 /**
- * Aggregate per-source check counts + last-call time. Scoped to the
- * team (teamId = teamOwnerUserId for members, user.id for owners).
- * Returns a complete record with zero-counts for surfaces never used —
- * the renderer can lay out all five cards regardless of activity.
+ * Single per-source aggregate: count, first-seen, last-seen. One scan
+ * powers BOTH the Active-surfaces row (count + lastAt) and the
+ * FirstCallBanner (recently-activated = firstAt within 7d window).
+ *
+ * Scoped to the team (teamId = teamOwnerUserId for members,
+ * user.id for owners). Returns a complete record with zero-counts for
+ * surfaces never used — the renderer can lay out all five cards.
  */
-async function loadSurfaceActivity(
+async function loadSourceStats(
   userId: string,
   teamOwnerUserId: string | null,
-): Promise<SurfaceActivity> {
+): Promise<{
+  activity: SurfaceActivity;
+  recentlyActivated: SurfaceKey | null;
+}> {
   const teamId = teamOwnerUserId ?? userId;
   const db = getDb();
   const rows = (await db
     .select({
       source: schema.violations.source,
       count: sql<number>`count(*)::int`,
+      firstAt: sql<Date>`min(${schema.violations.createdAt})`,
       lastAt: sql<Date>`max(${schema.violations.createdAt})`,
     })
     .from(schema.violations)
     .where(eq(schema.violations.teamId, teamId))
-    .groupBy(schema.violations.source)
-    .orderBy(desc(sql`max(${schema.violations.createdAt})`))) as Array<{
+    .groupBy(schema.violations.source)) as Array<{
     source: string;
     count: number;
+    firstAt: Date;
     lastAt: Date;
   }>;
 
-  const out: SurfaceActivity = {
+  const activity: SurfaceActivity = {
     mcp: { count: 0, lastAt: null },
     lsp: { count: 0, lastAt: null },
     action: { count: 0, lastAt: null },
     plugin: { count: 0, lastAt: null },
     cli: { count: 0, lastAt: null },
   };
+  const since = new Date(Date.now() - ACTIVATION_WINDOW_MS);
+  let recentlyActivated: { source: SurfaceKey; firstAt: Date } | null = null;
+
   for (const r of rows) {
-    if (r.source in out) {
-      out[r.source as SurfaceKey] = {
-        count: r.count,
-        lastAt: r.lastAt instanceof Date ? r.lastAt : new Date(r.lastAt),
-      };
+    if (!(r.source in activity)) continue;
+    const surface = r.source as SurfaceKey;
+    const firstAt = r.firstAt instanceof Date ? r.firstAt : new Date(r.firstAt);
+    const lastAt = r.lastAt instanceof Date ? r.lastAt : new Date(r.lastAt);
+    activity[surface] = { count: r.count, lastAt };
+    if (firstAt >= since && (!recentlyActivated || firstAt > recentlyActivated.firstAt)) {
+      recentlyActivated = { source: surface, firstAt };
     }
   }
-  return out;
+  return { activity, recentlyActivated: recentlyActivated?.source ?? null };
 }
 
 /**
@@ -737,52 +750,6 @@ function sourceLabel(source: string): string {
     default:
       return source;
   }
-}
-
-const TRACKED_SURFACES = new Set([
-  "mcp",
-  "lsp",
-  "action",
-  "plugin",
-  "cli",
-]);
-
-/**
- * Pick the most recently activated surface for the FirstCallBanner
- * (PR-32). Definition of "recently activated": this team's earliest
- * violation from a given source landed within the last 7 days. If
- * multiple surfaces newly activated in that window, return the most
- * recent one — that's the one the user is currently celebrating.
- */
-async function loadRecentlyActivatedSurface(
-  userId: string,
-  teamOwnerUserId: string | null,
-): Promise<SurfaceKey | null> {
-  const teamId = teamOwnerUserId ?? userId;
-  const since = new Date(Date.now() - ACTIVATION_WINDOW_MS);
-  const db = getDb();
-  const rows = (await db
-    .select({
-      source: schema.violations.source,
-      firstAt: sql<Date>`min(${schema.violations.createdAt})`,
-    })
-    .from(schema.violations)
-    .where(eq(schema.violations.teamId, teamId))
-    .groupBy(schema.violations.source)) as Array<{
-    source: string;
-    firstAt: Date;
-  }>;
-
-  let best: { source: SurfaceKey; firstAt: Date } | null = null;
-  for (const r of rows) {
-    if (!TRACKED_SURFACES.has(r.source)) continue;
-    const firstAt = r.firstAt instanceof Date ? r.firstAt : new Date(r.firstAt);
-    if (firstAt < since) continue;
-    if (!best || firstAt > best.firstAt) {
-      best = { source: r.source as SurfaceKey, firstAt };
-    }
-  }
-  return best?.source ?? null;
 }
 
 function PlanPill({ plan }: { plan: Plan }) {

@@ -255,14 +255,16 @@ export async function POST(req: Request) {
   const withAdds = applyAddedRules(overridden, text, teamRules.adds);
   const result = recomputeVerdict(withAdds);
 
-  // Log + increment are observational — if they fail, the user still gets
-  // their result. We surface the failure through Sentry, not to the user.
-  try {
-    // team_id always equals "team-owner-or-self" — see lib/team-scope.ts
-    // for the full rationale. Centralized in `teamScope()` so writes
-    // and reads always agree (PR-198 fix for the team_id NULL bug).
-    const teamIdForLog = teamScope(auth);
-    await logViolations({
+  // Log + token-usage writes are observational — both run in parallel
+  // since neither depends on the other, and a failure in either should
+  // never fail the request. The user already got their result and quota
+  // was already counted at claimQuotaSlot time.
+  // team_id always equals "team-owner-or-self" — see lib/team-scope.ts
+  // for the full rationale. Centralized in `teamScope()` so writes and
+  // reads always agree (PR-198 fix for the team_id NULL bug).
+  const teamIdForLog = teamScope(auth);
+  const [logResult, tokenResult] = await Promise.allSettled([
+    logViolations({
       userId: auth.user.id,
       teamId: teamIdForLog,
       source,
@@ -274,26 +276,19 @@ export async function POST(req: Request) {
       reviewReasonSubtype:
         (result as { review_reason?: string | null }).review_reason ?? null,
       runId: run_id ?? null,
-    });
-  } catch (err) {
-    console.error("logViolations failed:", err);
-  }
-
-  // Token-cost telemetry (audit M-24, PR 9). Roll up the engine's
-  // reported token usage into the user's current-month usage row so
-  // we can answer "how much did this customer cost us?" without
-  // walking engine logs. Best-effort: a failure here doesn't fail the
-  // request — the user already got their result and quota was already
-  // counted.
-  try {
-    await recordTokenUsage(auth.user.id, {
+    }),
+    recordTokenUsage(auth.user.id, {
       inputTokens: evalResponse.tokens.input,
       outputTokens: evalResponse.tokens.output,
       cacheReadInputTokens: evalResponse.tokens.cache_read_input ?? 0,
       cacheCreationInputTokens: evalResponse.tokens.cache_creation_input ?? 0,
-    });
-  } catch (err) {
-    console.error("recordTokenUsage failed:", err);
+    }),
+  ]);
+  if (logResult.status === "rejected") {
+    console.error("logViolations failed:", logResult.reason);
+  }
+  if (tokenResult.status === "rejected") {
+    console.error("recordTokenUsage failed:", tokenResult.reason);
   }
 
   // Bust the dashboard's edge cache so the usage counter, "This

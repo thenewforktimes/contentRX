@@ -22,7 +22,7 @@
  * to surface at all.
  */
 
-import { and, desc, eq, gte, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 
 export type FindingPattern =
@@ -137,8 +137,8 @@ export function buildPatterns(
 
 /**
  * Aggregate moment/file/severity counts for the given team's findings
- * within the window. Three queries in parallel; the caller passes the
- * total findings count to compute shares.
+ * within the window. One query with three CTE-style aggregates over a
+ * single index scan — the table only gets read once.
  */
 export async function loadFindingAggregates(
   teamId: string,
@@ -146,64 +146,50 @@ export async function loadFindingAggregates(
 ): Promise<FindingAggregates> {
   const db = getDb();
 
-  const [topMomentRows, topFileRows, severityRows] = await Promise.all([
-    db
-      .select({
-        moment: schema.violations.moment,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(schema.violations)
-      .where(
-        and(
-          eq(schema.violations.teamId, teamId),
-          gte(schema.violations.createdAt, since),
-          sql`${schema.violations.moment} IS NOT NULL`,
-        ),
-      )
-      .groupBy(schema.violations.moment)
-      .orderBy(desc(sql`count(*)`))
-      .limit(1),
-    db
-      .select({
-        filePath: schema.violations.filePath,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(schema.violations)
-      .where(
-        and(
-          eq(schema.violations.teamId, teamId),
-          gte(schema.violations.createdAt, since),
-          sql`${schema.violations.filePath} IS NOT NULL`,
-        ),
-      )
-      .groupBy(schema.violations.filePath)
-      .orderBy(desc(sql`count(*)`))
-      .limit(1),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(schema.violations)
-      .where(
-        and(
-          eq(schema.violations.teamId, teamId),
-          gte(schema.violations.createdAt, since),
-          eq(schema.violations.severity, "high"),
-        ),
-      ),
-  ]);
+  const rows = await db.execute<{
+    top_moment: string | null;
+    top_moment_count: number | null;
+    top_file: string | null;
+    top_file_count: number | null;
+    high_count: number;
+  }>(sql`
+    WITH base AS (
+      SELECT moment, file_path, severity
+      FROM ${schema.violations}
+      WHERE team_id = ${teamId} AND created_at >= ${since}
+    ),
+    moment_top AS (
+      SELECT moment, count(*)::int AS cnt
+      FROM base
+      WHERE moment IS NOT NULL
+      GROUP BY moment
+      ORDER BY cnt DESC
+      LIMIT 1
+    ),
+    file_top AS (
+      SELECT file_path, count(*)::int AS cnt
+      FROM base
+      WHERE file_path IS NOT NULL
+      GROUP BY file_path
+      ORDER BY cnt DESC
+      LIMIT 1
+    )
+    SELECT
+      (SELECT moment FROM moment_top) AS top_moment,
+      (SELECT cnt FROM moment_top) AS top_moment_count,
+      (SELECT file_path FROM file_top) AS top_file,
+      (SELECT cnt FROM file_top) AS top_file_count,
+      (SELECT count(*)::int FROM base WHERE severity = 'high') AS high_count
+  `);
 
-  const topMoment = topMomentRows[0]?.moment
-    ? {
-        moment: topMomentRows[0].moment as string,
-        count: topMomentRows[0].count,
-      }
-    : null;
-  const topFile = topFileRows[0]?.filePath
-    ? {
-        filePath: topFileRows[0].filePath as string,
-        count: topFileRows[0].count,
-      }
-    : null;
-  const highCount = severityRows[0]?.count ?? 0;
-
-  return { topMoment, topFile, highCount };
+  const r = rows[0];
+  return {
+    topMoment: r?.top_moment
+      ? { moment: r.top_moment, count: r.top_moment_count ?? 0 }
+      : null,
+    topFile: r?.top_file
+      ? { filePath: r.top_file, count: r.top_file_count ?? 0 }
+      : null,
+    highCount: r?.high_count ?? 0,
+  };
 }
