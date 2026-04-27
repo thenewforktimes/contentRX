@@ -41,28 +41,6 @@ const USAGE_WARNING_THRESHOLD = 0.8;
 const INSIGHTS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const ACTIVATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-/**
- * Wraps a dashboard data-loader so a thrown error names the loader
- * in stderr before propagating. The 500 still happens (the
- * surrounding Promise.all rethrows), but Vercel's Node-function logs
- * will now contain `[DASHBOARD_LOADER_FAIL] loadX: ErrorName: msg`
- * — which is the diff between "the dashboard is broken somewhere"
- * and "the dashboard is broken in loadX, here's the line."
- *
- * Diagnostic-only. Remove when the dashboard render is stable for a
- * full week.
- */
-async function tag<T>(name: string, fn: () => Promise<T>): Promise<T> {
-  try {
-    return await fn();
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error ? err.stack : undefined;
-    console.error(`[DASHBOARD_LOADER_FAIL] ${name}:`, msg, stack);
-    throw err;
-  }
-}
-
 function nextMonthReset(): string {
   const now = new Date();
   const next = new Date(
@@ -80,36 +58,12 @@ function nextMonthReset(): string {
 }
 
 export default async function DashboardPage() {
-  try {
-    return await renderDashboard();
-  } catch (err) {
-    // Server Component errors get hidden by Next in production builds
-    // (the user sees only "An error occurred in the Server Components
-    // render" via global-error.tsx). Without this catch the actual
-    // message + stack trace stays buried in stderr that Vercel's
-    // default UI doesn't surface and that Sentry's client capture
-    // can't see. Logging here puts the full error in the Node
-    // function's main log stream where it's findable.
-    console.error("[DASHBOARD_RENDER_FAIL]", {
-      message: err instanceof Error ? err.message : String(err),
-      name: err instanceof Error ? err.name : "Unknown",
-      stack: err instanceof Error ? err.stack : undefined,
-    });
-    throw err;
-  }
-}
-
-async function renderDashboard() {
-  const { userId: clerkId } = await tag("auth()", async () => {
-    return auth();
-  });
+  const { userId: clerkId } = await auth();
   if (!clerkId) {
     redirect("/sign-in?redirect_url=/dashboard");
   }
 
-  const user = await tag("getOrProvisionUser", () =>
-    getOrProvisionUser(clerkId),
-  );
+  const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
       <section className="rounded-lg border border-neutral-200 p-6 text-sm dark:border-neutral-800">
@@ -119,24 +73,14 @@ async function renderDashboard() {
   }
 
   const plan = user.plan as Plan;
-  // Each loader wrapped + tagged so the next render-time 500 names
-  // the failing branch. Removes when the dashboard render is stable.
   const [seats, used, activeSub, surfaceActivity, insights, activatedSource] =
     await Promise.all([
-      tag("loadSeats", () => loadSeats(user.id, plan, user.teamOwnerUserId)),
-      tag("loadCurrentUsage", () => loadCurrentUsage(user.id)),
-      tag("loadActiveSubscription", () =>
-        loadActiveSubscription(user.id, user.teamOwnerUserId),
-      ),
-      tag("loadSurfaceActivity", () =>
-        loadSurfaceActivity(user.id, user.teamOwnerUserId),
-      ),
-      tag("loadWeeklyInsights", () =>
-        loadWeeklyInsights(user.id, user.teamOwnerUserId),
-      ),
-      tag("loadRecentlyActivatedSurface", () =>
-        loadRecentlyActivatedSurface(user.id, user.teamOwnerUserId),
-      ),
+      loadSeats(user.id, plan, user.teamOwnerUserId),
+      loadCurrentUsage(user.id),
+      loadActiveSubscription(user.id, user.teamOwnerUserId),
+      loadSurfaceActivity(user.id, user.teamOwnerUserId),
+      loadWeeklyInsights(user.id, user.teamOwnerUserId),
+      loadRecentlyActivatedSurface(user.id, user.teamOwnerUserId),
     ]);
   const quota = monthlyQuota(plan, seats);
   const usedPct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;

@@ -261,31 +261,24 @@ class handler(BaseHTTPRequestHandler):
             # Per-stage timeout exhausted. Lets /api/check distinguish
             # "engine slow" from "engine broken."
             return self._respond(504, {"error": str(exc)})
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             # Keep the full traceback in stderr (Vercel captures it,
-            # Sentry ingests from there). Per ENG-H-01 the message
-            # surfaced to the public TS caller is generic; the
-            # internal-only `detail` and `traceback` fields carry the
-            # typed exception name and the file:line where it threw,
-            # so /api/check (gated by INTERNAL_EVAL_SECRET) can log
-            # them for diagnostics. /api/check still collapses the
-            # upstream body to "Evaluation service unavailable" before
-            # returning to the browser, so nothing here leaks to
-            # user-visible output — only founder-accessible logs.
+            # Sentry ingests from there) but return a generic message
+            # to the caller. The exception string can include file
+            # paths, model names, Anthropic error bodies, or truncated
+            # LLM output — none of which the TS caller should surface.
+            # (ENG-H-01 from 2026-04-22 audit.)
+            #
+            # PR-193/PR-194 added internal-only `detail` + `traceback`
+            # fields here as diagnostic aids during the prod 502
+            # incident. Removed (audit P2): they're dead instrumentation
+            # now that the engine is reliable, and skipping them keeps
+            # the leak surface as small as possible. If we hit an
+            # opaque error class again, reintroduce them as a 1-line
+            # diagnostic hotfix per the
+            # `feedback_diagnostic_detail_injection` memory pattern.
             traceback.print_exc()
-            tb_lines = traceback.format_exc().splitlines()
-            # Last 8 lines = the innermost frame + the exception line.
-            # Bounded so the response stays well under any header/body
-            # caps.
-            tb_tail = "\n".join(tb_lines[-8:]) if tb_lines else ""
-            return self._respond(
-                500,
-                {
-                    "error": "Evaluation failed",
-                    "detail": f"{type(exc).__name__}: {exc}",
-                    "traceback": tb_tail,
-                },
-            )
+            return self._respond(500, {"error": "Evaluation failed"})
 
         return self._respond(
             200,
