@@ -23,6 +23,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getDb, schema } from "@/db";
 import { trackEvent } from "@/lib/analytics";
+import { maybeGroupByDomain } from "@/lib/domain-grouping";
 import { appUrl, sendEmail } from "@/lib/email";
 import { monthlyQuota } from "@/lib/quotas";
 import { getRedis } from "@/lib/redis";
@@ -420,6 +421,21 @@ async function upsertSubscription(args: {
       .update(schema.users)
       .set({ plan })
       .where(eq(schema.users.id, userId));
+
+    // PR-21 — domain-based team grouping. When 3+ same-corporate-
+    // domain users hit Pro/Scale, link them via domainGroupId + bump
+    // every member's plan to "team" so the dashboard team UI
+    // activates. Best-effort (a failure here doesn't roll the
+    // subscription back); idempotent so a retry from Stripe re-runs
+    // safely.
+    try {
+      await maybeGroupByDomain(userId);
+    } catch (err) {
+      console.warn(
+        `domain-grouping check failed for user ${userId}`,
+        err,
+      );
+    }
   }
 }
 
