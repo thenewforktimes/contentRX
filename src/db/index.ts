@@ -6,6 +6,25 @@ import * as schema from "./schema";
 let _client: ReturnType<typeof postgres> | null = null;
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
+/**
+ * RLS contract (audit D1).
+ *
+ * Every table calls `.enableRLS()` in `schema.ts` for defense-in-depth.
+ * No policies are defined — the app uses Supabase's `postgres` role,
+ * which has BYPASSRLS, so queries succeed by bypassing the (empty)
+ * policy set. If a future maintainer points DATABASE_URL at a non-
+ * superuser role (e.g., the `anon` or `authenticated` roles a
+ * PostgREST endpoint would use), every read/write returns zero rows
+ * silently — RLS-enabled tables with no policies deny everything.
+ *
+ * The mitigation is a `vercel env` discipline + this comment. Adding
+ * a startup assertion that issues `SELECT current_user` would catch
+ * the mistake at boot, but it'd also add a probe RTT to every cold
+ * start and isn't worth the cost when the deploy pipeline is the
+ * place to enforce env hygiene. If RLS policies are added later, drop
+ * this contract note.
+ */
+
 export function getDb() {
   if (_db) return _db;
 

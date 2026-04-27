@@ -34,12 +34,10 @@ from .client import (
     QuotaExhaustedError,
     RateLimitError,
     check,
-    mark_false_positive,
     suggest_fix,
 )
 from .code_actions import (
     CMD_APPLY_SUGGESTION,
-    CMD_MARK_FALSE_POSITIVE,
     plan_actions_for_diagnostic,
     plan_to_code_action,
 )
@@ -122,10 +120,7 @@ def _initialize(
                 resolve_provider=False,
             ),
             execute_command_provider=lsp.ExecuteCommandOptions(
-                commands=[
-                    CMD_APPLY_SUGGESTION,
-                    CMD_MARK_FALSE_POSITIVE,
-                ],
+                commands=[CMD_APPLY_SUGGESTION],
             ),
         ),
         server_info=lsp.InitializeResultServerInfoType(
@@ -434,32 +429,6 @@ async def _apply_suggestion(
         }
     )
     server.apply_edit(edit)
-
-
-@SERVER.command(CMD_MARK_FALSE_POSITIVE)
-async def _mark_false_positive(
-    server: ContentRXLanguageServer, args: list[dict[str, Any]]
-) -> None:
-    """POST the override to /api/violations/override."""
-    if not args:
-        return
-    payload = args[0]
-    text = payload.get("text") or ""
-    standard_id = payload.get("standard_id") or ""
-    if not text or not standard_id:
-        return
-    try:
-        await mark_false_positive(text=text, standard_id=standard_id)
-    except ContentRXError as exc:
-        server.show_message(
-            f"ContentRX: couldn't record override — {exc}",
-            lsp.MessageType.Warning,
-        )
-        return
-    server.show_message(
-        f"ContentRX: recorded {standard_id} as a false positive.",
-        lsp.MessageType.Info,
-    )
 
 
 def _byte_range_to_lsp_range(

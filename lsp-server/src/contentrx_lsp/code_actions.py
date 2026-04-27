@@ -1,28 +1,23 @@
 """LSP code actions for ContentRX diagnostics.
 
 BUILD_PLAN_v2 Session 17; restructured for schema 2.0.0 (ADR
-2026-04-25). For every ContentRX diagnostic, we expose two actions:
+2026-04-25). The LSP exposes one quick fix per diagnostic:
 
-1. **Replace with suggested rewrite** (Quick Fix). Calls
-   `/api/suggest-fix` and applies the returned text as a
-   `WorkspaceEdit` on the diagnostic's range. Deferred — the
-   suggest-fix call happens when the user invokes the action, not at
-   diagnostic-emit time, so we don't burn LLM tokens on actions
-   nobody clicks.
+**Replace with suggested rewrite** — calls `/api/suggest-fix` and
+applies the returned text as a `WorkspaceEdit` on the diagnostic's
+range. Deferred — suggest-fix runs when the user invokes the action,
+not at diagnostic-emit time, so we don't burn LLM tokens on actions
+nobody clicks.
 
-2. **Mark as false positive**. Posts to `/api/violations/override`
-   with `override_type: mark_false_positive`. Reuses the override
-   capture infrastructure from BUILD_PLAN_v2 Session 11.
+The "Mark as false positive" action was dropped post-2.0.0:
+`/api/violations/override` keys overrides on `standard_id` (substrate),
+which schema 2.0.0 strips from public diagnostics. The override
+surface lives in the dashboard, where the user's own action data
+includes the standard_id naturally.
 
-The pre-pivot "Show standard rationale" action was removed in 2.0.0
-because the public `docs.contentrx.io/model/standards/<id>` pages no
-longer exist — the taxonomy is private. False-positive overrides
-still work without a `standard_id`; the override is keyed on the
-rendered text + extracted byte range.
-
-This module stays pure — no network I/O. The server wires the
-actions to actual HTTP calls + workspace edits. Lets us unit-test
-the action shaping without mocking pygls.
+This module stays pure — no network I/O. The server wires the action
+to actual HTTP calls + workspace edits. Lets us unit-test the shaping
+without mocking pygls.
 """
 
 from __future__ import annotations
@@ -33,11 +28,7 @@ from typing import Any
 from lsprotocol import types as lsp
 
 
-# Command identifiers — the LSP client (VS Code extension, etc.)
-# registers matching handlers. Namespaced under `contentrx.` so we
-# don't collide with anything the editor or another extension ships.
 CMD_APPLY_SUGGESTION = "contentrx.applySuggestion"
-CMD_MARK_FALSE_POSITIVE = "contentrx.markFalsePositive"
 
 
 @dataclass(frozen=True)
@@ -66,57 +57,37 @@ def plan_actions_for_diagnostic(
     from that dict; we operate on `issue`, `suggestion`, and
     `extracted_text` plus the byte offsets.
 
-    Both the "rewrite" and "mark as false positive" actions key on the
-    rendered issue+text rather than a substrate `standard_id`. Review-
-    recommended diagnostics emit only the false-positive action.
+    Returns at most one rewrite action — review-recommended
+    diagnostics with no issue or suggestion produce no actions.
     """
     issue = diagnostic_data.get("issue") or ""
     suggestion = diagnostic_data.get("suggestion") or ""
     extracted_text = diagnostic_data.get("extracted_text") or ""
 
-    plans: list[ActionPlan] = []
+    if not (issue or suggestion):
+        return []
 
-    has_actionable_violation = bool(issue or suggestion)
-
-    if has_actionable_violation:
-        plans.append(
-            ActionPlan(
-                title="Rewrite with ContentRX suggestion",
-                kind=lsp.CodeActionKind.QuickFix.value,
-                command=CMD_APPLY_SUGGESTION,
-                arguments=[
-                    {
-                        "uri": document_uri,
-                        "issue": issue,
-                        "current_suggestion": suggestion,
-                        "text": extracted_text,
-                        # Forward the diagnostic's original byte offsets
-                        # so apply_suggestion targets the exact JSX node
-                        # that fired, not the first matching string in
-                        # the document. Closes audit M-27.
-                        "start_byte": diagnostic_data.get("start_byte"),
-                        "end_byte": diagnostic_data.get("end_byte"),
-                    }
-                ],
-            )
-        )
-
-    plans.append(
+    return [
         ActionPlan(
-            title="Mark as false positive",
+            title="Rewrite with ContentRX suggestion",
             kind=lsp.CodeActionKind.QuickFix.value,
-            command=CMD_MARK_FALSE_POSITIVE,
+            command=CMD_APPLY_SUGGESTION,
             arguments=[
                 {
                     "uri": document_uri,
                     "issue": issue,
+                    "current_suggestion": suggestion,
                     "text": extracted_text,
-                }
+                    # Forward the diagnostic's original byte offsets
+                    # so apply_suggestion targets the exact JSX node
+                    # that fired, not the first matching string in
+                    # the document. Closes audit M-27.
+                    "start_byte": diagnostic_data.get("start_byte"),
+                    "end_byte": diagnostic_data.get("end_byte"),
+                },
             ],
-        )
-    )
-
-    return plans
+        ),
+    ]
 
 
 def plan_to_code_action(

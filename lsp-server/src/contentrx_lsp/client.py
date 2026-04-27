@@ -13,7 +13,7 @@ crashed language server.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import httpx
@@ -48,15 +48,16 @@ class RateLimitError(ContentRXError):
 
 @dataclass
 class CheckResult:
-    """Subset of /api/check the diagnostics layer consumes."""
+    """Subset of /api/check the diagnostics layer consumes.
+
+    Schema 2.0.0 envelope: only `verdict`, `review_reason`, `violations`,
+    `warnings` are public. Substrate fields (content_type, moment,
+    rationale_chain) don't reach this client — /api/check strips them.
+    """
 
     verdict: str  # "pass" | "violation" | "review_recommended" | "error"
     violations: list[dict[str, Any]]
     review_reason: str | None = None
-    content_type: str | None = None
-    moment: str | None = None
-    # passed through for possible future use
-    rationale_chain: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -133,9 +134,6 @@ async def check(
         verdict=result.get("verdict", "pass"),
         violations=list(result.get("violations") or []),
         review_reason=result.get("review_reason"),
-        content_type=result.get("content_type"),
-        moment=result.get("moment"),
-        rationale_chain=list(result.get("rationale_chain") or []),
     )
 
 
@@ -217,51 +215,3 @@ async def suggest_fix(
     )
 
 
-async def mark_false_positive(
-    *,
-    text: str,
-    standard_id: str,
-) -> None:
-    """POST /api/violations/override with override_type=mark_false_positive.
-
-    Fire-and-forget from the LSP's perspective — the editor already
-    removed the diagnostic optimistically when the user invoked the
-    action. Errors still bubble up so the server layer can surface
-    them via `window/showMessage`.
-    """
-    api_key = get_api_key()
-    base_url = get_api_base_url()
-
-    payload: dict[str, Any] = {
-        "text": text,
-        "standard_id": standard_id,
-        "override_type": "mark_false_positive",
-        "source": "lsp",
-    }
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "User-Agent": _USER_AGENT,
-        "Content-Type": "application/json",
-    }
-
-    async with httpx.AsyncClient(timeout=_TIMEOUT_SECONDS) as client:
-        try:
-            response = await client.post(
-                f"{base_url}/api/violations/override",
-                headers=headers,
-                json=payload,
-            )
-        except httpx.HTTPError as exc:
-            raise ContentRXError(f"Network error: {exc}") from exc
-
-        if response.status_code == 401:
-            raise AuthFailedError(
-                "ContentRX rejected the API key. Re-mint at "
-                "https://contentrx.io/dashboard."
-            )
-        if response.status_code >= 400:
-            raise ContentRXError(
-                f"ContentRX API error {response.status_code}: "
-                f"{response.text[:200]}"
-            )

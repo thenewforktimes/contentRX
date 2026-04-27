@@ -6,15 +6,14 @@ HTTP involvement.
 
 Schema 2.0.0 (ADR 2026-04-25): the `data` dict carries only public
 fields (issue, suggestion, severity, byte offsets) — no
-`standard_id`, `rule`, or `docs_url`. Actions are keyed off
-issue/suggestion presence, not standard_id.
+`standard_id`, `rule`, or `docs_url`. The single rewrite action is
+keyed off issue/suggestion presence.
 """
 
 from __future__ import annotations
 
 from contentrx_lsp.code_actions import (
     CMD_APPLY_SUGGESTION,
-    CMD_MARK_FALSE_POSITIVE,
     plan_actions_for_diagnostic,
 )
 
@@ -38,16 +37,11 @@ def _violation_data(
     }
 
 
-def test_violation_yields_two_actions():
+def test_violation_yields_one_rewrite_action():
     plans = plan_actions_for_diagnostic(_violation_data(), "file:///foo.tsx")
-    assert len(plans) == 2
-    titles = [p.title for p in plans]
-    assert any("Rewrite with ContentRX suggestion" in t for t in titles)
-    assert any("Mark as false positive" in t for t in titles)
-    # Schema 2.0.0: standard_id-keyed action titles are gone.
-    for t in titles:
-        assert "ACT-01" not in t
-        assert "CLR-01" not in t
+    assert len(plans) == 1
+    assert plans[0].title == "Rewrite with ContentRX suggestion"
+    assert plans[0].command == CMD_APPLY_SUGGESTION
 
 
 def test_no_show_rationale_action_in_2_0_0():
@@ -73,26 +67,15 @@ def test_apply_suggestion_command_receives_public_payload():
         assert forbidden not in args, f"{forbidden} leaked into apply args"
 
 
-def test_mark_false_positive_command_receives_public_payload():
-    plans = plan_actions_for_diagnostic(_violation_data(), "file:///foo.tsx")
-    mark = next(p for p in plans if p.command == CMD_MARK_FALSE_POSITIVE)
-    args = mark.arguments[0]
-    assert args["text"] == "Click here"
-    assert args["issue"] == "Generic CTA"
-    for forbidden in ("standard_id", "rule", "rule_version", "docs_url"):
-        assert forbidden not in args
-
-
-def test_review_recommended_only_offers_false_positive():
-    """REVIEW diagnostics have no actionable issue+suggestion pair, but
-    a reviewer can still mark them as a false positive to dismiss the
-    noise."""
+def test_review_recommended_yields_no_actions():
+    """REVIEW diagnostics carry no actionable issue+suggestion pair —
+    no rewrite to offer, and the override surface is the dashboard.
+    """
     plans = plan_actions_for_diagnostic(
         {"extracted_text": "OK", "severity": "medium"},
         "file:///foo.tsx",
     )
-    titles = [p.title for p in plans]
-    assert titles == ["Mark as false positive"]
+    assert plans == []
 
 
 def test_missing_extracted_text_defaults_empty_string():

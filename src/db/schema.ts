@@ -846,8 +846,17 @@ export const teamInvitations = pgTable(
     uniqueIndex("team_invitations_token_idx").on(t.token),
     // Listing pending invitations for a team owner is the hot path.
     index("team_invitations_owner_idx").on(t.teamOwnerUserId),
-    // "Do we already have an outstanding invite for this email?" pre-check.
-    index("team_invitations_email_idx").on(t.email),
+    // Pending-invite pre-check: composite covers both "any invite for
+    // this email globally" (rare) and the hot "is there a pending invite
+    // for this email under THIS team" (common). Partial unique below
+    // closes the duplicate-outstanding-invite race at the DB level.
+    index("team_invitations_owner_email_idx").on(
+      t.teamOwnerUserId,
+      t.email,
+    ),
+    uniqueIndex("team_invitations_pending_idx")
+      .on(t.teamOwnerUserId, t.email)
+      .where(sql`accepted_at IS NULL`),
   ],
 ).enableRLS();
 
