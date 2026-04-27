@@ -25,6 +25,11 @@ import { redirect } from "next/navigation";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { getDb, schema } from "@/db";
+import {
+  buildPatterns,
+  loadFindingAggregates,
+  type FindingPattern,
+} from "@/lib/insight-patterns";
 import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { ApiKeyPanel } from "./api-key-panel";
@@ -315,6 +320,7 @@ type WeeklyInsights = {
   overrideRatePct: number | null;
   topSourceLabel: string | null;
   topSourceCount: number;
+  patterns: FindingPattern[];
 };
 
 function InsightsPanel({
@@ -366,6 +372,15 @@ function InsightsPanel({
               {" "}{insights.topSourceCount === 1 ? "finding" : "findings"}.
             </p>
           )}
+          {insights.patterns.length > 0 && (
+            <ul className="flex list-disc flex-col gap-1 pl-5 text-neutral-700 dark:text-neutral-300">
+              {insights.patterns.map((p, i) => (
+                <li key={`${p.kind}-${i}`}>
+                  <PatternLine pattern={p} />
+                </li>
+              ))}
+            </ul>
+          )}
           {plan === "team" && insights.overrides >= 5 && (
             <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
               Your team is dismissing findings often. The override report
@@ -386,6 +401,51 @@ function InsightsPanel({
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * Renders one cross-finding callout. Phrasing is tuned to be observation
+ * (not prescription) — "X% landed on confirmations" gives the user a
+ * fact about their week, not a directive. They can decide what to do
+ * with it. Avoids the "you should fix X" trap that turns insights into
+ * nagging.
+ */
+function PatternLine({ pattern }: { pattern: FindingPattern }) {
+  if (pattern.kind === "moment-concentration") {
+    return (
+      <>
+        <span className="font-medium">{pattern.momentLabel}</span>
+        {" "}drew{" "}
+        <span className="tabular-nums">{pattern.sharePct}%</span>
+        {" "}of findings (
+        <span className="tabular-nums">{pattern.count.toLocaleString()}</span>
+        ).
+      </>
+    );
+  }
+  if (pattern.kind === "file-hotspot") {
+    return (
+      <>
+        Same file flagged most:{" "}
+        <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">
+          {pattern.filePath}
+        </code>{" "}
+        (
+        <span className="tabular-nums">{pattern.count.toLocaleString()}</span>{" "}
+        {pattern.count === 1 ? "finding" : "findings"}).
+      </>
+    );
+  }
+  return (
+    <>
+      <span className="tabular-nums">{pattern.highCount.toLocaleString()}</span>
+      {" "}of{" "}
+      <span className="tabular-nums">{pattern.total.toLocaleString()}</span>
+      {" "}findings are high-severity (
+      <span className="tabular-nums">{pattern.sharePct}%</span>
+      ).
+    </>
   );
 }
 
@@ -596,41 +656,43 @@ async function loadWeeklyInsights(
   const since = new Date(Date.now() - INSIGHTS_WINDOW_MS);
   const db = getDb();
 
-  const [violationsCount, overridesCount, topSource] = await Promise.all([
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(schema.violations)
-      .where(
-        and(
-          eq(schema.violations.teamId, teamId),
-          gte(schema.violations.createdAt, since),
+  const [violationsCount, overridesCount, topSource, patternAggregates] =
+    await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.violations)
+        .where(
+          and(
+            eq(schema.violations.teamId, teamId),
+            gte(schema.violations.createdAt, since),
+          ),
         ),
-      ),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(schema.violationOverrides)
-      .where(
-        and(
-          eq(schema.violationOverrides.teamId, teamId),
-          gte(schema.violationOverrides.createdAt, since),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.violationOverrides)
+        .where(
+          and(
+            eq(schema.violationOverrides.teamId, teamId),
+            gte(schema.violationOverrides.createdAt, since),
+          ),
         ),
-      ),
-    db
-      .select({
-        source: schema.violations.source,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(schema.violations)
-      .where(
-        and(
-          eq(schema.violations.teamId, teamId),
-          gte(schema.violations.createdAt, since),
-        ),
-      )
-      .groupBy(schema.violations.source)
-      .orderBy(desc(sql`count(*)`))
-      .limit(1),
-  ]);
+      db
+        .select({
+          source: schema.violations.source,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(schema.violations)
+        .where(
+          and(
+            eq(schema.violations.teamId, teamId),
+            gte(schema.violations.createdAt, since),
+          ),
+        )
+        .groupBy(schema.violations.source)
+        .orderBy(desc(sql`count(*)`))
+        .limit(1),
+      loadFindingAggregates(teamId, since),
+    ]);
 
   const violations = violationsCount[0]?.count ?? 0;
   const overrides = overridesCount[0]?.count ?? 0;
@@ -645,12 +707,15 @@ async function loadWeeklyInsights(
     : null;
   const topSourceCount = topSourceRow?.count ?? 0;
 
+  const patterns = buildPatterns(patternAggregates, violations);
+
   return {
     violations,
     overrides,
     overrideRatePct,
     topSourceLabel,
     topSourceCount,
+    patterns,
   };
 }
 
