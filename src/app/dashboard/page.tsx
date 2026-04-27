@@ -75,12 +75,36 @@ function nextMonthReset(): string {
 }
 
 export default async function DashboardPage() {
-  const { userId: clerkId } = await auth();
+  try {
+    return await renderDashboard();
+  } catch (err) {
+    // Server Component errors get hidden by Next in production builds
+    // (the user sees only "An error occurred in the Server Components
+    // render" via global-error.tsx). Without this catch the actual
+    // message + stack trace stays buried in stderr that Vercel's
+    // default UI doesn't surface and that Sentry's client capture
+    // can't see. Logging here puts the full error in the Node
+    // function's main log stream where it's findable.
+    console.error("[DASHBOARD_RENDER_FAIL]", {
+      message: err instanceof Error ? err.message : String(err),
+      name: err instanceof Error ? err.name : "Unknown",
+      stack: err instanceof Error ? err.stack : undefined,
+    });
+    throw err;
+  }
+}
+
+async function renderDashboard() {
+  const { userId: clerkId } = await tag("auth()", async () => {
+    return auth();
+  });
   if (!clerkId) {
     redirect("/sign-in?redirect_url=/dashboard");
   }
 
-  const user = await getOrProvisionUser(clerkId);
+  const user = await tag("getOrProvisionUser", () =>
+    getOrProvisionUser(clerkId),
+  );
   if (!user) {
     return (
       <section className="rounded-lg border border-neutral-200 p-6 text-sm dark:border-neutral-800">
