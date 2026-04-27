@@ -102,7 +102,11 @@ async function listActivePaidUsersInDomain(
     .where(
       and(
         sql`lower(${schema.users.email}) like ${"%@" + domain}`,
-        inArray(schema.users.plan, ["pro", "scale", "team"]),
+        // users.plan is the 3-value enum (free|pro|team) — Scale-tier
+        // subs have users.plan="pro" (PaidPlan = "pro"|"team" only).
+        // The 4-value enum lives on subscriptions.pricingTier, queried
+        // separately in the linkage update below.
+        inArray(schema.users.plan, ["pro", "team"]),
       ),
     )
     .orderBy(asc(schema.users.createdAt))) as Array<{
@@ -186,10 +190,9 @@ export async function maybeGroupByDomain(
       .where(
         and(
           eq(schema.subscriptions.userId, member.id),
-          inArray(
-            schema.subscriptions.pricingTier,
-            GROUPED_PRICING_TIERS as unknown as string[],
-          ),
+          inArray(schema.subscriptions.pricingTier, [
+            ...GROUPED_PRICING_TIERS,
+          ]),
         ),
       );
 
