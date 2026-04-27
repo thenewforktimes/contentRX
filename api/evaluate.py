@@ -130,10 +130,36 @@ class handler(BaseHTTPRequestHandler):
         # code-action provider and (eventually) the web dashboard's
         # rewrite-in-place action.
         if mode == "suggest_fix":
-            standard_id = body.get("standard_id")
-            if not isinstance(standard_id, str) or not standard_id:
+            # ADR 2026-04-25 — standard_id is now optional. Schema-2.0.0
+            # client surfaces (LSP, plugin, action, MCP) strip substrate
+            # and never carry it; the rewriter falls back to issue +
+            # current_suggestion. The rewriter still needs SOMETHING to
+            # anchor on, so refuse a request that supplies none of
+            # (standard_id, issue, current_suggestion).
+            standard_id_raw = body.get("standard_id")
+            standard_id: str | None = (
+                standard_id_raw
+                if isinstance(standard_id_raw, str) and standard_id_raw
+                else None
+            )
+            issue_raw = body.get("issue")
+            current_suggestion_raw = body.get("current_suggestion")
+            if not (
+                standard_id
+                or (isinstance(issue_raw, str) and issue_raw)
+                or (
+                    isinstance(current_suggestion_raw, str)
+                    and current_suggestion_raw
+                )
+            ):
                 return self._respond(
-                    400, {"error": "standard_id is required for mode=suggest_fix"}
+                    400,
+                    {
+                        "error": (
+                            "At least one of standard_id, issue, or "
+                            "current_suggestion is required for mode=suggest_fix"
+                        )
+                    },
                 )
             # Lazy import — keeps catalog/classify cold starts fast.
             from content_checker.suggest_fix import suggest_fix  # noqa: PLC0415

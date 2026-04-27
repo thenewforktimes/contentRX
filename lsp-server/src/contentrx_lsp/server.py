@@ -341,14 +341,30 @@ def _code_actions(
 async def _apply_suggestion(
     server: ContentRXLanguageServer, args: list[dict[str, Any]]
 ) -> None:
-    """Call /api/suggest-fix and apply the rewrite as a WorkspaceEdit."""
+    """Call /api/suggest-fix and apply the rewrite as a WorkspaceEdit.
+
+    PR-38 (ADR 2026-04-25) — schema 2.0.0 LSP diagnostics don't carry
+    `standard_id`, so the apply path no longer requires it. The
+    rewriter anchors on `issue` + `current_suggestion` instead. We
+    still need at least ONE of those three to even bother invoking
+    the API; an empty payload would just round-trip the input.
+    """
     if not args:
         return
     payload = args[0]
     uri = payload.get("uri")
     text = payload.get("text") or ""
+    if not uri or not text:
+        return
+    issue = payload.get("issue") or ""
+    current_suggestion = payload.get("current_suggestion") or ""
     standard_id = payload.get("standard_id") or ""
-    if not uri or not text or not standard_id:
+    if not (issue or current_suggestion or standard_id):
+        server.show_message(
+            "ContentRX: nothing to anchor a rewrite on — "
+            "no issue or suggestion attached to this diagnostic.",
+            lsp.MessageType.Info,
+        )
         return
 
     # Find the exact range of `text` in the live document. The client
@@ -385,10 +401,10 @@ async def _apply_suggestion(
     try:
         result = await suggest_fix(
             text=text,
-            standard_id=standard_id,
+            standard_id=standard_id or None,
             rule=payload.get("rule") or None,
-            issue=payload.get("issue") or None,
-            current_suggestion=payload.get("current_suggestion") or None,
+            issue=issue or None,
+            current_suggestion=current_suggestion or None,
         )
     except (AuthFailedError, QuotaExhaustedError) as exc:
         server.show_message(f"ContentRX: {exc}", lsp.MessageType.Warning)

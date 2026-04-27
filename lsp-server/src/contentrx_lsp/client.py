@@ -62,7 +62,7 @@ class CheckResult:
 @dataclass
 class SuggestFixResult:
     rewritten: str
-    standard_id: str
+    standard_id: str | None = None
 
 
 async def check(
@@ -142,7 +142,7 @@ async def check(
 async def suggest_fix(
     *,
     text: str,
-    standard_id: str,
+    standard_id: str | None = None,
     rule: str | None = None,
     issue: str | None = None,
     current_suggestion: str | None = None,
@@ -152,11 +152,18 @@ async def suggest_fix(
     Consumed by the LSP code-action provider when the user invokes
     the "Replace with suggested rewrite" action. One quota slot per
     call — treat it as an LLM call because that's exactly what it is.
+
+    `standard_id` is optional per ADR 2026-04-25 — schema 2.0.0 LSP
+    diagnostics don't carry substrate, so the rewriter falls back to
+    `issue` + `current_suggestion`. Caller must supply at least one of
+    those three or the API returns 400.
     """
     api_key = get_api_key()
     base_url = get_api_base_url()
 
-    payload: dict[str, Any] = {"text": text, "standard_id": standard_id}
+    payload: dict[str, Any] = {"text": text}
+    if standard_id:
+        payload["standard_id"] = standard_id
     if rule:
         payload["rule"] = rule
     if issue:
@@ -206,7 +213,7 @@ async def suggest_fix(
     result = body.get("result", body)
     return SuggestFixResult(
         rewritten=result.get("rewritten", "") or "",
-        standard_id=result.get("standard_id", standard_id),
+        standard_id=result.get("standard_id") or standard_id,
     )
 
 

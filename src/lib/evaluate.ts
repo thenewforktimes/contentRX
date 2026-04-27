@@ -216,14 +216,20 @@ export async function catalog(): Promise<CatalogResponse> {
 
 export type SuggestFixParams = {
   text: string;
-  standard_id: string;
+  // ADR 2026-04-25 — standard_id is now optional. Schema-2.0.0 client
+  // surfaces (LSP, plugin, action, MCP) strip substrate before
+  // forwarding; only server-side callers with substrate access can
+  // supply one. The rewriter falls back to issue + current_suggestion
+  // when absent. Caller must supply at least one of (standard_id,
+  // issue, current_suggestion).
+  standard_id?: string;
   rule?: string;
   issue?: string;
   current_suggestion?: string;
 };
 
 export type SuggestFixResponse = {
-  result: { rewritten: string; standard_id: string };
+  result: { rewritten: string; standard_id: string | null };
   latency_ms: number;
   tokens: EngineTokens;
 };

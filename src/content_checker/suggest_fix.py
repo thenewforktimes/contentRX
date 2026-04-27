@@ -45,22 +45,29 @@ class SuggestFixResult:
 def suggest_fix(
     *,
     text: str,
-    standard_id: str,
+    standard_id: str | None = None,
     rule: str | None = None,
     issue: str | None = None,
     current_suggestion: str | None = None,
     model: str = DEFAULT_MODEL,
 ) -> SuggestFixResult:
-    """Rewrite `text` to clear the violation described by `standard_id`.
+    """Rewrite `text` to clear the violation described by the
+    provided context.
 
     Args:
         text: The flagged UI copy. Required.
-        standard_id: The standard that fired (e.g. "ACT-01"). Required.
+        standard_id: The standard that fired (e.g. "ACT-01"). Optional
+            since schema 2.0.0 / ADR 2026-04-25 — the LSP and other
+            client surfaces no longer carry standard_ids, so the
+            rewriter falls back to issue + current_suggestion alone.
+            Server-side callers (e.g. the dashboard's own backend) may
+            still pass it through internally.
         rule: The standard's prescription from the library. Optional —
             helps the rewriter understand what "pass" looks like.
         issue: The specific violation call-out from the engine
-            (e.g. "uses a generic CTA verb"). Optional — a rewrite
-            without the issue text usually works but is less targeted.
+            (e.g. "uses a generic CTA verb"). Optional — but at least
+            ONE of `standard_id`, `issue`, or `current_suggestion`
+            should be supplied or the prompt has nothing to anchor on.
         current_suggestion: The hint the engine already emitted
             alongside the violation (e.g. "Use a more specific
             verb"). Optional — the rewriter treats this as a seed.
@@ -104,15 +111,24 @@ def suggest_fix(
 
 def _build_system_prompt(
     *,
-    standard_id: str,
+    standard_id: str | None,
     rule: str | None,
     issue: str | None,
 ) -> str:
-    rule_line = (
-        f"Standard: {standard_id} — {rule.strip()}\n"
-        if rule
-        else f"Standard: {standard_id}\n"
-    )
+    # ADR 2026-04-25 — standard_id is now optional. When absent (every
+    # client surface that strips substrate before forwarding), the
+    # rewriter relies on `issue` + `current_suggestion` (in the user
+    # prompt) as the anchor.
+    if standard_id:
+        rule_line = (
+            f"Standard: {standard_id} — {rule.strip()}\n"
+            if rule
+            else f"Standard: {standard_id}\n"
+        )
+    elif rule:
+        rule_line = f"Rule: {rule.strip()}\n"
+    else:
+        rule_line = ""
     issue_line = f"Specific issue: {issue.strip()}\n" if issue else ""
 
     return (

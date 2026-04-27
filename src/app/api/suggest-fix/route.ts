@@ -44,21 +44,40 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-const RequestSchema = z.object({
-  text: z.string().min(1).max(100_000),
-  standard_id: z
-    .string()
-    .min(1)
-    .max(32)
-    // standard_ids land in the LLM prompt verbatim. Tight regex + no
-    // inner whitespace closes the prompt-injection surface.
-    .regex(/^[A-Z]{2,4}-\d{2,3}$/, {
-      message: "standard_id must match /^[A-Z]{2,4}-\\d{2,3}$/",
-    }),
-  rule: z.string().max(1000).optional(),
-  issue: z.string().max(1000).optional(),
-  current_suggestion: z.string().max(1000).optional(),
-});
+const RequestSchema = z
+  .object({
+    text: z.string().min(1).max(100_000),
+    // ADR 2026-04-25 — standard_id is now optional. Schema-2.0.0
+    // client surfaces (LSP, plugin, action, MCP) strip substrate and
+    // never carry it; only server-side callers with substrate access
+    // can supply one. When present, still validated against the tight
+    // regex so substrate values landing in the LLM prompt don't open
+    // a prompt-injection surface.
+    standard_id: z
+      .string()
+      .max(32)
+      .regex(/^[A-Z]{2,4}-\d{2,3}$/, {
+        message: "standard_id must match /^[A-Z]{2,4}-\\d{2,3}$/",
+      })
+      .optional(),
+    rule: z.string().max(1000).optional(),
+    issue: z.string().max(1000).optional(),
+    current_suggestion: z.string().max(1000).optional(),
+  })
+  // The rewriter needs SOMETHING to anchor on. Refuse requests that
+  // would land in the engine with neither a standard_id nor any
+  // descriptive context — the LLM would just return the input.
+  .refine(
+    (v) =>
+      Boolean(v.standard_id) ||
+      Boolean(v.issue) ||
+      Boolean(v.current_suggestion),
+    {
+      message:
+        "At least one of standard_id, issue, or current_suggestion is required",
+      path: ["issue"],
+    },
+  );
 
 export async function POST(req: Request) {
   const auth = await resolveAuth(req);

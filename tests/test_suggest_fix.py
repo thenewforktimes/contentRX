@@ -65,6 +65,46 @@ def test_system_prompt_without_rule_or_issue():
     assert "Specific issue" not in prompt
 
 
+def test_system_prompt_omits_standard_when_none():
+    """ADR 2026-04-25 / PR-38 — schema 2.0.0 client surfaces (LSP,
+    plugin, Action, MCP) strip standard_id before forwarding. The
+    rewriter must build a sensible prompt without it."""
+    prompt = _build_system_prompt(
+        standard_id=None,
+        rule=None,
+        issue="Generic CTA",
+    )
+    assert "Standard:" not in prompt
+    assert "Generic CTA" in prompt
+
+
+def test_system_prompt_uses_rule_line_when_only_rule_supplied():
+    """When standard_id is absent but rule is present, the rewriter
+    still gets a 'Rule: …' anchor line — not a bare 'Standard:'
+    header followed by nothing."""
+    prompt = _build_system_prompt(
+        standard_id=None,
+        rule="Use a specific verb.",
+        issue=None,
+    )
+    assert "Rule: Use a specific verb." in prompt
+    assert "Standard:" not in prompt
+
+
+def test_suggest_fix_runs_without_standard_id():
+    """End-to-end: the rewriter completes a normal call when
+    standard_id is omitted (issue + current_suggestion alone supply
+    the anchor)."""
+    with patch.object(sf_module, "create_message") as m:
+        m.return_value = _fake_message(text="Start free trial")
+        result = suggest_fix(
+            text="Click here",
+            issue="Generic CTA",
+            current_suggestion="Use a specific verb",
+        )
+    assert result.rewritten == "Start free trial"
+
+
 def test_user_prompt_sentinel_delimits_text():
     prompt = _build_user_prompt(text="Click here", current_suggestion=None)
     assert "<<<TEXT" in prompt
