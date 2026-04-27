@@ -171,7 +171,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
         </div>
       ) : (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">
             No active API key. Generate one to sign in from the Figma plugin
             or the CLI.
           </p>

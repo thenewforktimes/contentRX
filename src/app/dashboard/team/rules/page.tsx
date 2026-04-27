@@ -39,7 +39,7 @@ export default async function TeamRulesPage() {
     return (
       <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
         <h1 className="text-lg font-semibold">Team rules</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
           Custom rules are a Team-plan feature. Disable standards for your
           whole team, override the wording of a rule, or add your own
           regex-based rules to the 47 built-ins.
@@ -80,7 +80,7 @@ export default async function TeamRulesPage() {
           ← Back to dashboard
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Team rules</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
           Disable standards, override the wording shown to your team, or add
           custom rules as regex patterns. Changes apply to every evaluation
           your team runs.

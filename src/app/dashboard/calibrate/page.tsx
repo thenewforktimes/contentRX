@@ -65,7 +65,7 @@ export default async function CalibratePage() {
               : "You&apos;ve already helped this week — thank you."}
           </h1>
         </header>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
           {gate.reason === "opted_out"
             ? "Calibration prompts are a 60-second pairwise preference check, once a week. They feed the human-judgment signal behind the content model. You can opt back in whenever you want."
             : "Pairwise preference prompts surface once every 7 days. We don&apos;t want to make calibration a chore. Come back next week."}
@@ -154,7 +154,7 @@ export default async function CalibratePage() {
             You&apos;ve answered every pair in the current pool.
           </h1>
         </header>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
           We&apos;ll add fresh pairs as the taxonomy evolves. Come back in a
           few weeks.
         </p>
@@ -177,7 +177,7 @@ export default async function CalibratePage() {
         <h1 className="mt-2 text-2xl font-semibold">
           Which of these reads better?
         </h1>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
           {PAIRS_PER_SESSION} pairs, one minute. Your picks feed the
           human-judgment signal behind ContentRX&apos;s content model.
           Pick the side that reads better for the context, or{" "}

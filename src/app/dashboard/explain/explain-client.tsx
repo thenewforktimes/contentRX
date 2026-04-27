@@ -172,7 +172,7 @@ export function ExplainClient() {
               ))}
             </ul>
           )}
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-neutral-500 dark:text-neutral-300">
             Evaluated in {response.latency_ms} ms.
           </p>
         </section>
@@ -202,7 +202,7 @@ function VerdictHeader({
         {verdict}
       </span>
       {reviewReason && (
-        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+        <span className="text-sm text-neutral-600 dark:text-neutral-300">
           {reviewReason.replace(/_/g, " ")}
         </span>
       )}

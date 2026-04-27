@@ -45,7 +45,7 @@ export default async function OverridesPage() {
     return (
       <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
         <h1 className="text-lg font-semibold">Override report</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
           The override report is a Team-plan feature. It surfaces the
           rules your team disagrees with most so you can disable or
           tune them in custom team rules.
@@ -188,7 +188,7 @@ export default async function OverridesPage() {
           Last {RANGE_DAYS} days
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Override report</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
           The rules your team dismisses most. Use this to decide which
           standards to disable or override in your{" "}
           <Link
@@ -235,7 +235,7 @@ export default async function OverridesPage() {
           {pushbacks.length > 0 && (
             <section>
               <h2 className="mb-1 text-sm font-semibold">Standard pushbacks</h2>
-              <p className="mb-3 text-xs text-neutral-600 dark:text-neutral-400">
+              <p className="mb-3 text-xs text-neutral-600 dark:text-neutral-300">
                 Clusters of 3+ overrides on the same standard inside a
                 single session (scan, CI run, dashboard session).
                 Strongest signal that a rule needs a refinement-log look.
@@ -248,7 +248,7 @@ export default async function OverridesPage() {
                   >
                     <div>
                       <p className="font-mono text-xs">{p.standardId}</p>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                      <p className="text-xs text-neutral-600 dark:text-neutral-300">
                         Session{" "}
                         <code className="font-mono">
                           {p.sessionKey.startsWith("pseudo:")
@@ -286,7 +286,7 @@ export default async function OverridesPage() {
                     className="border-b border-neutral-100 dark:border-neutral-900"
                   >
                     <td className="py-2 font-mono text-xs">{s.standard_id}</td>
-                    <td className="py-2 text-xs text-neutral-600 dark:text-neutral-400">
+                    <td className="py-2 text-xs text-neutral-600 dark:text-neutral-300">
                       {s.moment ?? "—"}
                     </td>
                     <td className="py-2 text-right">
@@ -319,7 +319,7 @@ export default async function OverridesPage() {
             <h2 className="mb-1 text-sm font-semibold">
               Behavior quadrants
             </h2>
-            <p className="mb-3 text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="mb-3 text-xs text-neutral-600 dark:text-neutral-300">
               How your team engaged with each finding.{" "}
               <em>Informed rejects</em> are the highest-information
               signal — the user read the rationale and still disagreed.

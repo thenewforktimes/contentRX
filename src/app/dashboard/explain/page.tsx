@@ -33,7 +33,7 @@ export default async function ExplainPage() {
           Live demo
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Explain a verdict</h1>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
           Paste a button label, error message, or paragraph. The
           evaluator surfaces the detected moment first, then returns a
           three-state verdict plus the full rationale chain — moment
