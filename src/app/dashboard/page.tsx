@@ -204,7 +204,7 @@ function TryACheckPanel() {
     <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Try a check</h2>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-neutral-500 dark:text-neutral-300">
           Paste any UI string · 1 check
         </span>
       </header>
@@ -235,11 +235,11 @@ function UsagePanel({
     <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Usage this month</h2>
-        <span className="text-xs text-neutral-500">{currentMonth()}</span>
+        <span className="text-xs text-neutral-500 dark:text-neutral-300">{currentMonth()}</span>
       </header>
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-3xl font-semibold">{used.toLocaleString()}</span>
-        <span className="text-sm text-neutral-500">
+        <span className="text-sm text-neutral-500 dark:text-neutral-300">
           of {quota.toLocaleString()} checks
         </span>
       </div>
@@ -249,21 +249,19 @@ function UsagePanel({
           style={{ width: `${usedPct}%` }}
         />
       </div>
-      <p className="mt-2 text-xs text-neutral-500">
+      <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-300">
         Resets {nextMonthReset()}.
       </p>
       {tone === "warn" && (
-        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-          You&apos;ve used past 80% of your {quota.toLocaleString()} checks
-          for {currentMonth()}. Upgrades take effect immediately if you need
-          more headroom before {nextMonthReset()}.
+        <p className="mt-2 text-xs text-neutral-900 dark:text-neutral-100">
+          You&apos;re close to your monthly limit. Upgrade to keep
+          checking before {nextMonthReset()}.
         </p>
       )}
       {tone === "exhausted" && (
-        <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-          You&apos;ve used all {quota.toLocaleString()} checks for{" "}
-          {currentMonth()}. Resets {nextMonthReset()}, or upgrade to keep
-          going.
+        <p className="mt-2 text-xs text-neutral-900 dark:text-neutral-100">
+          You&apos;ve run out of free content checks. Upgrade to keep
+          checking.
         </p>
       )}
     </section>
@@ -342,12 +340,12 @@ function SurfaceCard({
               : "inline-block h-2 w-2 rounded-full border border-neutral-300 dark:border-neutral-700"
           }
         />
-        <span className="text-xs text-neutral-600 dark:text-neutral-400">
+        <span className="text-xs text-neutral-600 dark:text-neutral-300">
           {connected ? formatRelative(lastAt) : "Not connected"}
         </span>
       </div>
       {connected ? (
-        <p className="mt-1 text-xs tabular-nums text-neutral-500">
+        <p className="mt-1 text-xs tabular-nums text-neutral-500 dark:text-neutral-300">
           {count.toLocaleString()} {count === 1 ? "check" : "checks"}
         </p>
       ) : (
@@ -396,10 +394,10 @@ function InsightsPanel({
     <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">This week</h2>
-        <span className="text-xs text-neutral-500">Last 7 days</span>
+        <span className="text-xs text-neutral-500 dark:text-neutral-300">Last 7 days</span>
       </header>
       {!hasActivity ? (
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
           Nothing flagged yet this week. Run a check above or wire a
           surface to start seeing patterns. Insights show up after your
           first few checks.
@@ -515,11 +513,11 @@ function CalibrateLink({ optedOut }: { optedOut: boolean }) {
     <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Calibration</h2>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-neutral-500 dark:text-neutral-300">
           {optedOut ? "Opted out" : "Weekly · 60 sec"}
         </span>
       </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
         Three pairwise judgment prompts a week, optional. Picks feed
         the human-judgment signal behind the content model.
       </p>
@@ -539,7 +537,7 @@ function MembersLink() {
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Members</h2>
       </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
         Invite teammates by email. They&apos;ll share the monthly check
         quota, custom rules, and custom examples.
       </p>
@@ -558,9 +556,9 @@ function OverridesLink() {
     <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Override report</h2>
-        <span className="text-xs text-neutral-500">Last 30 days</span>
+        <span className="text-xs text-neutral-500 dark:text-neutral-300">Last 30 days</span>
       </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
         The rules your team dismisses most. Use this to decide which
         standards to tune or disable in team rules.
       </p>
@@ -580,7 +578,7 @@ function TeamRulesLink() {
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Team rules</h2>
       </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
         Disable standards or add custom rules for your team. Changes
         apply to every evaluation your team runs.
       </p>

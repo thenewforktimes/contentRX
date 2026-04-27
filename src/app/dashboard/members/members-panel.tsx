@@ -81,7 +81,7 @@ export function MembersPanel({
     <div className="flex flex-col gap-8">
       <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
         <h2 className="text-sm font-semibold">Invite a teammate</h2>
-        <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-300">
           They&apos;ll get an email with a link that&apos;s good for 7 days.
           {seatsAvailable === 0 && (
             <>

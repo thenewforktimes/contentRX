@@ -325,7 +325,7 @@ function StandardRow({
           className={`mt-1 text-xs ${
             isDisabled
               ? "text-neutral-500 line-through dark:text-neutral-600"
-              : "text-neutral-600 dark:text-neutral-400"
+              : "text-neutral-600 dark:text-neutral-300"
           }`}
         >
           {rule}
@@ -486,7 +486,7 @@ function AddCustomRuleCard({
       <h2 className="mb-3 text-sm font-semibold">New custom rule</h2>
       <div className="flex flex-col gap-3">
         <label className="text-xs">
-          <span className="mb-1 block text-neutral-600 dark:text-neutral-400">
+          <span className="mb-1 block text-neutral-600 dark:text-neutral-300">
             Title
           </span>
           <input
@@ -498,7 +498,7 @@ function AddCustomRuleCard({
           />
         </label>
         <label className="text-xs">
-          <span className="mb-1 block text-neutral-600 dark:text-neutral-400">
+          <span className="mb-1 block text-neutral-600 dark:text-neutral-300">
             Rule text (shown to anyone who trips this)
           </span>
           <textarea
@@ -510,7 +510,7 @@ function AddCustomRuleCard({
           />
         </label>
         <label className="text-xs">
-          <span className="mb-1 block text-neutral-600 dark:text-neutral-400">
+          <span className="mb-1 block text-neutral-600 dark:text-neutral-300">
             Regex pattern — matched against the text being checked
           </span>
           <input
@@ -531,7 +531,7 @@ function AddCustomRuleCard({
             Case-insensitive
           </label>
           <label className="flex items-center gap-2">
-            <span className="text-neutral-600 dark:text-neutral-400">
+            <span className="text-neutral-600 dark:text-neutral-300">
               Severity
             </span>
             <select

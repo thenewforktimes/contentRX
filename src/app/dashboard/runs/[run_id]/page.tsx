@@ -102,7 +102,7 @@ export default async function RunPage({ params }: RunParams) {
         <Eyebrow>Run</Eyebrow>
         <h1 className="text-2xl font-semibold">{run_id}</h1>
         <section className="rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-neutral-600 dark:text-neutral-300">
             This run has no findings on your account, or it expired.
             ContentRX retains run history for 90 days.
           </p>
@@ -160,7 +160,7 @@ export default async function RunPage({ params }: RunParams) {
       <header>
         <Eyebrow>Run</Eyebrow>
         <h1 className="mt-2 text-2xl font-semibold tabular-nums">{run_id}</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
           {sourceLabel} · {formatTimeRange(earliestAt, latestAt)}
         </p>
       </header>
@@ -180,7 +180,7 @@ export default async function RunPage({ params }: RunParams) {
 
       <Link
         href="/dashboard"
-        className="text-sm text-neutral-600 underline hover:no-underline dark:text-neutral-400"
+        className="text-sm text-neutral-600 underline hover:no-underline dark:text-neutral-300"
       >
         ← Back to dashboard
       </Link>

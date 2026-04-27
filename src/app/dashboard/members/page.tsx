@@ -43,7 +43,7 @@ export default async function MembersPage() {
     return (
       <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
         <h1 className="text-lg font-semibold">Members</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-neutral-600 dark:text-neutral-300">
           Inviting teammates is a Team-plan feature. Upgrade to share
           the monthly check quota, custom rules, and custom examples
           across your team.
@@ -72,7 +72,7 @@ export default async function MembersPage() {
           Team
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Members</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
           {seats.used} of {seats.capacity} seats used
           {seats.pendingInviteCount > 0 && (
             <>

@@ -137,7 +137,7 @@ function UpgradeCard() {
         <IntervalToggle value={interval} onChange={setInterval} />
         {selectedPlan === "team" && (
           <label className="flex items-center gap-2 text-sm">
-            <span className="text-neutral-600 dark:text-neutral-400">Seats</span>
+            <span className="text-neutral-600 dark:text-neutral-300">Seats</span>
             <input
               type="number"
               min={TEAM_MIN_SEATS}
@@ -268,7 +268,7 @@ function PlanOption({
         <span className="text-sm font-semibold">{name}</span>
         <span className="text-xs text-neutral-500">{price}</span>
       </div>
-      <p className="text-xs text-neutral-600 dark:text-neutral-400">
+      <p className="text-xs text-neutral-600 dark:text-neutral-300">
         {description}
       </p>
     </button>
@@ -298,7 +298,7 @@ function IntervalToggle({
           className={`rounded-[5px] px-3 py-1 text-xs font-medium transition ${
             value === opt
               ? "bg-black text-white dark:bg-white dark:text-black"
-              : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+              : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
           }`}
         >
           {opt === "monthly" ? "Monthly" : "Annual"}
