@@ -64,14 +64,10 @@ export default function SourcesPage() {
           </Link>
           &apos;s transparency commitment.
         </p>
-        <dl className="mt-6 grid grid-cols-3 gap-4 text-sm">
+        <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
           <Stat
             label="Style guides"
             value={data.style_guides.length.toString()}
-          />
-          <Stat
-            label="Standards attributed"
-            value={`${data.standards_with_attribution} / ${data.standards_total}`}
           />
           <Stat
             label="Example pairs"
@@ -87,17 +83,11 @@ export default function SourcesPage() {
         <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
           Each system below informs the ContentRX content model. Role
           badges show how: <em>standard influences</em> means the system
-          is cited on one or more of the 47 standards;{" "}
+          is cited on one or more standards;{" "}
           <em>examples corpus</em> means before/after pairs live in the
           committed examples corpus; <em>moment weights</em> means the
-          system is named in{" "}
-          <a
-            href="https://github.com/thenewforktimes/contentRX/blob/main/src/content_checker/moments.py"
-            className="underline underline-offset-2"
-          >
-            <code className="font-mono text-xs">moments.py</code>
-          </a>
-          &apos;s weighting philosophy.
+          system informs how moments emphasize, relax, or suppress
+          standards.
         </p>
         <ul className="mt-6 space-y-6">
           {data.style_guides.map((s) => (
@@ -223,7 +213,7 @@ function StyleGuideCard({ source }: { source: StyleGuideSource }) {
           <dd className="mt-0.5 tabular-nums">
             {source.standards_count === 0
               ? "—"
-              : `${source.standards_count} of 47`}
+              : source.standards_count.toString()}
           </dd>
         </div>
         <div>

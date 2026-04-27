@@ -61,9 +61,13 @@ describe("/install page source", () => {
     expect(visible).toMatch(/alongside/i);
   });
 
-  it("cross-links the accountability surface", () => {
-    for (const href of ["/model", "/accuracy", "/dashboard"]) {
+  it("cross-links the public accountability surface", () => {
+    for (const href of ["/accuracy", "/dashboard"]) {
       expect(visible).toContain(`href="${href}"`);
     }
+  });
+
+  it("does not link to the private /model surface", () => {
+    expect(visible).not.toMatch(/href=["']\/model/);
   });
 });

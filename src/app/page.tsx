@@ -11,7 +11,9 @@
  *
  * Plus a sharp Grammarly/LanguageTool/Alex contrast, the Stripe Radar
  * frame for "the model IS the product," and links to the accountability
- * surface (/model, /accuracy, /sources, /ethics).
+ * surface (/accuracy, /sources, /ethics) — the taxonomy itself is
+ * private per ADR 2026-04-25; the public surface is the kappa story
+ * and the calibration log, not /model.
  *
  * Voice note for Robo: this draft is in my voice. Prose is editable;
  * the structure + the five sections matter for the acceptance
@@ -54,10 +56,10 @@ export default function Home() {
             Install → MCP · CLI · GitHub Action · Figma
           </Link>
           <Link
-            href="/model"
+            href="/accuracy"
             className="rounded-md border border-neutral-300 px-4 py-2 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
           >
-            See the model
+            See the accuracy
           </Link>
           <Link
             href="/sign-in"
@@ -86,10 +88,9 @@ export default function Home() {
               Engineers and PMs without content-design training can&apos;t
               hold all that context in their heads while they&apos;re
               shipping features. ContentRX holds it for them. It knows
-              that the same sentence reads differently in{" "}
-              <MomentLink id="destructive_action" /> than in{" "}
-              <MomentLink id="browsing_discovery" />, and applies the
-              standards that match the moment it detected.
+              that the same sentence reads differently in a destructive
+              confirmation than on a feature browse page, and applies
+              the standards that match the moment it detected.
             </p>
           </>
         }
@@ -105,16 +106,8 @@ export default function Home() {
               sees whether it owns the failure or blames the user.
               That&apos;s not a rule you can look up in a style guide
               — it&apos;s pattern recognition built from years of
-              practice. ContentRX encodes that pattern recognition. The{" "}
-              <Link href="/model" className="underline underline-offset-2">
-                47 standards
-              </Link>
-              {" "}are the visible surface of it; the{" "}
-              <Link href="/model/moments/destructive_action" className="underline underline-offset-2">
-                moments
-              </Link>
-              {" "}carry the situational weights; the evaluation chain
-              publishes{" "}
+              practice. ContentRX encodes that pattern recognition.
+              The evaluation chain publishes{" "}
               <Link href="/accuracy" className="underline underline-offset-2">
                 its own accuracy
               </Link>
@@ -156,13 +149,9 @@ export default function Home() {
               from every transaction Stripe has ever seen are the moat.
             </p>
             <p className="mt-3">
-              ContentRX is a model. We sell the model. The{" "}
-              <Link href="/model" className="underline underline-offset-2">
-                taxonomy
-              </Link>
-              {" "}is browsable and claimable;{" "}
+              ContentRX is a model. We sell the model.{" "}
               <Link href="/sources" className="underline underline-offset-2">
-                every source that shaped it
+                Every source that shaped it
               </Link>
               {" "}is named with its license and opt-out path;{" "}
               <Link href="/accuracy" className="underline underline-offset-2">
@@ -249,7 +238,7 @@ export default function Home() {
             <p>
               ContentRX is the content model that Robo — a senior content
               designer — would run on their own work. The moments, the
-              weights, the 47 standards: all carry one designer&apos;s
+              weights, and the standards all carry one designer&apos;s
               judgment calls, attributed and published. Read the{" "}
               <Link href="/about" className="underline underline-offset-2">
                 about-the-model
@@ -263,10 +252,6 @@ export default function Home() {
       <footer className="mt-16 border-t border-neutral-200 pt-8 text-sm text-neutral-500 dark:border-neutral-800">
         <p>
           The accountability surface:{" "}
-          <Link href="/model" className="underline underline-offset-2">
-            /model
-          </Link>{" "}
-          ·{" "}
           <Link href="/accuracy" className="underline underline-offset-2">
             /accuracy
           </Link>{" "}
@@ -307,14 +292,3 @@ function Section({
   );
 }
 
-function MomentLink({ id }: { id: string }) {
-  return (
-    <a
-      href={`https://docs.contentrx.io/model/moments/${id}`}
-      className="font-mono underline underline-offset-2"
-      rel="external noreferrer"
-    >
-      {id}
-    </a>
-  );
-}

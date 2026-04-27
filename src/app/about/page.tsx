@@ -47,10 +47,10 @@ export default function AboutPage() {
         </h1>
         <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
           ContentRX is the content model that a working senior content
-          designer would run on their own UI copy. The 47 standards,
-          the 13 moments, the weighting system that says &ldquo;in a
-          destructive confirmation, emphasize the consequence; in a
-          first-encounter, relax the tone&rdquo; — all of it carries
+          designer would run on their own UI copy. The standards,
+          the moments, the weighting system that says &ldquo;in a
+          destructive confirmation, emphasize the consequence; in an
+          onboarding flow, relax the tone&rdquo; — all of it carries
           one designer&apos;s judgment calls, attributed and published.
         </p>
       </header>
@@ -74,11 +74,7 @@ export default function AboutPage() {
             /sources
           </Link>
           {" "}page lists every style guide and OSS repo the model
-          leaned on; the{" "}
-          <Link href="/model/changelog" className="underline underline-offset-2">
-            changelog
-          </Link>
-          {" "}shows every revision as it happens.
+          leaned on.
         </p>
       </Section>
 
@@ -113,52 +109,39 @@ export default function AboutPage() {
         </ul>
         <p className="mt-3">
           Those three questions aren&apos;t in Grammarly&apos;s job
-          description. They are in ContentRX&apos;s. The same three
-          questions drive{" "}
-          <Link href="/model/standards/VT-05" className="underline underline-offset-2">
-            VT-05
-          </Link>
-          {" "}(voice in error recovery),{" "}
-          <Link href="/model/standards/ACT-01" className="underline underline-offset-2">
-            ACT-01
-          </Link>
-          {" "}(specific verbs over generic affirmatives), and{" "}
-          <Link href="/model/standards/CLR-01" className="underline underline-offset-2">
-            CLR-01
-          </Link>
-          {" "}(plain language, matched to the audience).
+          description. They are in ContentRX&apos;s. They drive standards
+          on voice in error recovery, on specific verbs over generic
+          affirmatives, and on plain language matched to the audience.
         </p>
       </Section>
 
-      <Section title="Why the model is public">
+      <Section title="Why the model stays honest">
         <p>
-          The moat isn&apos;t the rules. The rules are visible — 47 of
-          them, each with a permalink, pass/fail examples, applicable
-          content types, and a version history. Anyone can read the
-          taxonomy, and anyone can disagree with a specific call.
+          The hardest part of a content model isn&apos;t the rules — those
+          can be looked up in any style guide. It&apos;s the{" "}
+          <em>weighting</em>: which standards matter most in which
+          moment, and why. That&apos;s what a content designer builds
+          over a career, and it&apos;s what makes the model worth
+          calibrating.
         </p>
         <p className="mt-3">
-          What&apos;s harder to replicate is the{" "}
-          <em>weighting</em> — which standards get emphasized in which
-          moment, and why. That&apos;s what a content designer builds
-          over a career, and it&apos;s what{" "}
-          <Link href="/model" className="underline underline-offset-2">
-            /model
-          </Link>
-          {" "}makes browsable. The model gets better every time Robo
-          dismisses a verdict as &ldquo;the standard doesn&apos;t apply
-          here&rdquo; — the{" "}
-          <Link href="/dashboard/overrides" className="underline underline-offset-2">
-            override signal
-          </Link>
-          {" "}feeds back into calibration. And every weekly kappa
-          measurement lands on{" "}
+          Every weekly kappa measurement lands on{" "}
           <Link href="/accuracy" className="underline underline-offset-2">
             /accuracy
           </Link>
           {" "}with its own confidence interval; when measured ceiling
           diverges from the design target, thresholds move with the
-          measurement, not with the target.
+          measurement, not with the target. The model gets better every
+          time Robo dismisses a verdict as &ldquo;the standard doesn&apos;t
+          apply here&rdquo; — the{" "}
+          <Link href="/dashboard/overrides" className="underline underline-offset-2">
+            override signal
+          </Link>
+          {" "}feeds back into calibration, and the weekly{" "}
+          <Link href="/calibration" className="underline underline-offset-2">
+            calibration log
+          </Link>
+          {" "}publishes the movement.
         </p>
       </Section>
 
@@ -208,10 +191,6 @@ export default function AboutPage() {
       <footer className="mt-16 border-t border-neutral-200 pt-8 text-sm text-neutral-500 dark:border-neutral-800">
         <p>
           Keep reading:{" "}
-          <Link href="/model" className="underline underline-offset-2">
-            /model
-          </Link>{" "}
-          ·{" "}
           <Link href="/accuracy" className="underline underline-offset-2">
             /accuracy
           </Link>{" "}
