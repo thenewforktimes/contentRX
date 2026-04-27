@@ -310,11 +310,13 @@ function monthResetISO(): string {
   return next.toISOString();
 }
 
-function warningThreshold(plan: "free" | "pro" | "team", quota: number): number {
-  // Free plan emails when 5 scans remain (matches the in-plugin warning
-  // banner threshold). Paid plans use 10% of quota with a floor of 10
-  // so a 5,000-scan plan still gets a heads-up before the wall.
-  return plan === "free" ? 5 : Math.max(10, Math.round(quota * 0.1));
+function warningThreshold(_plan: "free" | "pro" | "team", quota: number): number {
+  // 2026-04-27: aligned the email + dashboard at 80% used (= 20%
+  // remaining). Robo's call: gentle nudge as the customer approaches
+  // the cap, same threshold across plans for consistency. Floor at 1
+  // so tiny quotas (test fixtures, downgrades) still emit at least one
+  // warning email before the wall.
+  return Math.max(1, Math.round(quota * 0.2));
 }
 
 async function notifyQuotaWarning(args: {
