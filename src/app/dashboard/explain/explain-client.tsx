@@ -402,7 +402,16 @@ function formatResetDate(isoString: string): string {
   try {
     const d = new Date(isoString);
     if (Number.isNaN(d.getTime())) return "next month";
-    return d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
+    // The API returns the calendar boundary as midnight UTC (e.g.
+    // 2026-05-01T00:00:00.000Z). Local timezones west of UTC (like
+    // Pacific) render that instant as the previous day evening, so
+    // without `timeZone: "UTC"` a user in PT sees "April 30" for a
+    // reset that's actually on May 1. Pin the format to UTC.
+    return d.toLocaleDateString(undefined, {
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC",
+    });
   } catch {
     return "next month";
   }

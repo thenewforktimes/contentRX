@@ -68,9 +68,14 @@ function nextMonthReset(): string {
   const next = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
   );
+  // Pin format to UTC. Server-side this currently works because
+  // Vercel Lambdas default to UTC, but that's a runtime quirk we
+  // shouldn't rely on — the same call with `timeZone: "UTC"` is
+  // explicit and stays correct if Vercel ever changes the default.
   return next.toLocaleDateString(undefined, {
     month: "long",
     day: "numeric",
+    timeZone: "UTC",
   });
 }
 
