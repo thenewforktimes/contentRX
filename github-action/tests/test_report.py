@@ -2,7 +2,19 @@
 
 from __future__ import annotations
 
-from report import FileReport, MAX_COMMENT_CHARS, render_markdown
+import io
+import json
+from unittest.mock import patch
+
+import pytest
+
+from report import (
+    FileReport,
+    MAX_COMMENT_CHARS,
+    STICKY_MARKER,
+    post_comment,
+    render_markdown,
+)
 
 
 def _report(path: str, entries: list[dict]) -> FileReport:
@@ -270,3 +282,171 @@ def test_truncated_count_negative_omits_notice() -> None:
     """Defensive: negative truncation makes no sense; treat as 0."""
     md = render_markdown([], total_strings=10, truncated_count=-5)
     assert "max-checks" not in md
+
+
+# ---------------------------------------------------------------------------
+# PR-39 — sticky PR comment (update-in-place)
+# ---------------------------------------------------------------------------
+class _FakeResponse:
+    """Tiny urlopen-shaped response object."""
+
+    def __init__(self, payload, *, link_header: str = ""):
+        self._body = json.dumps(payload).encode("utf-8")
+        self.headers = {"Link": link_header}
+
+    def read(self):
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_a):
+        return False
+
+
+def _record_calls():
+    """Capture every urlopen invocation (request method/url + body)."""
+    calls = []
+
+    def _record(req, timeout=None):
+        # Default behavior: empty comment list (no prior sticky).
+        calls.append(
+            {
+                "url": req.full_url,
+                "method": req.get_method(),
+                "body": req.data.decode("utf-8") if req.data else None,
+            }
+        )
+        # Per-call response is decided by the test via patches above.
+        return _FakeResponse({"id": 999})
+
+    return calls, _record
+
+
+def test_post_comment_creates_when_no_prior_sticky() -> None:
+    """First-run scenario: no prior ContentRX comment → POST new."""
+    calls = []
+
+    def _urlopen(req, timeout=None):
+        calls.append({"url": req.full_url, "method": req.get_method(), "body": req.data})
+        # First call: GET comments → empty list. Second call: POST → ok.
+        if req.get_method() == "GET":
+            return _FakeResponse([])
+        return _FakeResponse({"id": 42})
+
+    with patch("urllib.request.urlopen", _urlopen):
+        post_comment(
+            "the body",
+            repo="owner/repo",
+            pull_number=7,
+            token="ghp_test",
+        )
+
+    methods = [c["method"] for c in calls]
+    assert "GET" in methods
+    assert "POST" in methods
+    # Body sent on POST must include the sticky marker so future runs
+    # find this comment.
+    post_call = next(c for c in calls if c["method"] == "POST")
+    assert STICKY_MARKER in post_call["body"].decode("utf-8")
+    assert "the body" in post_call["body"].decode("utf-8")
+
+
+def test_post_comment_patches_when_sticky_exists() -> None:
+    """Second-run scenario: a prior ContentRX comment carries the
+    marker → PATCH that one in place."""
+    calls = []
+
+    def _urlopen(req, timeout=None):
+        calls.append({"url": req.full_url, "method": req.get_method(), "body": req.data})
+        if req.get_method() == "GET":
+            return _FakeResponse(
+                [
+                    # Some other comment from a teammate — should be skipped.
+                    {"id": 100, "body": "lgtm"},
+                    # The prior ContentRX comment we should update.
+                    {"id": 200, "body": f"{STICKY_MARKER}\n### ContentRX old"},
+                ]
+            )
+        return _FakeResponse({"id": 200})
+
+    with patch("urllib.request.urlopen", _urlopen):
+        post_comment(
+            "fresh body",
+            repo="owner/repo",
+            pull_number=7,
+            token="ghp_test",
+        )
+
+    patch_calls = [c for c in calls if c["method"] == "PATCH"]
+    assert len(patch_calls) == 1
+    # PATCH endpoint targets the existing comment id, not the PR's
+    # comments collection.
+    assert "/issues/comments/200" in patch_calls[0]["url"]
+    assert "fresh body" in patch_calls[0]["body"].decode("utf-8")
+    # No POST should fire — the existing comment is updated in place.
+    assert all(c["method"] != "POST" for c in calls)
+
+
+def test_post_comment_falls_back_to_post_when_lookup_fails() -> None:
+    """Defensive: if the GET comments call fails (network blip / GitHub
+    auth flake), the action still posts a new comment rather than
+    crashing — graceful degradation matters more than dedup here."""
+    import urllib.error
+
+    calls = []
+
+    def _urlopen(req, timeout=None):
+        calls.append({"url": req.full_url, "method": req.get_method()})
+        if req.get_method() == "GET":
+            raise urllib.error.HTTPError(
+                req.full_url, 502, "Bad Gateway", {}, io.BytesIO(b"")
+            )
+        return _FakeResponse({"id": 42})
+
+    with patch("urllib.request.urlopen", _urlopen):
+        post_comment(
+            "body",
+            repo="owner/repo",
+            pull_number=7,
+            token="ghp_test",
+        )
+
+    methods = [c["method"] for c in calls]
+    # GET attempted, failed, then POST fallback.
+    assert methods == ["GET", "POST"]
+
+
+def test_post_comment_paginates_comment_lookup() -> None:
+    """Comments come back paginated — the sticky lookup follows
+    Link: rel="next" so a marker on page 2 still matches."""
+    calls = []
+
+    def _urlopen(req, timeout=None):
+        calls.append({"method": req.get_method(), "url": req.full_url})
+        if req.get_method() == "GET":
+            # Page 1 — no marker, "next" link.
+            if "page=2" not in req.full_url:
+                return _FakeResponse(
+                    [{"id": 1, "body": "noise"}],
+                    link_header='<https://api.github.com/page=2>; rel="next"',
+                )
+            # Page 2 — carries the marker.
+            return _FakeResponse(
+                [{"id": 999, "body": f"{STICKY_MARKER}\nold"}]
+            )
+        return _FakeResponse({"id": 999})
+
+    with patch("urllib.request.urlopen", _urlopen):
+        post_comment(
+            "body",
+            repo="owner/repo",
+            pull_number=7,
+            token="ghp_test",
+        )
+
+    # Two GETs (paginated) + one PATCH.
+    methods = [c["method"] for c in calls]
+    assert methods.count("GET") == 2
+    assert methods.count("PATCH") == 1
+    assert all(c["method"] != "POST" for c in calls)

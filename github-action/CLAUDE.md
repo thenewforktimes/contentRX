@@ -20,8 +20,11 @@ that happens.
 - **Regex extractor, not AST.** v1 uses a targeted regex over JSXText
   and a closed allowlist of copy-holding attributes. BUILD_PLAN §15
   upgrades to a TypeScript AST walk.
-- **One comment per run.** No update-in-place yet. Re-runs create
-  additional comments; that's a known v1 limitation.
+- **Sticky comment.** As of PR-39 the action looks up its prior
+  comment via a `<!-- contentrx-action-sticky-comment -->` marker and
+  PATCHes it on every push. First-run still POSTs (no marker found);
+  subsequent runs update in place. Pre-PR-39 historical comments
+  stay as artifacts and aren't touched.
 - **Docker action, not JS/Composite.** Lets us pip-install
   `contentrx-cli` in a consistent Python environment without dragging
   Node into the action runtime.
@@ -39,7 +42,9 @@ that happens.
   the comment longer; don't fragment it across comments.
 - Don't post inline review comments (file-level). Issue comments on
   the PR are simpler and don't require git blob IDs.
-- Don't try to replace the old comment yet — that's BUILD_PLAN §15.
+- Sticky behaviour delivered in PR-39. Don't fragment the comment
+  across multiple posts; if more detail is needed, make the comment
+  longer.
 - Don't expand the copy-attribute list without thinking. False
   positives here are worse than missed strings.
 - Don't call `contentrx` more than once per unique string. If a line

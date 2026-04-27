@@ -31,6 +31,14 @@ TRUNCATION_FOOTER = (
     "Run the action locally or check the workflow logs for the full list._"
 )
 
+# PR-39 — sticky comment marker. HTML comments render invisibly in
+# GitHub Markdown but are visible when we fetch the comment list, so
+# we can find and update our prior comment instead of posting a fresh
+# one on every push. Pre-PR-39 ContentRX comments don't have this
+# marker, so the first run after upgrade still posts a fresh one and
+# every run after stays sticky.
+STICKY_MARKER = "<!-- contentrx-action-sticky-comment -->"
+
 
 @dataclass(frozen=True)
 class FileReport:
@@ -137,30 +145,142 @@ def post_comment(
     pull_number: int,
     token: str,
 ) -> dict:
-    """POST a new PR comment via the GitHub API. Returns the decoded response."""
+    """Post or update the ContentRX PR comment.
+
+    PR-39 — sticky behaviour. Prepend STICKY_MARKER to the body, then
+    look up the prior ContentRX comment by scanning the PR's existing
+    comments for the marker. Update-in-place when found, POST fresh
+    when not. Pre-PR-39 comments stay in place as historical artifacts;
+    this PR's first run is still a POST (no marker found), and
+    subsequent runs are PATCHes (marker found on the new run's comment).
+    """
+    marked_body = STICKY_MARKER + "\n" + body
+    existing_id = _find_sticky_comment_id(repo, pull_number, token)
+    if existing_id is not None:
+        return _patch_comment(existing_id, marked_body, repo=repo, token=token)
+    return _create_comment(marked_body, repo=repo, pull_number=pull_number, token=token)
+
+
+def _create_comment(
+    body: str,
+    *,
+    repo: str,
+    pull_number: int,
+    token: str,
+) -> dict:
+    """POST a new PR comment via the GitHub API."""
     url = f"{GITHUB_API}/repos/{repo}/issues/{pull_number}/comments"
     data = json.dumps({"body": body}).encode("utf-8")
     req = urllib.request.Request(
         url,
         data=data,
         method="POST",
-        headers={
-            "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "contentrx-action",
-        },
+        headers=_gh_headers(token),
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as err:
-        # Bubble up with enough context for the action log to explain.
         body_text = err.read().decode("utf-8", errors="replace")
         raise RuntimeError(
             f"Failed to post PR comment: {err.code} {err.reason}\n{body_text}"
         ) from err
+
+
+def _patch_comment(
+    comment_id: int,
+    body: str,
+    *,
+    repo: str,
+    token: str,
+) -> dict:
+    """PATCH an existing PR comment by id."""
+    url = f"{GITHUB_API}/repos/{repo}/issues/comments/{comment_id}"
+    data = json.dumps({"body": body}).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        method="PATCH",
+        headers=_gh_headers(token),
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as err:
+        body_text = err.read().decode("utf-8", errors="replace")
+        raise RuntimeError(
+            f"Failed to update PR comment {comment_id}: {err.code} {err.reason}\n{body_text}"
+        ) from err
+
+
+def _find_sticky_comment_id(
+    repo: str,
+    pull_number: int,
+    token: str,
+) -> int | None:
+    """Scan the PR's issue comments for one carrying STICKY_MARKER.
+
+    Returns the matching comment id, or None when no prior sticky
+    comment exists. Paginated; capped at 10 pages (1,000 comments) to
+    avoid rogue loops on pathological PRs. The match is on the marker
+    string ANYWHERE in the body — so ordering of marker + content
+    inside the body is irrelevant.
+    """
+    out: int | None = None
+    url: str | None = (
+        f"{GITHUB_API}/repos/{repo}/issues/{pull_number}/comments?per_page=100"
+    )
+    pages_fetched = 0
+    MAX_PAGES = 10
+
+    while url and pages_fetched < MAX_PAGES and out is None:
+        req = urllib.request.Request(url, headers=_gh_headers(token))
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                entries = json.loads(resp.read().decode("utf-8"))
+                link_header = resp.headers.get("Link", "")
+        except urllib.error.HTTPError:
+            # Comment list lookup failed — fall through to a fresh POST.
+            # That degrades gracefully (an extra comment) without
+            # crashing the run.
+            return None
+
+        for entry in entries:
+            body_text = entry.get("body", "") or ""
+            if STICKY_MARKER in body_text:
+                out = int(entry["id"])
+                break
+        url = _parse_next_link(link_header)
+        pages_fetched += 1
+
+    return out
+
+
+def _parse_next_link(link_header: str) -> str | None:
+    """Extract the rel="next" URL from a GitHub Link header. Lifted from
+    main.py's PR-files pagination — kept here as a private copy to
+    avoid an action-internal cross-import."""
+    if not link_header:
+        return None
+    for part in link_header.split(","):
+        segment = part.strip()
+        if 'rel="next"' not in segment:
+            continue
+        start = segment.find("<")
+        end = segment.find(">", start)
+        if start != -1 and end != -1:
+            return segment[start + 1 : end]
+    return None
+
+
+def _gh_headers(token: str) -> dict:
+    return {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "contentrx-action",
+    }
 
 
 def _render_truncation_notice(checked: int, truncated_count: int) -> str:
