@@ -189,7 +189,9 @@ export default async function CalibratePage() {
           pair_id: p.id,
           moment: p.moment,
           content_type: p.contentType,
-          standard_id: p.standardId,
+          // standard_id intentionally omitted — ADR 2026-04-25
+          // private-taxonomy boundary. The CalibrateForm only needs
+          // pair_id to correlate the user's pick back to the row.
           left_text: p.leftText,
           right_text: p.rightText,
           prompt: p.prompt,

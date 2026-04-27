@@ -8,11 +8,19 @@
 
 import { useState, useTransition } from "react";
 
+/**
+ * The shape `/dashboard/calibrate` ships to the client. Per ADR
+ * 2026-04-25 the substrate fields (`standard_id`, `rule_version`,
+ * `rationale_chain`) must NOT cross the user-facing boundary, so
+ * `pair_id` is the only identifier on this surface — it's an
+ * internal cuid the server uses to correlate the user's pick back
+ * to the originating PreferencePair row, with no taxonomy meaning
+ * to the user.
+ */
 export interface PairPublic {
   pair_id: string;
   moment: string;
   content_type: string;
-  standard_id: string;
   left_text: string;
   right_text: string;
   prompt: string | null;
@@ -77,12 +85,9 @@ export function CalibrateForm({ pairs }: { pairs: PairPublic[] }) {
           key={p.pair_id}
           className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800"
         >
-          <header className="mb-4 flex items-center justify-between">
-            <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+          <header className="mb-4">
+            <p className="text-xs font-mono uppercase tracking-widest text-neutral-500 dark:text-neutral-300">
               Pair {i + 1} of {pairs.length} · {p.moment} · {p.content_type}
-            </p>
-            <p className="font-mono text-xs text-neutral-500">
-              {p.standard_id}
             </p>
           </header>
           {p.prompt && (
