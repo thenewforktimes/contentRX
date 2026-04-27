@@ -77,6 +77,17 @@ export const users = pgTable("users", {
   preferenceOptedOutAt: timestamp("preference_opted_out_at", {
     withTimezone: true,
   }),
+  // PR-31 (90-day retention). Set by the
+  // /api/cron/pseudonymize-cancelled job when this user's
+  // subscription has been cancelled for >= 90 days AND no other
+  // active subscription exists. Once set: email + apiKeyHash +
+  // apiKeyPrefix have been replaced with sentinels, team-scoped
+  // rows have been deleted, and historical violations /
+  // violation_overrides / preferences have userId set to null.
+  // Reactivation post-pseudonymize is a cold start — the user
+  // appears as a fresh signup to themselves, but their anonymized
+  // signal continues to feed engine calibration.
+  pseudonymizedAt: timestamp("pseudonymized_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -141,6 +152,12 @@ export const subscriptions = pgTable(
     // subscriptions are detected on Pro/Scale; the dashboard uses it
     // to surface team-level views without a Team purchase decision.
     domainGroupId: text("domain_group_id"),
+    // PR-31 (90-day retention). Set when the Stripe webhook fires
+    // `customer.subscription.deleted` for this row. The pseudonymize
+    // cron uses this + a 90-day floor to decide which users to
+    // anonymize. Distinct from `currentPeriodEnd` (which is when the
+    // paid period ends — they keep access until then).
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
   },
   (t) => [
     // Exactly one active subscription per user. Historical rows with

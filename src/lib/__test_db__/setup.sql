@@ -24,6 +24,7 @@ CREATE TABLE users (
   stripe_customer_id text UNIQUE,
   ditto_api_key_encrypted text,
   preference_opted_out_at timestamptz,
+  pseudonymized_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -51,7 +52,11 @@ CREATE TABLE subscriptions (
   status text NOT NULL,
   plan text NOT NULL,
   seats int NOT NULL DEFAULT 1,
-  current_period_end timestamptz
+  current_period_end timestamptz,
+  pricing_tier text NOT NULL DEFAULT 'free',
+  soft_cap_usd int NOT NULL DEFAULT 50,
+  domain_group_id text,
+  cancelled_at timestamptz
 );
 
 CREATE UNIQUE INDEX subscriptions_user_active_idx
