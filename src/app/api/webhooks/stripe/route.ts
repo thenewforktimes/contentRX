@@ -39,6 +39,29 @@ import { SubscriptionConfirmationEmail } from "@/emails/subscription-confirmatio
 const DEDUPE_PREFIX = "stripe_event:";
 const DEDUPE_TTL_SECONDS = 24 * 60 * 60;
 
+/**
+ * Stripe SDK shapes that vary by API version. The `Stripe.Invoice` and
+ * `Stripe.SubscriptionItem` types in the official package don't always
+ * include these specific fields depending on which API version the
+ * project pins. Reading them via a narrow named type means:
+ *   - the field-name dependency is documented and discoverable;
+ *   - if Stripe stabilizes the shape we can drop the alias and
+ *     migrate to the SDK's built-in field name in one place;
+ *   - `as` casts at the call sites become readable instead of
+ *     `as unknown as { foo?: ... }` mystery casts.
+ *
+ * Both fields are read defensively at the call site (typeof guard /
+ * optional chain) — these aliases ARE the runtime contract too, not
+ * just type-level decoration.
+ */
+type InvoiceWithParent = {
+  parent?: { subscription?: string };
+};
+
+type SubscriptionItemWithPeriodEnd = {
+  current_period_end?: number;
+};
+
 export async function POST(req: Request) {
   // requireEnv throws on missing OR empty — Next.js catches → 500 + Sentry.
   // Same fix as the Clerk webhook (2026-04-24 incident).
@@ -308,9 +331,9 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // in Dashboard → Billing settings. We don't change the plan here — we
   // just log. Session 13 wires Resend for the dunning email.
   // Invoice schema can vary by API version; read subscription id via
-  // the parent relationship when available.
-  const parent = (invoice as unknown as { parent?: { subscription?: string } })
-    .parent;
+  // the parent relationship when available. See `InvoiceWithParent`
+  // type alias above for the documented field shape.
+  const parent = (invoice as unknown as InvoiceWithParent).parent;
   const subId = parent?.subscription;
   console.warn(
     `invoice.payment_failed${subId ? ` subscription=${subId}` : ""}${
@@ -444,10 +467,9 @@ function itemPeriodEnd(
 ): Date | null {
   if (!item) return null;
   // Different Stripe API versions keep the period on slightly different
-  // shapes; read defensively.
-  const raw = (
-    item as unknown as { current_period_end?: number }
-  ).current_period_end;
+  // shapes; read defensively via the documented type alias.
+  const raw = (item as unknown as SubscriptionItemWithPeriodEnd)
+    .current_period_end;
   if (typeof raw === "number") return new Date(raw * 1000);
   return null;
 }

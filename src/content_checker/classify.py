@@ -19,13 +19,16 @@ def classify_heuristic(text: str) -> str:
 
     if length <= 15 and any(w in text_lower for w in [
         "error", "fail", "couldn't", "can't", "unable", "went wrong",
-        # "problem" and "issue" removed — Opendoor triage Cluster 6.
-        # These words appear frequently in instructional/presentation
-        # content ("care about the problem") where error_message
-        # classification triggers false positives. Accepted tradeoff:
-        # heuristic-only false negatives on rare error messages that use
-        # only "problem" as their signal. The LLM classifier is the
-        # primary path and still catches these correctly.
+        # "problem" and "issue" removed (decision 2026-04-27, audit
+        # follow-up) — Opendoor triage Cluster 6 surfaced false
+        # positives where instructional/presentation content ("care
+        # about the problem") was classifying as error_message.
+        # Accepted tradeoff: heuristic-only false negatives on rare
+        # error messages that use ONLY "problem" as their signal. The
+        # LLM classifier is the primary path and still catches these
+        # correctly. If a customer reports the false-negative case,
+        # add the keywords back AND tighten by requiring 2+ signal
+        # words; don't just re-add and hope.
         "oops", "sorry", "unexpected",
     ]):
         return "error_message"
