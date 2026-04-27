@@ -19,7 +19,7 @@
  */
 
 import { auth } from "@clerk/nextjs/server";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { buttonStyles } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import { ExplainClient } from "./explain/explain-client";
 import { SubscriptionPanel } from "./subscription-panel";
 
 const USAGE_WARNING_THRESHOLD = 0.8;
+const INSIGHTS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function nextMonthReset(): string {
   const now = new Date();
@@ -60,11 +61,12 @@ export default async function DashboardPage() {
   }
 
   const plan = user.plan as Plan;
-  const [seats, used, activeSub, surfaceActivity] = await Promise.all([
+  const [seats, used, activeSub, surfaceActivity, insights] = await Promise.all([
     loadSeats(user.id, plan, user.teamOwnerUserId),
     loadCurrentUsage(user.id),
     loadActiveSubscription(user.id, user.teamOwnerUserId),
     loadSurfaceActivity(user.id, user.teamOwnerUserId),
+    loadWeeklyInsights(user.id, user.teamOwnerUserId),
   ]);
   const quota = monthlyQuota(plan, seats);
   const usedPct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
@@ -98,6 +100,8 @@ export default async function DashboardPage() {
       />
 
       <ActiveSurfacesRow activity={surfaceActivity} />
+
+      <InsightsPanel insights={insights} plan={plan} />
 
       <SubscriptionPanel
         plan={plan}
@@ -297,6 +301,86 @@ function formatRelative(date: Date): string {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+type WeeklyInsights = {
+  violations: number;
+  overrides: number;
+  overrideRatePct: number | null;
+  topSourceLabel: string | null;
+  topSourceCount: number;
+};
+
+function InsightsPanel({
+  insights,
+  plan,
+}: {
+  insights: WeeklyInsights;
+  plan: Plan;
+}) {
+  const hasActivity = insights.violations > 0 || insights.overrides > 0;
+  return (
+    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+      <header className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold">This week</h2>
+        <span className="text-xs text-neutral-500">Last 7 days</span>
+      </header>
+      {!hasActivity ? (
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Nothing flagged yet this week. Run a check above or wire a
+          surface to start seeing patterns. Insights show up after your
+          first few checks.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-3 text-sm">
+          <p className="text-neutral-700 dark:text-neutral-300">
+            <span className="font-semibold">{insights.violations.toLocaleString()}</span>{" "}
+            {insights.violations === 1 ? "finding" : "findings"} flagged.{" "}
+            {insights.overrides > 0 && (
+              <>
+                <span className="font-semibold">
+                  {insights.overrides.toLocaleString()}
+                </span>{" "}
+                dismissed
+                {insights.overrideRatePct !== null && (
+                  <> ({insights.overrideRatePct}% override rate)</>
+                )}
+                .
+              </>
+            )}
+          </p>
+          {insights.topSourceLabel && (
+            <p className="text-neutral-700 dark:text-neutral-300">
+              Most-active surface:{" "}
+              <span className="font-medium">{insights.topSourceLabel}</span>
+              {" "}with{" "}
+              <span className="tabular-nums">
+                {insights.topSourceCount.toLocaleString()}
+              </span>
+              {" "}{insights.topSourceCount === 1 ? "finding" : "findings"}.
+            </p>
+          )}
+          {plan === "team" && insights.overrides >= 5 && (
+            <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+              Your team is dismissing findings often. The override report
+              breaks down which standards your team disagrees with most —
+              consider tuning them in team rules.
+            </p>
+          )}
+          <div className="mt-1 flex flex-wrap gap-2">
+            {plan === "team" && (
+              <Link
+                href="/dashboard/overrides"
+                className={buttonStyles({ variant: "secondary", size: "sm" })}
+              >
+                Open override report
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function CalibrateLink({ optedOut }: { optedOut: boolean }) {
   return (
     <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
@@ -485,6 +569,98 @@ async function loadSurfaceActivity(
     }
   }
   return out;
+}
+
+/**
+ * Aggregate counts for the "This week" insights panel.
+ *
+ * Deliberately surfaces team-aggregate metrics only — counts of
+ * findings / dismissals + override rate + which surface is most
+ * active. Does NOT expose `standard_id` per the schema-2.0.0 lock;
+ * the per-standard breakdown lives on /dashboard/overrides where
+ * standard IDs are user-data (the user's own override actions).
+ */
+async function loadWeeklyInsights(
+  userId: string,
+  teamOwnerUserId: string | null,
+): Promise<WeeklyInsights> {
+  const teamId = teamOwnerUserId ?? userId;
+  const since = new Date(Date.now() - INSIGHTS_WINDOW_MS);
+  const db = getDb();
+
+  const [violationsCount, overridesCount, topSource] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.violations)
+      .where(
+        and(
+          eq(schema.violations.teamId, teamId),
+          gte(schema.violations.createdAt, since),
+        ),
+      ),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(schema.violationOverrides)
+      .where(
+        and(
+          eq(schema.violationOverrides.teamId, teamId),
+          gte(schema.violationOverrides.createdAt, since),
+        ),
+      ),
+    db
+      .select({
+        source: schema.violations.source,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.violations)
+      .where(
+        and(
+          eq(schema.violations.teamId, teamId),
+          gte(schema.violations.createdAt, since),
+        ),
+      )
+      .groupBy(schema.violations.source)
+      .orderBy(desc(sql`count(*)`))
+      .limit(1),
+  ]);
+
+  const violations = violationsCount[0]?.count ?? 0;
+  const overrides = overridesCount[0]?.count ?? 0;
+  const overrideRatePct =
+    violations > 0
+      ? Math.round((overrides / violations) * 1000) / 10
+      : null;
+
+  const topSourceRow = topSource[0];
+  const topSourceLabel = topSourceRow
+    ? sourceLabel(topSourceRow.source)
+    : null;
+  const topSourceCount = topSourceRow?.count ?? 0;
+
+  return {
+    violations,
+    overrides,
+    overrideRatePct,
+    topSourceLabel,
+    topSourceCount,
+  };
+}
+
+function sourceLabel(source: string): string {
+  switch (source) {
+    case "mcp":
+      return "MCP";
+    case "lsp":
+      return "LSP";
+    case "action":
+      return "GitHub Action";
+    case "plugin":
+      return "Figma plugin";
+    case "cli":
+      return "CLI";
+    default:
+      return source;
+  }
 }
 
 function PlanPill({ plan }: { plan: Plan }) {
