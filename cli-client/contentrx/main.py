@@ -101,6 +101,7 @@ def check_text(
     audience: str | None = None,
     source: str = "cli",
     file_path: str | None = None,
+    run_id: str | None = None,
     api_url: str | None = None,
     api_key: str | None = None,
     timeout: int = DEFAULT_TIMEOUT_SECONDS,
@@ -115,6 +116,8 @@ def check_text(
         payload["audience"] = audience
     if file_path:
         payload["file_path"] = file_path
+    if run_id:
+        payload["run_id"] = run_id
 
     base = api_url or _api_base_url()
     url = f"{base}/api/check"
@@ -332,7 +335,7 @@ def _parse_json_batch(raw: str) -> list[dict[str, Any]]:
                 code=EXIT_USAGE,
             )
         entry: dict[str, Any] = {"text": str(item["text"])}
-        for key in ("content_type", "moment", "audience", "file_path"):
+        for key in ("content_type", "moment", "audience", "file_path", "run_id"):
             if item.get(key):
                 entry[key] = str(item[key])
         out.append(entry)
@@ -378,6 +381,13 @@ def _build_parser() -> argparse.ArgumentParser:
         dest="file_path",
         help="Repository-relative source-file path. Attached to each "
         "violation and surfaced in the team analytics 'Top files' panel.",
+    )
+    parser.add_argument(
+        "--run-id",
+        dest="run_id",
+        help="Group violations under a shared run identifier — e.g. "
+        "GITHUB_RUN_ID from the Action runtime — so the dashboard can "
+        "render /dashboard/runs/<run_id>. Optional.",
     )
     parser.add_argument(
         "--source",
@@ -464,6 +474,7 @@ def run(argv: list[str]) -> int:
             moment=args.moment,
             audience=args.audience,
             file_path=args.file_path,
+            run_id=args.run_id,
             source=args.source,
         )
 
@@ -473,6 +484,7 @@ def run(argv: list[str]) -> int:
         moment=args.moment,
         audience=args.audience,
         file_path=args.file_path,
+        run_id=args.run_id,
         source=args.source,
         api_url=api_url,
         api_key=api_key,
@@ -499,6 +511,7 @@ def _run_batch(
     moment: str | None,
     audience: str | None,
     file_path: str | None,
+    run_id: str | None,
     source: str,
 ) -> int:
     all_passed = True
@@ -510,6 +523,7 @@ def _run_batch(
             moment=item.get("moment") or moment,
             audience=item.get("audience") or audience,
             file_path=item.get("file_path") or file_path,
+            run_id=item.get("run_id") or run_id,
             source=source,
             api_url=api_url,
             api_key=api_key,

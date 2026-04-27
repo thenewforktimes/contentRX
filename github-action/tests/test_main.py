@@ -80,7 +80,7 @@ def test_main_posts_comment_when_violations_found(
     monkeypatch.setattr(
         action_main,
         "run_contentrx",
-        lambda text, ct, fp: _violation_response(),
+        lambda text, ct, fp, run_id=None: _violation_response(),
     )
     posted = {}
 
@@ -125,7 +125,7 @@ def test_fail_on_none_does_not_fail_on_violation(
     monkeypatch.setattr(action_main, "_fetch_changed_from_api", _raise)
     monkeypatch.setattr(
         action_main, "run_contentrx",
-        lambda text, ct, fp: _violation_response(),
+        lambda text, ct, fp, run_id=None: _violation_response(),
     )
     monkeypatch.setattr(action_main, "post_comment", lambda *_a, **_kw: {"id": 1})
 
@@ -142,7 +142,7 @@ def test_fail_on_review_fails_when_review_recommended(
     tmp_path: Path,
 ) -> None:
     """`fail-on: review` fails on REVIEW-only results, not just violations."""
-    def review_response(text: str, ct: str, fp: str) -> dict:
+    def review_response(text: str, ct: str, fp: str, run_id: str | None = None) -> dict:
         return {
             "result": {
                 "content_type": "button_cta",
@@ -193,7 +193,7 @@ def test_fail_on_violation_default_passes_on_review_only(
     tmp_path: Path,
 ) -> None:
     """Default fail-on=violation does NOT fail on review_recommended only."""
-    def review_response(text: str, ct: str, fp: str) -> dict:
+    def review_response(text: str, ct: str, fp: str, run_id: str | None = None) -> dict:
         return {
             "result": {
                 "content_type": "button_cta",
@@ -248,7 +248,7 @@ def test_main_strict_mode_returns_nonzero_on_violations(
     monkeypatch.setattr(
         action_main,
         "run_contentrx",
-        lambda text, ct, fp: _violation_response(),
+        lambda text, ct, fp, run_id=None: _violation_response(),
     )
     monkeypatch.setattr(action_main, "post_comment", lambda **_: None)
 
@@ -276,7 +276,7 @@ def test_main_returns_zero_when_all_pass(
     monkeypatch.setattr(
         action_main,
         "run_contentrx",
-        lambda text, ct, fp: _pass_response(),
+        lambda text, ct, fp, run_id=None: _pass_response(),
     )
     monkeypatch.setattr(action_main, "post_comment", lambda **_: None)
 
@@ -306,7 +306,7 @@ def test_main_no_matching_files_is_noop(
     monkeypatch.setattr(
         action_main,
         "run_contentrx",
-        lambda text, ct, fp: pytest.fail("should not be called"),
+        lambda text, ct, fp, run_id=None: pytest.fail("should not be called"),
     )
 
     code = action_main.main()

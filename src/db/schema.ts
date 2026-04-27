@@ -278,6 +278,13 @@ export const violations = pgTable(
     // not enforced at the DB level because new subtypes may ship without
     // a migration.
     reviewReasonSubtype: text("review_reason_subtype"),
+    // PR-40 — groups every violation logged during the same external
+    // run. The GitHub Action sets this to GITHUB_RUN_ID so the
+    // dashboard can render `/dashboard/runs/<run_id>` long after the
+    // PR comment is gone (PRs close, action logs roll over, but the
+    // dashboard view survives). Nullable: plugin/CLI/MCP/LSP/inline
+    // checks have no run grouping.
+    runId: text("run_id"),
   },
   (t) => [
     index("violations_user_created_idx").on(t.userId, t.createdAt),
@@ -291,6 +298,9 @@ export const violations = pgTable(
       t.reviewReasonSubtype,
       t.createdAt,
     ),
+    // PR-40: per-run dashboard page query — `WHERE team_id = $1 AND
+    // run_id = $2` ordered by createdAt.
+    index("violations_team_run_idx").on(t.teamId, t.runId, t.createdAt),
   ],
 ).enableRLS();
 

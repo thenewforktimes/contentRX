@@ -74,6 +74,22 @@ const RequestSchema = z.object({
   // bound guards against repo paths that could swell the violations
   // table (typical paths are well under this).
   file_path: z.string().min(1).max(512).optional(),
+  // PR-40 — optional run_id, populated by the GitHub Action with
+  // GITHUB_RUN_ID. Groups every violation logged during the same
+  // workflow run so /dashboard/runs/<run_id> can render a single
+  // page summarizing the run. Tight regex: GitHub run IDs are
+  // numeric, but we accept any reasonable identifier (callers
+  // outside CI may want to use their own grouping key) — bounded to
+  // keep the column compact and immune to UUID-style malformation
+  // in URL paths.
+  run_id: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(/^[A-Za-z0-9._-]+$/, {
+      message: "run_id must be alphanumeric with . _ -",
+    })
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -90,7 +106,15 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { text, content_type, audience, moment, source, file_path } = parsed.data;
+  const {
+    text,
+    content_type,
+    audience,
+    moment,
+    source,
+    file_path,
+    run_id,
+  } = parsed.data;
 
   const quota = monthlyQuota(auth.plan, auth.seats);
 
@@ -253,6 +277,7 @@ export async function POST(req: Request) {
       filePath: file_path ?? null,
       reviewReasonSubtype:
         (result as { review_reason?: string | null }).review_reason ?? null,
+      runId: run_id ?? null,
     });
   } catch (err) {
     console.error("logViolations failed:", err);
