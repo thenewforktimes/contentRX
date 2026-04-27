@@ -261,15 +261,25 @@ class handler(BaseHTTPRequestHandler):
             # Per-stage timeout exhausted. Lets /api/check distinguish
             # "engine slow" from "engine broken."
             return self._respond(504, {"error": str(exc)})
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             # Keep the full traceback in stderr (Vercel captures it,
-            # Sentry ingests from there) but return a generic message
-            # to the caller. The exception string can include file
-            # paths, model names, Anthropic error bodies, or truncated
-            # LLM output — none of which the TS caller should surface.
-            # (ENG-H-01 from 2026-04-22 audit.)
+            # Sentry ingests from there). Per ENG-H-01 the message
+            # surfaced to the public TS caller is generic; the
+            # internal-only "detail" field carries the typed exception
+            # name so /api/check (which already gates on the internal
+            # secret) can log it for diagnostics. /api/check still
+            # collapses the upstream body to "Evaluation service
+            # unavailable" before returning to the browser, so
+            # nothing from `detail` leaks to user-visible output —
+            # only to founder-accessible logs.
             traceback.print_exc()
-            return self._respond(500, {"error": "Evaluation failed"})
+            return self._respond(
+                500,
+                {
+                    "error": "Evaluation failed",
+                    "detail": f"{type(exc).__name__}: {exc}",
+                },
+            )
 
         return self._respond(
             200,
