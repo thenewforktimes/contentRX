@@ -327,7 +327,7 @@ async function notifyQuotaWarning(args: {
   try {
     await sendEmail({
       to: args.to,
-      subject: `Heads up — ${Math.max(0, args.quota - args.used)} ContentRX scans left this month`,
+      subject: `Heads up — ${Math.max(0, args.quota - args.used)} ContentRX checks left this month`,
       react: QuotaWarningEmail({
         appUrl: emailAppUrl(),
         used: args.used,

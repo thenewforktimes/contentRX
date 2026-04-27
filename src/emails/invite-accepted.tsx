@@ -26,7 +26,7 @@ export function InviteAcceptedEmail({
         {inviteeEmail} joined your team.
       </Heading>
       <Text>
-        They can now scan content against your team's rules and contribute
+        They can now check content against your team's rules and contribute
         to your shared monthly quota.
       </Text>
       <Text style={{ marginTop: 20 }}>

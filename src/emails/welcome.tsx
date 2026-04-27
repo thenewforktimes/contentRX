@@ -21,12 +21,12 @@ export function WelcomeEmail({
   pluginUrl: string;
 }) {
   return (
-    <EmailShell preview="Welcome to ContentRX — let's get your first scan running.">
+    <EmailShell preview="Welcome to ContentRX — let's get your first check running.">
       <Heading as="h1" style={{ fontSize: 22, marginBottom: 12 }}>
         Welcome to ContentRX.
       </Heading>
       <Text>
-        You're on the Free plan: 25 scans a month, every standard, every
+        You're on the Free plan: 250 checks a month, every standard, every
         moment, no card required.
       </Text>
       <Text>Three ways to start:</Text>

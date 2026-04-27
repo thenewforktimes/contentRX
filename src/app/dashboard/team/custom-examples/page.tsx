@@ -54,7 +54,7 @@ export default async function CustomExamplesPage() {
           Custom examples are a Team-plan feature. They let your team
           mark specific strings as correct (or known-bad) for your
           product&apos;s voice — ContentRX short-circuits those
-          strings on every subsequent scan without running the LLM,
+          strings on every subsequent check without running the LLM,
           without weakening any global rule.
         </p>
         <Link
@@ -74,7 +74,7 @@ export default async function CustomExamplesPage() {
         <h1 className="text-lg font-semibold">Custom examples</h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400">
           Only the team owner manages custom examples. The set applies
-          to every team member&apos;s scans — matching strings
+          to every team member&apos;s checks — matching strings
           short-circuit the LLM and return the team&apos;s stored
           verdict. Ask your team owner if a phrasing you&apos;re
           seeing flagged should be added or removed.

@@ -149,7 +149,7 @@ function UsagePanel({
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-3xl font-semibold">{used.toLocaleString()}</span>
         <span className="text-sm text-neutral-500">
-          of {quota.toLocaleString()} scans
+          of {quota.toLocaleString()} checks
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-900">
@@ -207,7 +207,7 @@ function MembersLink() {
         <h2 className="text-sm font-semibold">Members</h2>
       </header>
       <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
-        Invite teammates by email. They&apos;ll share the monthly scan
+        Invite teammates by email. They&apos;ll share the monthly check
         quota, custom rules, and custom examples.
       </p>
       <Link

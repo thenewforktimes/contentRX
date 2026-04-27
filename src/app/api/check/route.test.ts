@@ -343,12 +343,12 @@ describe("/api/check — gates", () => {
 
   it("returns 402 when quota exhausted (does NOT call the engine)", async () => {
     const userId = await seedAuthedUser("free");
-    // Pre-fill usage to the free-tier cap. monthlyQuota("free") is 25.
+    // Pre-fill usage to the free-tier cap. monthlyQuota("free") is 250.
     await harness.db.insert(schema.usage).values({
       id: "u-fill",
       userId,
       month: new Date().toISOString().slice(0, 7),
-      count: 25,
+      count: 250,
     });
     cannedEval.current = PASS_RESULT;
 
@@ -356,7 +356,7 @@ describe("/api/check — gates", () => {
     expect(res.status).toBe(402);
     const body = await res.json();
     expect(body.error).toMatch(/quota/i);
-    expect(body.used).toBe(25);
+    expect(body.used).toBe(250);
     expect(body.plan).toBe("free");
   });
 

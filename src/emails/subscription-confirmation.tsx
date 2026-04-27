@@ -32,7 +32,7 @@ export function SubscriptionConfirmationEmail({
       </Heading>
       <Text>
         Your subscription is active. You're now on {quota.toLocaleString()}{" "}
-        scans / month
+        checks / month
         {plan === "team" ? ` across ${seats} seat${seats === 1 ? "" : "s"}` : ""}.
       </Text>
       {plan === "team" ? (

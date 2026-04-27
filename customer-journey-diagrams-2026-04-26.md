@@ -220,6 +220,14 @@ flowchart TD
 
     O --> P([Team ships content<br/>reviewed by Robo at scale<br/>~thousands of strings/month])
 
+%% [Updated 2026-04-27: per-team model adaptation deferred. Today the
+%% model adapts to a team via team_rules + custom_examples (direct,
+%% instant) and via Robo's global calibration loop (indirect, slow).
+%% Per-team ML fine-tuning is on the post-launch roadmap, not the
+%% launch SKU — pending customer-data validation that the demand is
+%% real. Don't ship marketing copy that claims "the model gets sharper
+%% for this team specifically" until the feature exists.]
+
     P --> Q[Brand promise delivered:<br/>'staff-level content design review<br/>in every repo, Figma file, or terminal']
 
     style A fill:#fde68a,stroke:#92400e
@@ -426,6 +434,8 @@ The dashboard is not the verdict surface (that's MCP/LSP/PR/Figma). The dashboar
 ---
 
 ## 6. The sad day — graceful cancellation + reactivation
+
+> **[Updated 2026-04-27]:** The "we'll keep your model warm for 90 days" language below was retired in favor of *"your team setup stays put for 90 days"* — there is no per-team ML model to "warm." What persists is the customer's configuration (team_rules, custom_examples), their override history, and their API key. Retention pattern: pseudonymize at 90 days post-cancel (matches existing audit H-08 / GDPR pattern), so personal attribution drops while anonymized signal continues to feed engine calibration. See revised PR-29/30/31 specs.
 
 The cancellation moment is when the brand either becomes a "they treated me well" memory or a "good riddance" memory. The first kind comes back. The second doesn't. Design for the first kind.
 

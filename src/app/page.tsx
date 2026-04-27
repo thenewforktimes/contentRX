@@ -50,14 +50,20 @@ export default function Home() {
           {" "}— with the Figma plugin alongside for design-time checks.
         </p>
         <div className="mt-8 flex flex-wrap gap-3 text-sm">
-          <Link href="/install" className={buttonStyles({ variant: "primary" })}>
-            Install → MCP · CLI · GitHub Action · Figma
+          <Link href="/sign-up" className={buttonStyles({ variant: "primary" })}>
+            Try free →
           </Link>
           <Link
-            href="/accuracy"
+            href="/install"
             className={buttonStyles({ variant: "secondary" })}
           >
-            See the accuracy
+            Install instructions
+          </Link>
+          <Link
+            href="/pricing"
+            className={buttonStyles({ variant: "secondary" })}
+          >
+            Pricing
           </Link>
           <Link href="/sign-in" className={buttonStyles({ variant: "ghost" })}>
             Sign in →
@@ -219,6 +225,10 @@ export default function Home() {
           The accountability surface:{" "}
           <Link href="/accuracy" className="underline underline-offset-2">
             /accuracy
+          </Link>{" "}
+          ·{" "}
+          <Link href="/pricing" className="underline underline-offset-2">
+            /pricing
           </Link>{" "}
           ·{" "}
           <Link href="/sources" className="underline underline-offset-2">

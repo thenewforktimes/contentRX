@@ -28,18 +28,18 @@ export function QuotaWarningEmail({
   const planLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Team";
   return (
     <EmailShell
-      preview={`${remaining} scans left this month on your ${planLabel} plan.`}
+      preview={`${remaining} checks left this month on your ${planLabel} plan.`}
     >
       <Heading as="h1" style={{ fontSize: 20, marginBottom: 12 }}>
         Heads up — you're approaching your monthly limit.
       </Heading>
       <Text>
-        You've used {used} of {quota} scans on your {planLabel} plan this
+        You've used {used} of {quota} checks on your {planLabel} plan this
         month ({remaining} left).
       </Text>
       {plan === "free" && (
         <Text>
-          Upgrade to Pro for 5,000 scans a month. No-meeting checkout,
+          Upgrade to Pro for 5,000 checks a month. No-meeting checkout,
           cancel anytime.
         </Text>
       )}

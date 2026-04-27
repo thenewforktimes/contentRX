@@ -45,7 +45,7 @@ export default async function MembersPage() {
         <h1 className="text-lg font-semibold">Members</h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400">
           Inviting teammates is a Team-plan feature. Upgrade to share
-          the monthly scan quota, custom rules, and custom examples
+          the monthly check quota, custom rules, and custom examples
           across your team.
         </p>
         <Link

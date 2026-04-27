@@ -116,7 +116,7 @@ function UpgradeCard() {
         <PlanOption
           name="Pro"
           price={interval === "monthly" ? "$24/mo" : "$18/mo billed annually"}
-          description="5,000 scans per month. For solo designers and small teams."
+          description="5,000 checks per month. For solo designers and small teams."
           selected={selectedPlan === "pro"}
           onSelect={() => setSelectedPlan("pro")}
         />
@@ -127,7 +127,7 @@ function UpgradeCard() {
               ? "$35/seat/mo"
               : "$29/seat/mo billed annually"
           }
-          description={`${TEAM_MIN_SEATS}-seat minimum. 5,000 scans per seat. Shared rule overrides (coming).`}
+          description={`${TEAM_MIN_SEATS}-seat minimum. 5,000 checks per seat. Shared rule overrides (coming).`}
           selected={selectedPlan === "team"}
           onSelect={() => setSelectedPlan("team")}
         />

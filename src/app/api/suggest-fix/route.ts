@@ -8,7 +8,7 @@
  *
  * Auth: Clerk session OR `Authorization: Bearer cx_<api_key>` — same
  * public surface as `/api/check`. Rate-limited at the standard user
- * tier. Consumes one scan quota slot per call (rewriting is an LLM
+ * tier. Consumes one check quota slot per call (rewriting is an LLM
  * call, so it costs).
  *
  * Privacy: the flagged text is plaintext in flight — same contract as
