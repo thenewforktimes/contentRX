@@ -124,6 +124,7 @@ export default async function DashboardPage() {
 
       {plan === "team" && (
         <>
+          <MembersLink />
           <TeamRulesLink />
           <OverridesLink />
         </>
@@ -152,6 +153,26 @@ function CalibrateLink({ optedOut }: { optedOut: boolean }) {
         className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
       >
         {optedOut ? "Visit calibration settings" : "Open calibration prompt"}
+      </Link>
+    </section>
+  );
+}
+
+function MembersLink() {
+  return (
+    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+      <header className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Members</h2>
+      </header>
+      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
+        Invite teammates by email. They&apos;ll share the monthly scan
+        quota, custom rules, and custom examples.
+      </p>
+      <Link
+        href="/dashboard/members"
+        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+      >
+        Open members
       </Link>
     </section>
   );

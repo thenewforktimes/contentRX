@@ -712,10 +712,47 @@ export const preferences = pgTable(
   ],
 ).enableRLS();
 
+// Pending invitations to join a team. Distinct from team_members
+// (which requires a Clerk user to exist) so we can hold the invite
+// state for an email that hasn't signed up yet. On accept, the row is
+// marked acceptedAt + acceptedByMemberUserId, and a corresponding
+// team_members row is created. Tokens expire after 7 days by default
+// — see src/lib/team-invitations.ts. RLS is on; queries only happen
+// via the server-side `postgres` role.
+export const teamInvitations = pgTable(
+  "team_invitations",
+  {
+    id: cuid(),
+    teamOwnerUserId: text("team_owner_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    token: text("token").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    acceptedByMemberUserId: text("accepted_by_member_user_id").references(
+      () => users.id,
+      { onDelete: "set null" },
+    ),
+  },
+  (t) => [
+    // Token is the bearer credential — unique enforces single-use semantics.
+    uniqueIndex("team_invitations_token_idx").on(t.token),
+    // Listing pending invitations for a team owner is the hot path.
+    index("team_invitations_owner_idx").on(t.teamOwnerUserId),
+    // "Do we already have an outstanding invite for this email?" pre-check.
+    index("team_invitations_email_idx").on(t.email),
+  ],
+).enableRLS();
+
 export type User = InferSelectModel<typeof users>;
 export type Usage = InferSelectModel<typeof usage>;
 export type Subscription = InferSelectModel<typeof subscriptions>;
 export type TeamMember = InferSelectModel<typeof teamMembers>;
+export type TeamInvitation = InferSelectModel<typeof teamInvitations>;
 export type TeamRule = InferSelectModel<typeof teamRules>;
 export type Violation = InferSelectModel<typeof violations>;
 export type DittoSync = InferSelectModel<typeof dittoSyncs>;
