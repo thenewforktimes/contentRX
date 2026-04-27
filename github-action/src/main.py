@@ -207,7 +207,12 @@ def _regex_fallback(files: list[Path]) -> list[Extraction]:
     return out
 
 
-def run_contentrx(text: str, content_type: str, file_path: str | None) -> dict:
+def run_contentrx(
+    text: str,
+    content_type: str,
+    file_path: str | None,
+    run_id: str | None = None,
+) -> dict:
     """Call the installed `contentrx` CLI with --json and return parsed output."""
     cmd = [
         "contentrx",
@@ -219,6 +224,8 @@ def run_contentrx(text: str, content_type: str, file_path: str | None) -> dict:
     ]
     if file_path:
         cmd.extend(["--file-path", file_path])
+    if run_id:
+        cmd.extend(["--run-id", run_id])
     cmd.append(text)
 
     env = os.environ.copy()
@@ -261,10 +268,13 @@ def collect_reports(
     extractions: list[Extraction],
     *,
     content_type: str,
+    run_id: str | None = None,
 ) -> list[FileReport]:
     by_file: dict[str, list[dict]] = {}
     for ext in extractions:
-        response = run_contentrx(ext.text, content_type, ext.source_file)
+        response = run_contentrx(
+            ext.text, content_type, ext.source_file, run_id=run_id
+        )
         result = response.get("result") or {}
         # v2 Session 10 — preserve the three-state verdict + reason.
         # Defaults handle older API versions that don't ship v1.1.0:
@@ -352,7 +362,13 @@ def main() -> int:
             file=sys.stderr,
         )
 
-    reports = collect_reports(extractions, content_type=content_type)
+    # PR-40 — group every check this run logs under GITHUB_RUN_ID so
+    # the dashboard can render /dashboard/runs/<run_id> long after the
+    # PR comment is gone.
+    run_id = os.environ.get("GITHUB_RUN_ID") or None
+    reports = collect_reports(
+        extractions, content_type=content_type, run_id=run_id
+    )
     # Hard violations vs review_recommended findings are tracked
     # separately so the fail-on policy below can gate independently
     # (BUILD_PLAN_v2 Session 10).
@@ -373,6 +389,7 @@ def main() -> int:
         reports,
         total_strings=len(extractions),
         truncated_count=truncated_count,
+        run_id=run_id,
     )
 
     pull_number = (event.get("pull_request") or {}).get("number")

@@ -35,6 +35,11 @@ type LogParams = {
   // same check so `/api/admin/refinement-signals` can cluster without
   // a separate `check_events` table.
   reviewReasonSubtype?: string | null;
+  // PR-40: groups violations by external run. The GitHub Action sets
+  // this to GITHUB_RUN_ID so /dashboard/runs/<run_id> can render a
+  // single page covering every string checked in that workflow run.
+  // Null for inline / LSP / CLI / plugin calls.
+  runId?: string | null;
 };
 
 export function hashText(text: string): string {
@@ -64,6 +69,7 @@ export async function logViolations(params: LogParams): Promise<number> {
       filePath: params.filePath ?? null,
       checkEventId,
       reviewReasonSubtype: params.reviewReasonSubtype ?? null,
+      runId: params.runId ?? null,
     }));
 
   if (rows.length === 0) return 0;

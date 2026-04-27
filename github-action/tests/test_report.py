@@ -161,6 +161,43 @@ def test_suggestion_identical_to_text_omits_diff() -> None:
     assert "```diff" not in md
 
 
+def test_run_id_appends_dashboard_link_to_footer() -> None:
+    """PR-40 — when a `run_id` is supplied, the comment footer links
+    to /dashboard/runs/<id>. Without it, footer stays unchanged."""
+    reports = [
+        _report(
+            "src/X.tsx",
+            [
+                {
+                    "text": "Click here",
+                    "line": 1,
+                    "kind": "jsx-text",
+                    "violations": [
+                        {
+                            "standard_id": "X",
+                            "issue": "bad",
+                            "suggestion": "Sign up",
+                            "severity": "high",
+                        }
+                    ],
+                }
+            ],
+        )
+    ]
+    md_with = render_markdown(reports, total_strings=1, run_id="12345")
+    assert "/dashboard/runs/12345" in md_with
+
+    md_without = render_markdown(reports, total_strings=1)
+    assert "/dashboard/runs/" not in md_without
+
+
+def test_run_id_appends_dashboard_link_in_no_violations_branch() -> None:
+    """The clean-summary branch should also link to the dashboard run
+    page so the audit trail survives even on green runs."""
+    md = render_markdown([], total_strings=8, run_id="abc-123")
+    assert "/dashboard/runs/abc-123" in md
+
+
 def test_reports_with_only_non_violating_entries_are_hidden() -> None:
     reports = [
         _report(

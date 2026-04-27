@@ -55,6 +55,7 @@ def render_markdown(
     total_strings: int,
     *,
     truncated_count: int = 0,
+    run_id: str | None = None,
 ) -> str:
     """Produce the body of the PR comment.
 
@@ -73,7 +74,14 @@ def render_markdown(
         )
         if truncation_notice:
             body += "\n" + truncation_notice + "\n"
-        body += "\n*Run by the [ContentRX](https://contentrx.io) GitHub Action.*"
+        if run_id:
+            body += (
+                f"\n*Run by the [ContentRX](https://contentrx.io) GitHub Action — "
+                f"[full report on dashboard]"
+                f"(https://contentrx.io/dashboard/runs/{run_id}).*"
+            )
+        else:
+            body += "\n*Run by the [ContentRX](https://contentrx.io) GitHub Action.*"
         return body
 
     lines: list[str] = []
@@ -135,10 +143,21 @@ def render_markdown(
 
     lines.append("---")
     lines.append("")
-    lines.append(
-        "*Run by the [ContentRX](https://contentrx.io) GitHub Action. "
-        "Rotate your API key at the [dashboard](https://contentrx.io/dashboard).*"
-    )
+    if run_id:
+        # PR-40 — the dashboard run page survives the PR being closed,
+        # the action log rolling over, etc. Linking from the footer
+        # preserves the audit trail without bloating the comment.
+        lines.append(
+            f"*Run by the [ContentRX](https://contentrx.io) GitHub Action — "
+            f"[full report on dashboard]"
+            f"(https://contentrx.io/dashboard/runs/{run_id}). "
+            "Rotate your API key at the [dashboard](https://contentrx.io/dashboard).*"
+        )
+    else:
+        lines.append(
+            "*Run by the [ContentRX](https://contentrx.io) GitHub Action. "
+            "Rotate your API key at the [dashboard](https://contentrx.io/dashboard).*"
+        )
 
     body = "\n".join(lines)
     # Enforce the GitHub char limit. Truncate at a line boundary where
