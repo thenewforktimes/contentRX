@@ -17,6 +17,7 @@
 
 import { useState } from "react";
 import type { PublicCheckEnvelope } from "@/lib/api-envelope";
+import { wordDiff, type DiffToken } from "@/lib/text-diff";
 
 type CheckEnvelope = PublicCheckEnvelope & {
   latency_ms: number;
@@ -106,9 +107,7 @@ export function ExplainClient() {
                     {v.issue}
                   </p>
                   {v.suggestion && (
-                    <p className="mt-1 text-neutral-700 dark:text-neutral-300">
-                      <em>Suggestion:</em> {v.suggestion}
-                    </p>
+                    <DiffBlock before={text} after={v.suggestion} />
                   )}
                 </li>
               ))}
@@ -150,6 +149,81 @@ function VerdictHeader({
       )}
     </div>
   );
+}
+
+/**
+ * Inline before/after diff for a violation's suggestion. Two stacked
+ * lines with word-level red/green highlighting — same algorithm the
+ * Figma plugin, GitHub Action, and LSP code action use, so the same
+ * change always reads the same way.
+ *
+ * `before` is the text the user submitted (the whole input, since
+ * the schema 2.0.0 envelope doesn't carry per-violation offsets).
+ * `after` is the violation's `suggestion` field.
+ */
+function DiffBlock({ before, after }: { before: string; after: string }) {
+  const tokens = wordDiff(before, after);
+  return (
+    <div className="mt-2 space-y-1 font-mono text-xs">
+      <div className="flex items-start gap-2">
+        <span
+          aria-hidden="true"
+          className="select-none text-neutral-400 dark:text-neutral-600"
+        >
+          −
+        </span>
+        <span className="break-words text-neutral-700 dark:text-neutral-300">
+          {tokens
+            .filter((t) => t.kind === "equal" || t.kind === "removed")
+            .map((t, i) => (
+              <DiffSpan key={`b-${i}`} token={t} side="before" />
+            ))}
+        </span>
+      </div>
+      <div className="flex items-start gap-2">
+        <span
+          aria-hidden="true"
+          className="select-none text-neutral-400 dark:text-neutral-600"
+        >
+          +
+        </span>
+        <span className="break-words text-neutral-700 dark:text-neutral-300">
+          {tokens
+            .filter((t) => t.kind === "equal" || t.kind === "added")
+            .map((t, i) => (
+              <DiffSpan key={`a-${i}`} token={t} side="after" />
+            ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function DiffSpan({
+  token,
+  side,
+}: {
+  token: DiffToken;
+  side: "before" | "after";
+}) {
+  if (token.kind === "equal") {
+    return <>{token.text}</>;
+  }
+  if (token.kind === "removed" && side === "before") {
+    return (
+      <span className="bg-red-100 text-red-900 line-through dark:bg-red-950/60 dark:text-red-300">
+        {token.text}
+      </span>
+    );
+  }
+  if (token.kind === "added" && side === "after") {
+    return (
+      <span className="bg-green-100 text-green-900 dark:bg-green-950/60 dark:text-green-300">
+        {token.text}
+      </span>
+    );
+  }
+  return null;
 }
 
 function SeverityBadge({ severity }: { severity: string }) {
