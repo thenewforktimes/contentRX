@@ -9,6 +9,79 @@ Version: v5.0.0 (this plan), supersedes BUILD_PLAN.md for all new work.
 
 ---
 
+## 🔄 Status update — 2026-04-27 (dashboard maturation sprint)
+
+A 9-hour sprint shipped 26 PRs (#185–#210) maturing the dashboard
+from "renders correctly" to "responds to user actions in real time
+with stable production reliability." High-level batches:
+
+**Feature work (PR-33 through PR-40, 7 PRs from the design-critique
+queue):**
+- PR-33 cross-finding pattern callouts in the "This week" panel.
+- PR-34 / PR-35 / PR-36 / PR-37 word-level diff views in the
+  dashboard, Figma plugin, GitHub Action PR comment, and LSP
+  diagnostic message respectively. Shared `text-diff` lib in TS;
+  ported inline to vanilla JS for the Figma sandbox; rendered as
+  GitHub-native ` ```diff ` fence in the Action; stacked
+  `Original/Suggested` block in the LSP message.
+- PR-38 LSP "Apply suggestion" code action wired through schema-2.0.0
+  (made `standard_id` optional throughout the engine + API + LSP
+  client + LSP server chain — the action had been silently broken
+  since the ADR cutover).
+- PR-40 `/dashboard/runs/[run_id]` per-PR result page; GitHub Action
+  passes `GITHUB_RUN_ID` end-to-end so the sticky comment links to
+  a durable dashboard view.
+
+**Engine + infra fixes uncovered along the way:**
+- Engine classifier shape mismatch (`dict[str,str]` vs `list[dict]`)
+  — silently broken for weeks, only fired on the dashboard's
+  no-content_type path.
+- `team_id = NULL` write-vs-read mismatch on free/Pro users — the
+  dashboard's "This week" / Active Surfaces / patterns panels
+  showed empty despite valid DB data.
+- Supabase connection-pool exhaustion (`postgres.js` defaulting to
+  `max: 10` per Lambda × 6 dashboard queries × Vercel concurrency
+  = exhaustion of Supabase's 15-slot pool). Fixed with `max: 1` per
+  Lambda.
+- Vercel edge cache serving stale dashboard HTML — fixed via
+  explicit `revalidatePath('/dashboard', 'layout')` on every write
+  + `router.refresh()` on the client after a successful check.
+
+**Audit + cleanup (PRs #206–#210, 5 PRs):**
+- Stripped `standard_id` from the calibrate-form (ADR 2026-04-25
+  privacy fence violation).
+- Extracted `revalidateDashboard()` helper covering all 10
+  dashboard-affecting write routes (override, invitations × 3,
+  team-rules × 3, custom-examples × 2 — previously only /api/check
+  and /api/suggest-fix had the call).
+- Extracted `teamScope()` helper centralizing the team-id-as-user-id
+  contract — applied in /api/check and /api/violations/override
+  (the latter still had the old NULL-for-Pro-users pattern).
+- Inline-snapshot privacy test for `publicCheckEnvelope` so any
+  future substrate leak surfaces as a test diff.
+- Removed diagnostic scaffolding (dashboard `tag()` wrapper,
+  `/api/evaluate` `detail`+`traceback` fields) now that the engine
+  + dashboard are stable.
+- Stripe webhook `as unknown as { ... }` casts replaced with named
+  type aliases.
+- Spawned follow-up: replace 16 bare `.select()` calls with
+  explicit column projections (preventive, deferred).
+
+**Deferred from the audit punch list (waiting on data):**
+- Audit P1 #6 (webhook dedupe split-brain risk) — needs design
+  decision on dedupe-with-write atomicity. Current pattern is
+  best-effort and the side-effect handlers are idempotent.
+- Audit P2 #10 (test coverage edges for new modules) — covered for
+  pure functions; integration test coverage will land alongside
+  the spawned `.select()` task since they touch overlapping files.
+
+Post-sprint state: 580 vitest tests passing, 1726 pytest tests
+passing, 0 typecheck errors, 0 lint warnings. Engine version 4.7.1.
+Schema includes `violations.run_id`. Production dashboard at
+https://contentrx.io/dashboard renders cleanly + reactively.
+
+---
+
 ## 🔄 Status update — 2026-04-25 (private-taxonomy pivot)
 
 The [private-taxonomy pivot ADR (2026-04-25)](decisions/2026-04-25-private-taxonomy-pivot.md)

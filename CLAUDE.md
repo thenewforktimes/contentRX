@@ -104,6 +104,17 @@ over time), `/admin/refinement-log` (refinement candidates UI),
 (preview-before-publish gate), `/admin/essay-drafts` (cold-start scaffold).
 Single-user by design — no multi-tenancy, no admin-of-admins recursion.
 
+**Auth model — pages vs APIs.** The Clerk layout auth above gates
+`/app/admin/*` page routes. APIs at `/api/admin/*` (e.g.
+`/api/admin/refinement-signals`) sit OUTSIDE the layout tree and don't
+inherit that auth — they use header-based authentication instead,
+typically `Authorization: Bearer <CRON_SECRET>` enforced via
+`requireCronAuth(req)`. Both modes are valid; the choice depends on
+the consumer (browser session → layout auth; server-to-server cron
+or GitHub Action → header auth). When adding a new admin-tier
+endpoint, pick the auth model that matches the caller and document
+it in the route's docstring.
+
 Lands in Phase B of the post-pivot build plan.
 
 ## PUBLIC_TAXONOMY feature flag
@@ -255,6 +266,39 @@ survive pulls.
 - `clerkClient()` is async
 - `authMiddleware()` is removed — we use `clerkMiddleware()`
 - Minimum Node 20.9.0 (we target Node 24 LTS on Vercel)
+
+## Secret rotation ceremony
+
+When rotating a shared secret (`INTERNAL_EVAL_SECRET`,
+`ANTHROPIC_API_KEY`, `STRIPE_WEBHOOK_SECRET`, `CLERK_SECRET_KEY`,
+`CLERK_WEBHOOK_SECRET`, `CRON_SECRET`, `RESEND_API_KEY`, etc.):
+
+1. **Update Vercel project env first.** `vercel env rm <NAME> production
+   && vercel env add <NAME> production` (paste new value), or use the
+   Vercel Dashboard. The current production deployment keeps running on
+   the old value until the next deploy — there is no in-place secret
+   reload.
+2. **Trigger a redeploy.** `vercel --prod` from a clean working tree, or
+   push an empty commit to main. Vercel rebuilds with the new secret.
+3. **Verify the new deploy is live.** Hit a route that uses the secret
+   (e.g. `/api/check` for Anthropic / internal eval, a Stripe test webhook
+   for Stripe). Check Vercel runtime logs for any auth-mismatch errors.
+4. **Pull the new secret locally if needed.** `vercel env pull
+   .env.local --yes`. Note this overwrites `.env.local` entirely —
+   localhost-specific overrides belong in `.env.development.local`.
+5. **Retire the old secret at the source.** Only after step 3 verifies
+   the new deploy is healthy. Stripe / Clerk / Anthropic dashboards
+   typically let you delete or disable the old key.
+
+Order matters. Rotating at the source first (step 5 before step 1)
+breaks production until the new secret reaches Vercel — which can be
+several minutes if a deploy is in flight. The order above keeps
+production live throughout.
+
+If a secret was already rotated at the source before step 1
+(emergency credential leak, etc.), accept that production will fail
+auth checks for the duration of one Vercel deploy (~2 min) and
+prioritize step 1 → step 2 → step 3 immediately.
 
 ## Known limitations (deferred audit findings)
 
