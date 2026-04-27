@@ -177,12 +177,7 @@ export default async function CustomExamplesPage() {
                   </td>
                   <td className="py-2 pr-4 text-xs">
                     {e.standardId ? (
-                      <Link
-                        href={`https://docs.contentrx.io/model/standards/${e.standardId}`}
-                        className="font-mono underline underline-offset-2"
-                      >
-                        {e.standardId}
-                      </Link>
+                      <code className="font-mono">{e.standardId}</code>
                     ) : (
                       <span className="text-neutral-400">—</span>
                     )}

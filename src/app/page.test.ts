@@ -50,10 +50,14 @@ describe("landing page (src/app/page.tsx)", () => {
     expect(visible).toMatch(/Stripe Radar/);
   });
 
-  it("links the full accountability surface", () => {
-    for (const href of ["/model", "/accuracy", "/sources", "/ethics"]) {
+  it("links the public accountability surface", () => {
+    for (const href of ["/accuracy", "/sources", "/ethics"]) {
       expect(visible).toContain(`href="${href}"`);
     }
+  });
+
+  it("does not link to the private /model surface", () => {
+    expect(visible).not.toMatch(/href=["']\/model/);
   });
 
   it("drops the Session-0 placeholder footer", () => {
@@ -114,9 +118,13 @@ describe("/about page (src/app/about/page.tsx)", () => {
     expect(visible).toMatch(/rationale/i);
   });
 
-  it("cross-links the accountability surface", () => {
-    for (const href of ["/model", "/accuracy", "/sources", "/ethics"]) {
+  it("cross-links the public accountability surface", () => {
+    for (const href of ["/accuracy", "/sources", "/ethics"]) {
       expect(visible).toContain(`href="${href}"`);
     }
+  });
+
+  it("does not link to the private /model surface", () => {
+    expect(visible).not.toMatch(/href=["']\/model/);
   });
 });

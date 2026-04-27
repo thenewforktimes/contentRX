@@ -1,11 +1,11 @@
 /**
  * /dashboard/explain — interactive "Why this verdict?" demo.
  *
- * Human-eval build plan Session 21. The rationale-chain component
- * lives in `src/components/rationale-chain.tsx`; this page is the
- * minimum viable surface for it on the web app. Users paste a string,
- * hit Check, and see the three-state verdict + expandable rationale
- * tree with a one-click feedback path for misdetected moments.
+ * Users paste a string, hit Check, and see the schema 2.0.0 public
+ * envelope: a verdict pill + violations with `issue`, `suggestion`,
+ * `severity`, `confidence`. Substrate fields (rationale chain, moments,
+ * standard ids) are stripped at the API boundary per ADR 2026-04-25
+ * and never reach this surface.
  *
  * Clerk-gated, counts against monthly quota (POSTs to /api/check).
  * The misdetection-feedback POST also goes through Clerk session auth.
@@ -37,7 +37,7 @@ export default async function ExplainPage() {
     <main className="mx-auto max-w-3xl px-6 py-12">
       <header className="mb-8">
         <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
-          Sessions 21 + 22 — rationale chain + moment banner
+          Live demo
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Explain a verdict</h1>
         <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">

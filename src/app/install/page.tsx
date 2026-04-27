@@ -271,14 +271,10 @@ jobs:
         </p>
         <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
           See{" "}
-          <Link href="/model" className="underline underline-offset-2">
-            /model
-          </Link>
-          {" "}for the taxonomy, {" "}
           <Link href="/accuracy" className="underline underline-offset-2">
             /accuracy
           </Link>
-          {" "}for the calibration numbers, and{" "}
+          {" "}for the calibration numbers and{" "}
           <Link href="/dashboard" className="underline underline-offset-2">
             /dashboard
           </Link>
