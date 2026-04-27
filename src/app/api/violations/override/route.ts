@@ -24,7 +24,6 @@
  * BUILD_PLAN_v2 Session 11.
  */
 
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
@@ -38,22 +37,10 @@ import { CUSTOM_STANDARD_ID_REGEX } from "@/lib/team-rules";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
-const CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-};
+import { corsJson, corsPreflight } from "@/lib/cors";
 
-function withCors(res: NextResponse): NextResponse {
-  for (const [k, v] of Object.entries(CORS_HEADERS)) {
-    res.headers.set(k, v);
-  }
-  return res;
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(req: Request) {
+  return corsPreflight(req);
 }
 
 // standard_id must be either a known built-in standard (e.g. "ACT-01",
@@ -117,21 +104,20 @@ const RequestSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const json = (body: unknown, init?: ResponseInit) =>
+    corsJson(req, body, init);
+
   const auth = await resolveAuth(req);
   if ("status" in auth) {
-    return withCors(
-      NextResponse.json({ error: auth.message }, { status: auth.status }),
-    );
+    return json({ error: auth.message }, { status: auth.status });
   }
 
   const body = await req.json().catch(() => null);
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
-    return withCors(
-      NextResponse.json(
-        { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
-        { status: 400 },
-      ),
+    return json(
+      { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
+      { status: 400 },
     );
   }
 
@@ -139,21 +125,19 @@ export async function POST(req: Request) {
   // can't be allowed to skew the implicit-labeling signal.
   const rl = await checkRateLimit(auth.user.id);
   if (!rl.success) {
-    return withCors(
-      NextResponse.json(
-        {
-          error: "Rate limit exceeded",
-          reset_at: new Date(rl.reset).toISOString(),
+    return json(
+      {
+        error: "Rate limit exceeded",
+        reset_at: new Date(rl.reset).toISOString(),
+      },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(
+            Math.max(1, Math.ceil((rl.reset - Date.now()) / 1000)),
+          ),
         },
-        {
-          status: 429,
-          headers: {
-            "retry-after": String(
-              Math.max(1, Math.ceil((rl.reset - Date.now()) / 1000)),
-            ),
-          },
-        },
-      ),
+      },
     );
   }
 
@@ -207,16 +191,9 @@ export async function POST(req: Request) {
       .returning();
     // Override report at /dashboard/overrides reads from this table.
     revalidateDashboard();
-    return withCors(
-      NextResponse.json(envelope({ override: row }), { status: 201 }),
-    );
+    return json(envelope({ override: row }), { status: 201 });
   } catch (err) {
     console.error("violation override insert failed:", err);
-    return withCors(
-      NextResponse.json(
-        { error: "Failed to record override" },
-        { status: 500 },
-      ),
-    );
+    return json({ error: "Failed to record override" }, { status: 500 });
   }
 }

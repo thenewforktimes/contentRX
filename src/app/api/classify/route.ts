@@ -21,30 +21,15 @@
  *     pipeline metadata.
  */
 
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { resolveAuth } from "@/lib/auth";
+import { corsJson, corsPreflight } from "@/lib/cors";
 import { classify } from "@/lib/evaluate";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 
-const CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-};
-
-function json(body: unknown, init?: ResponseInit): NextResponse {
-  const res = NextResponse.json(body, init);
-  for (const [k, v] of Object.entries(CORS_HEADERS)) {
-    res.headers.set(k, v);
-  }
-  return res;
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(req: Request) {
+  return corsPreflight(req);
 }
 
 const RequestSchema = z.object({
@@ -56,6 +41,8 @@ const RequestSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const json = (body: unknown, init?: ResponseInit) =>
+    corsJson(req, body, init);
   const auth = await resolveAuth(req);
   if ("status" in auth) {
     return json({ error: auth.message }, { status: auth.status });

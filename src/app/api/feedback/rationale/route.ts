@@ -20,71 +20,54 @@
  *     `violation_overrides.override_reason`.
  */
 
-import { NextResponse } from "next/server";
 import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
+import { corsJson, corsPreflight } from "@/lib/cors";
 import { RationaleFeedbackRequestSchema } from "@/lib/rationale-feedback";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
-const CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-};
-
-function withCors(res: NextResponse): NextResponse {
-  for (const [k, v] of Object.entries(CORS_HEADERS)) {
-    res.headers.set(k, v);
-  }
-  return res;
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(req: Request) {
+  return corsPreflight(req);
 }
 
 export async function POST(req: Request) {
+  const json = (body: unknown, init?: ResponseInit) =>
+    corsJson(req, body, init);
+
   const auth = await resolveAuth(req);
   if ("status" in auth) {
-    return withCors(
-      NextResponse.json({ error: auth.message }, { status: auth.status }),
-    );
+    return json({ error: auth.message }, { status: auth.status });
   }
 
   const rl = await checkRateLimit(auth.user.id);
   if (!rl.success) {
-    return withCors(
-      NextResponse.json(
-        {
-          error: "Rate limit exceeded",
-          reset_at: new Date(rl.reset).toISOString(),
+    return json(
+      {
+        error: "Rate limit exceeded",
+        reset_at: new Date(rl.reset).toISOString(),
+      },
+      {
+        status: 429,
+        headers: {
+          "retry-after": String(
+            Math.max(1, Math.ceil((rl.reset - Date.now()) / 1000)),
+          ),
         },
-        {
-          status: 429,
-          headers: {
-            "retry-after": String(
-              Math.max(1, Math.ceil((rl.reset - Date.now()) / 1000)),
-            ),
-          },
-        },
-      ),
+      },
     );
   }
 
   const body = await req.json().catch(() => null);
   const parsed = RationaleFeedbackRequestSchema.safeParse(body);
   if (!parsed.success) {
-    return withCors(
-      NextResponse.json(
-        {
-          error: "Invalid request",
-          issues: sanitizeZodIssues(parsed.error.issues),
-        },
-        { status: 400 },
-      ),
+    return json(
+      {
+        error: "Invalid request",
+        issues: sanitizeZodIssues(parsed.error.issues),
+      },
+      { status: 400 },
     );
   }
   const {
@@ -118,16 +101,14 @@ export async function POST(req: Request) {
     })
     .returning({ id: schema.rationaleFeedback.id });
 
-  return withCors(
-    NextResponse.json(
-      envelope({
-        result: {
-          ok: true,
-          id: row?.id ?? null,
-          correction_type,
-          hop_step,
-        },
-      }),
-    ),
+  return json(
+    envelope({
+      result: {
+        ok: true,
+        id: row?.id ?? null,
+        correction_type,
+        hop_step,
+      },
+    }),
   );
 }

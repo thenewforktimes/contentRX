@@ -24,26 +24,22 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { corsHeaders as baseCors, corsPreflight } from "@/lib/cors";
 import {
   FIGMA_HANDOFF_REDIS_PREFIX,
   isValidHandoff,
 } from "@/lib/figma-handoff";
 import { getRedis } from "@/lib/redis";
 
-function corsHeaders(): Record<string, string> {
-  // Figma plugin iframes send Origin: null. A wildcard is safe here because
-  // the sensitive data (the cx_token) is gated on possession of the random
-  // handoff code, not on cookie-based credentials.
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Cache-Control": "no-store",
-  };
+// Audit S5 — same allowlist as /api/* but the cx_token transits this
+// route, so we MUST forbid intermediary caching. Layer Cache-Control:
+// no-store on top of the allowlist headers.
+function authCorsHeaders(req: Request): Record<string, string> {
+  return { ...baseCors(req), "Cache-Control": "no-store" };
 }
 
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders() });
+export async function OPTIONS(req: Request) {
+  return corsPreflight(req);
 }
 
 export async function GET(req: Request) {
@@ -55,7 +51,7 @@ export async function GET(req: Request) {
   if (!isValidHandoff(handoff)) {
     return NextResponse.json(
       { error: "Missing or invalid handoff code" },
-      { status: 400, headers: corsHeaders() },
+      { status: 400, headers: authCorsHeaders(req) },
     );
   }
 
@@ -75,12 +71,12 @@ export async function GET(req: Request) {
     if (!token) {
       return NextResponse.json(
         { status: "pending" },
-        { status: 202, headers: corsHeaders() },
+        { status: 202, headers: authCorsHeaders(req) },
       );
     }
     return NextResponse.json(
       { token },
-      { status: 200, headers: corsHeaders() },
+      { status: 200, headers: authCorsHeaders(req) },
     );
   }
 

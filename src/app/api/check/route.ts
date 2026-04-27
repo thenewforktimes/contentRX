@@ -13,11 +13,11 @@
  *   9. Return the result + quota metadata
  */
 
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { publicCheckEnvelope } from "@/lib/api-envelope";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { resolveAuth } from "@/lib/auth";
+import { corsJson, corsPreflight } from "@/lib/cors";
 import {
   findMatchingExample,
   shortCircuitFromExample,
@@ -41,26 +41,14 @@ import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { QuotaExhaustedEmail } from "@/emails/quota-exhausted";
 import { QuotaWarningEmail } from "@/emails/quota-warning";
 
-// CORS: the Figma plugin iframe has Origin: null. We allow any origin
-// because the request is gated on the Authorization header, not on
-// cookies. No credentials, no Set-Cookie — so wildcard is safe.
-const CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-};
+// CORS allowlist (audit S5): see `lib/cors.ts`. The Figma plugin
+// iframe sends `Origin: null`; the marketing site is same-origin to
+// /api/*; we narrowed from `*` to figma + localhost-dev as defense-
+// in-depth. Auth is the bearer header, never a cookie, so an origin
+// that isn't on the list still can't forge an authenticated call.
 
-function json(body: unknown, init?: ResponseInit): NextResponse {
-  const res = NextResponse.json(body, init);
-  for (const [k, v] of Object.entries(CORS_HEADERS)) {
-    res.headers.set(k, v);
-  }
-  return res;
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(req: Request) {
+  return corsPreflight(req);
 }
 
 const RequestSchema = z.object({
@@ -95,6 +83,8 @@ const RequestSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const json = (body: unknown, init?: ResponseInit) =>
+    corsJson(req, body, init);
   const auth = await resolveAuth(req);
   if ("status" in auth) {
     return json({ error: auth.message }, { status: auth.status });
