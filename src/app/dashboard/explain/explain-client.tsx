@@ -16,6 +16,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { PublicCheckEnvelope } from "@/lib/api-envelope";
 import { wordDiff, type DiffToken } from "@/lib/text-diff";
@@ -38,6 +39,7 @@ type CheckError =
   | { kind: "unknown"; status: number; message: string };
 
 export function ExplainClient() {
+  const router = useRouter();
   const [text, setText] = useState(
     "Unable to complete operation. Please contact administrator.",
   );
@@ -68,6 +70,14 @@ export function ExplainClient() {
       }
       const data = (await res.json()) as CheckEnvelope;
       setResponse(data);
+      // Re-render the surrounding server components (UsagePanel,
+      // InsightsPanel, ActiveSurfacesRow) so the counter, "This week"
+      // numbers, and surface activity reflect the just-completed
+      // check without requiring a full page refresh. /api/check
+      // already calls revalidatePath("/dashboard", "layout") to bust
+      // the data cache (PR-199); router.refresh() is what tells the
+      // current browser tab to actually re-fetch the server output.
+      router.refresh();
     } catch {
       // Network failure (no res object), CORS, DNS, etc. The thrown
       // Error doesn't carry useful info for the user — fail to a
