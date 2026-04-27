@@ -2,20 +2,30 @@
  * /dashboard — account overview. Server-rendered so we can hit the DB
  * inline without a round-trip to a separate API endpoint.
  *
- * Shows: plan pill, month-to-date usage bar, API key management (via a
- * client subcomponent). The api_key_hash is never sent to the browser —
- * only the display prefix and the creation timestamp cross the wire.
+ * Section order (Apr 2026 inversion): API key first because it's the
+ * asset the customer is here to manage; usage bar second as the live
+ * signal; subscription third (billing); team-tier surfaces fourth;
+ * calibration last. Pre-inversion the order put billing/usage above
+ * the API key, which buried the integration step new customers came
+ * for.
+ *
+ * Usage bar tones: amber at ≥80% so the customer has runway to
+ * upgrade before they hit zero.
  */
 
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { buttonStyles } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { getDb, schema } from "@/db";
 import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { ApiKeyPanel } from "./api-key-panel";
 import { SubscriptionPanel } from "./subscription-panel";
+
+const USAGE_WARNING_THRESHOLD = 0.8;
 
 function nextMonthReset(): string {
   const now = new Date();
@@ -61,48 +71,32 @@ export default async function DashboardPage() {
   ]);
   const quota = monthlyQuota(plan, seats);
   const usedPct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
+  const usageTone: UsageTone =
+    used >= quota ? "exhausted" : used >= quota * USAGE_WARNING_THRESHOLD ? "warn" : "ok";
 
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
-            Dashboard
-          </p>
+          <Eyebrow>Dashboard</Eyebrow>
           <h1 className="mt-2 text-2xl font-semibold">{user.email}</h1>
         </div>
         <PlanPill plan={plan} />
       </header>
 
-      <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
-        <header className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Usage this month</h2>
-          <span className="text-xs text-neutral-500">{currentMonth()}</span>
-        </header>
-        <div className="mb-2 flex items-baseline justify-between">
-          <span className="text-3xl font-semibold">{used.toLocaleString()}</span>
-          <span className="text-sm text-neutral-500">
-            of {quota.toLocaleString()} scans
-          </span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-900">
-          <div
-            className={`h-full transition-[width] ${
-              used >= quota ? "bg-red-500" : "bg-black dark:bg-white"
-            }`}
-            style={{ width: `${usedPct}%` }}
-          />
-        </div>
-        <p className="mt-2 text-xs text-neutral-500">
-          Resets {nextMonthReset()}.
-        </p>
-        {used >= quota && (
-          <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-            You&apos;ve hit this month&apos;s quota. Upgrade or wait for the
-            reset.
-          </p>
-        )}
-      </section>
+      <ApiKeyPanel
+        initialPrefix={user.apiKeyPrefix}
+        initialCreatedAt={
+          user.apiKeyCreatedAt ? user.apiKeyCreatedAt.toISOString() : null
+        }
+      />
+
+      <UsagePanel
+        used={used}
+        quota={quota}
+        usedPct={usedPct}
+        tone={usageTone}
+      />
 
       <SubscriptionPanel
         plan={plan}
@@ -115,13 +109,6 @@ export default async function DashboardPage() {
         subscriptionStatus={activeSub?.status ?? null}
       />
 
-      <ApiKeyPanel
-        initialPrefix={user.apiKeyPrefix}
-        initialCreatedAt={
-          user.apiKeyCreatedAt ? user.apiKeyCreatedAt.toISOString() : null
-        }
-      />
-
       {plan === "team" && (
         <>
           <MembersLink />
@@ -132,6 +119,61 @@ export default async function DashboardPage() {
 
       <CalibrateLink optedOut={user.preferenceOptedOutAt !== null} />
     </div>
+  );
+}
+
+type UsageTone = "ok" | "warn" | "exhausted";
+
+function UsagePanel({
+  used,
+  quota,
+  usedPct,
+  tone,
+}: {
+  used: number;
+  quota: number;
+  usedPct: number;
+  tone: UsageTone;
+}) {
+  const barClasses: Record<UsageTone, string> = {
+    ok: "bg-black dark:bg-white",
+    warn: "bg-amber-500",
+    exhausted: "bg-red-500",
+  };
+  return (
+    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+      <header className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Usage this month</h2>
+        <span className="text-xs text-neutral-500">{currentMonth()}</span>
+      </header>
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-3xl font-semibold">{used.toLocaleString()}</span>
+        <span className="text-sm text-neutral-500">
+          of {quota.toLocaleString()} scans
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-900">
+        <div
+          className={`h-full transition-[width] ${barClasses[tone]}`}
+          style={{ width: `${usedPct}%` }}
+        />
+      </div>
+      <p className="mt-2 text-xs text-neutral-500">
+        Resets {nextMonthReset()}.
+      </p>
+      {tone === "warn" && (
+        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+          You&apos;re past 80% of this month&apos;s quota. Plan upgrades take
+          effect immediately if you need more headroom.
+        </p>
+      )}
+      {tone === "exhausted" && (
+        <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+          You&apos;ve hit this month&apos;s quota. Upgrade or wait for the
+          reset.
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -150,7 +192,7 @@ function CalibrateLink({ optedOut }: { optedOut: boolean }) {
       </p>
       <Link
         href="/dashboard/calibrate"
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+        className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
         {optedOut ? "Visit calibration settings" : "Open calibration prompt"}
       </Link>
@@ -170,7 +212,7 @@ function MembersLink() {
       </p>
       <Link
         href="/dashboard/members"
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+        className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
         Open members
       </Link>
@@ -191,7 +233,7 @@ function OverridesLink() {
       </p>
       <Link
         href="/dashboard/overrides"
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+        className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
         Open override report
       </Link>
@@ -211,7 +253,7 @@ function TeamRulesLink() {
       </p>
       <Link
         href="/dashboard/team/rules"
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+        className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
         Open team rules
       </Link>
@@ -282,10 +324,14 @@ async function loadCurrentUsage(userId: string): Promise<number> {
 }
 
 function PlanPill({ plan }: { plan: Plan }) {
+  // Semantically progressive: neutral (free) → blue (pro, paid) →
+  // emerald (team, paid + collaborative). The pre-inversion purple
+  // for team felt arbitrary; emerald reads as "shared / collaborative"
+  // (per the design critique).
   const styles: Record<Plan, string> = {
     free: "bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300",
     pro: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-    team: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
+    team: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
   };
   const label = plan.charAt(0).toUpperCase() + plan.slice(1);
   return (
