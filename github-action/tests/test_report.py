@@ -221,3 +221,52 @@ def test_overlong_report_is_truncated_under_github_limit() -> None:
     assert len(md) < 65536, f"comment body is {len(md)} chars, GitHub rejects over 65536"
     assert len(md) <= MAX_COMMENT_CHARS + 1000  # small slack for footer
     assert "Comment truncated" in md
+
+
+# ---------------------------------------------------------------------------
+# PR-14 — max-checks cap notice
+# ---------------------------------------------------------------------------
+def test_truncated_count_renders_notice_when_no_violations() -> None:
+    md = render_markdown([], total_strings=200, truncated_count=287)
+    assert "200" in md
+    assert "287" in md
+    assert "max-checks" in md
+    # Total = 200 + 287 = 487
+    assert "487" in md
+
+
+def test_truncated_count_renders_notice_with_violations() -> None:
+    reports = [
+        _report(
+            "src/Demo.tsx",
+            [
+                {
+                    "text": "Click here",
+                    "line": 5,
+                    "kind": "jsx-text",
+                    "violations": [
+                        {
+                            "issue": "Generic CTA.",
+                            "suggestion": "Use a specific verb.",
+                            "severity": "high",
+                        }
+                    ],
+                }
+            ],
+        )
+    ]
+    md = render_markdown(reports, total_strings=200, truncated_count=50)
+    assert "max-checks" in md
+    assert "Generic CTA" in md
+    assert "50" in md
+
+
+def test_truncated_count_zero_omits_notice() -> None:
+    md = render_markdown([], total_strings=10, truncated_count=0)
+    assert "max-checks" not in md
+
+
+def test_truncated_count_negative_omits_notice() -> None:
+    """Defensive: negative truncation makes no sense; treat as 0."""
+    md = render_markdown([], total_strings=10, truncated_count=-5)
+    assert "max-checks" not in md

@@ -291,6 +291,10 @@ def main() -> int:
     paths_glob = os.environ.get("CONTENTRX_PATHS", "**/*.{tsx,jsx,html}")
     content_type = os.environ.get("CONTENTRX_CONTENT_TYPE", "short_ui_copy")
     strict = os.environ.get("CONTENTRX_STRICT", "false").lower() == "true"
+    # PR-14: pre-action gate. Cap extracted strings so a giant PR
+    # doesn't burn quota by surprise. Default 200 — fits the typical
+    # content-PR shape; bump in workflow config for audit runs.
+    max_checks = _parse_max_checks(os.environ.get("CONTENTRX_MAX_CHECKS"))
 
     event = load_event()
     files = changed_files(event, workspace)
@@ -335,6 +339,19 @@ def main() -> int:
             except Exception as err:  # noqa: BLE001
                 print(f"warning: could not read {p}: {err}", file=sys.stderr)
 
+    # Apply the max-checks cap (PR-14). Slice deterministically (extractor
+    # output order) so re-runs of the same PR check the same first N.
+    truncated_count = 0
+    if max_checks > 0 and len(extractions) > max_checks:
+        truncated_count = len(extractions) - max_checks
+        extractions = extractions[:max_checks]
+        print(
+            f"ContentRX: PR has {len(extractions) + truncated_count} "
+            f"extractable strings; capping at {max_checks} per max-checks. "
+            f"{truncated_count} not checked.",
+            file=sys.stderr,
+        )
+
     reports = collect_reports(extractions, content_type=content_type)
     # Hard violations vs review_recommended findings are tracked
     # separately so the fail-on policy below can gate independently
@@ -352,7 +369,11 @@ def main() -> int:
         if e.get("verdict") == "review_recommended"
     )
 
-    body = render_markdown(reports, total_strings=len(extractions))
+    body = render_markdown(
+        reports,
+        total_strings=len(extractions),
+        truncated_count=truncated_count,
+    )
 
     pull_number = (event.get("pull_request") or {}).get("number")
     repo = (event.get("repository") or {}).get("full_name")
@@ -390,6 +411,22 @@ def main() -> int:
 
     _write_output("passed", "false" if failed else "true")
     return 1 if failed else 0
+
+
+def _parse_max_checks(raw: str | None) -> int:
+    """Parse CONTENTRX_MAX_CHECKS. Default 200; non-positive means unbounded."""
+    if not raw:
+        return 200
+    try:
+        value = int(raw.strip())
+    except (TypeError, ValueError):
+        print(
+            f"warning: CONTENTRX_MAX_CHECKS={raw!r} is not an integer; "
+            "falling back to 200",
+            file=sys.stderr,
+        )
+        return 200
+    return value
 
 
 def _write_output(name: str, value: str) -> None:

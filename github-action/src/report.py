@@ -42,16 +42,31 @@ class FileReport:
     entries: list[dict]
 
 
-def render_markdown(reports: Iterable[FileReport], total_strings: int) -> str:
-    """Produce the body of the PR comment."""
+def render_markdown(
+    reports: Iterable[FileReport],
+    total_strings: int,
+    *,
+    truncated_count: int = 0,
+) -> str:
+    """Produce the body of the PR comment.
+
+    `truncated_count` (PR-14): when > 0, the action capped extraction at
+    `max-checks` and skipped this many strings beyond the cap. Surface a
+    visible notice so the PR author knows coverage is partial and how to
+    raise the cap.
+    """
     reports = [r for r in reports if any(e.get("violations") for e in r.entries)]
+    truncation_notice = _render_truncation_notice(total_strings, truncated_count)
     if not reports:
-        return (
+        body = (
             "### ContentRX\n\n"
             f"Checked {total_strings} string"
             f"{'' if total_strings == 1 else 's'}. No content-standard violations.\n"
-            "\n*Run by the [ContentRX](https://contentrx.io) GitHub Action.*"
         )
+        if truncation_notice:
+            body += "\n" + truncation_notice + "\n"
+        body += "\n*Run by the [ContentRX](https://contentrx.io) GitHub Action.*"
+        return body
 
     lines: list[str] = []
     total_violations = sum(
@@ -90,6 +105,10 @@ def render_markdown(reports: Iterable[FileReport], total_strings: int) -> str:
                 lines.append(f"  - **{severity}**: {issue}")
                 if suggestion:
                     lines.append(f"    - _suggestion:_ {suggestion}")
+        lines.append("")
+
+    if truncation_notice:
+        lines.append(truncation_notice)
         lines.append("")
 
     lines.append("---")
@@ -142,6 +161,20 @@ def post_comment(
         raise RuntimeError(
             f"Failed to post PR comment: {err.code} {err.reason}\n{body_text}"
         ) from err
+
+
+def _render_truncation_notice(checked: int, truncated_count: int) -> str:
+    """Build a "⚠️ this PR was capped" notice. Empty when nothing skipped."""
+    if truncated_count <= 0:
+        return ""
+    total = checked + truncated_count
+    return (
+        f"> ⚠️ **This PR has {total} strings. ContentRX checked the "
+        f"first {checked}; {truncated_count} more weren't checked.** "
+        "Raise `max-checks` in your workflow config to check all of "
+        "them, or run a one-off Audit Pack ($99 for 25,000 checks) "
+        "for codebase-wide audits."
+    )
 
 
 def _truncate(s: str, max_len: int) -> str:

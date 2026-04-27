@@ -59,6 +59,18 @@ inputs:
     required: false
     default: ''
 
+  max-checks:
+    description: >-
+      Maximum number of strings to send to ContentRX in a single PR.
+      Above the cap, the action checks the first N strings and posts
+      a notice in the PR comment that the remaining N were skipped.
+      Default 200, which fits the typical content-PR shape and stays
+      well below the Pro 5,000-checks-per-month quota even on
+      busy repos. Bump this for codebase-wide audits or set very
+      high (e.g., 100000) for unbounded behavior.
+    required: false
+    default: '200'
+
 outputs:
   violations:
     description: Total violation count across all extracted strings.
@@ -81,3 +93,4 @@ runs:
     CONTENTRX_FAIL_ON: ${{ inputs.fail-on }}
     CONTENTRX_CONTENT_TYPE: ${{ inputs.content-type }}
     CONTENTRX_PATHS: ${{ inputs.paths }}
+    CONTENTRX_MAX_CHECKS: ${{ inputs.max-checks }}
