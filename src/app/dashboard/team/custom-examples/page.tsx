@@ -165,21 +165,21 @@ export default async function CustomExamplesPage() {
                     {e.moment ? (
                       <code className="font-mono">{e.moment}</code>
                     ) : (
-                      <span className="text-neutral-400">any</span>
+                      <span className="text-neutral-500">any</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs">
                     {e.contentType ? (
                       <code className="font-mono">{e.contentType}</code>
                     ) : (
-                      <span className="text-neutral-400">any</span>
+                      <span className="text-neutral-500">any</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs">
                     {e.standardId ? (
                       <code className="font-mono">{e.standardId}</code>
                     ) : (
-                      <span className="text-neutral-400">—</span>
+                      <span className="text-neutral-500">—</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs">
@@ -188,7 +188,7 @@ export default async function CustomExamplesPage() {
                         upstream
                       </span>
                     ) : (
-                      <span className="text-neutral-400">private</span>
+                      <span className="text-neutral-500">private</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs text-neutral-500 tabular-nums">

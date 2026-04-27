@@ -324,7 +324,7 @@ function StandardRow({
         <p
           className={`mt-1 text-xs ${
             isDisabled
-              ? "text-neutral-400 line-through dark:text-neutral-600"
+              ? "text-neutral-500 line-through dark:text-neutral-600"
               : "text-neutral-600 dark:text-neutral-400"
           }`}
         >

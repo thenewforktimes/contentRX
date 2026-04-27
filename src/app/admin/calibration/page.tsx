@@ -309,7 +309,7 @@ function StandardRow({
  */
 function Sparkline({ values }: { values: Array<number | null> }) {
   if (values.length === 0) {
-    return <span className="text-neutral-400">—</span>;
+    return <span className="text-neutral-500">—</span>;
   }
   const blocks = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"];
   return (

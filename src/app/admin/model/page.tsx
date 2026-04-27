@@ -122,7 +122,7 @@ export default function AdminModelPage() {
                     <span className="flex-1 text-neutral-800 dark:text-neutral-200">
                       {s.rule}
                     </span>
-                    <span className="hidden font-mono text-[10px] text-neutral-400 sm:inline">
+                    <span className="hidden font-mono text-[10px] text-neutral-500 sm:inline">
                       v{s.version}
                     </span>
                   </Link>

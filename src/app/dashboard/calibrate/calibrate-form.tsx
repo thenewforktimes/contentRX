@@ -81,7 +81,7 @@ export function CalibrateForm({ pairs }: { pairs: PairPublic[] }) {
             <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
               Pair {i + 1} of {pairs.length} · {p.moment} · {p.content_type}
             </p>
-            <p className="font-mono text-xs text-neutral-400">
+            <p className="font-mono text-xs text-neutral-500">
               {p.standard_id}
             </p>
           </header>

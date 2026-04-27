@@ -356,7 +356,7 @@ function QueueRow({
           </div>
         )}
       </dl>
-      <p className="mt-2 truncate font-mono text-[10px] text-neutral-400">
+      <p className="mt-2 truncate font-mono text-[10px] text-neutral-500">
         text_hash · {row.textHash.slice(0, 16)}…
       </p>
       {!isDecided && (

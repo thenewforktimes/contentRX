@@ -18,6 +18,8 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { Section } from "@/components/ui/section";
 
 /**
  * Placeholder string for Robo's bio — intentionally bracketed so the
@@ -39,9 +41,7 @@ export default function AboutPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-20">
       <header className="mb-12">
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
-          About the model
-        </p>
+        <Eyebrow>About the model</Eyebrow>
         <h1 className="mt-3 text-3xl font-semibold">
           What a content designer sees
         </h1>
@@ -206,22 +206,5 @@ export default function AboutPage() {
         </p>
       </footer>
     </main>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mt-12 border-t border-neutral-200 pt-8 first:border-t-0 first:pt-0 dark:border-neutral-800">
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <div className="mt-4 space-y-0 text-base text-neutral-700 dark:text-neutral-300">
-        {children}
-      </div>
-    </section>
   );
 }
