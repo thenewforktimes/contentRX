@@ -162,6 +162,9 @@ def _check_consistency(
     return violations, latency, tokens
 
 
+_BATCH_MAX_TOTAL_CHARS = 200_000
+
+
 def check_batch(
     items: list[ContentItem],
     model: str = DEFAULT_MODEL,
@@ -181,7 +184,18 @@ def check_batch(
 
     Returns:
         BatchResult with per-item results and consistency violations.
+
+    Raises:
+        ValueError: If the combined text exceeds _BATCH_MAX_TOTAL_CHARS.
+            Guards against unbounded LLM cost on a runaway caller.
     """
+    total_chars = sum(len(item.text) for item in items)
+    if total_chars > _BATCH_MAX_TOTAL_CHARS:
+        raise ValueError(
+            f"check_batch input is {total_chars} chars, exceeds "
+            f"{_BATCH_MAX_TOTAL_CHARS} cap. Split into smaller batches.",
+        )
+
     batch = BatchResult()
 
     # Phase 1: Check each item individually

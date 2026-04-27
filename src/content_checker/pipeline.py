@@ -367,7 +367,9 @@ def check(
     Args:
         text: The content to check.
         content_type: If provided, skips classification.
-        model: Claude model for all LLM calls.
+        model: Claude model for the scan + consistency stages. Classify
+            and validate run on MODEL_CLASSIFY / MODEL_VALIDATE (Haiku)
+            regardless — they're cheap yes/no judgements.
         use_llm_classifier: Use LLM for classification (True) or heuristic (False).
         audience: Content audience mode. Controls which standards are active.
             Accepts an Audience enum or a string ("product_ui", "general").
@@ -405,8 +407,11 @@ def check(
         ))
     else:
         ct_descriptions = get_content_type_descriptions(standards_data)
+        # Classify stays on MODEL_CLASSIFY (Haiku) — passing the
+        # pipeline's `model` here would overrule the per-stage routing
+        # in api_utils and pay Sonnet rates for a yes/no judgement.
         detected_type, cls_latency, cls_tokens = classify(
-            text, content_types=ct_descriptions, model=model, use_llm=use_llm_classifier,
+            text, content_types=ct_descriptions, use_llm=use_llm_classifier,
         )
         total_latency += cls_latency
         total_tokens += cls_tokens
@@ -528,9 +533,10 @@ def check(
 
     # Stage 4: Validate
     if llm_candidates:
+        # Validate stays on MODEL_VALIDATE (Haiku) — see classify.
         confirmed, rejected, val_latency, val_tokens = validate_candidates(
             text, detected_type, llm_candidates,
-            active_notes=active_notes, model=model,
+            active_notes=active_notes,
         )
         _stamp_rule_versions(confirmed, rule_versions)
         _stamp_rule_versions(rejected, rule_versions)

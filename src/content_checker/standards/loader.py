@@ -73,10 +73,56 @@ def load_standards(path: str | Path | None = None) -> dict:
     with open(default_path) as f:
         data = json.load(f)
 
+    _validate_schema(data, default_path)
     _cache = data
     _cache_path = default_path
 
     return _cache
+
+
+# Required keys per node. Validated at load time so a malformed library
+# fails the process startup with a clear message instead of corrupting a
+# downstream prompt or KeyErroring deep in the pipeline.
+_REQUIRED_TOP_LEVEL = {"version", "categories"}
+_REQUIRED_CATEGORY = {"id", "name", "standards"}
+_REQUIRED_STANDARD = {"id", "rule", "rule_type"}
+
+
+def _validate_schema(data: dict, source: Path) -> None:
+    missing = _REQUIRED_TOP_LEVEL - set(data)
+    if missing:
+        raise ValueError(f"{source}: missing top-level keys {sorted(missing)}")
+    if not isinstance(data["categories"], list):
+        raise ValueError(f"{source}: 'categories' must be a list")
+
+    seen_ids: set[str] = set()
+    for ci, cat in enumerate(data["categories"]):
+        if not isinstance(cat, dict):
+            raise ValueError(f"{source}: categories[{ci}] is not an object")
+        cat_missing = _REQUIRED_CATEGORY - set(cat)
+        if cat_missing:
+            raise ValueError(
+                f"{source}: categories[{ci}] missing keys {sorted(cat_missing)}",
+            )
+        if not isinstance(cat["standards"], list):
+            raise ValueError(
+                f"{source}: categories[{ci}].standards must be a list",
+            )
+        for si, std in enumerate(cat["standards"]):
+            if not isinstance(std, dict):
+                raise ValueError(
+                    f"{source}: categories[{ci}].standards[{si}] is not an object",
+                )
+            std_missing = _REQUIRED_STANDARD - set(std)
+            if std_missing:
+                raise ValueError(
+                    f"{source}: standard {std.get('id', '?')} missing "
+                    f"{sorted(std_missing)}",
+                )
+            sid = std["id"]
+            if sid in seen_ids:
+                raise ValueError(f"{source}: duplicate standard id {sid!r}")
+            seen_ids.add(sid)
 
 
 def get_cache_info() -> dict:
