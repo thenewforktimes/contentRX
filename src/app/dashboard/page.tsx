@@ -29,10 +29,12 @@ import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { ApiKeyPanel } from "./api-key-panel";
 import { ExplainClient } from "./explain/explain-client";
+import { FirstCallBanner } from "./first-call-banner";
 import { SubscriptionPanel } from "./subscription-panel";
 
 const USAGE_WARNING_THRESHOLD = 0.8;
 const INSIGHTS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const ACTIVATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function nextMonthReset(): string {
   const now = new Date();
@@ -61,13 +63,15 @@ export default async function DashboardPage() {
   }
 
   const plan = user.plan as Plan;
-  const [seats, used, activeSub, surfaceActivity, insights] = await Promise.all([
-    loadSeats(user.id, plan, user.teamOwnerUserId),
-    loadCurrentUsage(user.id),
-    loadActiveSubscription(user.id, user.teamOwnerUserId),
-    loadSurfaceActivity(user.id, user.teamOwnerUserId),
-    loadWeeklyInsights(user.id, user.teamOwnerUserId),
-  ]);
+  const [seats, used, activeSub, surfaceActivity, insights, activatedSource] =
+    await Promise.all([
+      loadSeats(user.id, plan, user.teamOwnerUserId),
+      loadCurrentUsage(user.id),
+      loadActiveSubscription(user.id, user.teamOwnerUserId),
+      loadSurfaceActivity(user.id, user.teamOwnerUserId),
+      loadWeeklyInsights(user.id, user.teamOwnerUserId),
+      loadRecentlyActivatedSurface(user.id, user.teamOwnerUserId),
+    ]);
   const quota = monthlyQuota(plan, seats);
   const usedPct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
   const usageTone: UsageTone =
@@ -75,6 +79,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <FirstCallBanner source={activatedSource} />
+
       <header className="flex items-center justify-between">
         <div>
           <Eyebrow>Dashboard</Eyebrow>
@@ -661,6 +667,52 @@ function sourceLabel(source: string): string {
     default:
       return source;
   }
+}
+
+const TRACKED_SURFACES = new Set([
+  "mcp",
+  "lsp",
+  "action",
+  "plugin",
+  "cli",
+]);
+
+/**
+ * Pick the most recently activated surface for the FirstCallBanner
+ * (PR-32). Definition of "recently activated": this team's earliest
+ * violation from a given source landed within the last 7 days. If
+ * multiple surfaces newly activated in that window, return the most
+ * recent one — that's the one the user is currently celebrating.
+ */
+async function loadRecentlyActivatedSurface(
+  userId: string,
+  teamOwnerUserId: string | null,
+): Promise<SurfaceKey | null> {
+  const teamId = teamOwnerUserId ?? userId;
+  const since = new Date(Date.now() - ACTIVATION_WINDOW_MS);
+  const db = getDb();
+  const rows = (await db
+    .select({
+      source: schema.violations.source,
+      firstAt: sql<Date>`min(${schema.violations.createdAt})`,
+    })
+    .from(schema.violations)
+    .where(eq(schema.violations.teamId, teamId))
+    .groupBy(schema.violations.source)) as Array<{
+    source: string;
+    firstAt: Date;
+  }>;
+
+  let best: { source: SurfaceKey; firstAt: Date } | null = null;
+  for (const r of rows) {
+    if (!TRACKED_SURFACES.has(r.source)) continue;
+    const firstAt = r.firstAt instanceof Date ? r.firstAt : new Date(r.firstAt);
+    if (firstAt < since) continue;
+    if (!best || firstAt > best.firstAt) {
+      best = { source: r.source as SurfaceKey, firstAt };
+    }
+  }
+  return best?.source ?? null;
 }
 
 function PlanPill({ plan }: { plan: Plan }) {
