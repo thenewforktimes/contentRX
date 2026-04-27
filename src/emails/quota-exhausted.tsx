@@ -28,11 +28,11 @@ export function QuotaExhaustedEmail({
   return (
     <EmailShell preview={`Used all ${quota} ${planLabel} checks for the month.`}>
       <Heading as="h1" style={{ fontSize: 20, marginBottom: 12 }}>
-        You've hit this month's limit.
+        You've used your {quota} checks this month.
       </Heading>
       <Text>
-        All {quota} {planLabel}-plan checks are used. Future check attempts
-        will return an "over quota" error until {resetsAt}.
+        That's the {planLabel}-plan ceiling. Resets {resetsAt} — until then,
+        new check attempts return an "over quota" error.
       </Text>
       {plan === "free" ? (
         <Text>

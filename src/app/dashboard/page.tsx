@@ -188,14 +188,16 @@ function UsagePanel({
       </p>
       {tone === "warn" && (
         <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
-          You&apos;re past 80% of this month&apos;s quota. Plan upgrades take
-          effect immediately if you need more headroom.
+          You&apos;ve used past 80% of your {quota.toLocaleString()} checks
+          for {currentMonth()}. Upgrades take effect immediately if you need
+          more headroom before {nextMonthReset()}.
         </p>
       )}
       {tone === "exhausted" && (
         <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-          You&apos;ve hit this month&apos;s quota. Upgrade or wait for the
-          reset.
+          You&apos;ve used all {quota.toLocaleString()} checks for{" "}
+          {currentMonth()}. Resets {nextMonthReset()}, or upgrade to keep
+          going.
         </p>
       )}
     </section>

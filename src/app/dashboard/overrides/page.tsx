@@ -222,13 +222,13 @@ export default async function OverridesPage() {
 
       {overrides_count === 0 ? (
         <section className="rounded-lg border border-dashed border-neutral-300 p-6 text-sm text-neutral-500 dark:border-neutral-700">
-          No overrides yet. When team members dismiss a violation in the
-          Figma plugin or comment{" "}
+          Nothing to show yet — your team hasn&apos;t dismissed any
+          findings. Dismissals from the Figma plugin or{" "}
           <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-xs dark:bg-neutral-900">
             /contentrx ignore &lt;STD&gt;
           </code>{" "}
-          on a PR, the dismissal lands here so you can decide whether to
-          tune the rule.
+          comments on PRs land here, so you can decide which rules to
+          tune.
         </section>
       ) : (
         <>

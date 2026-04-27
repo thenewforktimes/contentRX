@@ -108,12 +108,17 @@ export default async function CustomExamplesPage() {
       {entries.length === 0 ? (
         <section className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 p-6 text-sm dark:border-neutral-700 dark:bg-neutral-900">
           <p className="text-neutral-700 dark:text-neutral-300">
-            No custom examples yet. Add one with{" "}
+            Nothing here yet — your team hasn&apos;t added a custom example.
+            From the terminal:{" "}
             <code className="rounded bg-white px-1 py-0.5 dark:bg-neutral-950">
               contentrx example add &quot;Let&apos;s go.&quot; --verdict pass
               --moment confirmation
             </code>
-            .
+            . Or add one from Claude Code / Cursor with the{" "}
+            <code className="rounded bg-white px-1 py-0.5 dark:bg-neutral-950">
+              custom_example_add
+            </code>{" "}
+            MCP tool.
           </p>
         </section>
       ) : (
