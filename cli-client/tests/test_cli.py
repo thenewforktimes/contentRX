@@ -27,8 +27,10 @@ from contentrx.main import (
     EXIT_UPSTREAM,
     EXIT_USAGE,
     EXIT_VIOLATIONS,
+    _confirm_proceed,
     _parse_json_batch,
     _parse_txt_batch,
+    _print_dry_run_estimate,
     load_batch_file,
     main,
     print_result,
@@ -399,3 +401,135 @@ def test_print_result_review_recommended_shows_reason() -> None:
     assert "low_confidence" in out
     # REVIEW counts as passed for exit-code purposes.
     assert passed is True
+
+
+# ---------------------------------------------------------------------------
+# Pre-action gate (PR-13) — dry-run + confirm
+# ---------------------------------------------------------------------------
+def test_confirm_proceed_yes_flag_skips_prompt() -> None:
+    """`--yes` always proceeds without prompting (CI use)."""
+    assert _confirm_proceed(100, yes=True) is True
+
+
+def test_confirm_proceed_non_tty_proceeds_with_notice(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """Non-interactive shells (no TTY) auto-proceed but print the count
+    to stderr so it appears in pipeline logs."""
+    monkeypatch.setattr("sys.stdin.isatty", lambda: False)
+    assert _confirm_proceed(47, yes=False) is True
+    captured = capsys.readouterr()
+    assert "47" in captured.err
+    assert "checks" in captured.err
+
+
+def test_confirm_proceed_tty_default_yes(
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """In a TTY, an empty Enter accepts the default Y."""
+    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+    monkeypatch.setattr("builtins.input", lambda _prompt: "")
+    assert _confirm_proceed(5, yes=False) is True
+
+
+def test_confirm_proceed_tty_n_cancels(
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Typing n cancels."""
+    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+    monkeypatch.setattr("builtins.input", lambda _prompt: "n")
+    assert _confirm_proceed(5, yes=False) is False
+
+
+def test_confirm_proceed_eof_cancels(
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ctrl-D / EOF on the prompt cancels (don't assume yes)."""
+    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+
+    def _eof(_prompt):
+        raise EOFError
+
+    monkeypatch.setattr("builtins.input", _eof)
+    assert _confirm_proceed(5, yes=False) is False
+
+
+def test_print_dry_run_estimate_returns_ok_and_prints_count(capsys) -> None:
+    code = _print_dry_run_estimate(123)
+    assert code == EXIT_OK
+    out = capsys.readouterr().out
+    assert "123" in out
+    assert "checks" in out
+
+
+def test_print_dry_run_estimate_singular(capsys) -> None:
+    _print_dry_run_estimate(1)
+    out = capsys.readouterr().out
+    assert "1 check" in out  # singular
+
+
+def test_main_dry_run_requires_batch(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """`--dry-run` without `--batch` is a usage error."""
+    monkeypatch.setenv("CONTENTRX_API_KEY", "cx_test")
+    # argparse's parser.error() calls sys.exit(2) → SystemExit, same
+    # path as test_main_rejects_text_and_batch_together.
+    with pytest.raises(SystemExit) as excinfo:
+        main(["--dry-run", "Save"])
+    assert excinfo.value.code == EXIT_USAGE
+
+
+def test_main_dry_run_batch_does_not_call_api(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys
+) -> None:
+    """`--dry-run --batch FILE` prints the count and exits without
+    making any HTTP calls."""
+    monkeypatch.setenv("CONTENTRX_API_KEY", "cx_test")
+    batch = tmp_path / "strings.txt"
+    batch.write_text("one\ntwo\nthree\n")
+
+    called = {"count": 0}
+
+    def _explode(*_args, **_kwargs):
+        called["count"] += 1
+        raise AssertionError("urlopen should not be called in dry-run")
+
+    monkeypatch.setattr("urllib.request.urlopen", _explode)
+
+    code = main(["--batch", str(batch), "--dry-run"])
+    assert code == EXIT_OK
+    assert called["count"] == 0
+    out = capsys.readouterr().out
+    assert "3" in out
+
+
+def test_main_batch_yes_skips_confirm(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """`--yes` proceeds without consulting input()."""
+    monkeypatch.setenv("CONTENTRX_API_KEY", "cx_test")
+    batch = tmp_path / "strings.txt"
+    batch.write_text("only one\n")
+
+    def _explode(_prompt):
+        raise AssertionError("input() should not be called when --yes is set")
+
+    monkeypatch.setattr("builtins.input", _explode)
+    monkeypatch.setattr("sys.stdin.isatty", lambda: True)
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda req, timeout=None: _FakeResponse(
+            {
+                "schema_version": "2.0.0",
+                "verdict": "pass",
+                "review_reason": None,
+                "violations": [],
+                "warnings": [],
+                "usage": {},
+            }
+        ),
+    )
+
+    code = main(["--batch", str(batch), "--yes"])
+    assert code == EXIT_OK

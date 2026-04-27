@@ -398,6 +398,22 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Include latency and quota usage.",
     )
     parser.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        help="Only valid with --batch. Print how many checks the batch "
+        "would consume and exit without calling the API. Useful for "
+        "estimating quota use before running an audit.",
+    )
+    parser.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help="Skip the pre-batch confirmation prompt. Required for "
+        "non-interactive shells that should run --batch without a "
+        "yes/no input.",
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
@@ -423,6 +439,9 @@ def run(argv: list[str]) -> int:
     if args.batch is not None and args.text:
         parser.error("Provide TEXT or --batch FILE, not both.")
 
+    if args.dry_run and args.batch is None:
+        parser.error("--dry-run only makes sense with --batch.")
+
     # Environment-driven config resolved once; propagated down so tests
     # can override by setting env before calling run().
     api_key = _read_api_key()
@@ -430,6 +449,11 @@ def run(argv: list[str]) -> int:
 
     if args.batch is not None:
         items = load_batch_file(args.batch)
+        if args.dry_run:
+            return _print_dry_run_estimate(len(items))
+        if not _confirm_proceed(len(items), yes=args.yes):
+            print("Cancelled.", file=sys.stderr)
+            return EXIT_OK
         return _run_batch(
             items,
             json_output=args.json_output,
@@ -505,6 +529,48 @@ def _run_batch(
         json.dump(collected, sys.stdout, indent=2)
         print()
     return EXIT_OK if all_passed else EXIT_VIOLATIONS
+
+
+def _print_dry_run_estimate(count: int) -> int:
+    """Print the would-be check count and exit cleanly. PR-13: the
+    dry-run gate. Goes to stdout so pipelines can capture it; status
+    code is EXIT_OK because nothing failed — the user explicitly
+    asked for a count, not a check."""
+    word = "check" if count == 1 else "checks"
+    print(f"{count} {word} would be sent (dry-run; no API calls made).")
+    return EXIT_OK
+
+
+def _confirm_proceed(count: int, *, yes: bool) -> bool:
+    """Pre-batch confirmation prompt (PR-13).
+
+    The dry-run pattern from the customer-experience design doc: every
+    surface that can run more than ~10 checks at once needs a pre-action
+    gate. For the CLI specifically:
+
+      - `--yes` always skips (CI use).
+      - Non-TTY stdin → assume yes + print the count to stderr so it
+        shows up in pipeline logs (backward-compat: pre-PR-13 CI
+        scripts using `--batch` keep working).
+      - TTY → prompt. Default Y (Enter accepts).
+
+    Returns True to proceed, False to cancel.
+    """
+    if yes:
+        return True
+    word = "check" if count == 1 else "checks"
+    if not sys.stdin.isatty():
+        print(
+            f"Running {count} {word} (use --yes to silence this notice).",
+            file=sys.stderr,
+        )
+        return True
+    prompt = f"Run {count} {word}? [Y/n] "
+    try:
+        response = input(prompt).strip().lower()
+    except EOFError:
+        return False
+    return response in ("", "y", "yes")
 
 
 def _run_example_subcommand(argv: list[str]) -> int:
