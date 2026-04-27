@@ -43,7 +43,7 @@ export async function OPTIONS() {
 
 type Params = { id: string };
 
-async function requireTeamAdmin(
+async function requireTeamMember(
   req: Request,
 ): Promise<{ teamOwnerUserId: string } | NextResponse> {
   const auth = await resolveAuth(req);
@@ -60,15 +60,10 @@ async function requireTeamAdmin(
       ),
     );
   }
-  if (auth.teamOwnerUserId !== null) {
-    return withCors(
-      NextResponse.json(
-        { error: "Only the team owner can manage custom examples." },
-        { status: 403 },
-      ),
-    );
-  }
-  return { teamOwnerUserId: auth.user.id };
+  // Per Position-3 (Apr 2026): any team member can manage. Resolve
+  // teamId from teamOwnerUserId (members) or user.id (owners).
+  const teamOwnerUserId = auth.teamOwnerUserId ?? auth.user.id;
+  return { teamOwnerUserId };
 }
 
 export async function GET(
@@ -76,7 +71,7 @@ export async function GET(
   { params }: { params: Promise<Params> },
 ) {
   const { id } = await params;
-  const authOrRes = await requireTeamAdmin(req);
+  const authOrRes = await requireTeamMember(req);
   if (authOrRes instanceof NextResponse) return authOrRes;
   const { teamOwnerUserId } = authOrRes;
 
@@ -108,7 +103,7 @@ export async function PATCH(
   { params }: { params: Promise<Params> },
 ) {
   const { id } = await params;
-  const authOrRes = await requireTeamAdmin(req);
+  const authOrRes = await requireTeamMember(req);
   if (authOrRes instanceof NextResponse) return authOrRes;
   const { teamOwnerUserId } = authOrRes;
 
@@ -183,7 +178,7 @@ export async function DELETE(
   { params }: { params: Promise<Params> },
 ) {
   const { id } = await params;
-  const authOrRes = await requireTeamAdmin(req);
+  const authOrRes = await requireTeamMember(req);
   if (authOrRes instanceof NextResponse) return authOrRes;
   const { teamOwnerUserId } = authOrRes;
 

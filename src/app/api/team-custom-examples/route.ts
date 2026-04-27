@@ -47,9 +47,11 @@ export async function OPTIONS() {
 
 /**
  * Resolve the caller to a team-admin scope, or return an error
- * response. Used by every endpoint in this surface.
+ * response. Used by every endpoint in this surface. Per Position-3
+ * (Apr 2026): any team member can manage custom examples — there
+ * is no admin role. The team owner is just the billing contact.
  */
-async function requireTeamAdmin(
+async function requireTeamMember(
   req: Request,
 ): Promise<
   { teamOwnerUserId: string; actorUserId: string } | NextResponse
@@ -68,22 +70,14 @@ async function requireTeamAdmin(
       ),
     );
   }
-  // Team admin = the team owner. `teamOwnerUserId` is non-null for
-  // members; null (self-owned) for the owner. Only the owner
-  // manages.
-  if (auth.teamOwnerUserId !== null) {
-    return withCors(
-      NextResponse.json(
-        { error: "Only the team owner can manage custom examples." },
-        { status: 403 },
-      ),
-    );
-  }
-  return { teamOwnerUserId: auth.user.id, actorUserId: auth.user.id };
+  // teamOwnerUserId is null for the team owner, set for members.
+  // Resolve to the team's effective id either way.
+  const teamOwnerUserId = auth.teamOwnerUserId ?? auth.user.id;
+  return { teamOwnerUserId, actorUserId: auth.user.id };
 }
 
 export async function GET(req: Request) {
-  const authOrRes = await requireTeamAdmin(req);
+  const authOrRes = await requireTeamMember(req);
   if (authOrRes instanceof NextResponse) return authOrRes;
   const { teamOwnerUserId } = authOrRes;
 
@@ -133,7 +127,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const authOrRes = await requireTeamAdmin(req);
+  const authOrRes = await requireTeamMember(req);
   if (authOrRes instanceof NextResponse) return authOrRes;
   const { teamOwnerUserId, actorUserId } = authOrRes;
 

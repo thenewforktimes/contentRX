@@ -13,8 +13,10 @@
  *     short-circuit. No create form — ingestion belongs where the
  *     team is already authoring.
  *
- * Free / Pro users see an upsell card. Team-member (non-owner)
- * users see a 403 explanation (mirrors /dashboard/overrides).
+ * Free / Pro users see an upsell card. Any team member (owner or
+ * not) can manage custom examples — Position-3 product direction
+ * (Apr 2026): no admin distinction, everyone gets the same
+ * functionality.
  */
 
 import { auth } from "@clerk/nextjs/server";
@@ -67,26 +69,11 @@ export default async function CustomExamplesPage() {
     );
   }
 
-  const isAdmin = user.teamOwnerUserId === null;
-  if (!isAdmin) {
-    return (
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
-        <h1 className="text-lg font-semibold">Custom examples</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Only the team owner manages custom examples. The set applies
-          to every team member&apos;s checks — matching strings
-          short-circuit the LLM and return the team&apos;s stored
-          verdict. Ask your team owner if a phrasing you&apos;re
-          seeing flagged should be added or removed.
-        </p>
-      </section>
-    );
-  }
-
+  const teamOwnerUserId = user.teamOwnerUserId ?? user.id;
   const entries = await db
     .select()
     .from(schema.teamCustomExamples)
-    .where(eq(schema.teamCustomExamples.teamOwnerUserId, user.id))
+    .where(eq(schema.teamCustomExamples.teamOwnerUserId, teamOwnerUserId))
     .orderBy(desc(schema.teamCustomExamples.createdAt));
 
   return (
