@@ -55,13 +55,20 @@ def classify_heuristic(text: str) -> str:
     return "long_form_copy"
 
 
-def _build_classifier_prompt(content_types: list[dict]) -> str:
-    """Build the system prompt for the LLM classifier."""
+def _build_classifier_prompt(content_types: dict[str, str]) -> str:
+    """Build the system prompt for the LLM classifier.
+
+    `content_types` is the {id: description} mapping that
+    `filter.get_content_type_descriptions` returns; iterating gives
+    (id, description) pairs directly. The previous list[dict] shape
+    was the engine's pre-pivot wire format and never matched what
+    pipeline.check() has been passing — TypeError #200427.
+    """
     type_descriptions = ""
-    type_ids = []
-    for ct in content_types:
-        type_descriptions += f"\n- **{ct['id']}**: {ct['description']}"
-        type_ids.append(ct["id"])
+    type_ids: list[str] = []
+    for ct_id, ct_desc in content_types.items():
+        type_descriptions += f"\n- **{ct_id}**: {ct_desc}"
+        type_ids.append(ct_id)
 
     return (
         "You are a content type classifier for UI and UX copy. "
@@ -78,7 +85,7 @@ def _build_classifier_prompt(content_types: list[dict]) -> str:
 
 def classify_llm(
     text: str,
-    content_types: list[dict],
+    content_types: dict[str, str],
     model: str | None = None,
 ) -> tuple[str, float, TokenUsage]:
     """Classify content type using an LLM call.
@@ -98,7 +105,7 @@ def classify_llm(
     )
 
     system_prompt = _build_classifier_prompt(content_types)
-    valid_ids = [ct["id"] for ct in content_types]
+    valid_ids = list(content_types.keys())
 
     # Sentinel-delimit user text — even classify is injectable
     # (a successful injection could steer content_type to alter
@@ -136,7 +143,7 @@ def classify_llm(
 
 def classify(
     text: str,
-    content_types: list[dict] | None = None,
+    content_types: dict[str, str] | None = None,
     model: str = "claude-sonnet-4-20250514",
     use_llm: bool = True,
 ) -> tuple[str, float, TokenUsage]:

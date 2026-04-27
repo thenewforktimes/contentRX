@@ -2,7 +2,11 @@
 
 import pytest
 
-from content_checker.classify import classify, classify_heuristic
+from content_checker.classify import (
+    _build_classifier_prompt,
+    classify,
+    classify_heuristic,
+)
 from content_checker.models import TokenUsage
 
 
@@ -80,3 +84,30 @@ class TestClassifyWrapper:
     def test_no_content_types_uses_heuristic(self):
         result, _, _ = classify("Save changes", content_types=None, use_llm=True)
         assert result == "button_cta"
+
+
+class TestBuildClassifierPrompt:
+    """Locks the dict[str, str] contract between
+    `filter.get_content_type_descriptions` (caller) and
+    `_build_classifier_prompt` (callee). Regression guard for the
+    "TypeError: string indices must be integers" production failure
+    where the callee assumed list[dict] but every caller has been
+    passing dict[str, str]."""
+
+    def test_accepts_dict_shape(self) -> None:
+        prompt = _build_classifier_prompt(
+            {
+                "button_cta": "Button labels and short CTAs.",
+                "error_message": "Error and failure states.",
+            }
+        )
+        assert "**button_cta**" in prompt
+        assert "Button labels and short CTAs." in prompt
+        assert "**error_message**" in prompt
+        assert "Valid IDs: button_cta, error_message" in prompt
+
+    def test_empty_dict_yields_empty_descriptions_block(self) -> None:
+        prompt = _build_classifier_prompt({})
+        assert "Valid IDs: " in prompt
+        # No bullet rows when there are no types.
+        assert "**" not in prompt
