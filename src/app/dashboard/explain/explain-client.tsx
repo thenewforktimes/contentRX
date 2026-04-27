@@ -15,6 +15,7 @@
 
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { PublicCheckEnvelope } from "@/lib/api-envelope";
 import { wordDiff, type DiffToken } from "@/lib/text-diff";
@@ -23,12 +24,25 @@ type CheckEnvelope = PublicCheckEnvelope & {
   latency_ms: number;
 };
 
+/**
+ * Structured error states the inline check can render. Mapping API
+ * status codes to a kind here keeps the UI free of HTTP details and
+ * lets each branch render in plain English instead of dumping JSON.
+ */
+type CheckError =
+  | { kind: "quota"; used: number; quota: number; resetsAt: string | null }
+  | { kind: "auth" }
+  | { kind: "rate_limit"; retryAfterSeconds: number | null }
+  | { kind: "server" }
+  | { kind: "network" }
+  | { kind: "unknown"; status: number; message: string };
+
 export function ExplainClient() {
   const [text, setText] = useState(
     "Unable to complete operation. Please contact administrator.",
   );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CheckError | null>(null);
   const [response, setResponse] = useState<CheckEnvelope | null>(null);
 
   async function onCheck() {
@@ -43,15 +57,67 @@ export function ExplainClient() {
       });
       if (!res.ok) {
         const body = await res.text();
-        throw new Error(`${res.status} ${res.statusText}: ${body}`);
+        let parsed: Record<string, unknown> | null = null;
+        try {
+          parsed = JSON.parse(body) as Record<string, unknown>;
+        } catch {
+          // body wasn't JSON — fall through to unknown branch with raw text
+        }
+        setError(mapHttpError(res.status, parsed, body));
+        return;
       }
       const data = (await res.json()) as CheckEnvelope;
       setResponse(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+    } catch {
+      // Network failure (no res object), CORS, DNS, etc. The thrown
+      // Error doesn't carry useful info for the user — fail to a
+      // generic "couldn't reach the service" message instead of
+      // "TypeError: NetworkError when attempting to fetch resource."
+      setError({ kind: "network" });
     } finally {
       setLoading(false);
     }
+  }
+
+  /**
+   * HTTP status → typed CheckError. Kept inside the component so the
+   * field-name dependencies on the API response shape stay co-located
+   * with the renderer.
+   */
+  function mapHttpError(
+    status: number,
+    parsed: Record<string, unknown> | null,
+    raw: string,
+  ): CheckError {
+    if (status === 402) {
+      return {
+        kind: "quota",
+        used: typeof parsed?.used === "number" ? parsed.used : 0,
+        quota: typeof parsed?.quota === "number" ? parsed.quota : 0,
+        resetsAt:
+          typeof parsed?.resets_at === "string" ? parsed.resets_at : null,
+      };
+    }
+    if (status === 401) {
+      return { kind: "auth" };
+    }
+    if (status === 429) {
+      return {
+        kind: "rate_limit",
+        retryAfterSeconds:
+          typeof parsed?.retry_after_seconds === "number"
+            ? parsed.retry_after_seconds
+            : null,
+      };
+    }
+    if (status >= 500) {
+      return { kind: "server" };
+    }
+    const message =
+      typeof parsed?.error === "string"
+        ? parsed.error
+        : raw.slice(0, 200) || `HTTP ${status}`;
+    return { kind: "unknown", status, message };
   }
 
   return (
@@ -80,14 +146,7 @@ export function ExplainClient() {
         </button>
       </section>
 
-      {error && (
-        <p
-          role="alert"
-          className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
-        >
-          {error}
-        </p>
-      )}
+      {error && <ErrorBlock error={error} />}
 
       {response && (
         <section className="space-y-4">
@@ -224,6 +283,129 @@ function DiffSpan({
     );
   }
   return null;
+}
+
+/**
+ * Renders an inline check error in plain English. Each branch maps
+ * to a CheckError kind in onCheck() — quota exhaustion gets pricing
+ * + reset date, auth gets API-key guidance, rate-limit shows a
+ * countdown, server errors stay generic.
+ *
+ * Tone matches Robo's voice (PR-42 vocabulary refactor):
+ *   - direct, no jargon
+ *   - states the fact + the next action
+ *   - one CTA when there's a useful one, never a list of links
+ */
+function ErrorBlock({ error }: { error: CheckError }) {
+  if (error.kind === "quota") {
+    const resetDay = error.resetsAt ? formatResetDate(error.resetsAt) : null;
+    return (
+      <div
+        role="alert"
+        className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
+      >
+        <h3 className="font-semibold text-amber-900 dark:text-amber-200">
+          Monthly quota reached
+        </h3>
+        <p className="text-amber-900 dark:text-amber-300">
+          You&apos;ve used all {error.quota.toLocaleString()} checks for this
+          month
+          {resetDay ? `. Resets ${resetDay}` : ""}.
+        </p>
+        <Link
+          href="/pricing?from=quota"
+          className="mt-1 inline-block self-start rounded-md bg-amber-900 px-3 py-1.5 text-xs font-medium text-amber-50 hover:opacity-90 dark:bg-amber-200 dark:text-amber-950"
+        >
+          See plans
+        </Link>
+      </div>
+    );
+  }
+  if (error.kind === "auth") {
+    return (
+      <div
+        role="alert"
+        className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+      >
+        <h3 className="font-semibold text-red-900 dark:text-red-200">
+          Session expired
+        </h3>
+        <p className="text-red-900 dark:text-red-300">
+          You were signed out. Refresh the page to sign back in.
+        </p>
+      </div>
+    );
+  }
+  if (error.kind === "rate_limit") {
+    const seconds = error.retryAfterSeconds;
+    return (
+      <div
+        role="alert"
+        className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
+      >
+        <h3 className="font-semibold text-amber-900 dark:text-amber-200">
+          Slow down
+        </h3>
+        <p className="text-amber-900 dark:text-amber-300">
+          You&apos;re sending checks faster than the rate limit allows
+          {seconds ? `. Try again in ${seconds}s` : ""}.
+        </p>
+      </div>
+    );
+  }
+  if (error.kind === "server") {
+    return (
+      <div
+        role="alert"
+        className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+      >
+        <h3 className="font-semibold text-red-900 dark:text-red-200">
+          Something broke on our end
+        </h3>
+        <p className="text-red-900 dark:text-red-300">
+          The check service hit an error. Try again — if it keeps happening,
+          it&apos;s on us.
+        </p>
+      </div>
+    );
+  }
+  if (error.kind === "network") {
+    return (
+      <div
+        role="alert"
+        className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+      >
+        <h3 className="font-semibold text-red-900 dark:text-red-200">
+          Couldn&apos;t reach the check service
+        </h3>
+        <p className="text-red-900 dark:text-red-300">
+          Check your connection and try again.
+        </p>
+      </div>
+    );
+  }
+  // unknown: render the upstream message but in a readable shape.
+  return (
+    <div
+      role="alert"
+      className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+    >
+      <h3 className="font-semibold text-red-900 dark:text-red-200">
+        Couldn&apos;t complete the check
+      </h3>
+      <p className="text-red-900 dark:text-red-300">{error.message}</p>
+    </div>
+  );
+}
+
+function formatResetDate(isoString: string): string {
+  try {
+    const d = new Date(isoString);
+    if (Number.isNaN(d.getTime())) return "next month";
+    return d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
+  } catch {
+    return "next month";
+  }
 }
 
 function SeverityBadge({ severity }: { severity: string }) {
