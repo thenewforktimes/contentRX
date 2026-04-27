@@ -123,6 +123,24 @@ export const subscriptions = pgTable(
     plan: text("plan", { enum: ["pro", "team"] }).notNull(),
     seats: integer("seats").notNull().default(1),
     currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+    // PR-03 (pricing-and-unit-of-value-strategy 2026-04-26): launch SKU
+    // additions. Coexist with `plan` until PR-07 reconciles. `plan` stays
+    // the legacy 2-value enum; `pricingTier` is the forward-looking
+    // 4-value enum that includes Scale.
+    pricingTier: text("pricing_tier", {
+      enum: ["free", "pro", "scale", "team"],
+    })
+      .notNull()
+      .default("free"),
+    // Customer-set spend ceiling for overage charges. PR-09 reads this
+    // pre-call and 402s when the projected overage cost would cross it.
+    // Defaults to $50 (Pro default per the pricing doc); Scale defaults
+    // to $200 but that's set by the Checkout/upgrade flow, not here.
+    softCapUsd: integer("soft_cap_usd").notNull().default(50),
+    // Domain-grouping rollup. PR-21 sets this when 3+ same-domain
+    // subscriptions are detected on Pro/Scale; the dashboard uses it
+    // to surface team-level views without a Team purchase decision.
+    domainGroupId: text("domain_group_id"),
   },
   (t) => [
     // Exactly one active subscription per user. Historical rows with
@@ -712,6 +730,64 @@ export const preferences = pgTable(
   ],
 ).enableRLS();
 
+// Audit Pack credits — one row per pack purchase. PR-06 inserts on
+// successful Stripe webhook for the one-time invoice item. /api/check
+// (PR-08) deducts pack credits BEFORE subscription quota when both
+// exist, so audit-burst customers don't accidentally drain their
+// monthly subscription before their pack. Pack credits expire 90 days
+// after purchase; the cron job in PR-31 would reap rows past expiry
+// (unused credits forfeit, by design — expiry creates urgency).
+export const creditPacks = pgTable(
+  "credit_packs",
+  {
+    id: cuid(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    stripeInvoiceItemId: text("stripe_invoice_item_id").notNull(),
+    creditsTotal: integer("credits_total").notNull(),
+    creditsUsed: integer("credits_used").notNull().default(0),
+    purchasedAt: timestamp("purchased_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    // Stripe sends an idempotency key on the invoice item — uniqueness
+    // here prevents double-credit if the webhook retries.
+    uniqueIndex("credit_packs_invoice_item_idx").on(t.stripeInvoiceItemId),
+    // Hot path: "does this user have any active pack credits?" — filter
+    // on userId + expiresAt > now ordered by purchasedAt asc.
+    index("credit_packs_user_expires_idx").on(t.userId, t.expiresAt),
+  ],
+).enableRLS();
+
+// Per-user, per-month overage tally. PR-09 reads this to project the
+// month-end overage cost on each /api/check call and 402s when the
+// projection crosses softCapUsd. Stripe Metered Billing is the source
+// of truth for billing; this row is a fast local cache so the hot
+// path doesn't have to round-trip Stripe on every call.
+export const overageState = pgTable(
+  "overage_state",
+  {
+    id: cuid(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    month: text("month").notNull(), // 'YYYY-MM'
+    overageChecks: integer("overage_checks").notNull().default(0),
+    overageUsdCents: integer("overage_usd_cents").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // One row per user per month. Closes a race on the first overage
+    // increment (concurrent requests would otherwise create dup rows).
+    uniqueIndex("overage_state_user_month_idx").on(t.userId, t.month),
+  ],
+).enableRLS();
+
 // Pending invitations to join a team. Distinct from team_members
 // (which requires a Clerk user to exist) so we can hold the invite
 // state for an email that hasn't signed up yet. On accept, the row is
@@ -762,3 +838,5 @@ export type RationaleFeedback = InferSelectModel<typeof rationaleFeedback>;
 export type TeamCustomExample = InferSelectModel<typeof teamCustomExamples>;
 export type PreferencePair = InferSelectModel<typeof preferencePairs>;
 export type Preference = InferSelectModel<typeof preferences>;
+export type CreditPack = InferSelectModel<typeof creditPacks>;
+export type OverageState = InferSelectModel<typeof overageState>;
