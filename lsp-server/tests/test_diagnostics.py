@@ -91,6 +91,62 @@ def test_violations_emit_warning_severity():
     assert "ACT-01" not in d.message
 
 
+def test_diagnostic_message_includes_stacked_diff_when_text_and_suggestion_present():
+    """PR-37 — when both `extracted.text` and `suggestion` are present
+    and they differ, the diagnostic message includes a stacked
+    Original / Suggested block so editors render the change as a
+    visual diff in the hover popup. Same shape as the GitHub Action's
+    diff fence."""
+    diagnostics = violations_to_diagnostics(
+        "Click here",
+        _extracted("Click here"),
+        [
+            {
+                "issue": "Generic CTA",
+                "suggestion": "Start free trial",
+                "severity": "high",
+            }
+        ],
+        verdict="violation",
+    )
+    msg = diagnostics[0].message
+    assert "Original:" in msg
+    assert "- Click here" in msg
+    assert "Suggested:" in msg
+    assert "+ Start free trial" in msg
+    # Issue still leads the message so the editor's one-line summary
+    # still reads sensibly when truncated.
+    assert msg.startswith("Generic CTA")
+
+
+def test_diagnostic_message_falls_back_when_suggestion_missing():
+    """No suggestion → render only the issue (no half-formed diff)."""
+    diagnostics = violations_to_diagnostics(
+        "Click here",
+        _extracted("Click here"),
+        [{"issue": "Generic CTA", "suggestion": "", "severity": "low"}],
+        verdict="violation",
+    )
+    msg = diagnostics[0].message
+    assert msg == "Generic CTA"
+    assert "Original:" not in msg
+
+
+def test_diagnostic_message_falls_back_when_suggestion_is_no_op():
+    """Suggestion identical to original → use the prior single-line
+    'issue · Try: …' shape (don't render a 2-line diff with two
+    identical sides)."""
+    diagnostics = violations_to_diagnostics(
+        "Save",
+        _extracted("Save"),
+        [{"issue": "weird", "suggestion": "Save", "severity": "low"}],
+        verdict="violation",
+    )
+    msg = diagnostics[0].message
+    assert "Original:" not in msg
+    assert "Try: Save" in msg
+
+
 def test_review_recommended_emit_info_severity():
     diagnostics = violations_to_diagnostics(
         "Click here",

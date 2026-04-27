@@ -49,6 +49,44 @@ class LspDiagnostic:
 _STANDARDS_URL_BASE = "https://docs.contentrx.io/model/standards"
 
 
+def _build_diagnostic_message(
+    *, issue: str, suggestion: str, original: str
+) -> str:
+    """Compose the human-readable diagnostic message for the editor's
+    hover / Problems panel (PR-37).
+
+    LSP message strings are plain text in most clients (VS Code's
+    standard diagnostic surface in particular doesn't render markdown
+    in `Diagnostic.message`), so we use a stacked "Original / Suggested"
+    block with leading `-` / `+` markers — same visual story as the
+    GitHub Action's diff fence and the dashboard's stacked diff.
+
+    Falls back to the prior single-line "{issue} Try: {suggestion}"
+    when either side of the diff is missing or the suggestion is a
+    no-op (identical to the original).
+    """
+    issue = issue.strip()
+    suggestion = suggestion.strip()
+    original_stripped = (original or "").strip()
+    if (
+        suggestion
+        and original_stripped
+        and original_stripped != suggestion
+    ):
+        diff_block = (
+            f"Original:\n- {original_stripped}\n"
+            f"Suggested:\n+ {suggestion}"
+        )
+        if issue:
+            return f"{issue}\n\n{diff_block}"
+        return diff_block
+    parts = [issue]
+    if suggestion:
+        parts.append(f"Try: {suggestion}")
+    composed = " ".join(p for p in parts if p).strip()
+    return composed or "ContentRX flagged this string."
+
+
 def byte_range_to_lsp_range(
     source: str, start_byte: int, end_byte: int
 ) -> LspRange:
@@ -130,12 +168,11 @@ def violations_to_diagnostics(
             issue = v.get("issue") or ""
             suggestion = v.get("suggestion") or ""
             sev_band = v.get("severity") or "medium"
-            message_parts: list[str] = []
-            if issue:
-                message_parts.append(issue)
-            if suggestion:
-                message_parts.append(f"Try: {suggestion}")
-            message = " ".join(message_parts).strip() or "ContentRX flagged this string."
+            message = _build_diagnostic_message(
+                issue=issue,
+                suggestion=suggestion,
+                original=extracted.text,
+            )
             out.append(
                 LspDiagnostic(
                     range=lsp_range,
