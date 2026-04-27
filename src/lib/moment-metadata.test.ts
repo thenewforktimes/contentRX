@@ -3,7 +3,6 @@ import { MOMENTS } from "./engine-taxonomy";
 import {
   MOMENT_DESCRIPTIONS,
   SITUATION_PROPERTY_BY_MOMENT,
-  summarizeMomentBanner,
 } from "./moment-metadata";
 
 /**
@@ -54,41 +53,3 @@ describe("SITUATION_PROPERTY_BY_MOMENT", () => {
   });
 });
 
-describe("summarizeMomentBanner", () => {
-  it("returns null for a null summary", () => {
-    expect(summarizeMomentBanner("task_execution", null)).toBeNull();
-  });
-
-  it("returns null when there are no weighted standards", () => {
-    expect(
-      summarizeMomentBanner("empty_state", {
-        total: 0,
-        emphasized: 0,
-        relaxed: 0,
-        suppressed: 0,
-      }),
-    ).toBeNull();
-  });
-
-  it("formats non-zero counts and skips zero categories", () => {
-    expect(
-      summarizeMomentBanner("first_encounter", {
-        total: 5,
-        emphasized: 4,
-        relaxed: 1,
-        suppressed: 0,
-      }),
-    ).toBe("Looks like first_encounter — 4 emphasized, 1 relaxed.");
-  });
-
-  it("renders all three categories when all are non-zero", () => {
-    expect(
-      summarizeMomentBanner("decision_point", {
-        total: 5,
-        emphasized: 4,
-        relaxed: 0,
-        suppressed: 1,
-      }),
-    ).toBe("Looks like decision_point — 4 emphasized, 1 suppressed.");
-  });
-});

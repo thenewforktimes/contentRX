@@ -14,7 +14,6 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAllMomentWeightsSummaries } from "@/lib/moment-metadata.server";
 import { ExplainClient } from "./explain-client";
 
 export const metadata = {
@@ -26,12 +25,6 @@ export default async function ExplainPage() {
   if (!userId) {
     redirect("/sign-in?redirect_url=/dashboard/explain");
   }
-
-  // Precomputed at the server for the moment-correction dropdown.
-  // Human-eval build plan Session 22 — showing "(4)" next to each
-  // moment in the dropdown helps the user pick the one whose weights
-  // match their intuition, not just the name.
-  const momentSummaries = getAllMomentWeightsSummaries();
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
@@ -56,7 +49,7 @@ export default async function ExplainPage() {
         </p>
       </header>
 
-      <ExplainClient momentSummaries={momentSummaries} />
+      <ExplainClient />
     </main>
   );
 }

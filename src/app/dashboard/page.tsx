@@ -124,9 +124,8 @@ export default async function DashboardPage() {
 
       {plan === "team" && (
         <>
-          <TeamRulesLink isAdmin={user.teamOwnerUserId === null} />
-          <TeamAnalyticsLink />
-          <OverridesLink isAdmin={user.teamOwnerUserId === null} />
+          <TeamRulesLink />
+          <OverridesLink />
         </>
       )}
 
@@ -158,19 +157,16 @@ function CalibrateLink({ optedOut }: { optedOut: boolean }) {
   );
 }
 
-function OverridesLink({ isAdmin }: { isAdmin: boolean }) {
+function OverridesLink() {
   return (
     <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Override report</h2>
-        <span className="text-xs text-neutral-500">
-          {isAdmin ? "Last 30 days" : "Admin only"}
-        </span>
+        <span className="text-xs text-neutral-500">Last 30 days</span>
       </header>
       <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
-        {isAdmin
-          ? "The rules your team dismisses most. Use this to decide which standards to tune or disable in team rules."
-          : "The team owner can see which rules your team dismisses most. Ask them if you want to discuss tuning."}
+        The rules your team dismisses most. Use this to decide which
+        standards to tune or disable in team rules.
       </p>
       <Link
         href="/dashboard/overrides"
@@ -182,46 +178,21 @@ function OverridesLink({ isAdmin }: { isAdmin: boolean }) {
   );
 }
 
-function TeamRulesLink({ isAdmin }: { isAdmin: boolean }) {
+function TeamRulesLink() {
   return (
     <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Team rules</h2>
-        <span className="text-xs text-neutral-500">
-          {isAdmin ? "Admin" : "Read-only"}
-        </span>
       </header>
       <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
-        {isAdmin
-          ? "Disable standards or add your team's custom rules. Changes apply to every evaluation your team runs."
-          : "See which standards your team owner has disabled or added. Only the owner can make changes."}
+        Disable standards or add custom rules for your team. Changes
+        apply to every evaluation your team runs.
       </p>
       <Link
         href="/dashboard/team/rules"
         className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
       >
         Open team rules
-      </Link>
-    </section>
-  );
-}
-
-function TeamAnalyticsLink() {
-  return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
-      <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Team analytics</h2>
-        <span className="text-xs text-neutral-500">Last 7 / 30 / 90 days</span>
-      </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
-        Violations by standard, daily trends, and per-member activity.
-        No text content stored — aggregated from the violations log.
-      </p>
-      <Link
-        href="/dashboard/team/analytics"
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
-      >
-        Open analytics
       </Link>
     </section>
   );

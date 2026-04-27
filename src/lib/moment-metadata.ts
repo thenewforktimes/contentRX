@@ -71,32 +71,3 @@ export const SITUATION_PROPERTY_BY_MOMENT: Partial<Record<Moment, string>> = {
   compliance_disclosure: "compliance",
 };
 
-export interface MomentWeightsSummary {
-  /** Total weighted standards across all three modifier types. */
-  total: number;
-  emphasized: number;
-  relaxed: number;
-  suppressed: number;
-}
-
-/**
- * Pure helper — shapes the banner's lead sentence from a moment ID.
- *   summarizeMomentBanner("destructive_action", { emphasized: 3, ... })
- *   → "Looks like destructive_action — 3 standards emphasized, 0 relaxed."
- *
- * Returns null when the moment has no weighted standards — no point
- * in showing a banner that says "I'm applying zero special adjustments."
- */
-export function summarizeMomentBanner(
-  momentId: string,
-  summary: MomentWeightsSummary | null,
-): string | null {
-  if (!summary) return null;
-  const { emphasized, relaxed, suppressed, total } = summary;
-  if (total === 0) return null;
-  const parts: string[] = [];
-  if (emphasized > 0) parts.push(`${emphasized} emphasized`);
-  if (relaxed > 0) parts.push(`${relaxed} relaxed`);
-  if (suppressed > 0) parts.push(`${suppressed} suppressed`);
-  return `Looks like ${momentId} — ${parts.join(", ")}.`;
-}

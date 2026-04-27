@@ -22,21 +22,7 @@ type CheckEnvelope = PublicCheckEnvelope & {
   latency_ms: number;
 };
 
-export interface ExplainClientProps {
-  /**
-   * Kept in the props for compatibility with the page-server-component
-   * call site; the post-pivot dashboard does not render moment context
-   * because `moment` is substrate-only. The page can pass an empty
-   * object here.
-   */
-  momentSummaries?: Record<string, unknown>;
-}
-
-export function ExplainClient(_props: ExplainClientProps = {}) {
-  // _props is retained in the signature for API compatibility with the
-  // page-server-component caller; the post-pivot dashboard does not
-  // render moment context (substrate-only) so the prop goes unused.
-  void _props;
+export function ExplainClient() {
   const [text, setText] = useState(
     "Unable to complete operation. Please contact administrator.",
   );

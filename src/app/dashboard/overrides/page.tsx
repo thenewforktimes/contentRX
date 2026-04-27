@@ -5,10 +5,8 @@
  * `violation_overrides` directly via Drizzle so the page renders in one
  * round-trip with no client JS budget.
  *
- * Mirrors the gating pattern in /dashboard/team/analytics:
- *   - Free/Pro plan → upsell card
- *   - Team-member (non-admin) → 403 explanation
- *   - Admin → the actual report
+ * Plan-gated: Free/Pro → upsell card; Team → the report (any team
+ * member, not just the owner — Position-3 product direction, Apr 2026).
  *
  * BUILD_PLAN_v2 Session 11.
  */
@@ -57,26 +55,6 @@ export default async function OverridesPage() {
           className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 dark:bg-white dark:text-black"
         >
           Upgrade to Team
-        </Link>
-      </section>
-    );
-  }
-
-  const isAdmin = user.teamOwnerUserId === null;
-  if (!isAdmin) {
-    return (
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
-        <h1 className="text-lg font-semibold">Override report</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Only the team owner can see the override report. Ask your team
-          owner if you want to discuss which rules your team is dismissing
-          most.
-        </p>
-        <Link
-          href="/dashboard"
-          className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
-        >
-          Back to dashboard
         </Link>
       </section>
     );
