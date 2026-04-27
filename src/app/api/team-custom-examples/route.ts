@@ -24,6 +24,7 @@ import {
   CreateExampleRequestSchema,
 } from "@/lib/custom-examples-schemas";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { revalidateDashboard } from "@/lib/revalidate";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
@@ -216,6 +217,8 @@ export async function POST(req: Request) {
       })
       .returning();
 
+    // Custom-examples surface at /dashboard/team/custom-examples.
+    revalidateDashboard();
     return withCors(
       NextResponse.json(
         envelope({ result: { example: row } }),

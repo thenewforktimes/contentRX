@@ -16,6 +16,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appUrl, sendEmail } from "@/lib/email";
+import { revalidateDashboard } from "@/lib/revalidate";
 import { createInvitation, resolveTeamId } from "@/lib/team-invitations";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
@@ -105,6 +106,8 @@ export async function POST(req: Request) {
     }),
   });
 
+  // Members page reads from team_invitations.
+  revalidateDashboard();
   return NextResponse.json({
     invitation: {
       id: result.invitation.id,

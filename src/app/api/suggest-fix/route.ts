@@ -15,10 +15,10 @@
  * `/api/check`. No persistence of the original or the rewrite.
  */
 
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { envelope } from "@/lib/api-envelope";
+import { revalidateDashboard } from "@/lib/revalidate";
 import { resolveAuth } from "@/lib/auth";
 import { suggestFix } from "@/lib/evaluate";
 import { currentMonth, monthlyQuota } from "@/lib/quotas";
@@ -127,15 +127,10 @@ export async function POST(req: Request) {
 
   try {
     const response = await suggestFix(params);
-    // Same edge-cache invalidation as /api/check — suggest-fix
-    // consumes a quota slot, so the dashboard's usage counter +
-    // remaining display would otherwise lag behind on the next view.
-    // Best-effort wrapper — see comment in /api/check route.ts.
-    try {
-      revalidatePath("/dashboard", "layout");
-    } catch (err) {
-      console.warn("revalidatePath failed (non-fatal):", err);
-    }
+    // Suggest-fix consumes a quota slot — invalidate the dashboard
+    // cache so the counter / remaining display catch up on the
+    // next render.
+    revalidateDashboard();
     return json(
       envelope({
         result: response.result,

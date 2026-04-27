@@ -23,6 +23,7 @@ import {
   findReDoSConcern,
   nextCustomStandardId,
 } from "@/lib/team-rules";
+import { revalidateDashboard } from "@/lib/revalidate";
 import { isKnownStandardId } from "@/lib/standards";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 
@@ -144,6 +145,7 @@ export async function POST(req: Request) {
         ruleJson: parsed.data.rule_json,
       })
       .returning();
+    revalidateDashboard();
     return NextResponse.json(envelope({ rule: row }), { status: 201 });
   }
 
@@ -173,6 +175,7 @@ export async function POST(req: Request) {
         set: { updatedAt: new Date() },
       })
       .returning();
+    revalidateDashboard();
     return NextResponse.json(envelope({ rule: row }), { status: 201 });
   }
 
@@ -194,5 +197,6 @@ export async function POST(req: Request) {
       set: { ruleJson: parsed.data.rule_json, updatedAt: new Date() },
     })
     .returning();
+  revalidateDashboard();
   return NextResponse.json(envelope({ rule: row }), { status: 201 });
 }

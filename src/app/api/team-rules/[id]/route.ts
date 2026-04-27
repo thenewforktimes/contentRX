@@ -17,6 +17,7 @@ import { z } from "zod";
 import { envelope } from "@/lib/api-envelope";
 import { getDb, schema } from "@/db";
 import { resolveAuth } from "@/lib/auth";
+import { revalidateDashboard } from "@/lib/revalidate";
 import { findReDoSConcern } from "@/lib/team-rules";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 
@@ -116,6 +117,7 @@ export async function PATCH(req: Request, context: RouteContext) {
     .where(eq(schema.teamRules.id, id))
     .returning();
 
+  revalidateDashboard();
   return NextResponse.json(envelope({ rule: row }));
 }
 
@@ -144,5 +146,6 @@ export async function DELETE(req: Request, context: RouteContext) {
   }
 
   await db.delete(schema.teamRules).where(eq(schema.teamRules.id, id));
+  revalidateDashboard();
   return NextResponse.json(envelope({ ok: true }));
 }

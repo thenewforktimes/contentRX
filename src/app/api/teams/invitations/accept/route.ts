@@ -19,6 +19,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { acceptInvitation } from "@/lib/team-invitations";
 import { appUrl, sendEmail } from "@/lib/email";
+import { revalidateDashboard } from "@/lib/revalidate";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { InviteAcceptedEmail } from "@/emails/invite-accepted";
@@ -86,5 +87,8 @@ export async function POST(req: Request) {
     });
   }
 
+  // Members page (and any other team-scoped surface) reflects the
+  // newly-joined member; bust the cache.
+  revalidateDashboard();
   return NextResponse.json({ ok: true });
 }

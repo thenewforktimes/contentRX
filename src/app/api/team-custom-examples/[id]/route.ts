@@ -20,6 +20,7 @@ import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
 import { UpdateExampleRequestSchema } from "@/lib/custom-examples-schemas";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { revalidateDashboard } from "@/lib/revalidate";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
@@ -168,6 +169,7 @@ export async function PATCH(
     );
   }
 
+  revalidateDashboard();
   return withCors(
     NextResponse.json(envelope({ result: { example: updated[0] } })),
   );
@@ -199,6 +201,7 @@ export async function DELETE(
     );
   }
 
+  revalidateDashboard();
   return withCors(
     NextResponse.json(envelope({ result: { ok: true, deleted_id: id } })),
   );

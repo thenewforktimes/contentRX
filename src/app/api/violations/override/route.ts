@@ -31,6 +31,7 @@ import { resolveAuth } from "@/lib/auth";
 import { MOMENTS } from "@/lib/engine-taxonomy";
 import { hashText } from "@/lib/log-violations";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { revalidateDashboard } from "@/lib/revalidate";
 import { isKnownStandardId } from "@/lib/standards";
 import { CUSTOM_STANDARD_ID_REGEX } from "@/lib/team-rules";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
@@ -205,6 +206,8 @@ export async function POST(req: Request) {
         sessionId: session_id ?? null,
       })
       .returning();
+    // Override report at /dashboard/overrides reads from this table.
+    revalidateDashboard();
     return withCors(
       NextResponse.json(envelope({ override: row }), { status: 201 }),
     );
