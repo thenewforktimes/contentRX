@@ -27,12 +27,11 @@ export function InviteAcceptedEmail({
       </Heading>
       <Text>
         They can now scan content against your team's rules and contribute
-        to your shared monthly quota. Open team analytics to see their
-        activity once they've run a few scans.
+        to your shared monthly quota.
       </Text>
       <Text style={{ marginTop: 20 }}>
-        <Button href={`${appUrl}/dashboard/team/analytics`} style={button}>
-          Open team analytics
+        <Button href={`${appUrl}/dashboard`} style={button}>
+          Open dashboard
         </Button>
       </Text>
     </EmailShell>

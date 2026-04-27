@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     )) as Array<{ id: string; email: string }>;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://contentrx.io";
-  const dashboardUrl = `${appUrl}/dashboard/cadence`;
+  const dashboardUrl = `${appUrl}/dashboard/overrides`;
 
   const results: Array<{
     teamId: string;
