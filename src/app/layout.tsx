@@ -43,7 +43,7 @@ export default function RootLayout({
               defer
               data-domain={plausibleDomain}
               src="https://plausible.io/js/script.outbound-links.js"
-              strategy="afterInteractive"
+              strategy="lazyOnload"
             />
           )}
         </body>
