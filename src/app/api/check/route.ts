@@ -13,6 +13,7 @@
  *   9. Return the result + quota metadata
  */
 
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { publicCheckEnvelope } from "@/lib/api-envelope";
@@ -300,6 +301,25 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error("recordTokenUsage failed:", err);
+  }
+
+  // Bust Vercel's edge cache for every dashboard route nested under
+  // the dashboard layout. Without this the next /dashboard SSR can be
+  // served from a cached response that pre-dates this check, freezing
+  // the usage counter, "This week" panel, and Active-Surfaces row.
+  // Tried `force-dynamic` at the layout level (PR-196); broke SSR and
+  // got reverted (PR-197). Explicit per-write revalidation is the
+  // safer trade — cache stays warm for fast loads, invalidates only
+  // when the data backing the dashboard actually changes.
+  //
+  // Wrapped because revalidatePath requires Next's static generation
+  // store context, which vitest doesn't provide. Cache invalidation
+  // is best-effort: if it ever fails we'd rather the request still
+  // succeed and the dashboard catch up on the next natural refresh.
+  try {
+    revalidatePath("/dashboard", "layout");
+  } catch (err) {
+    console.warn("revalidatePath failed (non-fatal):", err);
   }
 
   // Public envelope (schema 2.0.0). `result` is the substrate
