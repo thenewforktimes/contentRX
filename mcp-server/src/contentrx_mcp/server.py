@@ -110,6 +110,138 @@ async def evaluate_copy(
 
 @mcp.tool(
     description=(
+        "Check multiple UI strings in one call. Set dry_run=true first "
+        "when batch is >10 strings to preview the quota cost before "
+        "running."
+    ),
+)
+async def evaluate_copy_batch(
+    strings: list[str],
+    moment_hint: str | None = None,
+    content_type_hint: str | None = None,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Run content-design review across many strings in one tool call.
+
+    PR-15 — the MCP-side dry-run gate. For batches of 10+ strings,
+    call once with dry_run=true to confirm the quota cost, then call
+    again with dry_run=false to actually run.
+
+    Args:
+        strings: List of UI strings to evaluate (button labels, error
+            messages, paragraphs, etc.). Each string consumes one check
+            from the monthly quota when dry_run=false.
+        moment_hint: Optional moment override applied to every string
+            in the batch (e.g. "error_recovery").
+        content_type_hint: Optional content_type override applied to
+            every string (e.g. "button_cta").
+        dry_run: When true, no API calls go out and no quota is used.
+            Returns the count + a "would consume N checks" message so
+            the LLM can confirm with the user before committing.
+
+    Returns:
+        dry_run=true:
+          { "dry_run": True, "string_count": N, "would_use_checks": N,
+            "message": "..." }
+
+        dry_run=false:
+          { "results": [
+              { "text": str, "verdict": str, "review_reason": str|None,
+                "violations": [...], "warnings": [...] },
+              { "text": str, "error": { "kind": str, "message": str } },
+              ...
+            ],
+            "checks_used": N,            # successfully completed
+            "terminated_early": bool,     # True if a fatal error stopped the batch
+            "termination_reason": str|None }
+
+        Schema 2.0.0 (ADR 2026-04-25): each result carries only the
+        public envelope fields. Substrate (standard_id, rule_version,
+        rationale_chain, moment) is stripped at the API boundary.
+    """
+    if not strings:
+        return {
+            "results": [],
+            "checks_used": 0,
+            "terminated_early": False,
+            "termination_reason": None,
+        }
+
+    if dry_run:
+        n = len(strings)
+        word = "check" if n == 1 else "checks"
+        return {
+            "dry_run": True,
+            "string_count": n,
+            "would_use_checks": n,
+            "message": (
+                f"Would consume {n} {word}. Call again with "
+                "dry_run=false to actually run the evaluation."
+            ),
+        }
+
+    results: list[dict[str, Any]] = []
+    checks_used = 0
+    terminated_early = False
+    termination_reason: str | None = None
+
+    try:
+        async with open_client() as client:
+            for text in strings:
+                try:
+                    result = await client.check(
+                        text=text,
+                        moment=moment_hint,
+                        content_type=content_type_hint,
+                    )
+                except (
+                    AuthError,
+                    AuthFailedError,
+                    QuotaExhaustedError,
+                ) as exc:
+                    # Fatal — abort the rest of the batch. Authentication
+                    # and quota errors will hit every subsequent request
+                    # the same way; better to fail fast than to spam.
+                    err = _typed_error(exc)
+                    results.append({"text": text, "error": err})
+                    terminated_early = True
+                    termination_reason = err.get("kind")
+                    break
+                except (RateLimitError, ContentRXError) as exc:
+                    # Per-string error, but the batch can keep going.
+                    results.append({"text": text, "error": _typed_error(exc)})
+                    continue
+
+                results.append(
+                    {
+                        "text": text,
+                        "verdict": result.verdict,
+                        "review_reason": result.review_reason,
+                        "violations": result.violations,
+                        "warnings": result.warnings,
+                    }
+                )
+                checks_used += 1
+    except (AuthError, AuthFailedError) as exc:
+        # Couldn't even open the client — surface as a single error.
+        return {
+            "results": [],
+            "checks_used": 0,
+            "terminated_early": True,
+            "termination_reason": "auth_failed",
+            "error": _typed_error(exc),
+        }
+
+    return {
+        "results": results,
+        "checks_used": checks_used,
+        "terminated_early": terminated_early,
+        "termination_reason": termination_reason,
+    }
+
+
+@mcp.tool(
+    description=(
         "Classify the UI moment a string represents — error, empty "
         "state, CTA, confirmation, etc. No quota cost."
     ),
