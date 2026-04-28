@@ -1,9 +1,13 @@
 /**
- * /pricing — public pricing page (PR-04 from
- * pricing-and-unit-of-value-strategy-2026-04-26.md).
+ * /pricing — public pricing page.
  *
- * Shows the locked launch SKUs: Free, Pro, Scale + Audit Pack.
- * Copy comes from Appendix A of the pricing doc.
+ * Three SKUs at launch: Free, Pro, Scale. The Audit Pack one-time
+ * SKU was cut pre-launch — at $99 it cannibalised Scale rather than
+ * expanding the market, and adding a one-time tier with no track
+ * record for conversion was the wrong shape of complexity for v1.
+ * Schema-side scaffolding (overage_state, audit credits) stays as
+ * reversibility insurance; the feature flag is just "don't show it
+ * on the page."
  *
  * Note: Stripe price IDs in `src/lib/stripe.ts` are still on the
  * pre-locked Pro $24 / Team $35 — PR-05 reconciles by adding the
@@ -22,7 +26,7 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 export const metadata: Metadata = {
   title: "Pricing — ContentRX",
   description:
-    "Free, Pro, Scale, and Audit Pack. All plans share the same engine, the same calibrated reviewer, and the same five surfaces. The only difference is how much you use it.",
+    "Free, Pro, and Scale. All plans share the same engine, the same calibrated reviewer, and the same five surfaces. The only difference is how much you use it.",
 };
 
 export default function PricingPage() {
@@ -49,14 +53,12 @@ export default function PricingPage() {
           name="Free"
           price="$0"
           quota="250 checks per month"
-          overage="Hard cap — no overage"
           cta={{ href: "/sign-up", label: "Try free" }}
         />
         <PlanCard
           name="Pro"
           price="$29 / month"
           quota="5,000 checks per month"
-          overage="Overage at $0.005 / check, soft cap default $50"
           cta={{ href: "/sign-up?plan=pro", label: "Start Pro" }}
           emphasized
         />
@@ -64,35 +66,8 @@ export default function PricingPage() {
           name="Scale"
           price="$99 / month"
           quota="25,000 checks per month"
-          overage="Overage at $0.003 / check, soft cap default $200"
           cta={{ href: "/sign-up?plan=scale", label: "Start Scale" }}
         />
-      </section>
-
-      <section className="mt-12">
-        <h2 className="text-lg font-semibold">
-          Have a one-time project? Skip the subscription.
-        </h2>
-        <Card variant="emphasis" className="mt-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h3 className="text-base font-semibold">Audit Pack — $99</h3>
-              <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-                25,000 checks. Valid 90 days. No subscription.
-              </p>
-              <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                For codebase audits, design system reviews, or pre-launch
-                content sweeps.
-              </p>
-            </div>
-            <Link
-              href="/sign-up?plan=audit"
-              className={buttonStyles({ variant: "primary" })}
-            >
-              Buy a pack
-            </Link>
-          </div>
-        </Card>
       </section>
 
       <section className="mt-16 border-t border-neutral-200 pt-10 dark:border-neutral-800">
@@ -106,10 +81,10 @@ export default function PricingPage() {
             q="What happens if I hit my quota on Pro?"
             a={
               <>
-                Nothing breaks. You keep working at $0.005 per additional
-                check, up to a soft cap you set (default $50). We email at
-                80% of the cap; you can raise it any time. If you&apos;re
-                hitting 5,000 every month, Scale at $99 is probably cheaper.
+                Pro caps at 5,000 checks per month — a hard cap, no
+                surprise overage charges. We email at 80% so you have
+                warning before you hit the limit. If you&apos;re bumping
+                5,000 most months, Scale at $99 covers 25,000.
               </>
             }
           />
@@ -181,14 +156,12 @@ function PlanCard({
   name,
   price,
   quota,
-  overage,
   cta,
   emphasized = false,
 }: {
   name: string;
   price: string;
   quota: string;
-  overage: string;
   cta: { href: string; label: string };
   emphasized?: boolean;
 }) {
@@ -204,7 +177,6 @@ function PlanCard({
       </div>
       <div className="flex-1 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
         <p className="font-medium">{quota}</p>
-        <p className="text-neutral-600 dark:text-neutral-400">{overage}</p>
         <p className="text-neutral-600 dark:text-neutral-400">
           All five surfaces.
         </p>

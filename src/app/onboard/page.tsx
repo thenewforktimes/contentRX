@@ -3,15 +3,16 @@
  *
  * Default post-signup destination via Clerk's `fallbackRedirectUrl`
  * on the SignUp component. The customer-journey diagrams put this
- * right after Clerk auth: "Where do you want to use ContentRX?" Six
- * options — five generation-layer surfaces + the Audit Pack offer
- * for burst usage.
+ * right after Clerk auth: "Where do you want to use ContentRX?"
+ * Five options — one per generation-layer surface (MCP, LSP, Action,
+ * Figma, CLI). The Audit Pack option was removed alongside the SKU
+ * itself; if we re-add a one-time pricing tier later, this picker
+ * can grow back to six.
  *
- * Picking a surface routes to its anchor on /install. Picking Audit
- * Pack routes to /pricing (the Audit Pack callout sits there). All
- * picks are stateless for now — we don't persist the choice yet
- * (PR-24's welcome email branching can read it from the redirect
- * params if we want to thread state through later).
+ * Picking a surface routes to its anchor on /install. All picks are
+ * stateless for now — we don't persist the choice yet (PR-24's
+ * welcome email branching can read it from the redirect params if
+ * we want to thread state through later).
  *
  * The page is reachable any time post-signup; users can revisit it
  * by URL. Not gated by "first-time only" for v1 — keeping it
@@ -76,14 +77,6 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
       "Batch checks from the terminal or CI. One pip install, stdlib runtime, exit codes you can pipe.",
     href: "/install#cli",
     cta: "Set up CLI →",
-  },
-  {
-    key: "audit",
-    name: "One-time audit project",
-    description:
-      "Auditing a codebase, design system, or pre-launch sweep? Skip the subscription — Audit Pack: $99 for 25,000 checks valid 90 days.",
-    href: "/pricing",
-    cta: "See Audit Pack →",
   },
 ];
 
