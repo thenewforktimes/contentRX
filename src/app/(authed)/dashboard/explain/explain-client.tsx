@@ -34,10 +34,23 @@ type CheckEnvelope = PublicCheckEnvelope & {
   };
 };
 
-// Mirrors the /api/check zod cap. Kept in sync by hand because
-// TypeScript-importing zod schemas across the route boundary adds
-// overhead for one number. If this number changes, update both.
-const MAX_CHECK_CHARS = 2_000;
+// Mirrors the /api/check billing constants. Kept in sync by hand
+// because TypeScript-importing zod schemas across the route boundary
+// adds overhead for two numbers. If either number changes, update
+// route.ts as well — the API enforces independently.
+const CHARS_PER_CHECK = 5_000;
+const MAX_CHECKS_PER_CALL = 5;
+const MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL; // 25_000
+
+/**
+ * Proportional billing preview: 1 check per CHARS_PER_CHECK characters,
+ * rounded up. Capped at MAX_CHECKS_PER_CALL so the live counter never
+ * shows numbers larger than the API will accept.
+ */
+function checksFor(text: string): number {
+  if (text.length === 0) return 0;
+  return Math.min(MAX_CHECKS_PER_CALL, Math.ceil(text.length / CHARS_PER_CHECK));
+}
 
 /**
  * Structured error states the inline check can render. Mapping API
@@ -179,7 +192,7 @@ export function ExplainClient() {
               : "border-neutral-300 focus:border-neutral-500 focus:ring-neutral-500 dark:border-neutral-700"
           }`}
         />
-        <div className="flex items-center justify-between text-xs">
+        <div className="flex items-center justify-between gap-3 text-xs">
           <span
             className={`tabular-nums ${
               text.length > MAX_CHECK_CHARS
@@ -189,18 +202,28 @@ export function ExplainClient() {
                   : "text-neutral-500 dark:text-neutral-300"
             }`}
           >
-            {text.length.toLocaleString()} / {MAX_CHECK_CHARS.toLocaleString()}{" "}
-            characters
+            {text.length.toLocaleString()} characters
+            {text.length > 0 && (
+              <>
+                {" · "}
+                <strong className="font-semibold">
+                  {checksFor(text)}{" "}
+                  {checksFor(text) === 1 ? "check" : "checks"}
+                </strong>
+              </>
+            )}
           </span>
-          {text.length > MAX_CHECK_CHARS && (
-            <span className="text-red-600 dark:text-red-400">
-              Too long for a single check.{" "}
-              <Link
-                href="/install"
-                className="underline underline-offset-2"
-              >
-                Use the GitHub Action or MCP →
+          {text.length > MAX_CHECK_CHARS ? (
+            <span className="text-right text-red-600 dark:text-red-400">
+              Too long. Split into pieces ≤ {MAX_CHECK_CHARS.toLocaleString()}{" "}
+              chars or use{" "}
+              <Link href="/install" className="underline underline-offset-2">
+                MCP / GitHub Action →
               </Link>
+            </span>
+          ) : (
+            <span className="text-neutral-500 dark:text-neutral-300">
+              1 check per {CHARS_PER_CHECK.toLocaleString()} chars
             </span>
           )}
         </div>

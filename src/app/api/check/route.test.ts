@@ -245,28 +245,88 @@ describe("/api/check — auth + input", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects text longer than the 2000-char tactical-check cap", async () => {
-    // Pinning the gaming-vector defense from 2026-04-28: a single check
-    // is for one tactical UI string, not a pasted block. Longer content
-    // should route through the GitHub Action or MCP evaluate_copy_batch.
-    // Cap and error message are co-defined in src/app/api/check/route.ts.
+  it("rejects text longer than the 25,000-char hard ceiling", async () => {
+    // Defense against pasted-codebase abuse: even with proportional
+    // billing, a single call can't exceed MAX_CHECK_CHARS = 25,000.
+    // The message must be honest about the cap applying across every
+    // surface (web, MCP, CLI, GHA, Figma) so a routed user doesn't
+    // bounce off the same 400 from the next surface they try.
     await seedAuthedUser();
-    const res = await POST(makeReq({ text: "x".repeat(2_001) }));
+    const res = await POST(makeReq({ text: "x".repeat(25_001) }));
     expect(res.status).toBe(400);
     const body = await res.json();
-    // Confirm the helpful message lands — bypass clients (devtools,
-    // future custom integrations) need to know where to go next.
     const messageBlob = JSON.stringify(body);
-    expect(messageBlob).toMatch(/2,000 characters/);
-    expect(messageBlob).toMatch(/GitHub Action|MCP/);
+    expect(messageBlob).toMatch(/25,000 characters/);
+    expect(messageBlob).toMatch(/5,000/); // CHARS_PER_CHECK in the message
+    expect(messageBlob.toLowerCase()).toContain("every surface");
+    expect(messageBlob).toMatch(/MCP|GitHub Action/);
   });
 
-  it("accepts text right at the 2000-char cap", async () => {
-    // Boundary check — exactly 2000 should pass.
+  it("accepts text right at the 25,000-char ceiling", async () => {
+    // Boundary check — exactly 25,000 should pass and consume 5 checks.
     await seedAuthedUser("pro");
     cannedEval.current = VIOLATION_RESULT;
-    const res = await POST(makeReq({ text: "x".repeat(2_000) }));
+    const res = await POST(makeReq({ text: "x".repeat(25_000) }));
     expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.usage.checks_consumed).toBe(5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Proportional billing — the 2026-04-28 hybrid design
+// ---------------------------------------------------------------------------
+
+describe("/api/check — proportional billing", () => {
+  // Boundary table: every step on the ceil(text.length / 5000) ladder
+  // gets a test so a future refactor that breaks the math at the
+  // boundaries (off-by-one, wrong rounding) fails loudly. The pattern:
+  // input length → expected checks consumed.
+  const cases = [
+    { len: 1, expected: 1, label: "1 char → 1 check" },
+    { len: 4_999, expected: 1, label: "4,999 chars → 1 check (just under boundary)" },
+    { len: 5_000, expected: 1, label: "5,000 chars → 1 check (at boundary)" },
+    { len: 5_001, expected: 2, label: "5,001 chars → 2 checks (just over boundary)" },
+    { len: 10_000, expected: 2, label: "10,000 chars → 2 checks" },
+    { len: 10_001, expected: 3, label: "10,001 chars → 3 checks" },
+    { len: 24_999, expected: 5, label: "24,999 chars → 5 checks" },
+    { len: 25_000, expected: 5, label: "25,000 chars → 5 checks (ceiling)" },
+  ];
+
+  for (const c of cases) {
+    it(c.label, async () => {
+      await seedAuthedUser("pro");
+      cannedEval.current = VIOLATION_RESULT;
+      const res = await POST(makeReq({ text: "x".repeat(c.len) }));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.usage.checks_consumed).toBe(c.expected);
+      expect(body.usage.used).toBe(c.expected);
+    });
+  }
+
+  it("rejects with 402 when the proportional cost exceeds remaining quota", async () => {
+    // The all-or-nothing claim: a 7,500-char input costs 2 checks,
+    // and a Free user with 24/25 checks already used can't run it
+    // even though they have 1 slot remaining. No partial fulfillment.
+    const userId = await seedAuthedUser("free");
+    // Directly bump the user's usage to 24/25 by inserting a usage row.
+    await harness.db
+      .insert(schema.usage)
+      .values({ userId, month: new Date().toISOString().slice(0, 7), count: 24 });
+    cannedEval.current = VIOLATION_RESULT;
+
+    // 7,500 chars = 2 checks needed; only 1 slot left = 402.
+    const res = await POST(makeReq({ text: "x".repeat(7_500) }));
+    expect(res.status).toBe(402);
+    const body = await res.json();
+    expect(body.checks_required).toBe(2);
+    // Usage row didn't budge — the claim was atomic, no partial spend.
+    const [row] = await harness.db
+      .select({ count: schema.usage.count })
+      .from(schema.usage)
+      .where(eq(schema.usage.userId, userId));
+    expect(row.count).toBe(24);
   });
 });
 

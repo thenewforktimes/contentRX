@@ -41,10 +41,32 @@ import {
   recomputeVerdict,
 } from "@/lib/team-rules";
 import { teamScope } from "@/lib/team-scope";
-import { claimQuotaSlot, recordTokenUsage } from "@/lib/usage";
+import { claimQuotaSlots, recordTokenUsage } from "@/lib/usage";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { QuotaExhaustedEmail } from "@/emails/quota-exhausted";
 import { QuotaWarningEmail } from "@/emails/quota-warning";
+
+// ----- billing model ---------------------------------------------------------
+//
+// One check = up to CHARS_PER_CHECK characters of input. Longer text is
+// stepped: 5,001-10,000 chars = 2 checks, 10,001-15,000 = 3, etc.
+// Hard ceiling at MAX_CHECK_CHARS keeps a single call from draining the
+// entire Free-tier monthly quota in one shot (worst case: 5 checks =
+// 20% of the 25-check Free allotment).
+//
+// These two constants ARE the contract. Change either and the API
+// response, the web app counter, and any client-side preview need to
+// stay in sync (the explain-client.tsx mirror is `MAX_CHECK_CHARS` /
+// `CHARS_PER_CHECK` — keep both pairs aligned).
+const CHARS_PER_CHECK = 5_000;
+const MAX_CHECKS_PER_CALL = 5;
+const MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL; // 25_000
+
+/** Proportional billing: 1 check per CHARS_PER_CHECK characters, rounded up. */
+function checksFor(text: string): number {
+  if (text.length === 0) return 0;
+  return Math.min(MAX_CHECKS_PER_CALL, Math.ceil(text.length / CHARS_PER_CHECK));
+}
 
 // CORS allowlist (audit S5): see `lib/cors.ts`. The Figma plugin
 // iframe sends `Origin: null`; the marketing site is same-origin to
@@ -57,36 +79,39 @@ export async function OPTIONS(req: Request) {
 }
 
 const RequestSchema = z.object({
-  // 2000-char cap defines the product as a *tactical* check tool — one
-  // button label, error message, paragraph, etc. per call. Two reasons:
+  // Hard ceiling: 25,000 characters per call. Proportional billing
+  // applies (1 check per 5,000 chars, see CHARS_PER_CHECK below) so a
+  // single call can cost up to MAX_CHECKS_PER_CALL = 5 quota units.
   //
-  //  1. Cost: every call routes to Anthropic with input-token billing
-  //     proportional to text length. The pre-pivot 100k cap (which only
-  //     existed to match the engine's MAX_CONTENT_LENGTH backstop) let
-  //     a single call cost up to ~$1 in tokens, which on the Free tier
-  //     means 25 mega-checks/month per gaming user.
-  //  2. Quality: the engine evaluates one piece of UI copy at a time.
-  //     A pasted-block-of-50-strings input gets evaluated holistically
-  //     and produces vague feedback. Forcing one-string-per-call yields
-  //     better verdicts.
+  // Why proportional instead of a flat 1-check-per-call cap:
+  //   - A flat cap at 25,000 would let a Free user spend 1 check on a
+  //     25,000-char block (~$0.25 in Anthropic input tokens). That's
+  //     500x the leverage of a tactical 50-char button label and
+  //     reintroduces the gaming vector PR-224 was designed to close.
+  //   - Proportional billing makes the gamer's leverage equal to
+  //     everyone else's: 1 check buys 5,000 chars, period. Long-form
+  //     legitimate users (FAQ entries, error pages) pay for what they
+  //     consume; nobody gets locked out for having 2,500-char copy.
   //
-  // Surfaces with legitimate multi-string workflows (GitHub Action,
-  // MCP evaluate_copy_batch, Figma plugin scanning a frame) issue
-  // ONE /api/check per string — each extraction lands here individually
-  // and is bounded by the same cap.
+  // Same cap applies to every surface (web app, MCP, CLI, GitHub
+  // Action, Figma plugin). The error message names them explicitly so
+  // a user routed here from one surface knows the cap follows them.
   //
-  // The engine's MAX_CONTENT_LENGTH=100_000 is unchanged — it remains
-  // the inner backstop in case a future internal tool ever bypasses
-  // /api/check. Defense in depth at two layers.
+  // Engine's MAX_CONTENT_LENGTH=100_000 is unchanged — defense-in-depth
+  // backstop if anything ever bypasses /api/check.
   text: z
     .string()
     .min(1)
-    .max(2_000, {
+    .max(MAX_CHECK_CHARS, {
       message:
-        "Text is too long for a single check (max 2,000 characters). " +
-        "ContentRX evaluates one piece of UI copy at a time. For longer " +
-        "content, split into separate checks, use the GitHub Action to " +
-        "scan source files, or use the MCP evaluate_copy_batch tool.",
+        `Text is too long (max ${MAX_CHECK_CHARS.toLocaleString()} characters per check). ` +
+        `ContentRX bills 1 check per ${CHARS_PER_CHECK.toLocaleString()} ` +
+        `characters across every surface (web app, MCP, CLI, GitHub Action, ` +
+        `Figma plugin) — even the batch tools enforce the per-string cap. ` +
+        `For copy longer than ${MAX_CHECK_CHARS.toLocaleString()} chars, ` +
+        `split it into separate strings and use MCP evaluate_copy_batch ` +
+        `(each string still capped here) or the GitHub Action (extracts ` +
+        `each source-file string individually).`,
     }),
   // content_type and moment go INTO the LLM system prompt verbatim.
   // Accepting arbitrary strings here is a prompt-injection vector.
@@ -185,11 +210,14 @@ export async function POST(req: Request) {
     );
   }
 
-  // Atomic claim: increments count by one ONLY if the user had room
-  // under their plan's quota. A burst of concurrent requests can no
-  // longer all squeeze past the cap (closes BE-M-04 / Known
-  // Limitation #2 from the 2026-04-22 audit).
-  const claim = await claimQuotaSlot(auth.user.id, quota);
+  // Proportional quota claim. A 50-char button label still costs 1
+  // check; a 7,500-char FAQ entry costs 2 checks; a 25,000-char doc
+  // costs 5. The atomic claim is all-or-nothing — if the user has 1
+  // check left and this call costs 2, we 402 without touching the
+  // engine. Burst concurrency is still safe (the upsert + setWhere
+  // guard composes the same way for n > 1).
+  const checksNeeded = checksFor(text);
+  const claim = await claimQuotaSlots(auth.user.id, checksNeeded, quota);
   if (!claim.granted) {
     void notifyQuotaExhausted({
       to: auth.user.email,
@@ -202,6 +230,7 @@ export async function POST(req: Request) {
         error: "Monthly quota exhausted",
         quota,
         used: claim.count,
+        checks_required: checksNeeded,
         plan: auth.plan,
         upgrade_url: `${appUrl()}/pricing?from=quota`,
         resets_at: monthResetISO(),
@@ -362,6 +391,11 @@ export async function POST(req: Request) {
       used: newUsed,
       quota,
       remaining: Math.max(0, quota - newUsed),
+      // checks_consumed reflects the proportional billing for this
+      // single call. Callers (web app counter, MCP agents) use it to
+      // explain "this paste cost you 2 checks" without re-implementing
+      // the chars/check math client-side.
+      checks_consumed: checksNeeded,
       month: currentMonth(),
       text_hash: hashText(text),
     },

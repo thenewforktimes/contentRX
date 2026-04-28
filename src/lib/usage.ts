@@ -35,36 +35,54 @@ export type ClaimResult =
   | { granted: false; count: number };
 
 /**
- * Atomically reserve one evaluation slot for (userId, current month).
+ * Atomically reserve N evaluation slots for (userId, current month).
  *
  * Returns { granted: true, count } with the new count if the user had
- * room. Returns { granted: false, count } with the current count if the
- * user was already at or above the quota — the caller should return 402
- * without touching the engine.
+ * room for all N. Returns { granted: false, count } with the current
+ * count if the claim would have pushed them over the quota — the caller
+ * should return 402 without touching the engine. The check is
+ * all-or-nothing: a request that needs 3 checks against a 1-remaining
+ * user is denied entirely, never partially fulfilled.
  *
- * Implementation uses a single upsert with a `WHERE count < quota`
- * guard on the update branch. If the guard rejects (count already at
- * the cap) the query returns zero rows; we then read the latest count
- * so the 402 response can include the current usage.
+ * `n` defaults to 1 to match the original `claimQuotaSlot` contract.
+ * The proportional-billing path (a single /api/check call charges
+ * Math.ceil(text.length / 5000) slots, see route.ts) passes n > 1 when
+ * the input text spans multiple billing tiers.
+ *
+ * Implementation: same upsert + setWhere guard pattern as the
+ * single-slot version, but the guard becomes `count + n <= quota` and
+ * the increment becomes `count + n`. The atomic property is preserved
+ * — the entire claim either succeeds or rolls back.
  */
-export async function claimQuotaSlot(
+export async function claimQuotaSlots(
   userId: string,
+  n: number,
   quota: number,
 ): Promise<ClaimResult> {
+  // Defensive: a callsite that computed n=0 (e.g., empty text post-trim)
+  // should never reach the API gate, but if it does, treat as a free
+  // pass that doesn't increment. The caller's fall-through behavior
+  // matches the granted=true contract; count stays accurate.
+  if (n <= 0) {
+    const current = await getCurrentUsage(userId);
+    return { granted: true, count: current };
+  }
+
   const db = getDb();
   const month = currentMonth();
 
-  // Two-step only when the atomic branch rejects (fast-path hits DB once).
   const rows = await db
     .insert(schema.usage)
-    .values({ userId, month, count: 1 })
+    .values({ userId, month, count: n })
     .onConflictDoUpdate({
       target: [schema.usage.userId, schema.usage.month],
       set: {
-        count: sql`${schema.usage.count} + 1`,
+        count: sql`${schema.usage.count} + ${n}`,
         updatedAt: sql`now()`,
       },
-      setWhere: sql`${schema.usage.count} < ${quota}`,
+      // All-or-nothing: only commit the +n increment if the user has
+      // room for the full claim. Partial fulfillment is not supported.
+      setWhere: sql`${schema.usage.count} + ${n} <= ${quota}`,
     })
     .returning({ count: schema.usage.count });
 
@@ -72,10 +90,21 @@ export async function claimQuotaSlot(
     return { granted: true, count: rows[0].count };
   }
 
-  // No rows returned → the guard rejected. Read the current count so the
-  // 402 response can render "X of Y this month" accurately.
+  // Guard rejected. Read the current count for the 402 response.
   const current = await getCurrentUsage(userId);
   return { granted: false, count: current };
+}
+
+/**
+ * Backward-compat single-slot wrapper. Same semantics as the original
+ * `claimQuotaSlot` for the rest of the codebase that hasn't migrated
+ * to the multi-slot form.
+ */
+export async function claimQuotaSlot(
+  userId: string,
+  quota: number,
+): Promise<ClaimResult> {
+  return claimQuotaSlots(userId, 1, quota);
 }
 
 export type TokenIncrement = {
