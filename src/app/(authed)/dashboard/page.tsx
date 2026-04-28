@@ -35,31 +35,24 @@ import {
 } from "@/lib/insight-patterns";
 import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
+import {
+  ActiveSurfacesRowLive,
+  type SurfaceActivity,
+  type SurfaceKey,
+} from "./active-surfaces-row-live";
 import { ApiKeyPanel } from "./api-key-panel";
 import { DashboardLivenessRefresher } from "./dashboard-liveness-refresher";
 import { ExplainClient } from "./explain/explain-client";
 import { FirstCallBanner } from "./first-call-banner";
 import { SubscriptionPanel } from "./subscription-panel";
+import { UsagePanelLive } from "./usage-panel-live";
 
-const USAGE_WARNING_THRESHOLD = 0.8;
 const INSIGHTS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const ACTIVATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-function nextMonthReset(): string {
-  const now = new Date();
-  const next = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
-  );
-  // Pin format to UTC. Server-side this currently works because
-  // Vercel Lambdas default to UTC, but that's a runtime quirk we
-  // shouldn't rely on — the same call with `timeZone: "UTC"` is
-  // explicit and stays correct if Vercel ever changes the default.
-  return next.toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
+// nextMonthReset() lived here when UsagePanel was inline. Now that
+// UsagePanel was extracted to ./usage-panel-live.tsx (Client Component
+// for optimistic updates), the helper lives there too.
 
 export default async function DashboardPage() {
   const { userId: clerkId } = await auth();
@@ -88,9 +81,8 @@ export default async function DashboardPage() {
   const surfaceActivity = sourceStats.activity;
   const activatedSource = sourceStats.recentlyActivated;
   const quota = monthlyQuota(plan, seats);
-  const usedPct = quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
-  const usageTone: UsageTone =
-    used >= quota ? "exhausted" : used >= quota * USAGE_WARNING_THRESHOLD ? "warn" : "ok";
+  // usedPct + usageTone derivation moved into UsagePanelLive (it owns
+  // its own state now and recomputes when used/quota change).
 
   return (
     <div className="flex flex-col gap-6">
@@ -120,14 +112,22 @@ export default async function DashboardPage() {
         }
       />
 
-      <UsagePanel
-        used={used}
-        quota={quota}
-        usedPct={usedPct}
-        tone={usageTone}
-      />
+      {/*
+        UsagePanelLive + ActiveSurfacesRowLive are Client Components
+        that take server-rendered initial values AND listen for the
+        cx-check-completed window event dispatched by ExplainClient.
+        After a check, the counter and Web app surface card jump
+        immediately from the response payload instead of waiting
+        ~200ms for router.refresh() to round-trip new HTML. The
+        server-authoritative values still flow in via re-render and
+        overwrite the optimistic state when they arrive.
+      */}
+      <UsagePanelLive initialUsed={used} initialQuota={quota} />
 
-      <ActiveSurfacesRow activity={surfaceActivity} />
+      <ActiveSurfacesRowLive
+        surfaces={SURFACES}
+        initialActivity={surfaceActivity}
+      />
 
       <InsightsPanel insights={insights} plan={plan} />
 
@@ -169,63 +169,13 @@ function TryACheckPanel() {
   );
 }
 
-type UsageTone = "ok" | "warn" | "exhausted";
-
-function UsagePanel({
-  used,
-  quota,
-  usedPct,
-  tone,
-}: {
-  used: number;
-  quota: number;
-  usedPct: number;
-  tone: UsageTone;
-}) {
-  const barClasses: Record<UsageTone, string> = {
-    ok: "bg-black dark:bg-white",
-    warn: "bg-amber-500",
-    exhausted: "bg-red-500",
-  };
-  return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
-      <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Usage this month</h2>
-        <span className="text-xs text-neutral-500 dark:text-neutral-300">{currentMonth()}</span>
-      </header>
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-3xl font-semibold">{used.toLocaleString()}</span>
-        <span className="text-sm text-neutral-500 dark:text-neutral-300">
-          of {quota.toLocaleString()} checks
-        </span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-900">
-        <div
-          className={`h-full transition-[width] ${barClasses[tone]}`}
-          style={{ width: `${usedPct}%` }}
-        />
-      </div>
-      <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-300">
-        Resets {nextMonthReset()}.
-      </p>
-      {tone === "warn" && (
-        <p className="mt-2 text-xs text-neutral-900 dark:text-neutral-100">
-          You&apos;re close to your monthly limit. Upgrade to keep
-          checking before {nextMonthReset()}.
-        </p>
-      )}
-      {tone === "exhausted" && (
-        <p className="mt-2 text-xs text-neutral-900 dark:text-neutral-100">
-          You&apos;ve run out of free content checks. Upgrade to keep
-          checking.
-        </p>
-      )}
-    </section>
-  );
-}
-
-type SurfaceKey = "dashboard" | "mcp" | "lsp" | "action" | "plugin" | "cli";
-type SurfaceActivity = Record<SurfaceKey, { count: number; lastAt: Date | null }>;
+// UsagePanel was extracted to ./usage-panel-live.tsx as a Client
+// Component that listens for cx-check-completed events. See that file
+// for the optimistic-update logic.
+//
+// SurfaceKey + SurfaceActivity types live in ./active-surfaces-row-live.tsx
+// and are imported above. Single source of truth so the loader and the
+// renderer stay in lockstep.
 
 const SURFACES: ReadonlyArray<{
   key: SurfaceKey;
@@ -256,89 +206,10 @@ const SURFACES: ReadonlyArray<{
   { key: "cli", label: "CLI", installHref: "/install#cli", installLabel: "Install" },
 ];
 
-function ActiveSurfacesRow({ activity }: { activity: SurfaceActivity }) {
-  return (
-    <section>
-      <h2 className="mb-3 text-sm font-semibold">Active surfaces</h2>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {SURFACES.map((s) => (
-          <SurfaceCard
-            key={s.key}
-            label={s.label}
-            installHref={s.installHref}
-            installLabel={s.installLabel}
-            count={activity[s.key].count}
-            lastAt={activity[s.key].lastAt}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function SurfaceCard({
-  label,
-  installHref,
-  installLabel,
-  count,
-  lastAt,
-}: {
-  label: string;
-  installHref: string;
-  installLabel: string;
-  count: number;
-  lastAt: Date | null;
-}) {
-  const connected = count > 0 && lastAt !== null;
-  return (
-    <div className="rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-800">
-      <p className="font-medium">{label}</p>
-      <div className="mt-2 flex items-center gap-1.5">
-        <span
-          aria-hidden
-          className={
-            connected
-              ? "inline-block h-2 w-2 rounded-full bg-emerald-500"
-              : "inline-block h-2 w-2 rounded-full border border-neutral-300 dark:border-neutral-700"
-          }
-        />
-        <span className="text-xs text-neutral-600 dark:text-neutral-300">
-          {connected ? formatRelative(lastAt) : "Not connected"}
-        </span>
-      </div>
-      {connected ? (
-        <p className="mt-1 text-xs tabular-nums text-neutral-500 dark:text-neutral-300">
-          {count.toLocaleString()} {count === 1 ? "check" : "checks"}
-        </p>
-      ) : (
-        <Link
-          href={installHref}
-          className="mt-1 inline-block text-xs text-neutral-700 underline underline-offset-2 dark:text-neutral-300"
-        >
-          {installLabel} →
-        </Link>
-      )}
-    </div>
-  );
-}
-
-function formatRelative(date: Date | string): string {
-  // Defense in depth: callers should pass real Dates, but unstable_cache
-  // can deserialize Date fields as strings on cache-hit paths. Tolerate
-  // both shapes at runtime so a future cache point that forgets to
-  // rehydrate can't take down the dashboard render.
-  const d = date instanceof Date ? date : new Date(date);
-  const now = Date.now();
-  const diff = now - d.getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
+// ActiveSurfacesRow + SurfaceCard + formatRelative were extracted to
+// ./active-surfaces-row-live.tsx as a Client Component that increments
+// the matching surface's count + sets lastAt = now optimistically when
+// a check fires. See that file for the optimistic-update logic.
 
 type WeeklyInsights = {
   violations: number;

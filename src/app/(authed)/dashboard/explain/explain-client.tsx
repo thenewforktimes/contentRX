@@ -20,9 +20,18 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { PublicCheckEnvelope } from "@/lib/api-envelope";
 import { wordDiff, type DiffToken } from "@/lib/text-diff";
+import { dispatchCheckCompleted } from "../dashboard-check-events";
 
 type CheckEnvelope = PublicCheckEnvelope & {
   latency_ms: number;
+  // The /api/check route appends usage info to the response (route.ts
+  // line ~327). Typed here so we can broadcast it to sibling Client
+  // Components for optimistic UI updates.
+  usage?: {
+    used: number;
+    quota: number;
+    remaining: number;
+  };
 };
 
 /**
@@ -70,12 +79,27 @@ export function ExplainClient() {
       }
       const data = (await res.json()) as CheckEnvelope;
       setResponse(data);
-      // Re-render the surrounding server components (UsagePanel,
-      // InsightsPanel, ActiveSurfacesRow) so the counter, "This week"
-      // numbers, and surface activity reflect the just-completed
-      // check without requiring a full page refresh. /api/check
-      // already calls revalidatePath("/dashboard", "layout") to bust
-      // the data cache (PR-199); router.refresh() is what tells the
+      // Optimistic UI: broadcast the completed check to sibling Client
+      // Components (UsagePanelLive, ActiveSurfacesRowLive) so the
+      // counter and Web app surface card jump immediately, instead of
+      // waiting ~200ms for router.refresh() to round-trip new
+      // server-rendered HTML. The response carries fresh usage data
+      // already; reusing it costs nothing and saves the latency.
+      if (data.usage) {
+        dispatchCheckCompleted({
+          source: "dashboard",
+          usage: {
+            used: data.usage.used,
+            quota: data.usage.quota,
+            remaining: data.usage.remaining,
+          },
+        });
+      }
+      // Still call router.refresh() for everything that ISN'T covered
+      // by the optimistic broadcast: This-week insights, first-call
+      // banner activation, plan-pill changes (free → pro), etc.
+      // /api/check already busts the relevant cache tags via
+      // revalidateDashboard(); router.refresh() is what tells the
       // current browser tab to actually re-fetch the server output.
       router.refresh();
     } catch {
