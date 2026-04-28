@@ -55,7 +55,7 @@ export function ExplainClient() {
       const res = await fetch("/api/check", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, source: "plugin" }),
+        body: JSON.stringify({ text, source: "dashboard" }),
       });
       if (!res.ok) {
         const body = await res.text();

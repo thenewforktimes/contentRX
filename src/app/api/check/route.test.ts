@@ -144,13 +144,20 @@ async function seedAuthedUser(plan: "free" | "pro" | "team" = "pro"): Promise<st
 }
 
 function makeReq(body: object, opts?: { auth?: string }): Request {
+  // Tests now must declare a source — the pre-pivot default ("plugin")
+  // was dropped on 2026-04-28 to fix the dashboard-bleed-into-Figma
+  // attribution bug. Default to "dashboard" here since the bulk of
+  // these tests simulate the web-app Try-a-check flow; tests that
+  // care about a specific surface override it in the body.
+  const withSource =
+    "source" in body ? body : { ...body, source: "dashboard" };
   return new Request("https://example.com/api/check", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: opts?.auth ?? `Bearer ${TEST_API_KEY}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(withSource),
   });
 }
 

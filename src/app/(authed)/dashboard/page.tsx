@@ -215,7 +215,7 @@ function UsagePanel({
   );
 }
 
-type SurfaceKey = "mcp" | "lsp" | "action" | "plugin" | "cli";
+type SurfaceKey = "dashboard" | "mcp" | "lsp" | "action" | "plugin" | "cli";
 type SurfaceActivity = Record<SurfaceKey, { count: number; lastAt: Date | null }>;
 
 const SURFACES: ReadonlyArray<{
@@ -224,6 +224,12 @@ const SURFACES: ReadonlyArray<{
   installHref: string;
   installLabel: string;
 }> = [
+  // Web app first — it's the surface the user is currently in. The
+  // installHref points back to the Try-a-check form on this same page
+  // so a fresh user gets a clear nudge to run their first check. The
+  // enum value is "dashboard" (matches violation_overrides + correction
+  // tables); the user-facing label is "Web app".
+  { key: "dashboard", label: "Web app", installHref: "#try-a-check", installLabel: "Try a check" },
   { key: "mcp", label: "MCP", installHref: "/install#mcp", installLabel: "Install" },
   { key: "lsp", label: "LSP", installHref: "/install#lsp", installLabel: "Install" },
   {
@@ -245,7 +251,7 @@ function ActiveSurfacesRow({ activity }: { activity: SurfaceActivity }) {
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold">Active surfaces</h2>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {SURFACES.map((s) => (
           <SurfaceCard
             key={s.key}
@@ -663,6 +669,7 @@ async function loadSourceStats(
       }>;
 
       const activity: SurfaceActivity = {
+        dashboard: { count: 0, lastAt: null },
         mcp: { count: 0, lastAt: null },
         lsp: { count: 0, lastAt: null },
         action: { count: 0, lastAt: null },
