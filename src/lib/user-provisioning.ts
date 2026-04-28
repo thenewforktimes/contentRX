@@ -30,7 +30,7 @@
  */
 
 import { clerkClient } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 
 export type ProvisionedUser = typeof schema.users.$inferSelect;
@@ -59,6 +59,15 @@ async function primaryEmailFromClerk(clerkId: string): Promise<string | null> {
  *
  * Concurrent provisions from a webhook + a dashboard load race safely
  * via `onConflictDoNothing` on `users.clerk_id`.
+ *
+ * Round-trip budget:
+ *   warm path  → 1 SELECT
+ *   cold path  → 1 SELECT + 1 Clerk admin API call + 1 upsert-or-fetch CTE
+ *
+ * The cold path used to be SELECT → INSERT → SELECT (3 RT). The CTE
+ * collapses INSERT-or-fetch into a single statement that returns the
+ * inserted row when no conflict, or the existing row when the webhook
+ * raced ahead of us. Audit Pf1.
  */
 export async function getOrProvisionUser(
   clerkId: string,
@@ -90,30 +99,30 @@ export async function getOrProvisionUser(
     return null;
   }
 
+  // Single-RT upsert-or-fetch. The CTE tries the insert; if it
+  // conflicts on either clerk_id or email (the webhook may have
+  // landed first, or a prior signup left a stale email row), the
+  // RETURNING clause yields nothing, and the UNION ALL falls through
+  // to a SELECT. The LIMIT 1 on the outer query ensures we only ever
+  // surface the first row — if both branches yield, we want the
+  // freshly-inserted one to win.
   try {
-    // No target on the conflict clause — `users` has unique constraints
-    // on both `clerk_id` and `email`. Targeting only clerk_id (as the
-    // earlier code did) caused PostgresError: users_email_unique to
-    // bubble up when (a) the webhook had already inserted the row and
-    // we lost a select-then-insert race, or (b) a stale row with this
-    // email existed under a different clerk_id (e.g., from a prior
-    // test signup). Bare onConflictDoNothing() lets either conflict
-    // pass; the re-select below tells us whether a row now exists for
-    // *our* clerk_id.
-    await db
-      .insert(schema.users)
-      .values({ clerkId, email, plan: "free" })
-      .onConflictDoNothing();
-
-    const [row] = await db
-      .select()
-      .from(schema.users)
-      .where(eq(schema.users.clerkId, clerkId))
-      .limit(1);
-    return row ?? null;
+    const rows = await db.execute<ProvisionedUser>(sql`
+      WITH ins AS (
+        INSERT INTO ${schema.users} (clerk_id, email, plan)
+        VALUES (${clerkId}, ${email}, 'free')
+        ON CONFLICT DO NOTHING
+        RETURNING *
+      )
+      SELECT * FROM ins
+      UNION ALL
+      SELECT * FROM ${schema.users} WHERE clerk_id = ${clerkId}
+      LIMIT 1
+    `);
+    return rows[0] ?? null;
   } catch (err) {
     console.error(
-      `getOrProvisionUser: insert/re-select failed for ${clerkId}`,
+      `getOrProvisionUser: upsert-or-fetch failed for ${clerkId}`,
       err,
     );
     return null;

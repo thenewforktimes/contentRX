@@ -190,7 +190,9 @@ export async function POST(req: Request) {
       })
       .returning();
     // Override report at /dashboard/overrides reads from this table.
-    revalidateDashboard();
+    // Override count surfaces in the "This week" insights panel too,
+    // so bust the team's violations tag.
+    revalidateDashboard({ teamId });
     return json(envelope({ override: row }), { status: 201 });
   } catch (err) {
     console.error("violation override insert failed:", err);

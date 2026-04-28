@@ -23,6 +23,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getDb, schema } from "@/db";
 import { trackEvent } from "@/lib/analytics";
+import { revalidateSubscription } from "@/lib/cache-tags";
 import { maybeGroupByDomain } from "@/lib/domain-grouping";
 import { appUrl, sendEmail } from "@/lib/email";
 import { monthlyQuota } from "@/lib/quotas";
@@ -195,6 +196,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
   await upsertSubscription({ userId, subscription, customerId: customerId ?? null });
+  revalidateSubscription(userId);
 
   // Welcome to paid: confirmation email + upgrade analytics. Best-effort —
   // a Resend or Plausible outage shouldn't 500 the webhook.
@@ -280,6 +282,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       ? subscription.customer
       : subscription.customer.id;
   await upsertSubscription({ userId, subscription, customerId });
+  // Plan, seats, current_period_end may all have shifted — bust the
+  // owner's subscription tag so /dashboard reflects the change on the
+  // next render.
+  revalidateSubscription(userId);
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -317,6 +323,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       .update(schema.users)
       .set({ plan: otherActive.plan })
       .where(eq(schema.users.id, userId));
+    revalidateSubscription(userId);
     return;
   }
 
@@ -324,6 +331,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .update(schema.users)
     .set({ plan: "free" })
     .where(eq(schema.users.id, userId));
+  revalidateSubscription(userId);
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {

@@ -20,10 +20,12 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { tags } from "@/lib/cache-tags";
 import { getDb, schema } from "@/db";
 import {
   buildPatterns,
@@ -544,18 +546,24 @@ async function loadSeats(
 ): Promise<number> {
   if (plan !== "team") return 1;
   const ownerId = teamOwnerUserId ?? userId;
-  const db = getDb();
-  const [sub] = await db
-    .select({ seats: schema.subscriptions.seats })
-    .from(schema.subscriptions)
-    .where(
-      and(
-        eq(schema.subscriptions.userId, ownerId),
-        eq(schema.subscriptions.plan, "team"),
-      ),
-    )
-    .limit(1);
-  return sub?.seats ?? 1;
+  return unstable_cache(
+    async (id: string) => {
+      const db = getDb();
+      const [sub] = await db
+        .select({ seats: schema.subscriptions.seats })
+        .from(schema.subscriptions)
+        .where(
+          and(
+            eq(schema.subscriptions.userId, id),
+            eq(schema.subscriptions.plan, "team"),
+          ),
+        )
+        .limit(1);
+      return sub?.seats ?? 1;
+    },
+    [`loadSeats:${ownerId}`],
+    { tags: [tags.subscription(ownerId)] },
+  )(ownerId);
 }
 
 async function loadActiveSubscription(
@@ -566,36 +574,52 @@ async function loadActiveSubscription(
   currentPeriodEnd: Date | null;
 } | null> {
   const ownerId = teamOwnerUserId ?? userId;
-  const db = getDb();
-  const [row] = await db
-    .select({
-      status: schema.subscriptions.status,
-      currentPeriodEnd: schema.subscriptions.currentPeriodEnd,
-    })
-    .from(schema.subscriptions)
-    .where(
-      and(
-        eq(schema.subscriptions.userId, ownerId),
-        inArray(schema.subscriptions.status, ["active", "trialing", "past_due"]),
-      ),
-    )
-    .limit(1);
-  return row ?? null;
+  return unstable_cache(
+    async (id: string) => {
+      const db = getDb();
+      const [row] = await db
+        .select({
+          status: schema.subscriptions.status,
+          currentPeriodEnd: schema.subscriptions.currentPeriodEnd,
+        })
+        .from(schema.subscriptions)
+        .where(
+          and(
+            eq(schema.subscriptions.userId, id),
+            inArray(schema.subscriptions.status, [
+              "active",
+              "trialing",
+              "past_due",
+            ]),
+          ),
+        )
+        .limit(1);
+      return row ?? null;
+    },
+    [`loadActiveSubscription:${ownerId}`],
+    { tags: [tags.subscription(ownerId)] },
+  )(ownerId);
 }
 
 async function loadCurrentUsage(userId: string): Promise<number> {
-  const db = getDb();
-  const [row] = await db
-    .select({ count: schema.usage.count })
-    .from(schema.usage)
-    .where(
-      and(
-        eq(schema.usage.userId, userId),
-        eq(schema.usage.month, currentMonth()),
-      ),
-    )
-    .limit(1);
-  return row?.count ?? 0;
+  // Cache key includes the month so the December → January roll-over
+  // doesn't read stale data: each month has its own usage row + tag.
+  const month = currentMonth();
+  return unstable_cache(
+    async (id: string, m: string) => {
+      const db = getDb();
+      const [row] = await db
+        .select({ count: schema.usage.count })
+        .from(schema.usage)
+        .where(
+          and(eq(schema.usage.userId, id), eq(schema.usage.month, m)),
+        )
+        .limit(1);
+      return row?.count ?? 0;
+    },
+    [`loadCurrentUsage:${userId}:${month}`],
+    { tags: [tags.usage(userId)] },
+  )(userId, month);
 }
 
 /**
@@ -615,44 +639,60 @@ async function loadSourceStats(
   recentlyActivated: SurfaceKey | null;
 }> {
   const teamId = teamOwnerUserId ?? userId;
-  const db = getDb();
-  const rows = (await db
-    .select({
-      source: schema.violations.source,
-      count: sql<number>`count(*)::int`,
-      firstAt: sql<Date>`min(${schema.violations.createdAt})`,
-      lastAt: sql<Date>`max(${schema.violations.createdAt})`,
-    })
-    .from(schema.violations)
-    .where(eq(schema.violations.teamId, teamId))
-    .groupBy(schema.violations.source)) as Array<{
-    source: string;
-    count: number;
-    firstAt: Date;
-    lastAt: Date;
-  }>;
+  // Hourly revalidation handles the moving "recently activated" window
+  // even when no new violations arrive to bust the tag. Tag invalidation
+  // covers the data-changes path; the timer covers the time-changes
+  // path. Whichever fires first refreshes the cache.
+  return unstable_cache(
+    async (id: string) => {
+      const db = getDb();
+      const rows = (await db
+        .select({
+          source: schema.violations.source,
+          count: sql<number>`count(*)::int`,
+          firstAt: sql<Date>`min(${schema.violations.createdAt})`,
+          lastAt: sql<Date>`max(${schema.violations.createdAt})`,
+        })
+        .from(schema.violations)
+        .where(eq(schema.violations.teamId, id))
+        .groupBy(schema.violations.source)) as Array<{
+        source: string;
+        count: number;
+        firstAt: Date;
+        lastAt: Date;
+      }>;
 
-  const activity: SurfaceActivity = {
-    mcp: { count: 0, lastAt: null },
-    lsp: { count: 0, lastAt: null },
-    action: { count: 0, lastAt: null },
-    plugin: { count: 0, lastAt: null },
-    cli: { count: 0, lastAt: null },
-  };
-  const since = new Date(Date.now() - ACTIVATION_WINDOW_MS);
-  let recentlyActivated: { source: SurfaceKey; firstAt: Date } | null = null;
+      const activity: SurfaceActivity = {
+        mcp: { count: 0, lastAt: null },
+        lsp: { count: 0, lastAt: null },
+        action: { count: 0, lastAt: null },
+        plugin: { count: 0, lastAt: null },
+        cli: { count: 0, lastAt: null },
+      };
+      const since = new Date(Date.now() - ACTIVATION_WINDOW_MS);
+      let recentlyActivated: { source: SurfaceKey; firstAt: Date } | null =
+        null;
 
-  for (const r of rows) {
-    if (!(r.source in activity)) continue;
-    const surface = r.source as SurfaceKey;
-    const firstAt = r.firstAt instanceof Date ? r.firstAt : new Date(r.firstAt);
-    const lastAt = r.lastAt instanceof Date ? r.lastAt : new Date(r.lastAt);
-    activity[surface] = { count: r.count, lastAt };
-    if (firstAt >= since && (!recentlyActivated || firstAt > recentlyActivated.firstAt)) {
-      recentlyActivated = { source: surface, firstAt };
-    }
-  }
-  return { activity, recentlyActivated: recentlyActivated?.source ?? null };
+      for (const r of rows) {
+        if (!(r.source in activity)) continue;
+        const surface = r.source as SurfaceKey;
+        const firstAt =
+          r.firstAt instanceof Date ? r.firstAt : new Date(r.firstAt);
+        const lastAt =
+          r.lastAt instanceof Date ? r.lastAt : new Date(r.lastAt);
+        activity[surface] = { count: r.count, lastAt };
+        if (
+          firstAt >= since &&
+          (!recentlyActivated || firstAt > recentlyActivated.firstAt)
+        ) {
+          recentlyActivated = { source: surface, firstAt };
+        }
+      }
+      return { activity, recentlyActivated: recentlyActivated?.source ?? null };
+    },
+    [`loadSourceStats:${teamId}`],
+    { tags: [tags.violations(teamId)], revalidate: 3600 },
+  )(teamId);
 }
 
 /**
@@ -669,70 +709,76 @@ async function loadWeeklyInsights(
   teamOwnerUserId: string | null,
 ): Promise<WeeklyInsights> {
   const teamId = teamOwnerUserId ?? userId;
-  const since = new Date(Date.now() - INSIGHTS_WINDOW_MS);
-  const db = getDb();
+  return unstable_cache(
+    async (id: string) => {
+      const since = new Date(Date.now() - INSIGHTS_WINDOW_MS);
+      const db = getDb();
 
-  const [violationsCount, overridesCount, topSource, patternAggregates] =
-    await Promise.all([
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(schema.violations)
-        .where(
-          and(
-            eq(schema.violations.teamId, teamId),
-            gte(schema.violations.createdAt, since),
-          ),
-        ),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(schema.violationOverrides)
-        .where(
-          and(
-            eq(schema.violationOverrides.teamId, teamId),
-            gte(schema.violationOverrides.createdAt, since),
-          ),
-        ),
-      db
-        .select({
-          source: schema.violations.source,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(schema.violations)
-        .where(
-          and(
-            eq(schema.violations.teamId, teamId),
-            gte(schema.violations.createdAt, since),
-          ),
-        )
-        .groupBy(schema.violations.source)
-        .orderBy(desc(sql`count(*)`))
-        .limit(1),
-      loadFindingAggregates(teamId, since),
-    ]);
+      const [violationsCount, overridesCount, topSource, patternAggregates] =
+        await Promise.all([
+          db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(schema.violations)
+            .where(
+              and(
+                eq(schema.violations.teamId, id),
+                gte(schema.violations.createdAt, since),
+              ),
+            ),
+          db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(schema.violationOverrides)
+            .where(
+              and(
+                eq(schema.violationOverrides.teamId, id),
+                gte(schema.violationOverrides.createdAt, since),
+              ),
+            ),
+          db
+            .select({
+              source: schema.violations.source,
+              count: sql<number>`count(*)::int`,
+            })
+            .from(schema.violations)
+            .where(
+              and(
+                eq(schema.violations.teamId, id),
+                gte(schema.violations.createdAt, since),
+              ),
+            )
+            .groupBy(schema.violations.source)
+            .orderBy(desc(sql`count(*)`))
+            .limit(1),
+          loadFindingAggregates(id, since),
+        ]);
 
-  const violations = violationsCount[0]?.count ?? 0;
-  const overrides = overridesCount[0]?.count ?? 0;
-  const overrideRatePct =
-    violations > 0
-      ? Math.round((overrides / violations) * 1000) / 10
-      : null;
+      const violations = violationsCount[0]?.count ?? 0;
+      const overrides = overridesCount[0]?.count ?? 0;
+      const overrideRatePct =
+        violations > 0
+          ? Math.round((overrides / violations) * 1000) / 10
+          : null;
 
-  const topSourceRow = topSource[0];
-  const topSourceLabel = topSourceRow
-    ? sourceLabel(topSourceRow.source)
-    : null;
-  const topSourceCount = topSourceRow?.count ?? 0;
+      const topSourceRow = topSource[0];
+      const topSourceLabel = topSourceRow
+        ? sourceLabel(topSourceRow.source)
+        : null;
+      const topSourceCount = topSourceRow?.count ?? 0;
 
-  const patterns = buildPatterns(patternAggregates, violations);
+      const patterns = buildPatterns(patternAggregates, violations);
 
-  return {
-    violations,
-    overrides,
-    overrideRatePct,
-    topSourceLabel,
-    topSourceCount,
-    patterns,
-  };
+      return {
+        violations,
+        overrides,
+        overrideRatePct,
+        topSourceLabel,
+        topSourceCount,
+        patterns,
+      };
+    },
+    [`loadWeeklyInsights:${teamId}`],
+    { tags: [tags.violations(teamId)], revalidate: 3600 },
+  )(teamId);
 }
 
 function sourceLabel(source: string): string {

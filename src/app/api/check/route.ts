@@ -281,10 +281,11 @@ export async function POST(req: Request) {
     console.error("recordTokenUsage failed:", tokenResult.reason);
   }
 
-  // Bust the dashboard's edge cache so the usage counter, "This
-  // week" panel, and Active-Surfaces row reflect this check on the
-  // next render. See `lib/revalidate.ts` for the full rationale.
-  revalidateDashboard();
+  // Bust the dashboard's edge cache + tag-cached loaders so the usage
+  // counter, "This week" panel, and Active-Surfaces row reflect this
+  // check on the next render. Scope: this user's usage, this team's
+  // violations. See `lib/revalidate.ts` + `lib/cache-tags.ts`.
+  revalidateDashboard({ userId: auth.user.id, teamId: teamIdForLog });
 
   // Public envelope (schema 2.0.0). `result` is the substrate
   // CheckResult shape returned by the Python engine; we project it

@@ -7,7 +7,7 @@
  * common method/header preflight values stay on the response.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { corsHeaders, corsJson, corsPreflight } from "./cors";
 
 function reqWith(origin: string | null): Request {
@@ -19,10 +19,8 @@ function reqWith(origin: string | null): Request {
   });
 }
 
-const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
-
 afterEach(() => {
-  process.env.NODE_ENV = ORIGINAL_NODE_ENV;
+  vi.unstubAllEnvs();
 });
 
 describe("corsHeaders — allowlist", () => {
@@ -68,19 +66,19 @@ describe("corsHeaders — allowlist", () => {
   });
 
   it("allows http://localhost:3000 when NODE_ENV=development", () => {
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NODE_ENV", "development");
     const headers = corsHeaders(reqWith("http://localhost:3000"));
     expect(headers["Access-Control-Allow-Origin"]).toBe("http://localhost:3000");
   });
 
   it("allows http://localhost:3001 etc. when NODE_ENV=development", () => {
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NODE_ENV", "development");
     const headers = corsHeaders(reqWith("http://localhost:3001"));
     expect(headers["Access-Control-Allow-Origin"]).toBe("http://localhost:3001");
   });
 
   it("denies localhost when NODE_ENV is not development", () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     const headers = corsHeaders(reqWith("http://localhost:3000"));
     expect(headers["Access-Control-Allow-Origin"]).toBeUndefined();
   });
