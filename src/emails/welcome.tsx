@@ -26,8 +26,9 @@ export function WelcomeEmail({
         Welcome to ContentRX.
       </Heading>
       <Text>
-        You're on the Free plan: 250 checks a month, every standard, every
-        moment, no card required.
+        You're on the Free plan: 20 checks a month, every standard, every
+        moment, no card required. (1 check = up to 3,000 characters of
+        UI copy.)
       </Text>
       <Text>Three ways to start:</Text>
       <Text>

@@ -38,9 +38,9 @@ type CheckEnvelope = PublicCheckEnvelope & {
 // because TypeScript-importing zod schemas across the route boundary
 // adds overhead for two numbers. If either number changes, update
 // route.ts as well — the API enforces independently.
-const CHARS_PER_CHECK = 5_000;
+const CHARS_PER_CHECK = 3_000;
 const MAX_CHECKS_PER_CALL = 5;
-const MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL; // 25_000
+const MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL; // 15_000
 
 /**
  * Proportional billing preview: 1 check per CHARS_PER_CHECK characters,

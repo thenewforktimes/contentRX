@@ -46,8 +46,9 @@ export type ClaimResult =
  *
  * `n` defaults to 1 to match the original `claimQuotaSlot` contract.
  * The proportional-billing path (a single /api/check call charges
- * Math.ceil(text.length / 5000) slots, see route.ts) passes n > 1 when
- * the input text spans multiple billing tiers.
+ * Math.ceil(text.length / CHARS_PER_CHECK) slots, see route.ts —
+ * CHARS_PER_CHECK is currently 3,000) passes n > 1 when the input
+ * text spans multiple billing tiers.
  *
  * Implementation: same upsert + setWhere guard pattern as the
  * single-slot version, but the guard becomes `count + n <= quota` and

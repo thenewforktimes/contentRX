@@ -1,20 +1,16 @@
 /**
  * /pricing — public pricing page.
  *
- * Three SKUs at launch: Free, Pro, Scale. The Audit Pack one-time
- * SKU was cut pre-launch — at $99 it cannibalised Scale rather than
- * expanding the market, and adding a one-time tier with no track
- * record for conversion was the wrong shape of complexity for v1.
- * Schema-side scaffolding (overage_state, audit credits) stays as
- * reversibility insurance; the feature flag is just "don't show it
- * on the page."
+ * Two self-serve SKUs at launch: Free and Pro. The Team plan is in
+ * flight (per-seat pricing + admin features + shared quota pool, see
+ * the 2026-04-28 strategy session); a "Talk to us" CTA serves
+ * teams + enterprise until the self-serve Team flow lands.
  *
- * Note: Stripe price IDs in `src/lib/stripe.ts` are still on the
- * pre-locked Pro $24 / Team $35 — PR-05 reconciles by adding the
- * Scale product, removing the Team SKU, and aligning Pro to $29.
- * Until then, all CTAs route to /sign-up; the existing dashboard
- * subscription panel charges what's currently in Stripe (positive
- * surprise for early signups).
+ * Quotas re-anchored 2026-04-28 alongside the proportional-billing
+ * rollout (1 check = up to 3,000 characters):
+ *   - Free: 20 checks/month — meaningful flow audit, no scan-the-product
+ *   - Pro:  1,000 checks/month at $29 — sustained daily use + bursts
+ *   - Team: 1,000/seat shared, $29/seat — coming soon
  */
 
 import type { Metadata } from "next";
@@ -26,7 +22,7 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 export const metadata: Metadata = {
   title: "Pricing — ContentRX",
   description:
-    "Free, Pro, and Scale. All plans share the same engine, the same calibrated reviewer, and the same five surfaces. The only difference is how much you use it.",
+    "Free and Pro. All plans share the same engine, the same calibrated reviewer, and the same surfaces. The only difference is how much you use it.",
 };
 
 export default function PricingPage() {
@@ -52,21 +48,21 @@ export default function PricingPage() {
         <PlanCard
           name="Free"
           price="$0"
-          quota="250 checks per month"
+          quota="20 checks per month"
           cta={{ href: "/sign-up", label: "Try free" }}
         />
         <PlanCard
           name="Pro"
           price="$29 / month"
-          quota="5,000 checks per month"
+          quota="1,000 checks per month"
           cta={{ href: "/sign-up?plan=pro", label: "Start Pro" }}
           emphasized
         />
         <PlanCard
-          name="Scale"
-          price="$99 / month"
-          quota="25,000 checks per month"
-          cta={{ href: "/sign-up?plan=scale", label: "Start Scale" }}
+          name="Team"
+          price="Coming soon"
+          quota="$29/seat, 1,000/seat shared pool, admin + analytics"
+          cta={{ href: "mailto:hello@contentrx.io?subject=Team plan", label: "Talk to us" }}
         />
       </section>
 
@@ -75,16 +71,33 @@ export default function PricingPage() {
         <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-6 text-sm sm:grid-cols-2">
           <Faq
             q="What's a check?"
-            a="One string evaluated by the engine — a verdict, a suggestion, a severity, a confidence — in under a second. Scanning a Figma frame with 23 strings consumes 23 checks."
+            a={
+              <>
+                One string up to 3,000 characters evaluated by the
+                engine — a verdict, a suggestion, a severity, a
+                confidence — in under a second. Longer text counts
+                proportionally (1 check per 3,000 characters, max 5
+                checks per call). The same cap applies on every surface
+                — web app, MCP, CLI, GitHub Action, Figma plugin.
+              </>
+            }
           />
           <Faq
             q="What happens if I hit my quota on Pro?"
             a={
               <>
-                Pro caps at 5,000 checks per month — a hard cap, no
+                Pro caps at 1,000 checks per month — a hard cap, no
                 surprise overage charges. We email at 80% so you have
                 warning before you hit the limit. If you&apos;re bumping
-                5,000 most months, Scale at $99 covers 25,000.
+                1,000 most months, the upcoming Team plan ($29/seat,
+                1,000/seat shared pool) is the right next step —{" "}
+                <a
+                  href="mailto:hello@contentrx.io?subject=Team plan"
+                  className="underline underline-offset-2"
+                >
+                  email us
+                </a>{" "}
+                and we&apos;ll set it up.
               </>
             }
           />
@@ -94,16 +107,24 @@ export default function PricingPage() {
           />
           <Faq
             q="Do I need a credit card to try it?"
-            a="No. Free is 250 checks/mo, no card required. Sign up, install on your surface of choice, and run your first check."
+            a="No. Free is 20 checks/mo, no card required. Sign up, install on your surface of choice, and run your first check."
           />
           <Faq
             q="What about teams?"
             a={
               <>
-                When 3+ teammates from the same email domain are on Pro or
-                Scale, we automatically roll your invoices into one and
-                surface team-level views in the dashboard. No team-purchase
-                decision required.
+                Team plan is shipping next: $29/seat with a shared
+                quota pool (1,000 checks per seat, pooled), an admin
+                role for member management, and team-level usage
+                analytics. For teams larger than 50 seats, custom
+                pricing — same product, conversation about what fits.{" "}
+                <a
+                  href="mailto:hello@contentrx.io?subject=Team plan"
+                  className="underline underline-offset-2"
+                >
+                  Email us
+                </a>{" "}
+                to get on the early-access list.
               </>
             }
           />

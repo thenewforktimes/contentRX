@@ -49,18 +49,22 @@ import { QuotaWarningEmail } from "@/emails/quota-warning";
 // ----- billing model ---------------------------------------------------------
 //
 // One check = up to CHARS_PER_CHECK characters of input. Longer text is
-// stepped: 5,001-10,000 chars = 2 checks, 10,001-15,000 = 3, etc.
-// Hard ceiling at MAX_CHECK_CHARS keeps a single call from draining the
-// entire Free-tier monthly quota in one shot (worst case: 5 checks =
-// 20% of the 25-check Free allotment).
+// stepped: 3,001-6,000 chars = 2 checks, 6,001-9,000 = 3, etc. Hard
+// ceiling at MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL.
 //
-// These two constants ARE the contract. Change either and the API
-// response, the web app counter, and any client-side preview need to
-// stay in sync (the explain-client.tsx mirror is `MAX_CHECK_CHARS` /
-// `CHARS_PER_CHECK` — keep both pairs aligned).
-const CHARS_PER_CHECK = 5_000;
+// 3,000-char unit (re-anchored 2026-04-28): a generous editorial
+// "paragraph" is 250-750 chars; 3,000 chars covers ~5 paragraphs, which
+// is far more than any single tactical UI string. The 5,000 unit from
+// the initial proportional rollout was overgenerous — most legitimate
+// long-form copy fits comfortably in 3,000, and tighter unit means
+// less cost-per-call exposure if a free user concatenates content.
+//
+// These constants ARE the contract. Change either and the API response,
+// the web app counter (explain-client.tsx mirrors), and any client-side
+// preview need to stay in sync.
+const CHARS_PER_CHECK = 3_000;
 const MAX_CHECKS_PER_CALL = 5;
-const MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL; // 25_000
+const MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL; // 15_000
 
 /** Proportional billing: 1 check per CHARS_PER_CHECK characters, rounded up. */
 function checksFor(text: string): number {
