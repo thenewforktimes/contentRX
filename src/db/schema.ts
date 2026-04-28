@@ -259,7 +259,7 @@ export const violations = pgTable(
     severity: text("severity").notNull(),
     textHash: text("text_hash").notNull(),
     source: text("source", {
-      enum: ["plugin", "cli", "action", "ditto", "lsp", "mcp"],
+      enum: ["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"],
     }).notNull(),
     // Source-file path for violations that originated from CI extraction
     // (GitHub Action runs against a repo). Nullable because plugin and

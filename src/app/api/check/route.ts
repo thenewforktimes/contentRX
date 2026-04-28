@@ -64,7 +64,14 @@ const RequestSchema = z.object({
   content_type: z.enum(CONTENT_TYPES).optional(),
   audience: z.enum(AUDIENCES).optional(),
   moment: z.enum(MOMENTS).optional(),
-  source: z.enum(["plugin", "cli", "action", "ditto", "lsp", "mcp"]).default("plugin"),
+  // Required: every official client (dashboard web app, figma plugin, CLI,
+  // github action, LSP, MCP) sets this explicitly. The pre-pivot default was
+  // "plugin", which silently misattributed every web-app and unauthenticated
+  // test call to the Figma plugin counter. Dropped on 2026-04-28 — see the
+  // surface-attribution fix PR. Rogue callers now get a 400 instead of
+  // polluting analytics. "dashboard" matches the existing terminology in
+  // violation_overrides + correction-feedback source enums.
+  source: z.enum(["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"]),
   // Optional file_path, populated by the GitHub Action only. Upper
   // bound guards against repo paths that could swell the violations
   // table (typical paths are well under this).
