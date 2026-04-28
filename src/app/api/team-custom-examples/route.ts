@@ -24,6 +24,10 @@ import {
   CreateExampleRequestSchema,
 } from "@/lib/custom-examples-schemas";
 import { corsJson, corsPreflight } from "@/lib/cors";
+import {
+  detectSensitivePatterns,
+  sensitiveDataErrorMessage,
+} from "@/lib/pii-screen";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
@@ -132,6 +136,22 @@ export async function POST(req: Request) {
     );
   }
   const data = parsed.data;
+
+  // PII pre-screen — custom examples persist their `text` raw in the
+  // database (we need it for the short-circuit lookup). That makes
+  // them a long-term storage liability if they contain credentials
+  // or PII. Refuse the insert here so the bad data never lands.
+  // See `lib/pii-screen.ts`.
+  const sensitivePatterns = detectSensitivePatterns(data.text);
+  if (sensitivePatterns.length > 0) {
+    return json(
+      {
+        error: sensitiveDataErrorMessage(sensitivePatterns),
+        patterns: sensitivePatterns,
+      },
+      { status: 400 },
+    );
+  }
 
   // verdict=violation requires standard_id (an entry that asserts
   // "this fails" is useless without naming the standard it fails

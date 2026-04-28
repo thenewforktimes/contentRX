@@ -26,6 +26,10 @@ import { appUrl as emailAppUrl, sendEmail } from "@/lib/email";
 import { AUDIENCES, CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 import { evaluate, type EvaluateResponse } from "@/lib/evaluate";
 import { hashText, logViolations } from "@/lib/log-violations";
+import {
+  detectSensitivePatterns,
+  sensitiveDataErrorMessage,
+} from "@/lib/pii-screen";
 import { currentMonth, monthlyQuota } from "@/lib/quotas";
 import { checkRateLimit } from "@/lib/ratelimit";
 import {
@@ -107,6 +111,21 @@ export async function POST(req: Request) {
     file_path,
     run_id,
   } = parsed.data;
+
+  // PII pre-screen — refuse credit cards, SSNs, and credential-shaped
+  // strings BEFORE they reach the engine, Anthropic, Sentry, or
+  // function logs. Cheap regex pass; the matched value is never
+  // echoed back. See `src/lib/pii-screen.ts`.
+  const sensitivePatterns = detectSensitivePatterns(text);
+  if (sensitivePatterns.length > 0) {
+    return json(
+      {
+        error: sensitiveDataErrorMessage(sensitivePatterns),
+        patterns: sensitivePatterns,
+      },
+      { status: 400 },
+    );
+  }
 
   const quota = monthlyQuota(auth.plan, auth.seats);
 

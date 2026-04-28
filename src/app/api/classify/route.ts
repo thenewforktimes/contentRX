@@ -25,6 +25,10 @@ import { z } from "zod";
 import { resolveAuth } from "@/lib/auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { classify } from "@/lib/evaluate";
+import {
+  detectSensitivePatterns,
+  sensitiveDataErrorMessage,
+} from "@/lib/pii-screen";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 
@@ -57,6 +61,19 @@ export async function POST(req: Request) {
     );
   }
   const { text } = parsed.data;
+
+  // PII pre-screen — block credentials and PII before they reach the
+  // engine, Anthropic, Sentry, or function logs. See `lib/pii-screen.ts`.
+  const sensitivePatterns = detectSensitivePatterns(text);
+  if (sensitivePatterns.length > 0) {
+    return json(
+      {
+        error: sensitiveDataErrorMessage(sensitivePatterns),
+        patterns: sensitivePatterns,
+      },
+      { status: 400 },
+    );
+  }
 
   const rl = await checkRateLimit(auth.user.id);
   if (!rl.success) {

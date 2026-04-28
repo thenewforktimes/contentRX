@@ -29,6 +29,10 @@ import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
 import { MOMENTS } from "@/lib/engine-taxonomy";
 import { hashText } from "@/lib/log-violations";
+import {
+  detectSensitivePatterns,
+  sensitiveDataErrorMessage,
+} from "@/lib/pii-screen";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { isKnownStandardId } from "@/lib/standards";
@@ -117,6 +121,27 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return json(
       { error: "Invalid request", issues: sanitizeZodIssues(parsed.error.issues) },
+      { status: 400 },
+    );
+  }
+
+  // PII pre-screen — refuse credentials and PII on the override path
+  // too. The text gets sha256-hashed before storage, but it transits
+  // the engine for context-recovery, so the upstream rules apply.
+  // Suggested/applied text is screened with the primary text. See
+  // `lib/pii-screen.ts`.
+  const candidates = [
+    parsed.data.text,
+    parsed.data.suggested_text ?? "",
+    parsed.data.applied_text ?? "",
+  ].join("\n");
+  const sensitivePatterns = detectSensitivePatterns(candidates);
+  if (sensitivePatterns.length > 0) {
+    return json(
+      {
+        error: sensitiveDataErrorMessage(sensitivePatterns),
+        patterns: sensitivePatterns,
+      },
       { status: 400 },
     );
   }
