@@ -206,25 +206,55 @@ export default function PrivacyPage() {
 
       <Section title="How long we keep it">
         <p>
-          As long as your account is active. When you cancel:
+          While your account is active, we keep the data described
+          above for as long as it&apos;s useful to you and to us.
+          What happens when you stop being a customer depends on
+          which kind of customer you were.
+        </p>
+        <p className="mt-3">
+          <strong>If you&apos;re on a paid plan and you cancel:</strong>{" "}
+          your account stays intact for 90 days so you can reactivate
+          without losing your team setup. After that grace period we
+          run a one-time pseudonymization pass:
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            Your account stays intact for 90 days so you can come back
-            without losing your team setup, custom examples, or
-            historical dashboard.
+            <strong>Deleted</strong> — your team rules, custom
+            examples, team-member records, and outstanding team
+            invitations. These are the configuration you and your
+            team built up over time; once you&apos;ve been gone for 90
+            days they&apos;re removed entirely.
           </li>
           <li>
-            After 90 days, we pseudonymize the account: email and API
-            key are dropped, team-scoped rows are deleted, and the
-            historical violation hashes get their <code>user_id</code>{" "}
-            set to null. Aggregate counts that fed our calibration
-            stay in place but are no longer linkable to you.
+            <strong>Anonymized, not deleted</strong> — historical
+            violation hashes and override records have their{" "}
+            <code>user_id</code> set to null. The hashed text and the
+            verdicts stay in our database (they fed engine
+            calibration during your time as a customer), but the link
+            back to you is severed.
+          </li>
+          <li>
+            <strong>Cleared</strong> — email, API key, and Stripe
+            customer ID on your <code>users</code> row are replaced
+            with sentinels. The row stays so foreign-key references
+            in the anonymized history remain valid.
           </li>
         </ul>
         <p className="mt-3">
-          You can request immediate deletion at any time — see
-          &ldquo;Your rights&rdquo; below.
+          <strong>If you&apos;re on the free plan</strong>, no
+          cancellation event ever fires, so the automated 90-day
+          pass doesn&apos;t apply. Your account sits idle until you
+          explicitly delete it (see &ldquo;Your rights&rdquo; below).
+          We may eventually add an inactivity-based cleanup; if we
+          do, the policy will say so before it runs.
+        </p>
+        <p className="mt-3">
+          <strong>If you delete on demand</strong>, the same
+          pseudonymization runs immediately rather than after 90 days.
+          A few records have legally required retention periods —
+          Stripe receipts (7 years for tax purposes) and fraud-
+          prevention logs — and we&apos;ll tell you specifically which
+          when you ask.
         </p>
       </Section>
 
