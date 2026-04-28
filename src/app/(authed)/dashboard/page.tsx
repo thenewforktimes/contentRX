@@ -321,9 +321,14 @@ function SurfaceCard({
   );
 }
 
-function formatRelative(date: Date): string {
+function formatRelative(date: Date | string): string {
+  // Defense in depth: callers should pass real Dates, but unstable_cache
+  // can deserialize Date fields as strings on cache-hit paths. Tolerate
+  // both shapes at runtime so a future cache point that forgets to
+  // rehydrate can't take down the dashboard render.
+  const d = date instanceof Date ? date : new Date(date);
   const now = Date.now();
-  const diff = now - date.getTime();
+  const diff = now - d.getTime();
   const minutes = Math.floor(diff / 60000);
   if (minutes < 1) return "now";
   if (minutes < 60) return `${minutes}m ago`;
@@ -331,7 +336,7 @@ function formatRelative(date: Date): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}d ago`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 type WeeklyInsights = {
@@ -588,7 +593,7 @@ async function loadActiveSubscription(
   currentPeriodEnd: Date | null;
 } | null> {
   const ownerId = teamOwnerUserId ?? userId;
-  return unstable_cache(
+  const cached = await unstable_cache(
     async (id: string) => {
       const db = getDb();
       const [row] = await db
@@ -613,6 +618,19 @@ async function loadActiveSubscription(
     [`loadActiveSubscription:${ownerId}`],
     { tags: [tags.subscription(ownerId)] },
   )(ownerId);
+  if (!cached) return null;
+  // The cache layer serializes Dates to ISO strings; rehydrate so the
+  // page-level call to `activeSub.currentPeriodEnd.toISOString()` doesn't
+  // crash with "TypeError: a.toISOString is not a function".
+  return {
+    status: cached.status,
+    currentPeriodEnd:
+      cached.currentPeriodEnd === null
+        ? null
+        : cached.currentPeriodEnd instanceof Date
+          ? cached.currentPeriodEnd
+          : new Date(cached.currentPeriodEnd),
+  };
 }
 
 async function loadCurrentUsage(userId: string): Promise<number> {
@@ -657,7 +675,7 @@ async function loadSourceStats(
   // even when no new violations arrive to bust the tag. Tag invalidation
   // covers the data-changes path; the timer covers the time-changes
   // path. Whichever fires first refreshes the cache.
-  return unstable_cache(
+  const cached = await unstable_cache(
     async (id: string) => {
       const db = getDb();
       const rows = (await db
@@ -708,6 +726,41 @@ async function loadSourceStats(
     [`loadSourceStats:${teamId}`],
     { tags: [tags.violations(teamId)], revalidate: 3600 },
   )(teamId);
+  // The cache layer JSON-serializes Dates back to ISO strings; rehydrate
+  // before returning so consumers (formatRelative, etc.) get real Dates.
+  return {
+    activity: rehydrateActivityDates(cached.activity),
+    recentlyActivated: cached.recentlyActivated,
+  };
+}
+
+/**
+ * Re-hydrate Date fields on a SurfaceActivity that may have come back
+ * from unstable_cache as ISO strings.
+ *
+ * unstable_cache uses JSON serialization; Date objects round-trip as
+ * ISO strings, not Date instances. Without this rehydration, downstream
+ * `formatRelative(lastAt)` calls `.getTime()` on a string and crashes
+ * with "TypeError: a.getTime is not a function". The crash was latent
+ * before the dashboard polling refresh landed (the cache-hit path was
+ * rarely exercised); polling every 5s pushed the cache-hit rate up
+ * enough that the latent bug fired in prod.
+ */
+function rehydrateActivityDates(activity: SurfaceActivity): SurfaceActivity {
+  return Object.fromEntries(
+    Object.entries(activity).map(([key, value]) => [
+      key,
+      {
+        count: value.count,
+        lastAt:
+          value.lastAt === null
+            ? null
+            : value.lastAt instanceof Date
+              ? value.lastAt
+              : new Date(value.lastAt),
+      },
+    ]),
+  ) as SurfaceActivity;
 }
 
 /**
