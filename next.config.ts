@@ -1,5 +1,10 @@
+import withBundleAnalyzer from "@next/bundle-analyzer";
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 // Audit S6 — Content-Security-Policy + companion security headers.
 //
@@ -82,12 +87,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   // Drop dead exports from barrel files at build time. Closes audit M-34.
-  // Recharts/Lucide/react-email all expose deep barrel files; without
-  // this, "import { Bar } from 'recharts'" pulls every chart kind into
-  // the bundle.
+  // Lucide and react-email expose deep barrel files; without this,
+  // "import { X } from 'lucide-react'" pulls every icon into the bundle.
+  // (Recharts was here pre-Pf7 — replaced by a hand-rolled SVG.)
   experimental: {
     optimizePackageImports: [
-      "recharts",
       "@react-email/components",
       "lucide-react",
     ],
@@ -111,7 +115,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+// Compose: bundle analyzer wraps the base config first (so it sees
+// the resolved webpack config), then Sentry wraps the result so its
+// build-time hooks still run.
+export default withSentryConfig(bundleAnalyzer(nextConfig), {
   // Source-map upload runs only when SENTRY_AUTH_TOKEN is present, so
   // local builds and PR-preview builds (no token) skip the upload step
   // automatically. Production builds in Vercel pick it up from env.

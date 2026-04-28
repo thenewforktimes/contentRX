@@ -11,6 +11,7 @@
     "dev": "next dev",
     "prebuild": "npm run check:no-dup-files",
     "build": "next build",
+    "analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -36,7 +37,6 @@
     "postgres": "^3.4.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "recharts": "^3.8.1",
     "resend": "^6.12.2",
     "stripe": "^22.0.2",
     "svix": "^1.91.1",
@@ -45,6 +45,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.4.4",
     "@eslint/eslintrc": "^3",
+    "@next/bundle-analyzer": "^16.2.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
