@@ -35,6 +35,7 @@ import {
 import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { ApiKeyPanel } from "./api-key-panel";
+import { DashboardLivenessRefresher } from "./dashboard-liveness-refresher";
 import { ExplainClient } from "./explain/explain-client";
 import { FirstCallBanner } from "./first-call-banner";
 import { SubscriptionPanel } from "./subscription-panel";
@@ -92,6 +93,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/*
+        Visibility-aware poll that calls router.refresh() every 5s while
+        the tab is focused. Lets external surfaces (MCP, Figma plugin,
+        CLI, GitHub Action, LSP) reflect on the dashboard without a
+        manual page refresh. Renders nothing.
+      */}
+      <DashboardLivenessRefresher />
       <FirstCallBanner source={activatedSource} />
 
       <header className="flex items-center justify-between">
