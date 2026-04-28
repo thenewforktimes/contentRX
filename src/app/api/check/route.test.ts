@@ -244,6 +244,30 @@ describe("/api/check — auth + input", () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it("rejects text longer than the 2000-char tactical-check cap", async () => {
+    // Pinning the gaming-vector defense from 2026-04-28: a single check
+    // is for one tactical UI string, not a pasted block. Longer content
+    // should route through the GitHub Action or MCP evaluate_copy_batch.
+    // Cap and error message are co-defined in src/app/api/check/route.ts.
+    await seedAuthedUser();
+    const res = await POST(makeReq({ text: "x".repeat(2_001) }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    // Confirm the helpful message lands — bypass clients (devtools,
+    // future custom integrations) need to know where to go next.
+    const messageBlob = JSON.stringify(body);
+    expect(messageBlob).toMatch(/2,000 characters/);
+    expect(messageBlob).toMatch(/GitHub Action|MCP/);
+  });
+
+  it("accepts text right at the 2000-char cap", async () => {
+    // Boundary check — exactly 2000 should pass.
+    await seedAuthedUser("pro");
+    cannedEval.current = VIOLATION_RESULT;
+    const res = await POST(makeReq({ text: "x".repeat(2_000) }));
+    expect(res.status).toBe(200);
+  });
 });
 
 // ---------------------------------------------------------------------------

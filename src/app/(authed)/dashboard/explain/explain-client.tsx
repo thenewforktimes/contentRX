@@ -34,6 +34,11 @@ type CheckEnvelope = PublicCheckEnvelope & {
   };
 };
 
+// Mirrors the /api/check zod cap. Kept in sync by hand because
+// TypeScript-importing zod schemas across the route boundary adds
+// overhead for one number. If this number changes, update both.
+const MAX_CHECK_CHARS = 2_000;
+
 /**
  * Structured error states the inline check can render. Mapping API
  * status codes to a kind here keeps the UI free of HTTP details and
@@ -168,12 +173,45 @@ export function ExplainClient() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={4}
-          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 font-mono text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+          className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-sm text-neutral-900 focus:outline-none focus:ring-1 dark:bg-neutral-950 dark:text-neutral-100 ${
+            text.length > MAX_CHECK_CHARS
+              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+              : "border-neutral-300 focus:border-neutral-500 focus:ring-neutral-500 dark:border-neutral-700"
+          }`}
         />
+        <div className="flex items-center justify-between text-xs">
+          <span
+            className={`tabular-nums ${
+              text.length > MAX_CHECK_CHARS
+                ? "text-red-600 dark:text-red-400"
+                : text.length > MAX_CHECK_CHARS * 0.9
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-neutral-500 dark:text-neutral-300"
+            }`}
+          >
+            {text.length.toLocaleString()} / {MAX_CHECK_CHARS.toLocaleString()}{" "}
+            characters
+          </span>
+          {text.length > MAX_CHECK_CHARS && (
+            <span className="text-red-600 dark:text-red-400">
+              Too long for a single check.{" "}
+              <Link
+                href="/install"
+                className="underline underline-offset-2"
+              >
+                Use the GitHub Action or MCP →
+              </Link>
+            </span>
+          )}
+        </div>
         <button
           type="button"
           onClick={onCheck}
-          disabled={loading || text.trim().length === 0}
+          disabled={
+            loading ||
+            text.trim().length === 0 ||
+            text.length > MAX_CHECK_CHARS
+          }
           className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
         >
           {loading ? "Checking…" : "Check"}

@@ -57,8 +57,37 @@ export async function OPTIONS(req: Request) {
 }
 
 const RequestSchema = z.object({
-  // Engine enforces MAX_CONTENT_LENGTH=100_000; match that exactly.
-  text: z.string().min(1).max(100_000),
+  // 2000-char cap defines the product as a *tactical* check tool — one
+  // button label, error message, paragraph, etc. per call. Two reasons:
+  //
+  //  1. Cost: every call routes to Anthropic with input-token billing
+  //     proportional to text length. The pre-pivot 100k cap (which only
+  //     existed to match the engine's MAX_CONTENT_LENGTH backstop) let
+  //     a single call cost up to ~$1 in tokens, which on the Free tier
+  //     means 25 mega-checks/month per gaming user.
+  //  2. Quality: the engine evaluates one piece of UI copy at a time.
+  //     A pasted-block-of-50-strings input gets evaluated holistically
+  //     and produces vague feedback. Forcing one-string-per-call yields
+  //     better verdicts.
+  //
+  // Surfaces with legitimate multi-string workflows (GitHub Action,
+  // MCP evaluate_copy_batch, Figma plugin scanning a frame) issue
+  // ONE /api/check per string — each extraction lands here individually
+  // and is bounded by the same cap.
+  //
+  // The engine's MAX_CONTENT_LENGTH=100_000 is unchanged — it remains
+  // the inner backstop in case a future internal tool ever bypasses
+  // /api/check. Defense in depth at two layers.
+  text: z
+    .string()
+    .min(1)
+    .max(2_000, {
+      message:
+        "Text is too long for a single check (max 2,000 characters). " +
+        "ContentRX evaluates one piece of UI copy at a time. For longer " +
+        "content, split into separate checks, use the GitHub Action to " +
+        "scan source files, or use the MCP evaluate_copy_batch tool.",
+    }),
   // content_type and moment go INTO the LLM system prompt verbatim.
   // Accepting arbitrary strings here is a prompt-injection vector.
   content_type: z.enum(CONTENT_TYPES).optional(),
