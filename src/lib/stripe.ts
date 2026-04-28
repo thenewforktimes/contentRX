@@ -3,12 +3,20 @@
  *
  * Price IDs live in env, not in code, so we can swap between test mode
  * and live mode without redeploying. The plan/interval combinations we
- * sell are locked in BUILD_PLAN §8:
+ * sell, anchored to the 2026-04-28 pricing re-anchor (commit ce5ec13)
+ * and the 2026-04-28 UX-copy audit:
  *
- *   - Pro Monthly:    $24/mo             (STRIPE_PRICE_PRO_MONTHLY)
- *   - Pro Annual:     $18/mo billed $216 (STRIPE_PRICE_PRO_ANNUAL)
- *   - Team Monthly:   $35/seat, 3-seat min (STRIPE_PRICE_TEAM_MONTHLY)
- *   - Team Annual:    $29/seat, 3-seat min (STRIPE_PRICE_TEAM_ANNUAL)
+ *   - Pro Monthly:   $29/mo                  (STRIPE_PRICE_PRO_MONTHLY)
+ *   - Pro Annual:    $24/mo billed annually  (STRIPE_PRICE_PRO_ANNUAL)
+ *   - Team Monthly:  $29/seat, 3-seat min    (STRIPE_PRICE_TEAM_MONTHLY)
+ *   - Team Annual:   $24/seat billed annually (STRIPE_PRICE_TEAM_ANNUAL)
+ *
+ * IMPORTANT: the price IDs in env still need to point at $29-anchored
+ * Stripe products. If a Stripe product is at the old $24/$35 price,
+ * update the product in the Stripe Dashboard or re-create at the new
+ * price and update the env. The display copy in
+ * src/app/(authed)/dashboard/subscription-panel.tsx and
+ * src/app/pricing/page.tsx now states $29 — Stripe must match.
  *
  * Everything else (trial policy, promo codes, tax, proration rules) is
  * configured in the Stripe Dashboard — the app stays thin.

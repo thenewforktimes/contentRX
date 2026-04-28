@@ -93,7 +93,7 @@ export async function POST(req: Request) {
   }
   if (auth.plan !== "team") {
     return json(
-      { error: "Rule previews are a Team-plan feature." },
+      { error: "Rule previews are available on the Team plan." },
       { status: 403 },
     );
   }

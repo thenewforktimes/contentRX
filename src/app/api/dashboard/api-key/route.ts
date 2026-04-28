@@ -21,7 +21,7 @@ import {
 export async function POST() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const db = getDb();
@@ -59,7 +59,7 @@ export async function POST() {
 export async function DELETE() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const db = getDb();

@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ContentRX — content design linter for Figma and code",
+  title: "ContentRX — the content model for product copy",
   description:
-    "A content standards checker that runs in Figma, your CLI, and your CI pipeline. Moment-aware, rule-cited, open source.",
+    "Situation-aware review for the moments where copy stops being decoration and starts being the product — error states, destructive confirmations, permissions flows, empty states. Runs in Claude Code, Cursor, your CLI, your CI, and Figma.",
 };
 
 export default function RootLayout({

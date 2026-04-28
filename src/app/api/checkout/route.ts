@@ -39,7 +39,7 @@ const RequestSchema = z.object({
 export async function POST(req: Request) {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const rl = await checkRateLimit(clerkId);

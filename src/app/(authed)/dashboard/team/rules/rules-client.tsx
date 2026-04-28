@@ -260,15 +260,15 @@ function DisablePreviewDialog({
     if (!preview) return "";
     const removed = preview.would_remove_violations;
     if (preview.window_violations === 0) {
-      return `No team violations logged in the last 30 days — disabling ${pending.standardId} is safe.`;
+      return "No team findings logged in the last 30 days — disabling this rule is safe.";
     }
     if (removed === 0) {
       return (
         preview.note ??
-        `${pending.standardId} hasn't fired on your team in the last 30 days. Disabling has no historical effect.`
+        "This rule hasn't fired on your team in the last 30 days. Disabling has no historical effect."
       );
     }
-    return `Disabling ${pending.standardId} would have removed ${removed} violation${
+    return `Disabling this rule would have removed ${removed} finding${
       removed === 1 ? "" : "s"
     } from your team's evaluations in the last 30 days (out of ${preview.window_violations} total).`;
   })();
@@ -276,10 +276,10 @@ function DisablePreviewDialog({
   return (
     <AlertDialog
       open
-      title={`Disable ${pending.standardId}?`}
+      title="Disable this rule?"
       description={description}
-      confirmLabel={pending.loading ? "Previewing…" : "Disable"}
-      cancelLabel="Keep it on"
+      confirmLabel={pending.loading ? "Previewing…" : "Disable rule"}
+      cancelLabel="Cancel"
       tone="danger"
       onConfirm={pending.loading ? () => {} : onConfirm}
       onCancel={onCancel}

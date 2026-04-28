@@ -32,7 +32,7 @@ export type ExportAuth = {
 export async function requireExportAuth(): Promise<ExportAuth | NextResponse> {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
   const user = await getOrProvisionUser(clerkId);
   if (!user) {

@@ -245,11 +245,12 @@ jobs:
       <Section title="Stacking surfaces">
         <p className="text-sm">
           The surfaces stack cleanly. A team typically runs the MCP
-          server locally for inline checks during authoring, the
-          GitHub Action as the PR gate, and the Figma plugin for the
-          designer-led flows. The CLI covers batch jobs and one-off
-          checks from any terminal. All four share one model, one
-          quota, one set of team rules.
+          server locally for inline checks during authoring, the LSP
+          for as-you-type diagnostics, the GitHub Action as the PR
+          gate, and the Figma plugin for the designer-led flows. The
+          CLI covers batch jobs and one-off checks from any terminal.
+          All five share one model, one monthly limit, one set of
+          team rules.
         </p>
         <p className="mt-3 text-sm">
           See{" "}

@@ -199,7 +199,7 @@ const SURFACES: ReadonlyArray<{
   },
   {
     key: "plugin",
-    label: "Figma",
+    label: "Figma plugin",
     installHref: "/install#figma",
     installLabel: "Install",
   },
@@ -281,7 +281,7 @@ function InsightsPanel({
           {plan === "team" && insights.overrides >= 5 && (
             <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
               Your team is dismissing findings often. The override report
-              breaks down which standards your team disagrees with most —
+              breaks down which rules your team disagrees with most —
               consider tuning them in team rules.
             </p>
           )}
@@ -291,7 +291,7 @@ function InsightsPanel({
                 href="/dashboard/overrides"
                 className={buttonStyles({ variant: "secondary", size: "sm" })}
               >
-                Open override report
+                View override report
               </Link>
             )}
           </div>
@@ -363,7 +363,7 @@ function CalibrateLink({ optedOut }: { optedOut: boolean }) {
         href="/dashboard/calibrate"
         className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
-        {optedOut ? "Visit calibration settings" : "Open calibration prompt"}
+        {optedOut ? "Manage calibration settings" : "Start calibration"}
       </Link>
     </section>
   );
@@ -376,14 +376,14 @@ function MembersLink() {
         <h2 className="text-sm font-semibold">Members</h2>
       </header>
       <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
-        Invite teammates by email. They&apos;ll share the monthly check
-        quota, custom rules, and custom examples.
+        Invite teammates by email. They&apos;ll share the team&apos;s
+        monthly check limit, custom rules, and custom examples.
       </p>
       <Link
         href="/dashboard/members"
         className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
-        Open members
+        Manage members
       </Link>
     </section>
   );
@@ -398,13 +398,13 @@ function OverridesLink() {
       </header>
       <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
         The rules your team dismisses most. Use this to decide which
-        standards to tune or disable in team rules.
+        rules to tune or disable in team rules.
       </p>
       <Link
         href="/dashboard/overrides"
         className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
-        Open override report
+        View override report
       </Link>
     </section>
   );
@@ -417,14 +417,14 @@ function TeamRulesLink() {
         <h2 className="text-sm font-semibold">Team rules</h2>
       </header>
       <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
-        Disable standards or add custom rules for your team. Changes
-        apply to every evaluation your team runs.
+        Disable a built-in rule or add your own. Changes apply to every
+        evaluation your team runs.
       </p>
       <Link
         href="/dashboard/team/rules"
         className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
-        Open team rules
+        Edit team rules
       </Link>
     </section>
   );

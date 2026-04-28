@@ -44,9 +44,8 @@ export default async function MembersPage() {
       <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
         <h1 className="text-lg font-semibold">Members</h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-300">
-          Inviting teammates is a Team-plan feature. Upgrade to share
-          the monthly check quota, custom rules, and custom examples
-          across your team.
+          Available on the Team plan. Invite teammates to share your
+          monthly check limit, custom rules, and custom examples.
         </p>
         <Link
           href="/dashboard"

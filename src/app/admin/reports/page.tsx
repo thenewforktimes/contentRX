@@ -157,7 +157,10 @@ function ReportRow({ entry }: { entry: ReportEntry }) {
 
 function ToggleReviewForm({ entry }: { entry: ReportEntry }) {
   const desired = entry.reviewed ? "false" : "true";
-  const label = entry.reviewed ? "Unmark" : "Mark reviewed";
+  const label = entry.reviewed ? "Reopen for review" : "Mark ready to publish";
+  const tooltip = entry.reviewed
+    ? "Clear the publication-ready sentinel and re-open this report for edits."
+    : "Mark this report ready to publish. Writes a sentinel file at reports/<type>/.<filename>.reviewed — commit it alongside the report.";
   return (
     <form action={toggleReviewedAction}>
       <input type="hidden" name="type" value={entry.type} />
@@ -165,7 +168,8 @@ function ToggleReviewForm({ entry }: { entry: ReportEntry }) {
       <input type="hidden" name="desired" value={desired} />
       <button
         type="submit"
-        className="rounded-md border border-neutral-300 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        title={tooltip}
+        className="rounded-md border border-neutral-300 px-2 py-0.5 text-[10px] font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
       >
         {label}
       </button>

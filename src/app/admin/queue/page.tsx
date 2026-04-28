@@ -23,6 +23,11 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import Link from "next/link";
 import { getDb, schema } from "@/db";
+import {
+  humanizeContentType,
+  humanizeMoment,
+  humanizeReviewReason,
+} from "@/lib/humanize";
 
 const SUBTYPES = [
   "low_confidence",
@@ -169,8 +174,8 @@ export default async function AdminQueuePage({
             Cases the engine flagged for review in the last {windowDays} days.
             Filter by subtype to focus the daily 15-minute review rhythm.
             Click <strong>Agree</strong> to confirm the engine&apos;s
-            review-recommended verdict, <strong>Disagree</strong> to mark
-            it as a false positive, or <strong>Skip</strong> to defer.
+            review-recommended verdict, <strong>False positive</strong> to
+            mark it as a miscall, or <strong>Skip</strong> to defer.
             Decisions persist into the override stream for calibration.
           </p>
         </div>
@@ -310,8 +315,8 @@ function QueueRow({
             </span>
           )}
           {row.reviewReasonSubtype && (
-            <span className="rounded bg-neutral-100 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
-              {row.reviewReasonSubtype.replace(/_/g, " ")}
+            <span className="rounded bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+              {humanizeReviewReason(row.reviewReasonSubtype)}
             </span>
           )}
           {isDecided && (
@@ -336,7 +341,7 @@ function QueueRow({
             <dt className="font-medium uppercase tracking-wide text-neutral-500">
               Content type
             </dt>
-            <dd className="font-mono">{row.contentType}</dd>
+            <dd>{humanizeContentType(row.contentType)}</dd>
           </div>
         )}
         {row.moment && (
@@ -344,7 +349,7 @@ function QueueRow({
             <dt className="font-medium uppercase tracking-wide text-neutral-500">
               Moment
             </dt>
-            <dd className="font-mono">{row.moment}</dd>
+            <dd>{humanizeMoment(row.moment)}</dd>
           </div>
         )}
         {row.source && (
@@ -369,7 +374,7 @@ function QueueRow({
           <DecisionForm
             violationId={row.id}
             stance="disagree"
-            label="Disagree"
+            label="False positive"
           />
           <DecisionForm violationId={row.id} stance="skip" label="Skip" />
         </div>

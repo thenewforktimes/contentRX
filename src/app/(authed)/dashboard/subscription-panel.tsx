@@ -93,12 +93,18 @@ function UpgradeCard() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Checkout failed");
+        throw new Error(
+          body?.error ?? "Couldn't start checkout. Try again — if it keeps happening, email hello@contentrx.io.",
+        );
       }
       const { url } = await res.json();
       window.location.href = safeStripeRedirect(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkout failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't start checkout. Try again — if it keeps happening, email hello@contentrx.io.",
+      );
       setLoading(false);
     }
   }
@@ -115,8 +121,8 @@ function UpgradeCard() {
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
         <PlanOption
           name="Pro"
-          price={interval === "monthly" ? "$24/mo" : "$18/mo billed annually"}
-          description="5,000 checks per month. For solo designers and small teams."
+          price={interval === "monthly" ? "$29/mo" : "$24/mo billed annually"}
+          description="1,000 checks per month. For solo designers and small teams."
           selected={selectedPlan === "pro"}
           onSelect={() => setSelectedPlan("pro")}
         />
@@ -124,10 +130,10 @@ function UpgradeCard() {
           name="Team"
           price={
             interval === "monthly"
-              ? "$35/seat/mo"
-              : "$29/seat/mo billed annually"
+              ? "$29/seat/mo"
+              : "$24/seat/mo billed annually"
           }
-          description={`${TEAM_MIN_SEATS}-seat minimum. 5,000 checks per seat. Shared rule overrides (coming).`}
+          description={`${TEAM_MIN_SEATS}-seat minimum. 1,000 checks per seat, pooled across the team.`}
           selected={selectedPlan === "team"}
           onSelect={() => setSelectedPlan("team")}
         />
@@ -164,7 +170,7 @@ function UpgradeCard() {
         disabled={loading}
         className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
       >
-        {loading ? "Opening Stripe Checkout…" : "Continue to checkout"}
+        {loading ? "Redirecting to Stripe…" : "Continue to checkout"}
       </button>
     </section>
   );
@@ -191,12 +197,18 @@ function PaidCard({
       const res = await fetch("/api/portal", { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Portal failed");
+        throw new Error(
+          body?.error ?? "Couldn't open the billing portal. Try again — if it keeps happening, email hello@contentrx.io.",
+        );
       }
       const { url } = await res.json();
       window.location.href = safeStripeRedirect(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Portal failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't open the billing portal. Try again — if it keeps happening, email hello@contentrx.io.",
+      );
       setLoading(false);
     }
   }
@@ -204,7 +216,7 @@ function PaidCard({
   const planLabel = plan === "pro" ? "Pro" : `Team (${seats} seats)`;
   const statusLabel =
     subscriptionStatus && subscriptionStatus !== "active"
-      ? ` · ${subscriptionStatus}`
+      ? ` · ${humanizeStatus(subscriptionStatus)}`
       : "";
 
   return (
@@ -235,7 +247,7 @@ function PaidCard({
         disabled={loading}
         className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
       >
-        {loading ? "Opening Stripe…" : "Manage subscription"}
+        {loading ? "Redirecting to Stripe…" : "Manage subscription"}
       </button>
     </section>
   );
@@ -316,4 +328,27 @@ function formatDate(iso: string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+// Translate Stripe lifecycle statuses into something a customer can read.
+// Anything not listed falls back to a Title Cased version of the raw status.
+function humanizeStatus(status: string): string {
+  switch (status) {
+    case "trialing":
+      return "Trialing";
+    case "past_due":
+      return "Payment past due — update your card to keep access";
+    case "incomplete":
+      return "Setup incomplete";
+    case "incomplete_expired":
+      return "Setup expired";
+    case "canceled":
+      return "Canceled";
+    case "unpaid":
+      return "Unpaid";
+    case "paused":
+      return "Paused";
+    default:
+      return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
 }

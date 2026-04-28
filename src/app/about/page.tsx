@@ -164,28 +164,32 @@ export default function AboutPage() {
 
       <Section title="How to disagree with the model">
         <p>
-          If you run ContentRX and the verdict is wrong, there are
-          three paths:
+          Every finding ships with the rationale that produced it — the
+          rule that fired, the moment it fired in, and a confidence
+          score. If you read all of that and the verdict is still wrong,
+          there are two paths:
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>Disagree with this finding</strong> — per-violation
-            three-button stance captures your override for team-level
-            analytics and, at scale, moves the standard&apos;s calibration.
+            <strong>Disagree with this finding</strong> — every finding
+            has a three-button stance (agree / disagree / ship anyway)
+            that captures your override for team-level analytics and,
+            at scale, feeds the calibration log.
           </li>
           <li>
-            <strong>Correct the moment</strong> — if the tool detected{" "}
-            <code>destructive_action</code> when you were writing a
-            first-encounter, the moment banner has a picker that routes
-            your correction into the moment-classifier backlog.
-          </li>
-          <li>
-            <strong>Expand the rationale chain</strong> — every verdict
-            ships with its full pipeline, hop by hop, with confidence at
-            each step. Upstream misdetection is a one-click feedback
-            path; you shouldn&apos;t have to guess which hop went sideways.
+            <strong>Correct the moment</strong> — if the tool read your
+            string as a destructive confirmation when you were writing
+            a first-encounter, the moment banner has a picker that
+            routes the correction back into calibration.
           </li>
         </ul>
+        <p className="mt-4">
+          Both paths land in the same place: the weekly{" "}
+          <Link href="/calibration" className="underline underline-offset-2">
+            calibration log
+          </Link>
+          {" "}where the movement gets reported in the open.
+        </p>
       </Section>
 
       <footer className="mt-16 border-t border-neutral-200 pt-8 text-sm text-neutral-500 dark:border-neutral-800">

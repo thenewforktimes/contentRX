@@ -61,7 +61,7 @@ export default function PricingPage() {
         <PlanCard
           name="Team"
           price="Coming soon"
-          quota="$29/seat, 1,000/seat shared pool, admin + analytics"
+          quota="$29/seat, 1,000/seat shared pool, member management + analytics"
           cta={{ href: "mailto:hello@contentrx.io?subject=Team plan", label: "Talk to us" }}
         />
       </section>
@@ -83,14 +83,14 @@ export default function PricingPage() {
             }
           />
           <Faq
-            q="What happens if I hit my quota on Pro?"
+            q="What happens if I hit my limit on Pro?"
             a={
               <>
                 Pro caps at 1,000 checks per month — a hard cap, no
                 surprise overage charges. We email at 80% so you have
                 warning before you hit the limit. If you&apos;re bumping
-                1,000 most months, the upcoming Team plan ($29/seat,
-                1,000/seat shared pool) is the right next step —{" "}
+                1,000 most months, the Team plan ($29/seat, 1,000/seat
+                shared pool) is the right next step —{" "}
                 <a
                   href="mailto:hello@contentrx.io?subject=Team plan"
                   className="underline underline-offset-2"
@@ -113,9 +113,9 @@ export default function PricingPage() {
             q="What about teams?"
             a={
               <>
-                Team plan is shipping next: $29/seat with a shared
-                quota pool (1,000 checks per seat, pooled), an admin
-                role for member management, and team-level usage
+                Team is in early access: $29/seat with a shared quota
+                pool (1,000 checks per seat, pooled), member
+                management for the team owner, and team-level usage
                 analytics. For teams larger than 50 seats, custom
                 pricing — same product, conversation about what fits.{" "}
                 <a
@@ -124,7 +124,7 @@ export default function PricingPage() {
                 >
                   Email us
                 </a>{" "}
-                to get on the early-access list.
+                and we&apos;ll get you set up.
               </>
             }
           />

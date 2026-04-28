@@ -91,7 +91,7 @@ export async function POST(req: Request) {
   }
   if (auth.plan !== "team") {
     return NextResponse.json(
-      { error: "Team plan required to edit rules" },
+      { error: "Editing team rules is available on the Team plan." },
       { status: 402 },
     );
   }

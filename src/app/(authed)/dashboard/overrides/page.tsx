@@ -46,9 +46,9 @@ export default async function OverridesPage() {
       <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
         <h1 className="text-lg font-semibold">Override report</h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-300">
-          The override report is a Team-plan feature. It surfaces the
-          rules your team disagrees with most so you can disable or
-          tune them in custom team rules.
+          Available on the Team plan. Surfaces the rules your team
+          disagrees with most so you can disable or tune them in team
+          rules.
         </p>
         <Link
           href="/dashboard"
@@ -317,18 +317,19 @@ export default async function OverridesPage() {
 
           <section>
             <h2 className="mb-1 text-sm font-semibold">
-              Behavior quadrants
+              How your team engaged
             </h2>
             <p className="mb-3 text-xs text-neutral-600 dark:text-neutral-300">
-              How your team engaged with each finding.{" "}
-              <em>Informed rejects</em> are the highest-information
-              signal — the user read the rationale and still disagreed.
-              <em> Reflex rejects</em> may be miscalibrated.
+              Each finding falls into one of four buckets, depending on
+              whether your teammate read the rationale before deciding
+              and whether they agreed or disagreed. Hover any row for
+              a definition.
             </p>
             <ul className="grid grid-cols-2 gap-2">
               {QUADRANT_ORDER.map((q) => (
                 <li
                   key={q}
+                  title={QUADRANT_TOOLTIPS[q]}
                   className="flex items-center justify-between rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-800"
                 >
                   <span className="text-xs">{QUADRANT_LABELS[q]}</span>
@@ -354,11 +355,24 @@ const QUADRANT_ORDER: readonly BehaviorQuadrant[] = [
 ] as const;
 
 const QUADRANT_LABELS: Record<BehaviorQuadrant, string> = {
-  informed_reject: "Informed reject",
-  informed_accept: "Informed accept",
-  pattern_match_accept: "Pattern-match accept",
-  reflex_reject: "Reflex reject",
-  unknown: "Unclassified (pre-Session-3)",
+  informed_reject: "Read it, disagreed",
+  informed_accept: "Read it, agreed",
+  pattern_match_accept: "Skimmed it, agreed",
+  reflex_reject: "Skimmed it, disagreed",
+  unknown: "Older entries (no engagement data)",
+};
+
+const QUADRANT_TOOLTIPS: Record<BehaviorQuadrant, string> = {
+  informed_reject:
+    "Teammate read the rationale and still pushed back. Highest-information signal — these are the cases worth investigating in team rules.",
+  informed_accept:
+    "Teammate read the rationale and accepted the finding. Confirms the rule landed correctly.",
+  pattern_match_accept:
+    "Teammate accepted without reading the rationale. Likely an obvious case where the rule fired correctly.",
+  reflex_reject:
+    "Teammate dismissed without reading the rationale. May indicate a rule that's miscalibrated for your team's voice.",
+  unknown:
+    "Older entries logged before we tracked engagement signal. Won't appear for new dismissals.",
 };
 
 function Stat({

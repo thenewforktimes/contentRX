@@ -21,14 +21,22 @@ export function JoinButton({ token }: { token: string }) {
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        const reason = body.error ?? `${res.status}`;
-        throw new Error(humanizeAcceptError(reason));
+        // The server returns a customer-ready message in `error`. Fall
+        // back to a generic message if the response shape is unexpected.
+        throw new Error(
+          body.error ??
+            "Couldn't accept the invitation. Try again — if it keeps happening, email hello@contentrx.io.",
+        );
       }
       router.push("/dashboard?joined=1");
       router.refresh();
     } catch (err) {
       setState("error");
-      setError(err instanceof Error ? err.message : "Couldn't join. Try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't accept the invitation. Try again — if it keeps happening, email hello@contentrx.io.",
+      );
     }
   }
 
@@ -54,23 +62,3 @@ export function JoinButton({ token }: { token: string }) {
   );
 }
 
-function humanizeAcceptError(reason: string): string {
-  switch (reason) {
-    case "not_found":
-      return "This invitation no longer exists.";
-    case "expired":
-      return "This invitation expired. Ask the inviter to send a new one.";
-    case "email_mismatch":
-      return "Your account email doesn't match the invitation.";
-    case "already_accepted":
-      return "This invitation has already been used.";
-    case "already_team_owner":
-      return "You already own a team. Cancel that subscription first.";
-    case "already_member":
-      return "You're already a member of another team.";
-    case "no_seats":
-      return "The team has no seats available. Ask them to add seats first.";
-    default:
-      return `Couldn't join (${reason}).`;
-  }
-}

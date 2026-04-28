@@ -108,9 +108,14 @@ export default async function AdminReportPreviewPage({
             />
             <button
               type="submit"
+              title={
+                report.reviewed
+                  ? "Clear the publication-ready sentinel and re-open this report for edits."
+                  : "Mark this report ready to publish. Writes a sentinel — commit it alongside the report."
+              }
               className="rounded-md border border-neutral-300 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
             >
-              {report.reviewed ? "Unmark reviewed" : "Mark reviewed"}
+              {report.reviewed ? "Reopen for review" : "Mark ready to publish"}
             </button>
           </form>
         </div>

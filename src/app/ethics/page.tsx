@@ -193,44 +193,44 @@ export default function EthicsPage() {
           The subscription is the entire revenue model. Free exists so
           you can try the product; paid tiers exist because the engine
           costs real money to run and the calibration work takes real
-          time. There&apos;s no second shoe to drop. The line we
+          time. There&apos;s no second shoe to drop. The line I
           won&apos;t cross to make up the difference, in plain language:
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            We don&apos;t sell your strings — hashed, anonymised, or
+            I don&apos;t sell your strings — hashed, anonymised, or
             otherwise — to data brokers, advertisers, or anyone else.
             There is no third-party broker contract; there will not be
             one.
           </li>
           <li>
-            We don&apos;t repackage your check history into a profile
+            I don&apos;t repackage your check history into a profile
             of you, your team, or your industry that gets marketed
             against you. Your dashboard shows your activity to you;
             no aggregate &ldquo;intent signal&rdquo; product gets sold
             on top.
           </li>
           <li>
-            We don&apos;t use your content to train a model — ours,
+            I don&apos;t use your content to train a model — mine,
             Anthropic&apos;s, anyone&apos;s — without your explicit,
             per-entry opt-in. The Team-plan custom-example contribution
             toggle is the only path by which a customer string ever
-            joins our calibration corpus. It&apos;s off by default,
+            joins the calibration corpus. It&apos;s off by default,
             and it&apos;s a per-entry toggle, not a one-time
             account-wide setting.
           </li>
           <li>
-            We don&apos;t share your strings with any third party
+            I don&apos;t share your strings with any third party
             beyond the subprocessors named in the{" "}
             <Link href="/privacy" className="underline underline-offset-2">
               privacy policy
             </Link>
-            . Each one has a defined purpose; if we add one, the list
-            updates within 30 days and we post about it.
+            . Each one has a defined purpose; if I add one, the list
+            updates within 30 days and I post about it.
           </li>
           <li>
-            We don&apos;t run an &ldquo;engagement metrics&rdquo; or
-            behavioural-modelling layer on how you use ContentRX. We
+            I don&apos;t run an &ldquo;engagement metrics&rdquo; or
+            behavioural-modelling layer on how you use ContentRX. I
             track monthly check counts (because billing) and crash
             reports (because bugs). Nothing else.
           </li>
@@ -241,7 +241,7 @@ export default function EthicsPage() {
           refuses obvious credentials and PII (credit card numbers,
           SSNs, Stripe / OpenAI / Anthropic / GitHub keys, AWS access
           keys) — those values never reach the engine, never reach
-          Anthropic, never reach our error logs. Sentry events have
+          Anthropic, never reach the error logs. Sentry events have
           request bodies and auth headers stripped before send. Vercel
           function logs use a hand-shaped error format that omits
           transitive properties of SDK errors (which sometimes carry

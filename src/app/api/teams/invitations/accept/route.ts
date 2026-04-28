@@ -31,7 +31,7 @@ const RequestSchema = z.object({
 export async function POST(req: Request) {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
   const body = await req.json().catch(() => null);
@@ -61,17 +61,8 @@ export async function POST(req: Request) {
   });
 
   if (!result.ok) {
-    const status =
-      result.reason === "not_found"
-        ? 404
-        : result.reason === "expired"
-          ? 410
-          : result.reason === "email_mismatch"
-            ? 403
-            : result.reason === "no_seats"
-              ? 402
-              : 409;
-    return NextResponse.json({ error: result.reason }, { status });
+    const { status, message } = describeAcceptError(result.reason);
+    return NextResponse.json({ error: message, code: result.reason }, { status });
   }
 
   // Notify the team owner (best effort — don't block the accept on
@@ -91,4 +82,60 @@ export async function POST(req: Request) {
   // newly-joined member; bust the cache.
   revalidateDashboard();
   return NextResponse.json({ ok: true });
+}
+
+// Translate the acceptInvitation() reason enum into a status code +
+// a customer-facing message. The raw enum (`email_mismatch`, etc.)
+// stays in the response as `code` for clients that want to branch
+// on it programmatically; `error` is the human string we render.
+function describeAcceptError(reason: string): {
+  status: number;
+  message: string;
+} {
+  switch (reason) {
+    case "not_found":
+      return {
+        status: 404,
+        message:
+          "This invitation link doesn't match anything in our records. It may have been revoked, or the link may be incomplete.",
+      };
+    case "expired":
+      return {
+        status: 410,
+        message: "This invitation expired. Ask the inviter to send a new one.",
+      };
+    case "email_mismatch":
+      return {
+        status: 403,
+        message:
+          "This invitation was sent to a different email address. Sign in with the right account to accept.",
+      };
+    case "no_seats":
+      return {
+        status: 402,
+        message:
+          "The team has no seats available. Ask the team owner to add seats first.",
+      };
+    case "already_accepted":
+      return {
+        status: 409,
+        message: "This invitation has already been used.",
+      };
+    case "already_member":
+      return {
+        status: 409,
+        message: "You're already a member of another team.",
+      };
+    case "is_team_owner":
+      return {
+        status: 409,
+        message:
+          "You already own a team. Cancel that subscription before joining another team.",
+      };
+    default:
+      return {
+        status: 409,
+        message: "Couldn't accept the invitation. Try again — if it keeps happening, email hello@contentrx.io.",
+      };
+  }
 }

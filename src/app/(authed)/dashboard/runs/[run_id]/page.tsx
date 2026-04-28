@@ -36,6 +36,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { getDb, schema } from "@/db";
+import {
+  humanizeContentType,
+  humanizeMoment,
+  humanizeReviewReason,
+} from "@/lib/humanize";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 
 // Display cap: even runs with thousands of findings render at most
@@ -274,18 +279,18 @@ function FileBlock({
             <SeverityDot severity={it.severity} />
             <div className="flex-1">
               <div className="text-neutral-700 dark:text-neutral-300">
-                {it.contentType.replace(/_/g, " ")}
+                {humanizeContentType(it.contentType)}
                 {it.moment && (
                   <>
                     {" · "}
-                    {it.moment.replace(/_/g, " ")}
+                    {humanizeMoment(it.moment)}
                   </>
                 )}
               </div>
               {it.reviewReasonSubtype && (
                 <div className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                   Review recommended:{" "}
-                  {it.reviewReasonSubtype.replace(/_/g, " ")}
+                  {humanizeReviewReason(it.reviewReasonSubtype)}
                 </div>
               )}
             </div>

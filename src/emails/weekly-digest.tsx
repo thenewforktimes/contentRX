@@ -1,14 +1,22 @@
 /**
- * Weekly review-cadence digest — human-eval build plan Session 9.
+ * Weekly review-cadence digest.
  *
- * Fires weekly to team admins. Summarizes last week's override stream,
- * highlights urgent flags (override-rate spikes + new clusters), and
- * points at this week's moment rotation slot. Dedupe is handled by
- * `sendEmail`'s Redis layer keyed by (user, ISO week).
+ * Fires Monday to the team owner. Summarizes last week's overrides,
+ * highlights spikes / new clusters, and points at this week's moment
+ * deep-review slot. Dedupe is handled by `sendEmail`'s Redis layer
+ * keyed by (user, ISO week).
+ *
+ * Per ADR 2026-04-25 (private-taxonomy pivot), this email is a
+ * customer surface — `standard_id` and `rule_version` must NEVER
+ * appear here. We look up the standard's human-readable rule text
+ * via STANDARDS_BY_ID and render that instead. Unknown IDs (custom
+ * team rules) fall back to a generic phrase.
  */
 
 import { Heading, Link, Section, Text } from "@react-email/components";
 import type { WeeklyDigestPayload } from "@/lib/cadence";
+import { humanizeMoment } from "@/lib/humanize";
+import { STANDARDS_BY_ID } from "@/lib/standards";
 import { EmailShell } from "./_shell";
 
 const heading: React.CSSProperties = {
@@ -31,11 +39,6 @@ const body: React.CSSProperties = {
   margin: "0 0 12px",
 };
 
-const mono: React.CSSProperties = {
-  fontFamily: "SFMono-Regular, Consolas, monospace",
-  fontSize: 12,
-};
-
 const flagBox: React.CSSProperties = {
   backgroundColor: "#fff7ed",
   border: "1px solid #fed7aa",
@@ -43,6 +46,15 @@ const flagBox: React.CSSProperties = {
   padding: 12,
   marginBottom: 8,
 };
+
+// Render a standard's human-readable rule text. Falls back to a
+// generic phrase for custom (TEAM-NN) rules so we never leak the raw
+// id to the customer-facing email.
+function ruleTextFor(standardId: string): string {
+  const known = STANDARDS_BY_ID[standardId];
+  if (known) return known.rule;
+  return "a custom rule your team added";
+}
 
 export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload }) {
   const deltaLabel =
@@ -56,24 +68,22 @@ export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload })
         Review digest · {payload.weekLabel}
       </Heading>
       <Text style={body}>
-        {payload.totalOverridesThisWeek} overrides this week ({deltaLabel}).{" "}
+        {payload.totalOverridesThisWeek} findings dismissed this week ({deltaLabel}).{" "}
         {payload.pendingRefinementCount > 0 && (
           <>
-            {payload.pendingRefinementCount} pending refinement-log candidate
-            {payload.pendingRefinementCount === 1 ? "" : "s"} waiting for
-            triage.
+            {payload.pendingRefinementCount} taxonomy refinement{" "}
+            {payload.pendingRefinementCount === 1 ? "candidate" : "candidates"}
+            {" "}waiting for triage.
           </>
         )}
       </Text>
 
       {payload.urgentFlags.length > 0 && (
         <Section>
-          <Text style={sub}>Urgent flags</Text>
+          <Text style={sub}>Worth a look</Text>
           {payload.urgentFlags.map((f, i) => (
-            <Section key={`${f.standardId}-${i}`} style={flagBox}>
-              <Text style={{ ...body, margin: 0 }}>
-                <span style={mono}>{f.standardId}</span> — {f.message}
-              </Text>
+            <Section key={`${f.standardId ?? "flag"}-${i}`} style={flagBox}>
+              <Text style={{ ...body, margin: 0 }}>{f.message}</Text>
             </Section>
           ))}
         </Section>
@@ -81,11 +91,12 @@ export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload })
 
       {payload.topStandards.length > 0 && (
         <Section>
-          <Text style={sub}>Top-overridden standards</Text>
-          {payload.topStandards.map((s) => (
-            <Text key={s.standardId} style={body}>
-              <span style={mono}>{s.standardId}</span> · {s.count}x
-              {s.moment ? ` · ${s.moment}` : ""}
+          <Text style={sub}>Most-dismissed rules this week</Text>
+          {payload.topStandards.map((s, i) => (
+            <Text key={`top-${i}`} style={body}>
+              {ruleTextFor(s.standardId)} — {s.count}{" "}
+              {s.count === 1 ? "dismissal" : "dismissals"}
+              {s.moment ? ` · ${humanizeMoment(s.moment)}` : ""}
             </Text>
           ))}
         </Section>
@@ -93,9 +104,7 @@ export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload })
 
       <Section>
         <Text style={sub}>This week&apos;s moment deep-review</Text>
-        <Text style={body}>
-          <span style={mono}>{payload.nextMoment}</span>
-        </Text>
+        <Text style={body}>{humanizeMoment(payload.nextMoment)}</Text>
       </Section>
 
       <Section style={{ marginTop: 24 }}>
@@ -111,7 +120,7 @@ export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload })
             textDecoration: "none",
           }}
         >
-          Open review dashboard
+          View override report
         </Link>
       </Section>
     </EmailShell>

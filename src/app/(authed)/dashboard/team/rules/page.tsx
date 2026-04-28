@@ -40,9 +40,9 @@ export default async function TeamRulesPage() {
       <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
         <h1 className="text-lg font-semibold">Team rules</h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-300">
-          Custom rules are a Team-plan feature. Disable standards for your
-          whole team, override the wording of a rule, or add your own
-          regex-based rules to the 47 built-ins.
+          Available on the Team plan. Disable a built-in rule for your
+          whole team, rewrite the wording your team sees, or add your
+          own regex-based rules on top.
         </p>
         <Link
           href="/dashboard"

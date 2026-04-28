@@ -40,7 +40,9 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       const res = await fetch("/api/dashboard/api-key", { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Rotation failed");
+        throw new Error(
+          body?.error ?? "Couldn't rotate the key. Try again — if it keeps happening, email hello@contentrx.io.",
+        );
       }
       const body = await res.json();
       setPrefix(body.prefix);
@@ -55,7 +57,10 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       // the user navigates away and back.
       startTransition(() => router.refresh());
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Rotation failed";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Couldn't rotate the key. Try again — if it keeps happening, email hello@contentrx.io.";
       setState({ kind: "error", message });
     }
   }
@@ -67,14 +72,19 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       const res = await fetch("/api/dashboard/api-key", { method: "DELETE" });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Revocation failed");
+        throw new Error(
+          body?.error ?? "Couldn't revoke the key. Try again — if it keeps happening, email hello@contentrx.io.",
+        );
       }
       setPrefix(null);
       setCreatedAt(null);
       setState({ kind: "idle" });
       startTransition(() => router.refresh());
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Revocation failed";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Couldn't revoke the key. Try again — if it keeps happening, email hello@contentrx.io.";
       setState({ kind: "error", message });
     }
   }

@@ -41,7 +41,7 @@ async function requireTeamMember(
   if (auth.plan !== "team") {
     return corsJson(
       req,
-      { error: "Custom examples are a Team-plan feature." },
+      { error: "Custom examples are available on the Team plan." },
       { status: 403 },
     );
   }

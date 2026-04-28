@@ -53,11 +53,10 @@ export default async function CustomExamplesPage() {
       <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
         <h1 className="text-lg font-semibold">Custom examples</h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-300">
-          Custom examples are a Team-plan feature. They let your team
-          mark specific strings as correct (or known-bad) for your
-          product&apos;s voice — ContentRX short-circuits those
-          strings on every subsequent check without running the LLM,
-          without weakening any global rule.
+          Available on the Team plan. Mark specific strings as correct
+          (or known-bad) for your product&apos;s voice — ContentRX
+          short-circuits those strings on every subsequent check
+          without running the LLM, without weakening any global rule.
         </p>
         <Link
           href="/dashboard"

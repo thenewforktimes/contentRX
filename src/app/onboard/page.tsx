@@ -95,7 +95,7 @@ export default async function OnboardPage() {
         </h1>
         <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
           Pick the surface you&apos;ll start with. You can use the others
-          later — one API key covers them all, and your 250 free checks
+          later — one API key covers them all, and your 20 free checks
           a month are shared across every surface.
         </p>
       </header>

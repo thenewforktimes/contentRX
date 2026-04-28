@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { PublicCheckEnvelope } from "@/lib/api-envelope";
+import { humanizeReviewReason } from "@/lib/humanize";
 import { wordDiff, type DiffToken } from "@/lib/text-diff";
 import { dispatchCheckCompleted } from "../dashboard-check-events";
 
@@ -216,9 +217,9 @@ export function ExplainClient() {
           {text.length > MAX_CHECK_CHARS ? (
             <span className="text-right text-red-600 dark:text-red-400">
               Too long. Split into pieces ≤ {MAX_CHECK_CHARS.toLocaleString()}{" "}
-              chars or use{" "}
+              chars, or use{" "}
               <Link href="/install" className="underline underline-offset-2">
-                MCP / GitHub Action →
+                another surface →
               </Link>
             </span>
           ) : (
@@ -298,7 +299,7 @@ function VerdictHeader({
       </span>
       {reviewReason && (
         <span className="text-sm text-neutral-600 dark:text-neutral-300">
-          {reviewReason.replace(/_/g, " ")}
+          {humanizeReviewReason(reviewReason)}
         </span>
       )}
     </div>
@@ -400,7 +401,7 @@ function ErrorBlock({ error }: { error: CheckError }) {
         className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
       >
         <h3 className="font-semibold text-amber-900 dark:text-amber-200">
-          Monthly quota reached
+          Monthly limit reached
         </h3>
         <p className="text-amber-900 dark:text-amber-300">
           You&apos;ve used all {error.quota.toLocaleString()} checks for this
@@ -411,7 +412,7 @@ function ErrorBlock({ error }: { error: CheckError }) {
           href="/pricing?from=quota"
           className="mt-1 inline-block self-start rounded-md bg-amber-900 px-3 py-1.5 text-xs font-medium text-amber-50 hover:opacity-90 dark:bg-amber-200 dark:text-amber-950"
         >
-          See plans
+          View plans
         </Link>
       </div>
     );
@@ -439,11 +440,11 @@ function ErrorBlock({ error }: { error: CheckError }) {
         className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
       >
         <h3 className="font-semibold text-amber-900 dark:text-amber-200">
-          Slow down
+          Hold on a sec
         </h3>
         <p className="text-amber-900 dark:text-amber-300">
-          You&apos;re sending checks faster than the rate limit allows
-          {seconds ? `. Try again in ${seconds}s` : ""}.
+          Too many checks too fast
+          {seconds ? `. Try again in ${seconds}s` : ", try again in a moment"}.
         </p>
       </div>
     );
