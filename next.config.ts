@@ -6,82 +6,27 @@ const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-// Audit S6 — Content-Security-Policy + companion security headers.
+// Audit S6 — companion security headers.
 //
-// The connect/script/frame/img origins enumerate every third party we
-// actually load in the browser: Clerk auth, Stripe Checkout + Customer
-// Portal, Plausible analytics, Sentry browser SDK. Server-side calls
-// (Anthropic, Resend, Postgres, Upstash) don't appear in CSP — they
-// originate from the Vercel function, not the browser.
+// CSP was here too in the first cut, but it broke Clerk's frontend
+// SDK in production: the script-src allowlist (`*.clerk.com`,
+// `*.clerk.accounts.dev`) didn't cover the actual Frontend API
+// origin Clerk serves at production scale, so /sign-in rendered as a
+// black screen with the Clerk script blocked. Reverted to ship the
+// page; rebuild it from Clerk's published recommendations once we
+// can confirm the production Clerk Frontend API URL against the live
+// CSP report from a working environment.
 //
-// `'unsafe-inline'` and `'unsafe-eval'` on script-src are needed for
-// Next.js 15's hydration glue. Locking those down requires nonce-based
-// middleware, deferred until post-launch.
-//
-// Skipped in development so HMR's eval-based fast refresh keeps working
-// without the dev console getting drowned in CSP violation reports.
-const cspDirectives: Record<string, string[]> = {
-  "default-src": ["'self'"],
-  "script-src": [
-    "'self'",
-    "'unsafe-inline'",
-    "'unsafe-eval'",
-    "https://js.stripe.com",
-    "https://plausible.io",
-    "https://*.clerk.com",
-    "https://*.clerk.accounts.dev",
-    "https://challenges.cloudflare.com",
-  ],
-  "style-src": ["'self'", "'unsafe-inline'"],
-  "img-src": [
-    "'self'",
-    "data:",
-    "blob:",
-    "https://img.clerk.com",
-    "https://*.stripe.com",
-  ],
-  "font-src": ["'self'", "data:"],
-  "connect-src": [
-    "'self'",
-    "https://api.stripe.com",
-    "https://api.clerk.com",
-    "https://*.clerk.com",
-    "https://*.clerk.accounts.dev",
-    "https://plausible.io",
-    "https://*.ingest.sentry.io",
-    "https://*.sentry.io",
-  ],
-  "frame-src": [
-    "https://js.stripe.com",
-    "https://hooks.stripe.com",
-    "https://challenges.cloudflare.com",
-    "https://*.clerk.com",
-    "https://*.clerk.accounts.dev",
-  ],
-  "worker-src": ["'self'", "blob:"],
-  "frame-ancestors": ["'none'"],
-  "form-action": ["'self'"],
-  "base-uri": ["'self'"],
-  "object-src": ["'none'"],
-};
-
-const csp = Object.entries(cspDirectives)
-  .map(([k, v]) => `${k} ${v.join(" ")}`)
-  .join("; ") + "; upgrade-insecure-requests";
-
+// The other defenses against customer-content leakage stay in place
+// — PII pre-screen at /api/*, Sentry beforeSend scrubber,
+// safe-error-log helper. CSP was defense-in-depth on top of those.
 const securityHeaders = [
-  // CSP only in production — see comment above.
-  ...(process.env.NODE_ENV === "production"
-    ? [{ key: "Content-Security-Policy", value: csp }]
-    : []),
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=(self)",
   },
-  // frame-ancestors in CSP supersedes X-Frame-Options on modern
-  // browsers, but the legacy header still matters for IE/older Edge.
   { key: "X-Frame-Options", value: "DENY" },
 ];
 
