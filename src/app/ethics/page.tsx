@@ -184,6 +184,92 @@ export default function EthicsPage() {
         </ul>
       </Section>
 
+      <Section
+        number="6"
+        title="Customer, not product"
+        summary="ContentRX makes money by charging for a tool. Not by selling, repackaging, or modeling the work you check."
+      >
+        <p>
+          The subscription is the entire revenue model. Free exists so
+          you can try the product; paid tiers exist because the engine
+          costs real money to run and the calibration work takes real
+          time. There&apos;s no second shoe to drop. The line we
+          won&apos;t cross to make up the difference, in plain language:
+        </p>
+        <ul className="mt-3 ml-5 list-disc space-y-2">
+          <li>
+            We don&apos;t sell your strings — hashed, anonymised, or
+            otherwise — to data brokers, advertisers, or anyone else.
+            There is no third-party broker contract; there will not be
+            one.
+          </li>
+          <li>
+            We don&apos;t repackage your check history into a profile
+            of you, your team, or your industry that gets marketed
+            against you. Your dashboard shows your activity to you;
+            no aggregate &ldquo;intent signal&rdquo; product gets sold
+            on top.
+          </li>
+          <li>
+            We don&apos;t use your content to train a model — ours,
+            Anthropic&apos;s, anyone&apos;s — without your explicit,
+            per-entry opt-in. The Team-plan custom-example contribution
+            toggle is the only path by which a customer string ever
+            joins our calibration corpus. It&apos;s off by default,
+            and it&apos;s a per-entry toggle, not a one-time
+            account-wide setting.
+          </li>
+          <li>
+            We don&apos;t share your strings with any third party
+            beyond the subprocessors named in the{" "}
+            <Link href="/privacy" className="underline underline-offset-2">
+              privacy policy
+            </Link>
+            . Each one has a defined purpose; if we add one, the list
+            updates within 30 days and we post about it.
+          </li>
+          <li>
+            We don&apos;t run an &ldquo;engagement metrics&rdquo; or
+            behavioural-modelling layer on how you use ContentRX. We
+            track monthly check counts (because billing) and crash
+            reports (because bugs). Nothing else.
+          </li>
+        </ul>
+        <p className="mt-3">
+          The commitment is backed by code, not just policy. Every
+          public route that takes a string runs a pre-screen that
+          refuses obvious credentials and PII (credit card numbers,
+          SSNs, Stripe / OpenAI / Anthropic / GitHub keys, AWS access
+          keys) — those values never reach the engine, never reach
+          Anthropic, never reach our error logs. Sentry events have
+          request bodies and auth headers stripped before send. Vercel
+          function logs use a hand-shaped error format that omits
+          transitive properties of SDK errors (which sometimes carry
+          the request payload). The hardening is in{" "}
+          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[11px] dark:bg-neutral-900">
+            src/lib/pii-screen.ts
+          </code>
+          ,{" "}
+          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[11px] dark:bg-neutral-900">
+            src/lib/sentry-scrub.ts
+          </code>
+          , and{" "}
+          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[11px] dark:bg-neutral-900">
+            src/lib/safe-error-log.ts
+          </code>{" "}
+          if you want to verify against the source.
+        </p>
+        <p className="mt-3">
+          If any of this ever changes — say a future investor pitches
+          &ldquo;but think of the data&rdquo; — the policy here gets
+          superseded by an ADR I publish before any new collection
+          starts, and existing customers are notified by email. The
+          version of this commitment that&apos;s live is always the
+          one at /ethics. If there&apos;s no superseding ADR linked
+          from this page, the rules above are the rules.
+        </p>
+      </Section>
+
       <section className="mt-12 rounded-lg border border-neutral-300 bg-neutral-50 p-6 text-sm dark:border-neutral-700 dark:bg-neutral-900">
         <h2 className="text-base font-semibold">How to opt out</h2>
         <p className="mt-2 text-neutral-700 dark:text-neutral-300">

@@ -452,3 +452,55 @@ every API change, every new surface, every code review going forward.
   moments by name; don't add a `docs_url` field to violations; don't
   reactivate `scripts/generate-spec.mjs` or the `contentrx-standards`
   repo without a new ADR superseding the pivot.
+
+## Customer data — non-negotiables
+
+ContentRX is a customer-not-product business. The subscription is the
+entire revenue model; we don't sell, repackage, profile, or train
+on customer strings. The full position is at `/ethics` (commitment 6),
+the contract is in [decisions/2026-04-28-customer-not-product.md](decisions/2026-04-28-customer-not-product.md),
+and the engineering layer that backs it lives in three files. None of
+this is aspirational — every public route handling a string already
+behaves this way.
+
+**The three guard files (don't bypass them):**
+- `src/lib/pii-screen.ts` — regex pre-screen that refuses obvious
+  credentials and PII (credit cards via Luhn, SSNs, AWS / Stripe /
+  OpenAI / Anthropic / GitHub keys) on every text-accepting route.
+  Wired into `/api/check`, `/api/classify`, `/api/suggest-fix`,
+  `/api/violations/override`, and `/api/team-custom-examples`. Add
+  a new public route that takes a string → wire the pre-screen too.
+- `src/lib/sentry-scrub.ts` — Sentry `beforeSend` handler. Drops
+  request bodies, auth headers, cookies, query strings; truncates
+  exception messages at 200 chars; redacts text-shaped extras /
+  tags / breadcrumb data. Don't disable, don't loosen.
+- `src/lib/safe-error-log.ts` — `logSafeError(label, err)` replaces
+  `console.error(label, err)` in user-text routes. Hand-shapes the
+  log payload to `{kind, message, status?}` so Vercel function logs
+  never get the err object's transitive properties (SDK errors
+  sometimes serialise the request body into their own subclasses).
+  Use it in any new route that handles user content.
+
+**Behaviours that violate the position (don't ship):**
+- A surface that aggregates customer strings into a profile, score,
+  or "intent signal" product, even if anonymised.
+- Telemetry that goes beyond {monthly check counts, crash reports}
+  on how individual customers use ContentRX.
+- A subprocessor added without updating the `/privacy` subprocessor
+  table within 30 days.
+- Removing or weakening any of the three guard files above without
+  a new ADR superseding 2026-04-28.
+
+**The contributeUpstream review surface** (when you build it). Today
+no admin route reads `teamCustomExamples WHERE contributeUpstream =
+true`. When that admin queue ships, the rules: per-entry display
+only, never aggregated, never default-on, with a "this is the team's
+own opt-in contribution" banner so the surface can't be mistaken for
+implicit harvesting.
+
+**The Anthropic ZDR commitment** (operational, not code). Customer
+strings transit Anthropic's API. Anthropic's default 30-day API-log
+retention is the largest gap the engineering layer can't close. ZDR
+(zero data retention) is enabled at the account level via Anthropic
+support. Don't claim "your strings never leave the request lifecycle"
+in any user-facing copy until ZDR is confirmed live on the account.

@@ -114,6 +114,56 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
+      <Section title="What we won&apos;t do, in plain language">
+        <p>
+          Subscription is the entire revenue model. We don&apos;t make
+          money any other way; the things below are the lines we
+          won&apos;t cross to make up the difference.
+        </p>
+        <ul className="mt-3 ml-5 list-disc space-y-2">
+          <li>
+            <strong>We don&apos;t sell your strings.</strong> Hashed,
+            anonymised, or otherwise. No data-broker contract, no
+            advertiser arrangement.
+          </li>
+          <li>
+            <strong>We don&apos;t repackage your check history into
+            a profile</strong> of you, your team, or your industry
+            that gets marketed against you.
+          </li>
+          <li>
+            <strong>We don&apos;t use your content to train any
+            model</strong> — ours, Anthropic&apos;s, anyone&apos;s —
+            without your explicit, per-entry opt-in.
+          </li>
+          <li>
+            <strong>We don&apos;t share your strings with any third
+            party</strong> beyond the subprocessors named below.
+          </li>
+          <li>
+            <strong>We don&apos;t run engagement-modelling
+            telemetry</strong> on how you use ContentRX. We track
+            check counts (because billing) and crash reports
+            (because bugs). Nothing else.
+          </li>
+        </ul>
+        <p className="mt-4">
+          And the engineering layer behind that: every public route
+          that takes a string runs a pre-screen that refuses obvious
+          credentials and PII (credit card numbers, SSNs, AWS / Stripe
+          / OpenAI / GitHub keys) before they can reach Anthropic, our
+          error logs, or anyone&apos;s eyes. Sentry events have
+          request bodies and auth headers stripped before send. The
+          long-form version of this commitment, with the rationale
+          and the &ldquo;what changes if we ever change our mind&rdquo;
+          path, is at{" "}
+          <Link href="/ethics" className="underline underline-offset-2">
+            /ethics
+          </Link>
+          {" "}(commitment 6).
+        </p>
+      </Section>
+
       <Section title="Who else sees it (subprocessors)">
         <p>
           Running ContentRX requires partners. Each one sees only the
