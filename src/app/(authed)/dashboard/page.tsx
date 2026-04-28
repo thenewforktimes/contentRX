@@ -26,6 +26,7 @@ import { redirect } from "next/navigation";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { tags } from "@/lib/cache-tags";
+import { asDate, rehydrateMappedDates } from "@/lib/date-rehydrate";
 import { getDb, schema } from "@/db";
 import {
   buildPatterns,
@@ -619,17 +620,13 @@ async function loadActiveSubscription(
     { tags: [tags.subscription(ownerId)] },
   )(ownerId);
   if (!cached) return null;
-  // The cache layer serializes Dates to ISO strings; rehydrate so the
-  // page-level call to `activeSub.currentPeriodEnd.toISOString()` doesn't
-  // crash with "TypeError: a.toISOString is not a function".
+  // unstable_cache serializes Dates to ISO strings on cache hits;
+  // asDate() rehydrates so the page-level call to
+  // `activeSub.currentPeriodEnd.toISOString()` always sees a real Date.
+  // See src/lib/date-rehydrate.ts for the contract.
   return {
     status: cached.status,
-    currentPeriodEnd:
-      cached.currentPeriodEnd === null
-        ? null
-        : cached.currentPeriodEnd instanceof Date
-          ? cached.currentPeriodEnd
-          : new Date(cached.currentPeriodEnd),
+    currentPeriodEnd: asDate(cached.currentPeriodEnd),
   };
 }
 
@@ -726,41 +723,17 @@ async function loadSourceStats(
     [`loadSourceStats:${teamId}`],
     { tags: [tags.violations(teamId)], revalidate: 3600 },
   )(teamId);
-  // The cache layer JSON-serializes Dates back to ISO strings; rehydrate
-  // before returning so consumers (formatRelative, etc.) get real Dates.
+  // unstable_cache JSON-serializes Dates back to ISO strings on cache
+  // hits; rehydrateMappedDates rebuilds activity[*].lastAt as real Date
+  // instances so consumers (formatRelative, etc.) don't crash with
+  // "TypeError: a.getTime is not a function". See src/lib/date-rehydrate.ts.
   return {
-    activity: rehydrateActivityDates(cached.activity),
+    activity: rehydrateMappedDates(
+      cached.activity,
+      "lastAt",
+    ) as SurfaceActivity,
     recentlyActivated: cached.recentlyActivated,
   };
-}
-
-/**
- * Re-hydrate Date fields on a SurfaceActivity that may have come back
- * from unstable_cache as ISO strings.
- *
- * unstable_cache uses JSON serialization; Date objects round-trip as
- * ISO strings, not Date instances. Without this rehydration, downstream
- * `formatRelative(lastAt)` calls `.getTime()` on a string and crashes
- * with "TypeError: a.getTime is not a function". The crash was latent
- * before the dashboard polling refresh landed (the cache-hit path was
- * rarely exercised); polling every 5s pushed the cache-hit rate up
- * enough that the latent bug fired in prod.
- */
-function rehydrateActivityDates(activity: SurfaceActivity): SurfaceActivity {
-  return Object.fromEntries(
-    Object.entries(activity).map(([key, value]) => [
-      key,
-      {
-        count: value.count,
-        lastAt:
-          value.lastAt === null
-            ? null
-            : value.lastAt instanceof Date
-              ? value.lastAt
-              : new Date(value.lastAt),
-      },
-    ]),
-  ) as SurfaceActivity;
 }
 
 /**
