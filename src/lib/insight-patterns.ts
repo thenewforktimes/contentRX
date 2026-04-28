@@ -146,6 +146,14 @@ export async function loadFindingAggregates(
 ): Promise<FindingAggregates> {
   const db = getDb();
 
+  // postgres-js's wire-protocol writer for raw `sql` template params
+  // expects a string/Buffer/ArrayBuffer, not a Date — Drizzle's query
+  // builder normally adapts Date in `gte()` etc., but this raw CTE
+  // bypasses that adapter. Pass the ISO string and cast it in SQL so
+  // Postgres still compares as a timestamp. Fixes a 500 on /dashboard
+  // that broke production after the audit P0b CTE consolidation.
+  const sinceIso = since.toISOString();
+
   const rows = await db.execute<{
     top_moment: string | null;
     top_moment_count: number | null;
@@ -156,7 +164,7 @@ export async function loadFindingAggregates(
     WITH base AS (
       SELECT moment, file_path, severity
       FROM ${schema.violations}
-      WHERE team_id = ${teamId} AND created_at >= ${since}
+      WHERE team_id = ${teamId} AND created_at >= ${sinceIso}::timestamptz
     ),
     moment_top AS (
       SELECT moment, count(*)::int AS cnt
