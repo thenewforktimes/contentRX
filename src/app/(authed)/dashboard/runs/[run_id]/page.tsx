@@ -31,12 +31,18 @@
  */
 
 import { auth } from "@clerk/nextjs/server";
-import { and, asc, eq, or } from "drizzle-orm";
+import { and, asc, eq, or, sql } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { getDb, schema } from "@/db";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
+
+// Display cap: even runs with thousands of findings render at most
+// this many rows. The aggregate query covers the totals so the headline
+// stats stay accurate; the per-file lists just become "first N
+// findings, X more not shown" when overflowing. Audit Pf4.
+const DISPLAYED_FINDINGS_LIMIT = 500;
 
 type RunParams = {
   params: Promise<{ run_id: string }>;
@@ -72,31 +78,53 @@ export default async function RunPage({ params }: RunParams) {
   const teamId = user.teamOwnerUserId ?? user.id;
 
   const db = getDb();
-  const rows = (await db
-    .select({
-      id: schema.violations.id,
-      createdAt: schema.violations.createdAt,
-      filePath: schema.violations.filePath,
-      moment: schema.violations.moment,
-      contentType: schema.violations.contentType,
-      severity: schema.violations.severity,
-      source: schema.violations.source,
-      reviewReasonSubtype: schema.violations.reviewReasonSubtype,
-    })
-    .from(schema.violations)
-    .where(
-      and(
-        eq(schema.violations.runId, run_id),
-        or(
-          eq(schema.violations.teamId, teamId),
-          eq(schema.violations.userId, user.id),
-        ),
-      ),
-    )
-    .orderBy(asc(schema.violations.filePath), asc(schema.violations.createdAt))
-    .limit(2000)) as ViolationRow[];
 
-  if (rows.length === 0) {
+  // One query for the displayed rows, one parallel query for stats
+  // computed in SQL. This keeps the page accurate even for huge runs
+  // — the displayed list is capped, but the headline numbers
+  // (findings, files, severity counts, time range) reflect the
+  // full set. Audit Pf4.
+  const filterClause = and(
+    eq(schema.violations.runId, run_id),
+    or(
+      eq(schema.violations.teamId, teamId),
+      eq(schema.violations.userId, user.id),
+    ),
+  );
+
+  const [rows, statsRows] = await Promise.all([
+    db
+      .select({
+        id: schema.violations.id,
+        createdAt: schema.violations.createdAt,
+        filePath: schema.violations.filePath,
+        moment: schema.violations.moment,
+        contentType: schema.violations.contentType,
+        severity: schema.violations.severity,
+        source: schema.violations.source,
+        reviewReasonSubtype: schema.violations.reviewReasonSubtype,
+      })
+      .from(schema.violations)
+      .where(filterClause)
+      .orderBy(asc(schema.violations.filePath), asc(schema.violations.createdAt))
+      .limit(DISPLAYED_FINDINGS_LIMIT) as Promise<ViolationRow[]>,
+    db
+      .select({
+        total: sql<number>`count(*)::int`,
+        fileCount: sql<number>`count(distinct ${schema.violations.filePath})::int`,
+        highCount: sql<number>`count(*) filter (where ${schema.violations.severity} = 'high')::int`,
+        mediumCount: sql<number>`count(*) filter (where ${schema.violations.severity} = 'medium')::int`,
+        lowCount: sql<number>`count(*) filter (where ${schema.violations.severity} = 'low')::int`,
+        earliestAt: sql<Date | null>`min(${schema.violations.createdAt})`,
+        latestAt: sql<Date | null>`max(${schema.violations.createdAt})`,
+      })
+      .from(schema.violations)
+      .where(filterClause),
+  ]);
+
+  const stats = statsRows[0];
+
+  if (!stats || stats.total === 0) {
     return (
       <div className="flex flex-col gap-4">
         <Eyebrow>Run</Eyebrow>
@@ -117,30 +145,25 @@ export default async function RunPage({ params }: RunParams) {
     );
   }
 
+  // Stats come from the SQL aggregate over the full set; the displayed
+  // rows may be a capped subset. Group capped rows by file for display.
   const byFile = new Map<string, ViolationRow[]>();
-  let highCount = 0;
-  let mediumCount = 0;
-  let lowCount = 0;
-  let earliestAt: Date = rows[0].createdAt;
-  let latestAt: Date = rows[0].createdAt;
   for (const row of rows) {
     const key = row.filePath ?? "(no file)";
     const list = byFile.get(key);
     if (list) list.push(row);
     else byFile.set(key, [row]);
-
-    if (row.severity === "high") highCount++;
-    else if (row.severity === "medium") mediumCount++;
-    else lowCount++;
-
-    if (row.createdAt < earliestAt) earliestAt = row.createdAt;
-    if (row.createdAt > latestAt) latestAt = row.createdAt;
   }
-
   // Files sorted by finding count desc — biggest hot-spots first.
   const sortedFiles = [...byFile.entries()].sort(
     (a, b) => b[1].length - a[1].length,
   );
+
+  const earliestAt = stats.earliestAt
+    ? new Date(stats.earliestAt)
+    : new Date();
+  const latestAt = stats.latestAt ? new Date(stats.latestAt) : new Date();
+  const truncated = stats.total > rows.length;
 
   const sourceLabel = (() => {
     const sources = new Set(rows.map((r) => r.source));
@@ -166,11 +189,23 @@ export default async function RunPage({ params }: RunParams) {
       </header>
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Findings" value={rows.length} />
-        <Stat label="Files" value={byFile.size} />
-        <Stat label="High" value={highCount} tone="high" />
-        <Stat label="Medium / low" value={mediumCount + lowCount} tone="muted" />
+        <Stat label="Findings" value={stats.total} />
+        <Stat label="Files" value={stats.fileCount} />
+        <Stat label="High" value={stats.highCount} tone="high" />
+        <Stat
+          label="Medium / low"
+          value={stats.mediumCount + stats.lowCount}
+          tone="muted"
+        />
       </section>
+
+      {truncated && (
+        <p className="rounded-md border border-amber-300 bg-amber-50/60 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Showing the first {rows.length.toLocaleString()} findings of{" "}
+          {stats.total.toLocaleString()}. Earlier findings on the same files
+          aren&apos;t listed below — totals above remain accurate.
+        </p>
+      )}
 
       <section className="flex flex-col gap-4">
         {sortedFiles.map(([file, items]) => (

@@ -1,0 +1,12 @@
+# ContentRX security disclosure policy.
+# RFC 9116. Human-readable version at https://contentrx.io/security.
+#
+# If you've found something that looks like a vulnerability, send it
+# to the contact below before disclosing publicly. We respond within
+# 5 business days; serious issues sooner.
+
+Contact: mailto:security@contentrx.io
+Expires: 2027-04-27T00:00:00Z
+Preferred-Languages: en
+Canonical: https://contentrx.io/.well-known/security.txt
+Policy: https://contentrx.io/security

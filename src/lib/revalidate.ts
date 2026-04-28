@@ -1,36 +1,52 @@
 /**
  * Cache-invalidation helper for write routes that affect dashboard
- * display. Centralizes the `revalidatePath("/dashboard", "layout")`
- * call so every write path uses the same shape — single source of
- * truth for the pattern, single place to change if we ever switch
- * to a different invalidation strategy (Redis pubsub, on-demand
- * ISR, etc.).
+ * display. Two layers, busted together when the caller supplies the
+ * appropriate scope:
  *
- * The "layout" arg invalidates every route nested under the
- * dashboard layout — `/dashboard`, `/dashboard/runs/[id]`,
- * `/dashboard/overrides`, `/dashboard/members`, `/dashboard/team/*`,
- * `/dashboard/calibrate`, `/dashboard/explain`. One call covers all
- * the pages that might be displaying data the write just changed.
+ *   1. **Path-level** — `revalidatePath("/dashboard", "layout")`
+ *      invalidates every route nested under the dashboard layout
+ *      (/dashboard, /dashboard/runs/[id], /dashboard/overrides,
+ *      /dashboard/members, /dashboard/team/*, /dashboard/calibrate,
+ *      /dashboard/explain). Catches sub-pages whose loaders aren't
+ *      tag-cached (yet).
  *
- * Wrapped in try/catch because `revalidatePath` requires Next's
- * static-generation-store context which vitest doesn't supply (and
- * which can theoretically fail at runtime under transient Vercel
- * conditions). Cache invalidation is best-effort: a failure should
- * never break the write request, the dashboard catches up on the
- * next natural refresh.
+ *   2. **Tag-level** (audit Pf3) — when the caller provides
+ *      `userId`/`teamId`/`ownerId`, the matching `unstable_cache`
+ *      tags (see `lib/cache-tags.ts`) get revalidated too. Without
+ *      this layer, /dashboard root would read stale memoized values
+ *      until the function-cache TTL expired.
+ *
+ * Both layers wrap individual try/catches: failures in one don't
+ * cancel the other, and neither path-level nor tag-level revalidation
+ * has a static-generation-store available in vitest. Cache
+ * invalidation is best-effort.
  *
  * Usage:
- *   import { revalidateDashboard } from "@/lib/revalidate";
- *   // ... after a successful DB write that affects dashboard data ...
+ *   // Generic "something changed" — broad fallback, safe pre-Pf3.
  *   revalidateDashboard();
+ *
+ *   // Scoped: bust the cached loaders for one user / team / owner.
+ *   revalidateDashboard({ userId: auth.user.id, teamId });
  */
 
 import { revalidatePath } from "next/cache";
+import {
+  revalidateSubscription,
+  revalidateUsage,
+  revalidateViolations,
+} from "./cache-tags";
 
-export function revalidateDashboard(): void {
+export function revalidateDashboard(opts?: {
+  userId?: string;
+  teamId?: string;
+  ownerId?: string;
+}): void {
   try {
     revalidatePath("/dashboard", "layout");
   } catch (err) {
-    console.warn("revalidateDashboard failed (non-fatal):", err);
+    console.warn("revalidateDashboard path-level failed (non-fatal):", err);
   }
+  if (opts?.userId) revalidateUsage(opts.userId);
+  if (opts?.teamId) revalidateViolations(opts.teamId);
+  if (opts?.ownerId) revalidateSubscription(opts.ownerId);
 }

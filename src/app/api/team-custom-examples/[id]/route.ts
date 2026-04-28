@@ -18,28 +18,15 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
+import { corsJson, corsPreflight } from "@/lib/cors";
 import { UpdateExampleRequestSchema } from "@/lib/custom-examples-schemas";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
-const CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-};
-
-function withCors(res: NextResponse): NextResponse {
-  for (const [k, v] of Object.entries(CORS_HEADERS)) {
-    res.headers.set(k, v);
-  }
-  return res;
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(req: Request) {
+  return corsPreflight(req);
 }
 
 type Params = { id: string };
@@ -49,16 +36,13 @@ async function requireTeamMember(
 ): Promise<{ teamOwnerUserId: string } | NextResponse> {
   const auth = await resolveAuth(req);
   if ("status" in auth) {
-    return withCors(
-      NextResponse.json({ error: auth.message }, { status: auth.status }),
-    );
+    return corsJson(req, { error: auth.message }, { status: auth.status });
   }
   if (auth.plan !== "team") {
-    return withCors(
-      NextResponse.json(
-        { error: "Custom examples are a Team-plan feature." },
-        { status: 403 },
-      ),
+    return corsJson(
+      req,
+      { error: "Custom examples are a Team-plan feature." },
+      { status: 403 },
     );
   }
   // Per Position-3 (Apr 2026): any team member can manage. Resolve
@@ -76,6 +60,9 @@ export async function GET(
   if (authOrRes instanceof NextResponse) return authOrRes;
   const { teamOwnerUserId } = authOrRes;
 
+  const json = (body: unknown, init?: ResponseInit) =>
+    corsJson(req, body, init);
+
   const db = getDb();
   const [row] = await db
     .select()
@@ -88,15 +75,8 @@ export async function GET(
     )
     .limit(1);
 
-  if (!row) {
-    return withCors(
-      NextResponse.json({ error: "Not found" }, { status: 404 }),
-    );
-  }
-
-  return withCors(
-    NextResponse.json(envelope({ result: { example: row } })),
-  );
+  if (!row) return json({ error: "Not found" }, { status: 404 });
+  return json(envelope({ result: { example: row } }));
 }
 
 export async function PATCH(
@@ -108,38 +88,32 @@ export async function PATCH(
   if (authOrRes instanceof NextResponse) return authOrRes;
   const { teamOwnerUserId } = authOrRes;
 
+  const json = (body: unknown, init?: ResponseInit) =>
+    corsJson(req, body, init);
+
   const rl = await checkRateLimit(teamOwnerUserId);
   if (!rl.success) {
-    return withCors(
-      NextResponse.json(
-        { error: "Rate limit exceeded" },
-        { status: 429 },
-      ),
-    );
+    return json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);
   const parsed = UpdateExampleRequestSchema.safeParse(body);
   if (!parsed.success) {
-    return withCors(
-      NextResponse.json(
-        {
-          error: "Invalid request",
-          issues: sanitizeZodIssues(parsed.error.issues),
-        },
-        { status: 400 },
-      ),
+    return json(
+      {
+        error: "Invalid request",
+        issues: sanitizeZodIssues(parsed.error.issues),
+      },
+      { status: 400 },
     );
   }
   const data = parsed.data;
 
   // Nothing to update → treat as a no-op with the current row.
   if (data.notes === undefined && data.contribute_upstream === undefined) {
-    return withCors(
-      NextResponse.json(
-        { error: "Nothing to update. Send `notes` or `contribute_upstream`." },
-        { status: 400 },
-      ),
+    return json(
+      { error: "Nothing to update. Send `notes` or `contribute_upstream`." },
+      { status: 400 },
     );
   }
 
@@ -164,15 +138,11 @@ export async function PATCH(
     .returning();
 
   if (updated.length === 0) {
-    return withCors(
-      NextResponse.json({ error: "Not found" }, { status: 404 }),
-    );
+    return json({ error: "Not found" }, { status: 404 });
   }
 
   revalidateDashboard();
-  return withCors(
-    NextResponse.json(envelope({ result: { example: updated[0] } })),
-  );
+  return json(envelope({ result: { example: updated[0] } }));
 }
 
 export async function DELETE(
@@ -183,6 +153,9 @@ export async function DELETE(
   const authOrRes = await requireTeamMember(req);
   if (authOrRes instanceof NextResponse) return authOrRes;
   const { teamOwnerUserId } = authOrRes;
+
+  const json = (body: unknown, init?: ResponseInit) =>
+    corsJson(req, body, init);
 
   const db = getDb();
   const deleted = await db
@@ -196,13 +169,9 @@ export async function DELETE(
     .returning({ id: schema.teamCustomExamples.id });
 
   if (deleted.length === 0) {
-    return withCors(
-      NextResponse.json({ error: "Not found" }, { status: 404 }),
-    );
+    return json({ error: "Not found" }, { status: 404 });
   }
 
   revalidateDashboard();
-  return withCors(
-    NextResponse.json(envelope({ result: { ok: true, deleted_id: id } })),
-  );
+  return json(envelope({ result: { ok: true, deleted_id: id } }));
 }

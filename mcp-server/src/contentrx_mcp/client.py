@@ -15,9 +15,9 @@ from typing import Any
 
 import httpx
 
-from .auth import AuthError, get_api_base_url, get_api_key
+from .auth import get_api_base_url, get_api_key
 
-_USER_AGENT = "contentrx-mcp/0.5.0"
+_USER_AGENT = "contentrx-mcp/0.6.0"
 _TIMEOUT_SECONDS = 60.0
 
 
@@ -64,36 +64,6 @@ class ClassifyResult:
 
 
 @dataclass
-class StandardSummary:
-    id: str
-    rule: str
-    correct: str | None = None
-    incorrect: str | None = None
-    rule_type: str | None = None
-    relevant_content_types: list[str] | None = None
-
-
-@dataclass
-class StandardDetail:
-    id: str
-    rule: str
-    correct: str | None
-    incorrect: str | None
-    rule_type: str | None
-    relevant_content_types: list[str]
-    content_type_notes: dict[str, str]
-    category_id: str
-    category_name: str
-
-
-@dataclass
-class WeightedStandard:
-    standard_id: str
-    modifier: str  # "emphasize" | "relax" | "suppress"
-    rationale: str
-
-
-@dataclass
 class CustomExample:
     """A single team-scoped custom-example entry (human-eval Session 30)."""
 
@@ -118,33 +88,19 @@ class CustomExampleCap:
     cap: int
 
 
-@dataclass
-class MomentEntry:
-    id: str
-    description: str
-    weighted_standards: list[WeightedStandard]
-
-
 class ContentRXClient:
-    """Holds an httpx.AsyncClient + an optional cx_token. Created per tool call.
+    """Holds an httpx.AsyncClient + a cx_token. Created per tool call."""
 
-    Authenticated calls (check, classify) require the api_key to be set
-    — if it isn't, those methods raise AuthError before hitting the
-    network. Public calls (standards, moments) work either way.
-    """
-
-    def __init__(self, *, api_key: str | None, base_url: str):
+    def __init__(self, *, api_key: str, base_url: str):
         self._api_key = api_key
-        headers: dict[str, str] = {
-            "User-Agent": _USER_AGENT,
-            "Content-Type": "application/json",
-        }
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
         self._client = httpx.AsyncClient(
             base_url=base_url,
             timeout=_TIMEOUT_SECONDS,
-            headers=headers,
+            headers={
+                "User-Agent": _USER_AGENT,
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
         )
 
     async def __aenter__(self) -> "ContentRXClient":
@@ -152,13 +108,6 @@ class ContentRXClient:
 
     async def __aexit__(self, *_exc_info: object) -> None:
         await self._client.aclose()
-
-    def _require_auth(self) -> None:
-        if not self._api_key:
-            raise AuthError(
-                "This call requires CONTENTRX_API_KEY. Generate one at "
-                "https://contentrx.io/dashboard."
-            )
 
     async def check(
         self,
@@ -168,7 +117,6 @@ class ContentRXClient:
         content_type: str | None = None,
     ) -> CheckResult:
         """POST /api/check — full evaluation. Counts against monthly quota."""
-        self._require_auth()
         body: dict[str, Any] = {"text": text, "source": "mcp"}
         if moment:
             body["moment"] = moment
@@ -196,7 +144,6 @@ class ContentRXClient:
 
     async def classify(self, *, text: str) -> ClassifyResult:
         """POST /api/classify — content_type + moment only. Free of quota."""
-        self._require_auth()
         resp = await self._client.post("/api/classify", json={"text": text})
         self._raise_for_typed_status(resp)
         data = resp.json()
@@ -205,76 +152,6 @@ class ContentRXClient:
             content_type=result.get("content_type", "unknown"),
             moment=result.get("moment", "unknown"),
         )
-
-    async def list_standards(
-        self, *, moment: str | None = None,
-    ) -> list[StandardSummary]:
-        """GET /api/standards — public catalog. Optional moment filter.
-
-        When `moment` is provided, intersects the catalog with the
-        moment's weighted-standards list (excluding suppressed
-        standards) so the result is "rules this moment cares about."
-        """
-        resp = await self._client.get("/api/standards")
-        self._raise_for_typed_status(resp)
-        library = resp.json()
-        all_standards: list[StandardSummary] = []
-        for cat in library.get("categories") or []:
-            for std in cat.get("standards") or []:
-                all_standards.append(
-                    StandardSummary(
-                        id=std.get("id", ""),
-                        rule=std.get("rule", ""),
-                        correct=std.get("correct"),
-                        incorrect=std.get("incorrect"),
-                        rule_type=std.get("rule_type"),
-                        relevant_content_types=std.get("relevant_content_types"),
-                    )
-                )
-        if not moment:
-            return all_standards
-        relevant_ids = await self._standards_for_moment(moment)
-        return [s for s in all_standards if s.id in relevant_ids]
-
-    async def get_standard(self, *, standard_id: str) -> StandardDetail:
-        """GET /api/standards/[id] — single standard with category metadata."""
-        resp = await self._client.get(f"/api/standards/{standard_id}")
-        self._raise_for_typed_status(resp)
-        data = resp.json()
-        std = data.get("standard") or {}
-        cat = data.get("category") or {}
-        return StandardDetail(
-            id=std.get("id", standard_id),
-            rule=std.get("rule", ""),
-            correct=std.get("correct"),
-            incorrect=std.get("incorrect"),
-            rule_type=std.get("rule_type"),
-            relevant_content_types=list(std.get("relevant_content_types") or []),
-            content_type_notes=dict(std.get("content_type_notes") or {}),
-            category_id=cat.get("id", ""),
-            category_name=cat.get("name", ""),
-        )
-
-    async def list_moments(self) -> list[MomentEntry]:
-        """GET /api/moments — full moments taxonomy + per-moment weights."""
-        resp = await self._client.get("/api/moments")
-        self._raise_for_typed_status(resp)
-        data = resp.json()
-        return [
-            MomentEntry(
-                id=m.get("id", ""),
-                description=m.get("description", ""),
-                weighted_standards=[
-                    WeightedStandard(
-                        standard_id=w.get("standard_id", ""),
-                        modifier=w.get("modifier", ""),
-                        rationale=w.get("rationale", ""),
-                    )
-                    for w in (m.get("weighted_standards") or [])
-                ],
-            )
-            for m in (data.get("moments") or [])
-        ]
 
     # ------------------------------------------------------------------
     # Custom examples (human-eval build plan Session 30, PR B)
@@ -292,7 +169,6 @@ class ContentRXClient:
         contribute_upstream: bool = False,
     ) -> CustomExample:
         """POST /api/team-custom-examples — add one entry. Admin-only."""
-        self._require_auth()
         body: dict[str, Any] = {
             "text": text,
             "verdict": verdict,
@@ -318,7 +194,6 @@ class ContentRXClient:
         limit: int | None = None,
     ) -> CustomExampleCap:
         """GET /api/team-custom-examples — list the team's entries."""
-        self._require_auth()
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = str(limit)
@@ -336,7 +211,6 @@ class ContentRXClient:
 
     async def search_custom_examples(self, *, text: str) -> CustomExampleCap:
         """GET /api/team-custom-examples?text=… — check if a string is covered."""
-        self._require_auth()
         resp = await self._client.get(
             "/api/team-custom-examples",
             params={"text": text},
@@ -351,31 +225,11 @@ class ContentRXClient:
 
     async def remove_custom_example(self, *, example_id: str) -> bool:
         """DELETE /api/team-custom-examples/[id]. Returns True on success."""
-        self._require_auth()
         resp = await self._client.delete(
             f"/api/team-custom-examples/{example_id}",
         )
         self._raise_for_typed_status(resp)
         return True
-
-    async def _standards_for_moment(self, moment: str) -> set[str]:
-        """Standards that 'matter' for a moment — emphasize/relax, not suppress.
-
-        A 'suppress' modifier means the standard rarely applies in this
-        moment, so we exclude it from the filtered list. The result is
-        the set of standard IDs a developer scoping copy for this moment
-        should pay attention to.
-        """
-        moments = await self.list_moments()
-        for m in moments:
-            if m.id != moment:
-                continue
-            return {
-                w.standard_id
-                for w in m.weighted_standards
-                if w.modifier in ("emphasize", "relax")
-            }
-        return set()
 
     @staticmethod
     def _raise_for_typed_status(resp: httpx.Response) -> None:
@@ -417,22 +271,6 @@ class ContentRXClient:
 def open_client() -> ContentRXClient:
     """Construct an authenticated client from env. Raises if API key missing."""
     return ContentRXClient(api_key=get_api_key(), base_url=get_api_base_url())
-
-
-def open_optional_client() -> ContentRXClient:
-    """Construct a client that includes auth IF set, but doesn't error if missing.
-
-    Used by tools that hit only public endpoints (standards, moments) so
-    a developer browsing the spec doesn't need a key. Authenticated
-    methods on the returned client still raise AuthError if called
-    without the key — auth gating happens per-method, not per-client.
-    """
-    base_url = get_api_base_url()
-    try:
-        api_key: str | None = get_api_key()
-    except AuthError:
-        api_key = None
-    return ContentRXClient(api_key=api_key, base_url=base_url)
 
 
 # ---------------------------------------------------------------------------

@@ -39,29 +39,17 @@ from http.server import BaseHTTPRequestHandler
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(_ROOT, "src"))
 
-# Module-level imports are limited to the cheap path so catalog mode
-# (the most-cold endpoint — backed by /api/standards + /api/moments,
-# both unauthenticated and called by every MCP server connection) can
-# cold-start without paying for the LLM stack. Closes audit H-23.
-#
-# The cheap imports here:
-#   - api_utils typed exceptions (no anthropic transitive — anthropic
-#     is lazy-imported inside create_message itself)
-#   - moments (just data + a small heuristic)
-#
-# Heavy imports (check, classify, load_standards, suggest_fix) move
-# inside their respective handler branches. Python caches loaded
-# modules so re-entry doesn't re-pay the cost on warm instances.
+# Module-level imports kept to the cheap path. Heavy imports (check,
+# classify, load_standards, suggest_fix) move inside their handler
+# branches so cold starts that only handle classify or suggest_fix
+# don't pay for the LLM stack. Python's module cache avoids re-paying
+# on warm instances.
 from content_checker.api_utils import (  # noqa: E402
     PromptInjectionError,
     RateLimitedError,
     RequestTimeoutError,
 )
-from content_checker.moments import (  # noqa: E402
-    MOMENT_TAXONOMY,
-    MOMENT_WEIGHTS,
-    detect_moment,
-)
+from content_checker.moments import detect_moment  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -89,37 +77,6 @@ class handler(BaseHTTPRequestHandler):
             return self._respond(400, {"error": f"Invalid JSON: {exc}"})
 
         mode = body.get("mode", "check")
-
-        # Catalog mode: returns the moments taxonomy + weighted-standards
-        # mapping. Used by /api/moments to back the MCP server's
-        # `list_standards(moment=...)` filter and the
-        # `contentrx://moments` resource. No text required — this is a
-        # static-ish data query, not an evaluation.
-        if mode == "catalog":
-            return self._respond(
-                200,
-                {
-                    "result": {
-                        "moments": [
-                            {
-                                "id": mid,
-                                "description": desc,
-                                "weighted_standards": [
-                                    {
-                                        "standard_id": w.standard_id,
-                                        "modifier": w.modifier,
-                                        "rationale": w.rationale,
-                                    }
-                                    for w in MOMENT_WEIGHTS.get(mid, [])
-                                ],
-                            }
-                            for mid, desc in MOMENT_TAXONOMY.items()
-                        ],
-                    },
-                    "latency_ms": 0,
-                    "tokens": {"input": 0, "output": 0},
-                },
-            )
 
         text = body.get("text")
         if not isinstance(text, str) or not text:

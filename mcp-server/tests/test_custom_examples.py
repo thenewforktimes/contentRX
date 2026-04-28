@@ -85,20 +85,6 @@ async def test_add_custom_example_posts_expected_body_and_parses_result():
 
 
 @pytest.mark.asyncio
-async def test_add_custom_example_requires_auth():
-    obj = ContentRXClient.__new__(ContentRXClient)
-    obj._api_key = None  # type: ignore[attr-defined]
-    obj._client = httpx.AsyncClient(  # type: ignore[attr-defined]
-        base_url="https://test.contentrx",
-        transport=httpx.MockTransport(lambda r: httpx.Response(500)),
-    )
-    async with obj:
-        from contentrx_mcp.auth import AuthError
-        with pytest.raises(AuthError, match="CONTENTRX_API_KEY"):
-            await obj.add_custom_example(text="x", verdict="pass")
-
-
-@pytest.mark.asyncio
 async def test_list_custom_examples_returns_cap_and_entries():
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "GET"

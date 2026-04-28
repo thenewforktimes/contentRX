@@ -65,13 +65,12 @@ export default function InstallPage() {
         title="MCP server — Claude Code, Cursor, any MCP client"
       >
         <p>
-          The ContentRX MCP server exposes four tools to any MCP
-          client: <code>evaluate_copy</code>,{" "}
-          <code>classify_moment</code>, <code>explain_violation</code>,
-          and <code>list_standards</code>. Claude Code or Cursor
-          can check a string inline during generation — the LLM
-          narrates the moment first, then the verdict, then the
-          rationale chain on demand.
+          The ContentRX MCP server exposes <code>evaluate_copy</code>{" "}
+          and <code>classify_moment</code> tools (plus team
+          custom-example management) to any MCP client. Claude Code
+          or Cursor can check a string inline during generation — the
+          LLM narrates the moment first, then the verdict, then a
+          suggested rewrite.
         </p>
         <p className="mt-3">
           Claude Code:

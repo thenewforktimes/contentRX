@@ -14,12 +14,21 @@ import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb, schema } from "@/db";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { getStripe } from "@/lib/stripe";
 
 export async function POST() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rl = await checkRateLimit(clerkId);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429 },
+    );
   }
 
   const db = getDb();

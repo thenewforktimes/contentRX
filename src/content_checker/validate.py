@@ -109,6 +109,12 @@ def validate_candidates(
 
     try:
         result = parse_llm_json(llm_response.text, context="validate")
+        validations = result.get("validations")
+        if not isinstance(validations, list):
+            raise ParseError(
+                f"validate: 'validations' is {type(validations).__name__}, "
+                "expected list",
+            )
     except ParseError:
         # Fail-closed: treat all candidates as confirmed when we can't parse
         return candidates, [], latency, tokens
@@ -117,7 +123,9 @@ def validate_candidates(
     # preserved so rejected candidates can carry it to the review
     # queue as `Violation.validate_rejection_reason` (Session 13).
     validation_map: dict[str, tuple[str, str]] = {}
-    for v in result.get("validations", []):
+    for v in validations:
+        if not isinstance(v, dict):
+            continue
         sid = v.get("standard_id")
         if not sid:
             continue

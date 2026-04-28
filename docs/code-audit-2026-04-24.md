@@ -334,7 +334,7 @@ The codebase is **structurally sound** — tests pass, build is clean, no commit
 - `cli-client/contentrx/main.py:84`, `mcp-server/...auth.py:32`, `lsp-server/...auth.py:29` — API key from env only, no OS keychain. VS Code extension uses `SecretStorage` (good). Documented limitation.
 - `lsp-server/src/contentrx_lsp/client.py:127,202,259` — error responses include up to 200 chars of `response.text`. Defense-in-depth: show only status + reason to user; log body to LSP channel.
 - `github-action/src/main.py:151,212` — `subprocess.run` with list (safe), but missing `"--"` separator before positional `text` argument.
-- `src/app/api/standards`, `/api/standards/[id]`, `/api/moments` are public/unauthenticated by design (cache-able catalog) — confirmed intentional.
+- ~~`src/app/api/standards`, `/api/standards/[id]`, `/api/moments` are public/unauthenticated by design~~ — superseded by ADR 2026-04-25 (private taxonomy). Routes removed; MCP `list_standards`/`explain_violation` tools and `contentrx://` resources removed alongside them.
 - `figma-plugin/ui.html:3615` — `console.log("ContentRX scan export:", json)` runs only on clipboard fallback; `json` is scan result, not token.
 - `mcp-server/src/contentrx_mcp/server.py` — `evaluate_copy` tool's `context` parameter silently ignored. Not security; confusing API.
 - `cli-client/contentrx/main.py:122,204,266` — example `_CliError` cross-imported as private name. Brittle to refactors.

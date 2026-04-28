@@ -10,10 +10,8 @@ def test_default_prompt_falls_back_to_context_file_or_diff():
     assert "file or diff currently in context" in out
     assert "classify_moment(text)" in out
     assert "evaluate_copy(text" in out
-    assert "explain_violation(standard_id)" in out
     assert "Summary" in out
     assert "Violations by severity" in out
-    assert "Standards cited" in out
 
 
 def test_focused_prompt_includes_provided_target():

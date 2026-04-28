@@ -169,51 +169,6 @@ export async function classify(text: string): Promise<ClassifyResponse> {
   return (await res.json()) as ClassifyResponse;
 }
 
-export type CatalogMoment = {
-  id: string;
-  description: string;
-  weighted_standards: Array<{
-    standard_id: string;
-    modifier: "emphasize" | "relax" | "suppress" | string;
-    rationale: string;
-  }>;
-};
-
-export type CatalogResponse = {
-  result: { moments: CatalogMoment[] };
-  latency_ms: number;
-  tokens: EngineTokens;
-};
-
-/**
- * Catalog call into the Python evaluator. Returns the moments taxonomy
- * with each moment's standards-weight adjustments. Backs the public
- * /api/moments route consumed by the MCP server's `list_standards` tool
- * (when filtered by moment) and the `contentrx://moments` resource.
- */
-export async function catalog(): Promise<CatalogResponse> {
-  const secret = requireEnv("INTERNAL_EVAL_SECRET");
-
-  const res = await fetch(internalEvaluateUrl(), {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-internal-secret": secret,
-    },
-    body: JSON.stringify({ mode: "catalog" }),
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(
-      `Catalog fetch failed: ${res.status} ${res.statusText} ${body}`,
-    );
-  }
-
-  return (await res.json()) as CatalogResponse;
-}
-
 export type SuggestFixParams = {
   text: string;
   // ADR 2026-04-25 — standard_id is now optional. Schema-2.0.0 client

@@ -76,7 +76,13 @@ export async function findMatchingExample(
         eq(schema.teamCustomExamples.normalizedText, normalized),
       ),
     )
-    .orderBy(desc(schema.teamCustomExamples.createdAt));
+    // Deterministic order: most-recently-created first; id ASC tie-break
+    // for rows that landed in the same millisecond (timestamp resolution
+    // collisions are rare but real with bulk inserts).
+    .orderBy(
+      desc(schema.teamCustomExamples.createdAt),
+      schema.teamCustomExamples.id,
+    );
 
   return pickBestMatch(rows, params) ?? null;
 }

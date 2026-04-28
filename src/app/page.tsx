@@ -164,10 +164,9 @@ export default function Home() {
         <ul className="mt-4 ml-5 list-disc space-y-2">
           <li>
             <strong>MCP server</strong> — Claude Code, Cursor, and
-            any MCP client call <code>evaluate_copy</code>,{" "}
-            <code>classify_moment</code>, and the standards catalog
-            directly. Inline content review during generation, not
-            after.{" "}
+            any MCP client call <code>evaluate_copy</code> and{" "}
+            <code>classify_moment</code> directly. Inline content
+            review during generation, not after.{" "}
             <Link href="/install#mcp" className="underline underline-offset-2">
               Install
             </Link>

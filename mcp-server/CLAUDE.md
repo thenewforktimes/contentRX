@@ -37,9 +37,9 @@ MCP server is a pure HTTP client over the public ContentRX API.
 ## What not to do
 
 - Don't add tools that aren't on the v2 plan for the current release.
-  v2 Session 4 = the two tools shipping in 0.1; v2 Session 5 adds
-  `explain_violation` + `list_standards` + resources + the
-  `review_ui_copy` prompt.
+- Don't add tools that render the standards library or moment taxonomy.
+  Per ADR 2026-04-25 the taxonomy is private; surfaces here may emit
+  only the public envelope (issue, suggestion, severity, confidence).
 - Don't expose tool descriptions that say what the tool DOES rather
   than what it DOES FOR THE CALLER. "Returns violations with rule
   citations" is correct. "Sends a POST to /api/check" is wrong (that's

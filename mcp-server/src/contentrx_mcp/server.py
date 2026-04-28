@@ -1,29 +1,24 @@
 """ContentRX MCP server entry point.
 
-Exposes four tools, three resources, and one prompt to any MCP client
-(Claude Code, Cursor, Claude desktop, …):
+Exposes the content-design review tools to any MCP client (Claude Code,
+Cursor, Claude desktop, …):
 
 Tools:
-  - evaluate_copy(text, moment_hint?, context?) — full content-design
-    review against the standards library
-  - classify_moment(text) — what UI moment is this string? (cheap,
-    no quota cost)
-  - explain_violation(standard_id) — rationale + examples for a
-    cited rule (public, no quota cost)
-  - list_standards(moment?) — filterable catalog (public, no quota cost)
-
-Resources:
-  - contentrx://standards — markdown index of every standard
-  - contentrx://standards/{id} — single standard rendered as markdown
-  - contentrx://moments — full moments taxonomy + weights as markdown
+  - evaluate_copy(text, moment_hint?, context?) — full review against
+    the standards library
+  - evaluate_copy_batch(strings, …) — many strings in one call, with a
+    dry_run gate for batches of 10+
+  - classify_moment(text) — what UI moment is this string? (cheap, no
+    quota cost)
+  - custom_example_{add,list,search,remove} — Team-plan curation of
+    short-circuit entries that skip the LLM at /api/check time
 
 Prompt:
   - review_ui_copy(focus?) — multi-step workflow that walks a file or
     diff calling the tools above and summarises violations by severity
 
-Both LLM-cost tools (evaluate_copy, classify_moment) require
-`CONTENTRX_API_KEY`. The catalog tools and resources work without one
-so a developer browsing the spec doesn't need an account.
+All tools require `CONTENTRX_API_KEY`. The taxonomy is private per ADR
+2026-04-25 — no surface here renders standard IDs or rule text.
 """
 
 from __future__ import annotations
@@ -40,14 +35,8 @@ from .client import (
     QuotaExhaustedError,
     RateLimitError,
     open_client,
-    open_optional_client,
 )
 from .prompts import build_review_ui_copy_prompt
-from .resources import (
-    render_moments_index,
-    render_standard,
-    render_standards_index,
-)
 
 mcp = FastMCP("contentrx")
 
@@ -269,83 +258,6 @@ async def classify_moment(text: str) -> dict[str, Any]:
     return {"content_type": result.content_type, "moment": result.moment}
 
 
-@mcp.tool(
-    description=(
-        "Explain a content-design standard by ID. Returns rule, "
-        "pass/fail examples, and notes. No quota cost."
-    ),
-)
-async def explain_violation(standard_id: str) -> dict[str, Any]:
-    """Look up a standard's rationale and examples.
-
-    Args:
-        standard_id: The ID of the standard to explain (e.g. "CLR-01",
-            "GRM-06"). IDs come from `list_standards` or from the
-            `violations[].standard_id` field of an evaluate_copy result.
-
-    Returns:
-        A dict with id, rule, correct (pass example), incorrect (fail
-        example), rule_type, category, relevant_content_types, and
-        content_type_notes.
-    """
-    try:
-        async with open_optional_client() as client:
-            std = await client.get_standard(standard_id=standard_id)
-    except ContentRXError as exc:
-        return _typed_error(exc)
-
-    return {
-        "id": std.id,
-        "rule": std.rule,
-        "correct": std.correct,
-        "incorrect": std.incorrect,
-        "rule_type": std.rule_type,
-        "category_id": std.category_id,
-        "category_name": std.category_name,
-        "relevant_content_types": std.relevant_content_types,
-        "content_type_notes": std.content_type_notes,
-    }
-
-
-@mcp.tool(
-    description=(
-        "List all content-design standards. Optionally filter to those "
-        "weighted for a given moment. No quota cost."
-    ),
-)
-async def list_standards(moment: str | None = None) -> dict[str, Any]:
-    """Browse the standards catalog.
-
-    Args:
-        moment: Optional moment ID to filter by. When provided, returns
-            only the standards that the given moment emphasizes or
-            relaxes (suppressed standards are excluded). Use the
-            contentrx://moments resource to see valid moment IDs.
-
-    Returns:
-        A dict with `total` (int) and `standards` (list of summaries).
-    """
-    try:
-        async with open_optional_client() as client:
-            standards = await client.list_standards(moment=moment)
-    except ContentRXError as exc:
-        return _typed_error(exc)
-
-    return {
-        "total": len(standards),
-        "moment_filter": moment,
-        "standards": [
-            {
-                "id": s.id,
-                "rule": s.rule,
-                "rule_type": s.rule_type,
-                "relevant_content_types": s.relevant_content_types,
-            }
-            for s in standards
-        ],
-    }
-
-
 # ---------------------------------------------------------------------------
 # Custom examples — Team-plan feature (human-eval build plan Session 30)
 #
@@ -526,50 +438,6 @@ def _example_as_dict(entry: "CustomExample") -> dict[str, Any]:
         "created_at": entry.created_at,
         "updated_at": entry.updated_at,
     }
-
-
-# ---------------------------------------------------------------------------
-# Resources
-# ---------------------------------------------------------------------------
-
-
-@mcp.resource(
-    "contentrx://standards",
-    name="ContentRX standards",
-    description="Index of every content-design standard in the library.",
-    mime_type="text/markdown",
-)
-async def standards_index_resource() -> str:
-    """Markdown directory listing all standards. No auth required."""
-    async with open_optional_client() as client:
-        standards = await client.list_standards()
-    return render_standards_index(standards)
-
-
-@mcp.resource(
-    "contentrx://standards/{standard_id}",
-    name="ContentRX standard",
-    description="A single content-design standard rendered as markdown.",
-    mime_type="text/markdown",
-)
-async def standard_resource(standard_id: str) -> str:
-    """Markdown for one standard. No auth required."""
-    async with open_optional_client() as client:
-        std = await client.get_standard(standard_id=standard_id)
-    return render_standard(std)
-
-
-@mcp.resource(
-    "contentrx://moments",
-    name="ContentRX moments",
-    description="The 13 UI moments + each one's standards-weight adjustments.",
-    mime_type="text/markdown",
-)
-async def moments_resource() -> str:
-    """Markdown of the moments taxonomy. No auth required."""
-    async with open_optional_client() as client:
-        moments = await client.list_moments()
-    return render_moments_index(moments)
 
 
 # ---------------------------------------------------------------------------

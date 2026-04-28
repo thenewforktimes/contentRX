@@ -103,58 +103,13 @@ classify_moment(text: str) -> {
 Free of quota. Rate-limited at 60/min per user (same bucket as
 `evaluate_copy`).
 
-### `explain_violation` — rule rationale + examples (no quota cost)
-
-Look up the full text + pass/fail examples for any standard ID. The
-`violations[].standard_id` field of an `evaluate_copy` result is the
-typical input here.
-
-```
-explain_violation(standard_id: str) -> {
-  id, rule, correct, incorrect, rule_type, category_id, category_name,
-  relevant_content_types, content_type_notes,
-}
-```
-
-Public — works without an API key. Useful even before you have an
-account, for spec browsing.
-
-### `list_standards` — filterable rule catalog (no quota cost)
-
-Browse the standards library. Optional moment filter narrows to rules
-that "matter" for the moment (i.e. emphasized or relaxed; suppressed
-rules are excluded).
-
-```
-list_standards(moment: str | None) -> {
-  total: int,
-  moment_filter: str | None,
-  standards: [{id, rule, rule_type, relevant_content_types}],
-}
-```
-
-Public — works without an API key.
-
-## Resources
-
-Three read-only resources the LLM can pull into context:
-
-| URI | What |
-|---|---|
-| `contentrx://standards` | Markdown index of every standard in the library |
-| `contentrx://standards/{id}` | A single standard — rule, examples, notes, content-type guidance |
-| `contentrx://moments` | The 13 UI moments + each one's standards-weight adjustments |
-
-Resources don't require an API key.
-
 ## Prompts
 
 ### `/review_ui_copy [focus?]`
 
 Multi-step review workflow. Walks every UI string in a file or diff
-through `classify_moment` → `evaluate_copy` (and `explain_violation`
-where useful), then summarizes violations by severity with rule
-citations.
+through `classify_moment` → `evaluate_copy`, then summarizes violations
+by severity with suggested rewrites.
 
 ```
 /review_ui_copy                              # uses file/diff in context
@@ -180,15 +135,13 @@ Claude Code calls `evaluate_copy` before writing the JSX:
 ```text
 evaluate_copy(text="Click here to view pricing")
 
-→ overall_verdict: "fail"
-  content_type: "button_cta"
-  moment: "decision_point"
+→ verdict: "violation"
   violations: [
     {
-      standard_id: "ACT-02",
       issue: "Vague CTA — 'Click here' doesn't name the destination",
       suggestion: "Lead with the action verb + object: 'View pricing'",
-      severity: "block"
+      severity: "block",
+      confidence: 0.91
     }
   ]
 ```
@@ -205,8 +158,7 @@ In Claude desktop with a file open in context:
 ```
 
 The prompt walks every UI string in the file: `classify_moment` →
-`evaluate_copy` → `explain_violation` for any failures. Returns a
-structured summary grouped by severity with rule citations and
+`evaluate_copy`. Returns a structured summary grouped by severity with
 suggested rewrites. Typical output for a 200-line dashboard component
 surfaces 3–8 violations most human reviewers miss on skim.
 

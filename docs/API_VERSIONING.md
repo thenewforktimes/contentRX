@@ -273,9 +273,6 @@ Routes that return an envelope as of 1.0.0:
 Routes that **will** envelope when their next change ships:
 
 - `POST /api/classify`
-- `GET /api/standards`
-- `GET /api/standards/[id]`
-- `GET /api/moments`
 - `POST /api/dashboard/api-key`
 - `POST /api/checkout`
 - `POST /api/portal`

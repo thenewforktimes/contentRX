@@ -13,11 +13,11 @@
  *   9. Return the result + quota metadata
  */
 
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { publicCheckEnvelope } from "@/lib/api-envelope";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { resolveAuth } from "@/lib/auth";
+import { corsJson, corsPreflight } from "@/lib/cors";
 import {
   findMatchingExample,
   shortCircuitFromExample,
@@ -41,26 +41,14 @@ import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { QuotaExhaustedEmail } from "@/emails/quota-exhausted";
 import { QuotaWarningEmail } from "@/emails/quota-warning";
 
-// CORS: the Figma plugin iframe has Origin: null. We allow any origin
-// because the request is gated on the Authorization header, not on
-// cookies. No credentials, no Set-Cookie — so wildcard is safe.
-const CORS_HEADERS: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  "Access-Control-Max-Age": "86400",
-};
+// CORS allowlist (audit S5): see `lib/cors.ts`. The Figma plugin
+// iframe sends `Origin: null`; the marketing site is same-origin to
+// /api/*; we narrowed from `*` to figma + localhost-dev as defense-
+// in-depth. Auth is the bearer header, never a cookie, so an origin
+// that isn't on the list still can't forge an authenticated call.
 
-function json(body: unknown, init?: ResponseInit): NextResponse {
-  const res = NextResponse.json(body, init);
-  for (const [k, v] of Object.entries(CORS_HEADERS)) {
-    res.headers.set(k, v);
-  }
-  return res;
-}
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(req: Request) {
+  return corsPreflight(req);
 }
 
 const RequestSchema = z.object({
@@ -95,6 +83,8 @@ const RequestSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const json = (body: unknown, init?: ResponseInit) =>
+    corsJson(req, body, init);
   const auth = await resolveAuth(req);
   if ("status" in auth) {
     return json({ error: auth.message }, { status: auth.status });
@@ -255,14 +245,16 @@ export async function POST(req: Request) {
   const withAdds = applyAddedRules(overridden, text, teamRules.adds);
   const result = recomputeVerdict(withAdds);
 
-  // Log + increment are observational — if they fail, the user still gets
-  // their result. We surface the failure through Sentry, not to the user.
-  try {
-    // team_id always equals "team-owner-or-self" — see lib/team-scope.ts
-    // for the full rationale. Centralized in `teamScope()` so writes
-    // and reads always agree (PR-198 fix for the team_id NULL bug).
-    const teamIdForLog = teamScope(auth);
-    await logViolations({
+  // Log + token-usage writes are observational — both run in parallel
+  // since neither depends on the other, and a failure in either should
+  // never fail the request. The user already got their result and quota
+  // was already counted at claimQuotaSlot time.
+  // team_id always equals "team-owner-or-self" — see lib/team-scope.ts
+  // for the full rationale. Centralized in `teamScope()` so writes and
+  // reads always agree (PR-198 fix for the team_id NULL bug).
+  const teamIdForLog = teamScope(auth);
+  const [logResult, tokenResult] = await Promise.allSettled([
+    logViolations({
       userId: auth.user.id,
       teamId: teamIdForLog,
       source,
@@ -274,32 +266,26 @@ export async function POST(req: Request) {
       reviewReasonSubtype:
         (result as { review_reason?: string | null }).review_reason ?? null,
       runId: run_id ?? null,
-    });
-  } catch (err) {
-    console.error("logViolations failed:", err);
-  }
-
-  // Token-cost telemetry (audit M-24, PR 9). Roll up the engine's
-  // reported token usage into the user's current-month usage row so
-  // we can answer "how much did this customer cost us?" without
-  // walking engine logs. Best-effort: a failure here doesn't fail the
-  // request — the user already got their result and quota was already
-  // counted.
-  try {
-    await recordTokenUsage(auth.user.id, {
+    }),
+    recordTokenUsage(auth.user.id, {
       inputTokens: evalResponse.tokens.input,
       outputTokens: evalResponse.tokens.output,
       cacheReadInputTokens: evalResponse.tokens.cache_read_input ?? 0,
       cacheCreationInputTokens: evalResponse.tokens.cache_creation_input ?? 0,
-    });
-  } catch (err) {
-    console.error("recordTokenUsage failed:", err);
+    }),
+  ]);
+  if (logResult.status === "rejected") {
+    console.error("logViolations failed:", logResult.reason);
+  }
+  if (tokenResult.status === "rejected") {
+    console.error("recordTokenUsage failed:", tokenResult.reason);
   }
 
-  // Bust the dashboard's edge cache so the usage counter, "This
-  // week" panel, and Active-Surfaces row reflect this check on the
-  // next render. See `lib/revalidate.ts` for the full rationale.
-  revalidateDashboard();
+  // Bust the dashboard's edge cache + tag-cached loaders so the usage
+  // counter, "This week" panel, and Active-Surfaces row reflect this
+  // check on the next render. Scope: this user's usage, this team's
+  // violations. See `lib/revalidate.ts` + `lib/cache-tags.ts`.
+  revalidateDashboard({ userId: auth.user.id, teamId: teamIdForLog });
 
   // Public envelope (schema 2.0.0). `result` is the substrate
   // CheckResult shape returned by the Python engine; we project it
