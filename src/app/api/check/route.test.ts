@@ -245,28 +245,29 @@ describe("/api/check — auth + input", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects text longer than the 25,000-char hard ceiling", async () => {
+  it("rejects text longer than the 15,000-char hard ceiling", async () => {
     // Defense against pasted-codebase abuse: even with proportional
-    // billing, a single call can't exceed MAX_CHECK_CHARS = 25,000.
-    // The message must be honest about the cap applying across every
-    // surface (web, MCP, CLI, GHA, Figma) so a routed user doesn't
-    // bounce off the same 400 from the next surface they try.
+    // billing, a single call can't exceed MAX_CHECK_CHARS = 15,000
+    // (CHARS_PER_CHECK 3,000 × MAX_CHECKS_PER_CALL 5). The message
+    // must be honest about the cap applying across every surface
+    // (web, MCP, CLI, GHA, Figma) so a routed user doesn't bounce
+    // off the same 400 from the next surface they try.
     await seedAuthedUser();
-    const res = await POST(makeReq({ text: "x".repeat(25_001) }));
+    const res = await POST(makeReq({ text: "x".repeat(15_001) }));
     expect(res.status).toBe(400);
     const body = await res.json();
     const messageBlob = JSON.stringify(body);
-    expect(messageBlob).toMatch(/25,000 characters/);
-    expect(messageBlob).toMatch(/5,000/); // CHARS_PER_CHECK in the message
+    expect(messageBlob).toMatch(/15,000 characters/);
+    expect(messageBlob).toMatch(/3,000/); // CHARS_PER_CHECK in the message
     expect(messageBlob.toLowerCase()).toContain("every surface");
     expect(messageBlob).toMatch(/MCP|GitHub Action/);
   });
 
-  it("accepts text right at the 25,000-char ceiling", async () => {
-    // Boundary check — exactly 25,000 should pass and consume 5 checks.
+  it("accepts text right at the 15,000-char ceiling", async () => {
+    // Boundary check — exactly 15,000 should pass and consume 5 checks.
     await seedAuthedUser("pro");
     cannedEval.current = VIOLATION_RESULT;
-    const res = await POST(makeReq({ text: "x".repeat(25_000) }));
+    const res = await POST(makeReq({ text: "x".repeat(15_000) }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.usage.checks_consumed).toBe(5);
@@ -274,23 +275,22 @@ describe("/api/check — auth + input", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Proportional billing — the 2026-04-28 hybrid design
+// Proportional billing — re-anchored 2026-04-28 to 3,000 chars per check
 // ---------------------------------------------------------------------------
 
 describe("/api/check — proportional billing", () => {
-  // Boundary table: every step on the ceil(text.length / 5000) ladder
+  // Boundary table: every step on the ceil(text.length / 3000) ladder
   // gets a test so a future refactor that breaks the math at the
-  // boundaries (off-by-one, wrong rounding) fails loudly. The pattern:
-  // input length → expected checks consumed.
+  // boundaries (off-by-one, wrong rounding) fails loudly.
   const cases = [
     { len: 1, expected: 1, label: "1 char → 1 check" },
-    { len: 4_999, expected: 1, label: "4,999 chars → 1 check (just under boundary)" },
-    { len: 5_000, expected: 1, label: "5,000 chars → 1 check (at boundary)" },
-    { len: 5_001, expected: 2, label: "5,001 chars → 2 checks (just over boundary)" },
-    { len: 10_000, expected: 2, label: "10,000 chars → 2 checks" },
-    { len: 10_001, expected: 3, label: "10,001 chars → 3 checks" },
-    { len: 24_999, expected: 5, label: "24,999 chars → 5 checks" },
-    { len: 25_000, expected: 5, label: "25,000 chars → 5 checks (ceiling)" },
+    { len: 2_999, expected: 1, label: "2,999 chars → 1 check (just under boundary)" },
+    { len: 3_000, expected: 1, label: "3,000 chars → 1 check (at boundary)" },
+    { len: 3_001, expected: 2, label: "3,001 chars → 2 checks (just over boundary)" },
+    { len: 6_000, expected: 2, label: "6,000 chars → 2 checks" },
+    { len: 6_001, expected: 3, label: "6,001 chars → 3 checks" },
+    { len: 14_999, expected: 5, label: "14,999 chars → 5 checks" },
+    { len: 15_000, expected: 5, label: "15,000 chars → 5 checks (ceiling)" },
   ];
 
   for (const c of cases) {
@@ -306,18 +306,18 @@ describe("/api/check — proportional billing", () => {
   }
 
   it("rejects with 402 when the proportional cost exceeds remaining quota", async () => {
-    // The all-or-nothing claim: a 7,500-char input costs 2 checks,
-    // and a Free user with 24/25 checks already used can't run it
+    // The all-or-nothing claim: a 4,500-char input costs 2 checks,
+    // and a Free user with 19/20 checks already used can't run it
     // even though they have 1 slot remaining. No partial fulfillment.
     const userId = await seedAuthedUser("free");
-    // Directly bump the user's usage to 24/25 by inserting a usage row.
+    // Directly bump the user's usage to 19/20 by inserting a usage row.
     await harness.db
       .insert(schema.usage)
-      .values({ userId, month: new Date().toISOString().slice(0, 7), count: 24 });
+      .values({ userId, month: new Date().toISOString().slice(0, 7), count: 19 });
     cannedEval.current = VIOLATION_RESULT;
 
-    // 7,500 chars = 2 checks needed; only 1 slot left = 402.
-    const res = await POST(makeReq({ text: "x".repeat(7_500) }));
+    // 4,500 chars = 2 checks needed; only 1 slot left = 402.
+    const res = await POST(makeReq({ text: "x".repeat(4_500) }));
     expect(res.status).toBe(402);
     const body = await res.json();
     expect(body.checks_required).toBe(2);
@@ -326,7 +326,7 @@ describe("/api/check — proportional billing", () => {
       .select({ count: schema.usage.count })
       .from(schema.usage)
       .where(eq(schema.usage.userId, userId));
-    expect(row.count).toBe(24);
+    expect(row.count).toBe(19);
   });
 });
 
@@ -434,12 +434,15 @@ describe("/api/check — gates", () => {
 
   it("returns 402 when quota exhausted (does NOT call the engine)", async () => {
     const userId = await seedAuthedUser("free");
-    // Pre-fill usage to the free-tier cap. monthlyQuota("free") is 250.
+    // Pre-fill usage at-or-above the free-tier cap. monthlyQuota("free")
+    // is 20 (re-anchored 2026-04-28); filling to 20 leaves zero room
+    // for any new claim and the route returns 402 before the engine
+    // is touched.
     await harness.db.insert(schema.usage).values({
       id: "u-fill",
       userId,
       month: new Date().toISOString().slice(0, 7),
-      count: 250,
+      count: 20,
     });
     cannedEval.current = PASS_RESULT;
 
@@ -447,23 +450,23 @@ describe("/api/check — gates", () => {
     expect(res.status).toBe(402);
     const body = await res.json();
     expect(body.error).toMatch(/quota/i);
-    expect(body.used).toBe(250);
+    expect(body.used).toBe(20);
     expect(body.plan).toBe("free");
   });
 
   it("under concurrent requests at the cap-1 boundary, exactly one succeeds", async () => {
-    // Free-tier monthlyQuota is 25 (src/lib/quotas.ts). Pre-fill to
-    // cap-1 (24), fire 5 concurrent POSTs; exactly one returns 200,
-    // the rest return 402. Proves the claimQuotaSlot atomic upsert
-    // holds end-to-end through the route handler — not just at the
-    // unit-test layer where it's also proven (src/lib/usage.test.ts).
+    // Free-tier monthlyQuota is 20 (src/lib/quotas.ts, re-anchored
+    // 2026-04-28). Pre-fill to cap-1 (19), fire 5 concurrent POSTs;
+    // exactly one returns 200, the rest return 402. Proves the
+    // claimQuotaSlots atomic upsert holds end-to-end through the
+    // route handler — not just at the unit-test layer.
     const userId = await seedAuthedUser("free");
     const month = new Date().toISOString().slice(0, 7);
     await harness.db.insert(schema.usage).values({
       id: "u-boundary",
       userId,
       month,
-      count: 24, // cap is 25
+      count: 19, // cap is 20
     });
     cannedEval.current = PASS_RESULT;
 
@@ -480,7 +483,7 @@ describe("/api/check — gates", () => {
       .select()
       .from(schema.usage)
       .where(eq(schema.usage.userId, userId));
-    expect(row?.count).toBe(25);
+    expect(row?.count).toBe(20);
   });
 });
 

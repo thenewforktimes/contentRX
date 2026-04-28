@@ -39,7 +39,7 @@ export function QuotaWarningEmail({
       </Text>
       {plan === "free" && (
         <Text>
-          Upgrade to Pro for 5,000 checks a month. No-meeting checkout,
+          Upgrade to Pro for 1,000 checks a month. No-meeting checkout,
           cancel anytime.
         </Text>
       )}
