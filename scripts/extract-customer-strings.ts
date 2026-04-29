@@ -68,6 +68,14 @@ const INCLUDE_PREFIXES: ReadonlyArray<string> = [
 
 const EXCLUDE_PATTERNS: ReadonlyArray<RegExp> = [
   /^src\/app\/admin\//,
+  // Admin-tier API routes serve only founders (founder-auth via
+  // isContentRXAdmin or CRON_SECRET). Their JSON error responses
+  // intentionally use terse copy: 404 for non-founders so the URL
+  // doesn't leak (per /admin/layout.tsx posture), generic 500
+  // messages so server-side error detail stays in safe-error-log.
+  // These don't follow customer-copy rules — same architectural
+  // reason /admin pages don't.
+  /^src\/app\/api\/admin\//,
   /\.test\.(ts|tsx)$/,
   /\.spec\.(ts|tsx)$/,
   /__tests__\//,

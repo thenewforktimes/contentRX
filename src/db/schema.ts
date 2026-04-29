@@ -561,6 +561,75 @@ export const suggestionCandidates = pgTable(
   ],
 ).enableRLS();
 
+// Suggestion precedents — ADR 2026-04-29 (Phase 2 Block 2a).
+//
+// The CURATED side of the two-tier signal architecture. Robert's
+// /admin triage promotes vetted suggestion_candidates rows here.
+// At runtime, the LLM scan prompt's precedent retrieval (Block 2c)
+// reads ONLY this table — never the noisy candidates table — so
+// customer signal can't poison the model's voice without founder
+// curation.
+//
+// Each row is one canonical good suggestion for a specific bucket
+// (moment, content_type, standard_id). When multiple candidates
+// are merged into one precedent, sample_size aggregates so retrieval
+// can rank precedents by approval frequency.
+//
+// Privacy: approved_text is founder-curated content. PII pre-screen
+// runs on /admin triage writes the same way it runs on customer
+// /api/violations/adjust writes (defense in depth).
+export const suggestionPrecedents = pgTable(
+  "suggestion_precedents",
+  {
+    id: cuid(),
+    // Bucket axes — REQUIRED for precedents (unlike candidates,
+    // where they can be null pending triage). The retrieval module
+    // reads on (moment, content_type, standard_id) directly; without
+    // those, a precedent can't be matched to a runtime check.
+    moment: text("moment").notNull(),
+    contentType: text("content_type").notNull(),
+    standardId: text("standard_id").notNull(),
+    // The curated suggestion text. PII-screened on insert.
+    approvedText: text("approved_text").notNull(),
+    // Founder who promoted this precedent. set-null on delete to
+    // keep the precedent alive past account changes (audit H-08).
+    approvedBy: text("approved_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    // Optional traceability back to the candidate that seeded the
+    // precedent. set-null on delete: candidates may be archived,
+    // but the precedent stays.
+    sourceCandidateId: text("source_candidate_id").references(
+      () => suggestionCandidates.id,
+      { onDelete: "set null" },
+    ),
+    // How many candidates have been merged into this precedent (or
+    // approved as exact duplicates). Higher sample_size = stronger
+    // signal at retrieval time.
+    sampleSize: integer("sample_size").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    approvedAt: timestamp("approved_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Retrieval hot path: per-request bucket lookup with top-N by
+    // sample_size DESC, created_at DESC. The runtime lookup has a
+    // hard top-3 cap so cluster sizes never bloat the prompt.
+    index("suggestion_precedents_bucket_idx").on(
+      t.moment,
+      t.contentType,
+      t.standardId,
+    ),
+    // /admin browsing: recent approvals stream.
+    index("suggestion_precedents_approved_at_idx").on(t.approvedAt),
+    // FK index on source_candidate_id for the deletion cascade.
+    index("suggestion_precedents_source_idx").on(t.sourceCandidateId),
+  ],
+).enableRLS();
+
 // Graduation status per standard — human-eval build plan Session 10.
 //
 // Stores the current graduation level per standard (robo_labels →
@@ -989,6 +1058,7 @@ export type Violation = InferSelectModel<typeof violations>;
 export type DittoSync = InferSelectModel<typeof dittoSyncs>;
 export type ViolationOverride = InferSelectModel<typeof violationOverrides>;
 export type SuggestionCandidate = InferSelectModel<typeof suggestionCandidates>;
+export type SuggestionPrecedent = InferSelectModel<typeof suggestionPrecedents>;
 export type GraduationStatus = InferSelectModel<typeof graduationStatus>;
 export type RationaleFeedback = InferSelectModel<typeof rationaleFeedback>;
 export type TeamCustomExample = InferSelectModel<typeof teamCustomExamples>;

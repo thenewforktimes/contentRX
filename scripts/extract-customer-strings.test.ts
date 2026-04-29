@@ -63,6 +63,22 @@ describe("isInScope", () => {
     expect(isInScope("src/app/admin/queue/page.tsx")).toBe(false);
   });
 
+  it("excludes /api/admin (founder-tier API routes)", () => {
+    // Admin-tier API routes serve only founders. Their JSON error
+    // responses intentionally use terse copy (404 for non-founders
+    // so the URL doesn't leak; generic 500s so error detail stays
+    // in safe-error-log). Same architectural reason /admin pages
+    // are excluded.
+    expect(
+      isInScope("src/app/api/admin/refinement-signals/route.ts"),
+    ).toBe(false);
+    expect(
+      isInScope(
+        "src/app/api/admin/suggestion-candidates/triage/route.ts",
+      ),
+    ).toBe(false);
+  });
+
   it("excludes test files", () => {
     expect(isInScope("src/lib/foo.test.ts")).toBe(false);
     expect(isInScope("src/app/page.spec.ts")).toBe(false);
