@@ -15,6 +15,14 @@ export type EvaluateParams = {
   content_type?: ContentType;
   audience?: Audience;
   moment?: Moment;
+  /** Calibration precedents the engine should inject as voice
+   *  guidance in the LLM scan prompt. See src/lib/precedents.ts.
+   *  Empty array (or omitted) → engine falls back to the universal
+   *  voice rules from PR #252. Block 2c of the calibration plan. */
+  precedents?: ReadonlyArray<{
+    approved_text: string;
+    sample_size: number;
+  }>;
 };
 
 /**

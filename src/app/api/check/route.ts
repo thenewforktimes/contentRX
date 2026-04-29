@@ -26,6 +26,7 @@ import { appUrl as emailAppUrl, sendEmail } from "@/lib/email";
 import { AUDIENCES, CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 import { evaluate, type EvaluateResponse } from "@/lib/evaluate";
 import { hashText, logViolations } from "@/lib/log-violations";
+import { fetchPrecedentsForCheck } from "@/lib/precedents";
 import {
   detectSensitivePatterns,
   sensitiveDataErrorMessage,
@@ -309,8 +310,35 @@ export async function POST(req: Request) {
       tokens: { input: 0, output: 0 },
     };
   } else {
+    // Block 2c (calibration plan): pull approved precedents matching
+    // (moment, content_type) and pass them to the engine for voice-
+    // guidance prompt injection. Empty array when no precedents
+    // match — engine falls back to the universal voice rules from
+    // PR #252.
+    let precedents: Awaited<ReturnType<typeof fetchPrecedentsForCheck>> = [];
     try {
-      evalResponse = await evaluate({ text, content_type, audience, moment });
+      precedents = await fetchPrecedentsForCheck({
+        moment: moment ?? null,
+        contentType: content_type ?? null,
+      });
+    } catch (err) {
+      // Retrieval failure is non-fatal: log + continue without
+      // precedents. The check still runs against the universal
+      // voice rules.
+      logSafeError("precedent retrieval failed", err);
+    }
+
+    try {
+      evalResponse = await evaluate({
+        text,
+        content_type,
+        audience,
+        moment,
+        precedents: precedents.map((p) => ({
+          approved_text: p.approvedText,
+          sample_size: p.sampleSize,
+        })),
+      });
     } catch (err) {
       // Log detail to stderr (Sentry ingests via Vercel). Return an opaque
       // message to the caller — the Python-side error can include file paths,

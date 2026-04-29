@@ -196,12 +196,20 @@ class handler(BaseHTTPRequestHandler):
 
         # Lazy import — only check mode pays. Catalog/classify don't.
         from content_checker import check  # noqa: PLC0415
+        # Block 2c (calibration plan): /api/check pre-fetches matching
+        # precedents from suggestion_precedents and forwards them so
+        # the engine can inject voice guidance into the LLM scan
+        # prompt. Empty list (or omitted) → engine falls back to the
+        # universal voice rules from PR #252. Schema:
+        #   precedents: [{"approved_text": str, "sample_size": int}, ...]
+        precedents = body.get("precedents") or []
         try:
             result, latency_s, tokens = check(
                 text=text,
                 content_type=body.get("content_type"),
                 audience=body.get("audience", "product_ui"),
                 moment=body.get("moment"),
+                precedents=precedents,
             )
         except PromptInjectionError as exc:
             # Caller-side error: input contained our sentinel. Return 400

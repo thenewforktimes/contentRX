@@ -140,15 +140,59 @@ def _build_standards_section(standards_data: dict) -> str:
     return standards_text
 
 
-def _build_system_eval_rules(content_type: str | None, moment: str) -> str:
+def _build_precedents_section(precedents: list[dict] | None) -> str:
+    """Format a calibration-precedents block for the scan prompt.
+
+    Block 2c of the calibration plan. The customer-facing /admin
+    queue promotes vetted suggestion_candidates rows to
+    suggestion_precedents; /api/check pre-fetches matches and
+    forwards them here. Empty list → empty string (LLM falls back to
+    the universal voice rules).
+
+    The block guides the LLM toward the team's approved phrasing by
+    showing concrete examples of what's worked in this bucket. It
+    does NOT replace the universal voice rules — both fire.
+    """
+    if not precedents:
+        return ""
+    # Defensive cap. The retrieval layer already top-3s; this is a
+    # belt-and-suspenders ceiling in case a future caller forgets.
+    items = list(precedents)[:5]
+    lines: list[str] = [
+        "## Voice precedents (approved suggestions for this moment + content type)\n",
+        "These are real suggestions a content designer has approved for "
+        "checks like this one. Match the voice and shape of these "
+        "approved examples when writing the `suggestion` field. They are "
+        "examples, not templates — adapt to the specific input.\n",
+    ]
+    for i, p in enumerate(items, 1):
+        text = (p.get("approved_text") or "").strip()
+        if not text:
+            continue
+        sample_size = p.get("sample_size", 1)
+        suffix = f" (×{sample_size})" if sample_size > 1 else ""
+        lines.append(f'  {i}. "{text}"{suffix}\n')
+    return "\n".join(lines) + "\n"
+
+
+def _build_system_eval_rules(
+    content_type: str | None,
+    moment: str,
+    precedents: list[dict] | None = None,
+) -> str:
     """The post-standards portion of the scan system prompt. Includes
     dynamic moment context per request — NOT cached."""
     # Phase 3: Moment context calibrates the LLM for the experiential moment.
     # Returns empty string for the default moment (browsing_discovery)
     # so the system prompt is unchanged for the baseline case.
     moment_section = build_moment_prompt_section(moment) if moment else ""
+    # Block 2c (calibration plan): prepend approved precedents above
+    # the universal voice rules so the LLM sees concrete examples
+    # before the abstract guidance.
+    precedents_section = _build_precedents_section(precedents)
     return (
         f"\n\n{moment_section}"
+        f"{precedents_section}"
         "## How to evaluate\n\n"
         "1. Check the content against the standards listed above, applying these rules:\n"
         "   - **Only flag clear, unambiguous violations.** If you are less than 90% "
@@ -240,6 +284,7 @@ def build_system_prompt(
     content_type: str | None = None,
     audience: Audience = Audience.PRODUCT_UI,
     moment: str = "",
+    precedents: list[dict] | None = None,
 ) -> str:
     """Build the system prompt as a single string.
 
@@ -251,7 +296,7 @@ def build_system_prompt(
     return (
         _build_system_intro(content_type, audience)
         + _build_standards_section(standards_data)
-        + _build_system_eval_rules(content_type, moment)
+        + _build_system_eval_rules(content_type, moment, precedents)
     )
 
 
@@ -260,6 +305,7 @@ def build_system_prompt_blocks(
     content_type: str | None = None,
     audience: Audience = Audience.PRODUCT_UI,
     moment: str = "",
+    precedents: list[dict] | None = None,
 ) -> list[dict]:
     """Build the scan system prompt as content blocks with prompt caching.
 
@@ -275,6 +321,9 @@ def build_system_prompt_blocks(
         [0] static intro + dynamic content_type/audience  (uncached)
         [1] standards library                              (CACHED)
         [2] dynamic moment + static evaluation rules      (uncached)
+                — also carries the per-request precedent block (Block 2c).
+                  Precedents are inherently per-request and would defeat
+                  caching if placed in block [1].
     """
     return [
         {"type": "text", "text": _build_system_intro(content_type, audience)},
@@ -283,7 +332,7 @@ def build_system_prompt_blocks(
             "text": _build_standards_section(standards_data),
             "cache_control": {"type": "ephemeral"},
         },
-        {"type": "text", "text": _build_system_eval_rules(content_type, moment)},
+        {"type": "text", "text": _build_system_eval_rules(content_type, moment, precedents)},
     ]
 
 
@@ -294,6 +343,7 @@ def _llm_scan(
     model: str,
     audience: Audience = Audience.PRODUCT_UI,
     moment: str = "",
+    precedents: list[dict] | None = None,
 ) -> tuple[dict, float, TokenUsage]:
     """Run the LLM scan stage. Returns (parsed_result, latency, tokens)."""
     prompt_ct = None if content_type == "unfiltered" else content_type
@@ -303,6 +353,7 @@ def _llm_scan(
     system_prompt = build_system_prompt_blocks(
         standards_data, content_type=prompt_ct, audience=audience,
         moment=moment,
+        precedents=precedents,
     )
 
     # Sentinel-delimit user `text` so a prompt-injected payload can't
@@ -394,6 +445,7 @@ def check(
     use_llm_classifier: bool = True,
     audience: Audience | str = Audience.PRODUCT_UI,
     moment: str | None = None,
+    precedents: list[dict] | None = None,
 ) -> tuple[CheckResult, float, TokenUsage]:
     """Full pipeline: classify → detect moment → filter → preprocess → scan → validate.
 
@@ -530,10 +582,14 @@ def check(
     ))
 
     # Stage 3b: LLM scan (audience + moment context injected into system prompt)
+    # Block 2c (calibration plan): pass through any pre-fetched
+    # precedents from /api/check so the scan prompt can inject them
+    # as voice guidance. Empty/None → universal voice rules only.
     scan_result, scan_latency, scan_tokens = _llm_scan(
         text, filtered, detected_type, model,
         audience=audience,
         moment=detected_moment,
+        precedents=precedents,
     )
     total_latency += scan_latency
     total_tokens += scan_tokens
