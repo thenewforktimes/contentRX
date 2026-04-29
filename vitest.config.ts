@@ -22,7 +22,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     exclude: ["node_modules", ".next", ".vercel", "docs-site", "cli-client", "mcp-server", "github-action"],
   },
 });
