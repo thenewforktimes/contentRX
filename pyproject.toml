@@ -5,10 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "content-standards-checker"
 version = "4.7.1"
-description = "An open source linter for UX and UI copy"
+description = "ContentRX content model for product copy. Source-available."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = {file = "LICENSE"}
+authors = [
+    {name = "Robert Ballard"},
+]
 dependencies = [
     "anthropic>=0.30.0",
 ]

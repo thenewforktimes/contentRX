@@ -1,43 +1,32 @@
-Creative Commons Attribution 4.0 International License
+# Licensing for content-model/
 
-ContentRX Content Model (standards library, moments taxonomy, and
-associated specification documents in this directory) is licensed
-under CC BY 4.0. You are free to:
+While this directory lives in the contentRX monorepo it is governed by
+the **root LICENSE** ([Functional Source License, FSL-1.1-MIT](../LICENSE)),
+not by Creative Commons. The standards library, moments taxonomy, and
+associated specification documents here are part of the same
+source-available product as the engine, web app, and surfaces.
 
-  - Share — copy and redistribute the material in any medium or format
-  - Adapt — remix, transform, and build upon the material for any
-    purpose, even commercially
+## Future intent
 
-The licensor cannot revoke these freedoms as long as you follow the
-license terms.
+If/when this directory is published as the standalone
+`contentrx-standards` repository (BUILD_PLAN_v2 Sessions 19 and 20,
+currently deferred per the
+[2026-04-25 private-taxonomy pivot ADR](../decisions/2026-04-25-private-taxonomy-pivot.md)),
+the spec content is intended to ship under
+**Creative Commons Attribution 4.0 International (CC BY 4.0)** so
+external users can adopt and adapt the standards with attribution.
 
-Under the following terms:
+That re-licensing happens at the moment of publication, not now. Until
+then, the FSL-1.1-MIT terms in the root LICENSE govern this content.
 
-  - Attribution — You must give appropriate credit, provide a link to
-    the license, and indicate if changes were made. You may do so in
-    any reasonable manner, but not in any way that suggests the
-    licensor endorses you or your use.
+## Why this directory has its own LICENSE file
 
-Specifically, attribution should include:
-
-  1. The name "ContentRX Content Model"
-  2. A link to https://docs.contentrx.io or
-     https://github.com/contentrx/content-model (whichever is available)
-  3. The version identifier (see CHANGELOG.md)
-  4. An indication of any changes you made to the material
-
-No additional restrictions — You may not apply legal terms or
-technological measures that legally restrict others from doing
-anything the license permits.
-
-Full license text: https://creativecommons.org/licenses/by/4.0/legalcode
+The file is preserved as reversibility insurance. The README in this
+directory documents the deferred-spec-repo status; this LICENSE file
+is the placeholder for the CC BY 4.0 grant that activates on
+publication. Don't delete it.
 
 ---
 
-This license applies ONLY to the content in the `content-model/`
-directory (the specification). The ContentRX engine, web app, plugin,
-CLI, MCP server, LSP server, editor extensions, and other software
-components elsewhere in this repository remain under their
-respective licenses (currently MIT for the open-source packages and
-proprietary for the hosted product surfaces). See the root-level
-LICENSE files in each subdirectory for details.
+For the operative license that applies to this content right now, see
+[../LICENSE](../LICENSE).

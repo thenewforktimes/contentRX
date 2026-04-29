@@ -1,4 +1,4 @@
-"""Content standards checker — an open source linter for UX and UI copy.
+"""ContentRX engine — the content model for product copy.
 
 Usage:
     from content_checker import check, check_unfiltered, check_batch
