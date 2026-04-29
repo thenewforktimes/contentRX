@@ -1,8 +1,8 @@
-# Content standards checker
+# ContentRX
 
-An open source linter for UX and UI copy. Checks content against a structured standards library using Claude as the reasoning engine.
+The content model for product copy. Situation-aware review for the moments where copy stops being decoration and starts being the product — error states, destructive confirmations, permissions flows, empty states. A staff content designer's pattern recognition, running where product copy is increasingly written: Claude Code, Cursor, your CLI, and every pull request.
 
-Think ESLint, but for words.
+This repository is **source-available** under the [Functional Source License](LICENSE) (FSL-1.1-MIT). You can read it, fork it, audit it, contribute to it, and use it internally. You can't ship a commercial replica. After two years from each release, the code converts to MIT.
 
 ## What it does
 
