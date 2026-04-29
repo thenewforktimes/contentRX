@@ -162,6 +162,30 @@ export default function AboutPage() {
         </p>
       </Section>
 
+      <Section title="One approval, not three">
+        <p>
+          Most teams can&apos;t get an AI provider approved fast enough
+          to keep up with how product copy is changing. Engineers got
+          Cursor. Content designers are still waiting on the
+          procurement conversation, the security review, the AI policy
+          committee. Six months in, the work has shipped without them.
+        </p>
+        <p className="mt-3">
+          ContentRX is one approval away. A $29-a-month SaaS tool, not
+          another LLM relationship to negotiate. No Anthropic or OpenAI
+          key required from you or your org. No second vendor agreement.
+          The senior content-design judgment your team needs, abstracted
+          behind a subscription your team can actually buy.
+        </p>
+        <p className="mt-3">
+          Layoffs hit content design hard. The senior people who knew
+          how to mentor are often gone; the writers who remain don&apos;t
+          have access to the tools that could partially backfill. This
+          is the workaround for the people in that gap, while the work
+          itself can&apos;t wait.
+        </p>
+      </Section>
+
       <Section title="How to disagree with the model">
         <p>
           Every finding ships with the rationale that produced it: the

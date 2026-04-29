@@ -110,6 +110,10 @@ export default function PricingPage() {
             a="No. Free is 20 checks/mo, no card required. Sign up, install on your surface of choice, and run your first check."
           />
           <Faq
+            q="Do I need an Anthropic or OpenAI API key?"
+            a="No. ContentRX includes the LLM. You bring your subscription; we handle the AI vendor relationship. No procurement conversation, no security review of another LLM provider, no separate Anthropic billing account to set up. One ContentRX API key covers all five surfaces."
+          />
+          <Faq
             q="What about teams?"
             a={
               <>
