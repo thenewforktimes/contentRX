@@ -2,20 +2,25 @@
  * /dashboard — account overview. Server-rendered so we can hit the DB
  * inline without a round-trip to a separate API endpoint.
  *
- * Section order (Apr 2026 inversion + PR-16/17):
+ * Section order (Apr 2026 IA refresh per design critique):
  *   1. Header (email + plan pill)
  *   2. Try a check (inline ExplainClient, the hero)
- *   3. API key
- *   4. Usage (amber at ≥80%)
- *   5. Active surfaces row (last-call timestamp per source)
+ *   3. Usage this month (amber at ≥80%)
+ *   4. This week (insights — the "what's worth looking at?" panel)
+ *   5. Active surfaces (3-col grid, last-call timestamps)
+ *   --- divider: work above, configuration below ---
  *   6. Subscription
- *   7. Team-tier surfaces
- *   8. Calibration
+ *   7. API key
+ *   8. Team-tier surfaces (members, rules, overrides)
+ *   9. Calibration (opt-in)
  *
+ * Principle: work surfaces above the divider, configuration below.
+ * Customers come back to do work, not to manage their account.
  * Try-a-check at the top serves both new users (touch the product
- * before installing) and returning users (one-off "let me sanity-check
- * this string"). Active surfaces row is the "are my integrations
- * alive?" surface — the dashboard's primary job post-MCP-shift.
+ * before installing) and returning users (one-off sanity check).
+ * Usage + insights answer "am I about to hit a limit?" and "what
+ * should I look at?" — those rise. API key is one-time-mint plus
+ * occasional rotate; demoted below the work surfaces.
  */
 
 import { auth } from "@clerk/nextjs/server";
@@ -105,13 +110,6 @@ export default async function DashboardPage() {
 
       <TryACheckPanel />
 
-      <ApiKeyPanel
-        initialPrefix={user.apiKeyPrefix}
-        initialCreatedAt={
-          user.apiKeyCreatedAt ? user.apiKeyCreatedAt.toISOString() : null
-        }
-      />
-
       {/*
         UsagePanelLive + ActiveSurfacesRowLive are Client Components
         that take server-rendered initial values AND listen for the
@@ -124,12 +122,24 @@ export default async function DashboardPage() {
       */}
       <UsagePanelLive initialUsed={used} initialQuota={quota} />
 
+      <InsightsPanel insights={insights} plan={plan} />
+
       <ActiveSurfacesRowLive
         surfaces={SURFACES}
         initialActivity={surfaceActivity}
       />
 
-      <InsightsPanel insights={insights} plan={plan} />
+      {/*
+        Divider between work surfaces (above) and account configuration
+        (below). The hairline puts a literal pause in the page so the
+        eye stops looking for "more work to do" and starts treating
+        the next sections as settings. Hidden visually if the page is
+        already short (Free user with no team panels).
+      */}
+      <div
+        aria-hidden
+        className="my-2 border-t border-neutral-200 dark:border-neutral-800"
+      />
 
       <SubscriptionPanel
         plan={plan}
@@ -140,6 +150,13 @@ export default async function DashboardPage() {
             : null
         }
         subscriptionStatus={activeSub?.status ?? null}
+      />
+
+      <ApiKeyPanel
+        initialPrefix={user.apiKeyPrefix}
+        initialCreatedAt={
+          user.apiKeyCreatedAt ? user.apiKeyCreatedAt.toISOString() : null
+        }
       />
 
       {plan === "team" && (

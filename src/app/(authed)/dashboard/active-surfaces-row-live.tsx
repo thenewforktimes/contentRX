@@ -81,7 +81,7 @@ export function ActiveSurfacesRowLive({
   return (
     <section>
       <h2 className="mb-3 text-sm font-semibold">Active surfaces</h2>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {surfaces.map((s) => (
           <SurfaceCard
             key={s.key}
@@ -112,7 +112,7 @@ function SurfaceCard({
 }) {
   const connected = count > 0 && lastAt !== null;
   return (
-    <div className="rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-800">
+    <div className="rounded-md border border-neutral-200 p-4 text-sm dark:border-neutral-800">
       <p className="font-medium">{label}</p>
       <div className="mt-2 flex items-center gap-1.5">
         <span
