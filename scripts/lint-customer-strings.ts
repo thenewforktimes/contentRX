@@ -122,6 +122,18 @@ const CHECKS: Check[] = [
     description: "Plural-bug pattern. Use a ternary instead of (s).",
     match: regexMatch(/\b\d+ \w+\(s\)/),
   },
+  {
+    id: "no-violation-customer-word",
+    severity: "error",
+    description:
+      'Customer surfaces use "Findings" (and the new severity ladder: "Don\'t ship" / "Worth adjusting" / "Quick polish"). "Violation" / "Violations" stays in the API + DB only. See docs/copy-vocabulary.md and ADR 2026-04-29 §9.',
+    // Match standalone "Violation" / "Violations" / "violation" /
+    // "violations" — not part of a larger word like "violationary"
+    // or "non-violation-y". Inline code spans + raw enum values
+    // (passed through as JSX text) get caught; comments are
+    // pre-stripped by the extractor.
+    match: regexMatch(/\bViolations?\b/),
+  },
 
   // ---------------------------------------------------------------------------
   // Warnings (CI emits, doesn't block)

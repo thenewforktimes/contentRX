@@ -205,7 +205,7 @@ export default async function OverridesPage() {
       <section className="grid grid-cols-3 gap-4">
         <Stat label="Overrides" value={overrides_count.toLocaleString()} />
         <Stat
-          label="Violations in window"
+          label="Findings in window"
           value={violations_count.toLocaleString()}
         />
         <Stat

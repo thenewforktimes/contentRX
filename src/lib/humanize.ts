@@ -94,3 +94,84 @@ export function humanizeOverrideStance(value: string | null | undefined): string
   if (!value) return "";
   return OVERRIDE_STANCE_LABELS[value] ?? fallback(value);
 }
+
+/**
+ * The customer-facing pill tone vocabulary. Mirrors PillTone in
+ * src/components/ui/pill.tsx but kept narrow here since these
+ * helpers only emit a subset.
+ */
+export type CustomerToneVerdict = "emerald" | "amber" | "red";
+export type CustomerToneSeverity = "amber" | "red" | "stone";
+
+/**
+ * Humanize a substrate verdict into a customer-facing label + tone.
+ *
+ * The substrate enums (`pass` / `review_recommended` / `violation`)
+ * are render-internal; customers see warmer, more productive labels.
+ * See ADR 2026-04-29 §9a for the locked vocabulary and the rationale
+ * behind dropping "Violation" from customer-visible copy
+ * (docs/copy-vocabulary.md: "Violations stays in API + DB. Findings
+ * is what customers see.").
+ *
+ * The "Adjust before shipping" + red-tone path requires a hard-rule
+ * signal that today's schema 2.0 envelope doesn't carry. When the
+ * envelope adds that signal in a future bump, pass `hasShipBlocker:
+ * true` to surface it. For now the default amber path covers every
+ * `verdict: violation` regardless of finding kind.
+ */
+export function humanizeVerdict(
+  verdict: string,
+  findingCount: number,
+  hasShipBlocker = false,
+): { label: string; tone: CustomerToneVerdict } {
+  if (verdict === "pass") {
+    return { label: "All clear", tone: "emerald" };
+  }
+  if (verdict === "review_recommended") {
+    return { label: "Worth a look", tone: "amber" };
+  }
+  if (verdict === "violation") {
+    if (hasShipBlocker) {
+      return { label: "Adjust before shipping", tone: "red" };
+    }
+    if (findingCount === 1) {
+      return { label: "1 finding to adjust", tone: "amber" };
+    }
+    return { label: `${findingCount} findings to adjust`, tone: "amber" };
+  }
+  // Defensive fallback: unknown verdict keyword. Render the raw
+  // value sentence-cased so the gap is visible without crashing.
+  return { label: fallback(verdict), tone: "amber" };
+}
+
+/**
+ * Humanize a substrate severity into a customer-facing label + tone.
+ *
+ * Three substrate tiers (`high` / `medium` / `low`) collapse to two
+ * visible tiers in the default case: high+medium → "Worth adjusting"
+ * (amber), low → "Quick polish" (stone). The collapse is intentional —
+ * most users don't need to distinguish the high/medium boundary; the
+ * confidence-derived split is substrate granularity.
+ *
+ * The "Don't ship" + red-tone path is reserved for genuine ship-
+ * blockers (profanity, trademark, security). It requires a hard-rule
+ * signal that today's schema 2.0 envelope doesn't carry — pass
+ * `isShipBlocker: true` to surface it once the envelope grows that
+ * field. For now the default amber/stone paths cover every finding.
+ */
+export function humanizeSeverity(
+  severity: string,
+  isShipBlocker = false,
+): { label: string; tone: CustomerToneSeverity } {
+  if (isShipBlocker && severity === "high") {
+    return { label: "Don't ship", tone: "red" };
+  }
+  if (severity === "high" || severity === "medium") {
+    return { label: "Worth adjusting", tone: "amber" };
+  }
+  if (severity === "low") {
+    return { label: "Quick polish", tone: "stone" };
+  }
+  // Defensive fallback for unknown severity keyword.
+  return { label: fallback(severity), tone: "stone" };
+}

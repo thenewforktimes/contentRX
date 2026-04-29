@@ -20,7 +20,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Pill } from "@/components/ui/pill";
 import type { PublicCheckEnvelope } from "@/lib/api-envelope";
-import { humanizeReviewReason } from "@/lib/humanize";
+import {
+  humanizeReviewReason,
+  humanizeSeverity,
+  humanizeVerdict,
+} from "@/lib/humanize";
 import { wordDiff, type DiffToken } from "@/lib/text-diff";
 import { dispatchCheckCompleted } from "../dashboard-check-events";
 
@@ -261,6 +265,7 @@ export function ExplainClient() {
           <VerdictHeader
             verdict={response.verdict}
             reviewReason={response.review_reason}
+            findingCount={response.violations.length}
           />
           {response.violations.length > 0 && (
             <ul className="space-y-2">
@@ -295,20 +300,19 @@ export function ExplainClient() {
 function VerdictHeader({
   verdict,
   reviewReason,
+  findingCount,
 }: {
   verdict: string;
   reviewReason: string | null;
+  findingCount: number;
 }) {
-  const tone =
-    verdict === "pass"
-      ? "emerald"
-      : verdict === "review_recommended"
-        ? "amber"
-        : "red";
-  const label =
-    verdict === "review_recommended"
-      ? "Review"
-      : verdict.charAt(0).toUpperCase() + verdict.slice(1);
+  // Per ADR 2026-04-29 §9a — customer surface speaks "Findings" /
+  // "All clear" / "Worth a look" / "N findings to adjust", not raw
+  // substrate verdict enums. Rendering goes through humanizeVerdict
+  // at the boundary; the same helper is shared by every customer
+  // surface (web, MCP, CLI, GitHub Action, LSP, Figma plugin) so the
+  // language is identical wherever findings render.
+  const { label, tone } = humanizeVerdict(verdict, findingCount);
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Pill tone={tone}>{label}</Pill>
@@ -529,8 +533,12 @@ function formatResetDate(isoString: string): string {
 }
 
 function SeverityBadge({ severity }: { severity: string }) {
-  const tone =
-    severity === "high" ? "red" : severity === "medium" ? "amber" : "neutral";
-  const label = severity.charAt(0).toUpperCase() + severity.slice(1);
+  // Per ADR 2026-04-29 §9b — substrate severity (high/medium/low)
+  // collapses to two visible customer tiers: high+medium → "Worth
+  // adjusting" (amber), low → "Quick polish" (stone). The "Don't
+  // ship" red tier is reserved for hard-rule findings, which the
+  // schema 2.0 envelope doesn't carry yet (see humanize.ts for the
+  // future signal). All findings ship through the default path.
+  const { label, tone } = humanizeSeverity(severity);
   return <Pill tone={tone}>{label}</Pill>;
 }

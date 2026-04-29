@@ -198,10 +198,16 @@ export default async function CustomExamplesPage() {
 }
 
 function VerdictPill({ verdict }: { verdict: string }) {
+  // Per ADR 2026-04-29 §9: customer surfaces use the calmer
+  // language pattern. The substrate verdict stays `pass` /
+  // `violation` (this is the team owner's pinned outcome for the
+  // exact-match short-circuit), but the rendered label is
+  // "Pass" / "Adjust" with amber for the latter (red is reserved
+  // for ship-blockers per the color rule).
   if (verdict === "pass") {
     return <Pill tone="emerald">Pass</Pill>;
   }
-  return <Pill tone="red">Violation</Pill>;
+  return <Pill tone="amber">Adjust</Pill>;
 }
 
 function formatDate(d: Date): string {
