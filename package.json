@@ -22,7 +22,8 @@
     "db:push": "dotenv -e .env.local -- drizzle-kit push",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
     "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
-    "extract-strings": "tsx scripts/extract-customer-strings.ts"
+    "extract-strings": "tsx scripts/extract-customer-strings.ts",
+    "lint:copy": "tsx scripts/lint-customer-strings.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.3",
