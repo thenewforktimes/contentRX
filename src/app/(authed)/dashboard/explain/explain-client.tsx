@@ -33,6 +33,14 @@ type CheckEnvelope = PublicCheckEnvelope & {
     quota: number;
     remaining: number;
   };
+  // Snapshot of the textarea value at submission time. Stored on the
+  // response so DiffBlock's "before" line stays pinned to what the
+  // user actually checked. Without this, pasting fresh copy into the
+  // textarea re-renders the existing diff with the new text struck
+  // through and the previous suggestion still shown — which looks
+  // like the engine flagged the new text but actually reflects the
+  // earlier check.
+  submittedText: string;
 };
 
 // Mirrors the /api/check billing constants. Kept in sync by hand
@@ -96,8 +104,11 @@ export function ExplainClient() {
         setError(mapHttpError(res.status, parsed, body));
         return;
       }
-      const data = (await res.json()) as CheckEnvelope;
-      setResponse(data);
+      const data = (await res.json()) as Omit<CheckEnvelope, "submittedText">;
+      // Capture the text we just submitted so DiffBlock renders against
+      // a stable "before" line even if the user keeps editing the
+      // textarea afterward.
+      setResponse({ ...data, submittedText: text });
       // Optimistic UI: broadcast the completed check to sibling Client
       // Components (UsagePanelLive, ActiveSurfacesRowLive) so the
       // counter and Web app surface card jump immediately, instead of
@@ -262,7 +273,10 @@ export function ExplainClient() {
                     {v.issue}
                   </p>
                   {v.suggestion && (
-                    <DiffBlock before={text} after={v.suggestion} />
+                    <DiffBlock
+                      before={response.submittedText}
+                      after={v.suggestion}
+                    />
                   )}
                 </li>
               ))}
