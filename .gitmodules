@@ -1,0 +1,3 @@
+[submodule "src/content_checker/standards/private"]
+	path = src/content_checker/standards/private
+	url = https://github.com/thenewforktimes/contentRX-substrate.git
