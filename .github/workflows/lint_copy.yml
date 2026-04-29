@@ -1,0 +1,44 @@
+name: Customer-copy lint
+
+# Runs the mechanical lint over customer-facing strings on every PR.
+# Catches em dashes, prohibited terms, generic CTAs, standard-ID
+# leaks, and plural bugs deterministically. The judgment-level
+# checks (calm/confident/charming, recovery-path quality) live in
+# PR 4's engine integration; this is the fast first line.
+#
+# Scope is governed by the audience boundary in
+# docs/copy-vocabulary.md. /admin/* surfaces are deliberately
+# excluded — founder voice keeps em dashes and substrate jargon.
+#
+# The vitest "live codebase is clean" spec in
+# scripts/lint-customer-strings.test.ts already enforces zero
+# error-severity findings on main; this workflow runs the same
+# script directly so the failure surface is the lint output, not a
+# Vitest assertion message.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: lint-copy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-copy:
+    name: lint:copy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint:copy -- --pretty
