@@ -1,0 +1,42 @@
+name: Archive stale calibration candidates (daily)
+
+# Block 4 (polish) of the calibration plan. Hits POST /api/cron/
+# archive-stale-candidates daily. The endpoint flips suggestion_candidates
+# rows that have been pending >90 days to status='rejected', so the
+# /admin/suggestions queue doesn't rot under candidates Robert never
+# got to. The endpoint is a no-op when no rows have crossed the
+# 90-day floor.
+#
+# Auth: CRON_SECRET bearer; same secret used by other cron POST
+# endpoints in this repo.
+
+on:
+  schedule:
+    # 03:45 UTC daily. Offset from 03:00 (rollback-monitor) and
+    # 03:30 (pseudonymize-cancelled) so DB contention stays bounded
+    # in the early-morning UTC window.
+    - cron: "45 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: archive-stale-candidates
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    name: Archive stale calibration candidates
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST cron endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          set -euo pipefail
+          : "${CRON_SECRET:?CRON_SECRET secret missing}"
+          : "${APP_URL:?APP_URL secret missing}"
+          response=$(curl -fsS \
+            -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL}/api/cron/archive-stale-candidates")
+          echo "Response: ${response}"
