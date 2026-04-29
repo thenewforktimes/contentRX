@@ -176,8 +176,7 @@ export function FindingAdjustModal({
             Adjust this finding
           </h2>
           <p className="mt-1 text-sm text-stone-600 dark:text-stone-300">
-            Tell ContentRX what to change about its read. Pick one or
-            both.
+            Tell ContentRX what to change. Check whichever applies.
           </p>
         </header>
 
@@ -194,7 +193,7 @@ export function FindingAdjustModal({
               />
               <span className="flex-1">
                 <span className="font-medium text-stone-900 dark:text-stone-100">
-                  The verdict is wrong
+                  Adjust the verdict
                 </span>
                 <span className="mt-0.5 block text-stone-600 dark:text-stone-400">
                   This isn&apos;t a finding for your team&apos;s context.
@@ -254,7 +253,7 @@ export function FindingAdjustModal({
               />
               <span className="flex-1">
                 <span className="font-medium text-stone-900 dark:text-stone-100">
-                  The suggestion is wrong
+                  Adjust the suggestion
                 </span>
                 <span className="mt-0.5 block text-stone-600 dark:text-stone-400">
                   Write the version you&apos;d ship below.
@@ -289,12 +288,12 @@ export function FindingAdjustModal({
                 />
                 <span className="flex-1">
                   <span className="font-medium text-stone-900 dark:text-stone-100">
-                    Share with the ContentRX model
+                    Help calibrate the ContentRX model
                   </span>
                   <span className="mt-0.5 block text-stone-600 dark:text-stone-400">
-                    Your adjustment becomes a candidate for review. We
-                    only promote it after a content designer signs off.
-                    Off by default.
+                    Your edit becomes a candidate for review. Only
+                    approved suggestions reach the model. Off by
+                    default.
                   </span>
                 </span>
               </label>
