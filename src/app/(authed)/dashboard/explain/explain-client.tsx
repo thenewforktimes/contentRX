@@ -738,6 +738,24 @@ function CopySuggestionButton({
         confidence,
         issue,
       });
+      // Block 3a (calibration plan): also fire-and-forget a POST so
+      // the substrate gets a customer_copy row. Failure is silent —
+      // the clipboard already succeeded; substrate accounting is
+      // best-effort. The row is always share_upstream=false (passive
+      // signal, no opt-in), so it stays team-private.
+      void fetch("/api/calibration/copy-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          submittedText,
+          suggestion,
+          severity,
+          confidence,
+          issue,
+        }),
+      }).catch(() => {
+        // Swallowed — see comment above.
+      });
     } catch {
       setState("error");
     }
