@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from . import __version__
+from .humanize import humanize_severity, humanize_verdict
 
 DEFAULT_API_URL = "https://contentrx.io"
 DEFAULT_TIMEOUT_SECONDS = 60
@@ -224,14 +225,25 @@ def print_result(
     # top level — no `result` wrapper, no `moment`, `content_type`,
     # `summary`, or `rationale_chain` (those are substrate). Each
     # violation has `issue`, `suggestion`, `severity`, `confidence`.
+    #
+    # Per ADR 2026-04-29 §9 the customer-facing vocabulary is now
+    # "All clear" / "Worth a look" / "N findings to adjust" — never
+    # raw substrate enums like "VIOLATION". Rendering goes through
+    # `humanize.humanize_verdict` / `humanize_severity` so the same
+    # labels appear on every surface (web, MCP, CLI, GH Action, LSP,
+    # Figma plugin).
     verdict = response.get("verdict") or "pass"
     review_reason = response.get("review_reason")
+    violations = response.get("violations", []) or []
+    label, tone = humanize_verdict(verdict, finding_count=len(violations))
     if verdict == "pass":
-        icon, color, label = "✓", "\033[32m", "PASS"
+        icon, color = "✓", "\033[32m"
     elif verdict == "review_recommended":
-        icon, color, label = "⚠", "\033[33m", "REVIEW"
-    else:  # violation, error
-        icon, color, label = "✗", "\033[31m", verdict.upper()
+        icon, color = "⚠", "\033[33m"
+    elif tone == "red":
+        icon, color = "✗", "\033[31m"
+    else:  # violation, default amber
+        icon, color = "⚠", "\033[33m"
     reset = "\033[0m"
     use_color = _stream_supports_color(stream)
 
@@ -242,13 +254,12 @@ def print_result(
     if verdict == "review_recommended" and review_reason:
         print(f"  Reason: {review_reason}", file=stream)
 
-    violations = response.get("violations", []) or []
     if violations:
-        print(f"\n  Violations ({len(violations)}):", file=stream)
+        print(f"\n  Findings ({len(violations)}):", file=stream)
         for v in violations:
-            severity = (v.get("severity") or "medium").upper()
+            sev_label, _ = humanize_severity(v.get("severity") or "medium")
             issue = v.get("issue", "")
-            print(f"    - [{severity}] {issue}", file=stream)
+            print(f"    - [{sev_label}] {issue}", file=stream)
             if v.get("suggestion"):
                 print(f"        suggestion: {v['suggestion']}", file=stream)
 

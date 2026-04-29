@@ -28,6 +28,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from .auth import AuthError
+from .humanize import humanize_severity, humanize_verdict
 from .client import (
     AuthFailedError,
     ContentRXError,
@@ -89,10 +90,25 @@ async def evaluate_copy(
     except ContentRXError as exc:
         return _typed_error(exc)
 
+    # Schema 2.0.0 wire format. The raw substrate enums (`verdict`,
+    # `severity`) stay on the response so LLM clients can do flow
+    # control (e.g. branch on verdict == "violation"), but per ADR
+    # 2026-04-29 §9 we also ship `verdict_label` + per-violation
+    # `severity_label` so the LLM can surface the calmer customer-
+    # facing copy directly without re-rendering the substrate enum.
+    verdict_label, _ = humanize_verdict(
+        result.verdict, finding_count=len(result.violations)
+    )
+    violations_with_labels: list[dict[str, Any]] = []
+    for v in result.violations:
+        sev_label, _tone = humanize_severity(v.get("severity", "medium"))
+        violations_with_labels.append({**v, "severity_label": sev_label})
+
     return {
         "verdict": result.verdict,
+        "verdict_label": verdict_label,
         "review_reason": result.review_reason,
-        "violations": result.violations,
+        "violations": violations_with_labels,
         "warnings": result.warnings,
     }
 
@@ -201,12 +217,22 @@ async def evaluate_copy_batch(
                     results.append({"text": text, "error": _typed_error(exc)})
                     continue
 
+                # Same humanize treatment as the single-string path
+                # — see evaluate_copy() above for the rationale.
+                v_label, _ = humanize_verdict(
+                    result.verdict, finding_count=len(result.violations)
+                )
+                violations_with_labels: list[dict[str, Any]] = []
+                for v in result.violations:
+                    s_label, _t = humanize_severity(v.get("severity", "medium"))
+                    violations_with_labels.append({**v, "severity_label": s_label})
                 results.append(
                     {
                         "text": text,
                         "verdict": result.verdict,
+                        "verdict_label": v_label,
                         "review_reason": result.review_reason,
-                        "violations": result.violations,
+                        "violations": violations_with_labels,
                         "warnings": result.warnings,
                     }
                 )

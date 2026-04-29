@@ -205,7 +205,7 @@ def test_main_pass_returns_zero(monkeypatch: pytest.MonkeyPatch, capsys) -> None
     code = main(["Save changes"])
     assert code == EXIT_OK
     out = capsys.readouterr().out
-    assert "PASS" in out
+    assert "All clear" in out
 
 
 def test_main_fail_returns_violations_code(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
@@ -233,7 +233,7 @@ def test_main_fail_returns_violations_code(monkeypatch: pytest.MonkeyPatch, caps
     # Substrate IDs (ACC-01 etc.) MUST NOT render. Issue text + severity do.
     assert "ACC-01" not in out
     assert "Contains 'click here'" in out
-    assert "[HIGH]" in out
+    assert "[Worth adjusting]" in out
 
 
 def test_main_json_mode_emits_raw_response(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
@@ -336,7 +336,7 @@ def test_print_result_returns_true_for_pass() -> None:
         "warnings": [],
     }
     assert print_result("Save", payload, verbose=False, stream=buf) is True
-    assert "PASS" in buf.getvalue()
+    assert "All clear" in buf.getvalue()
 
 
 def test_print_result_renders_severity_and_issue_only() -> None:
@@ -360,7 +360,7 @@ def test_print_result_renders_severity_and_issue_only() -> None:
     }
     print_result("Click here", payload, verbose=False, stream=buf)
     out = buf.getvalue()
-    assert "[HIGH]" in out
+    assert "[Worth adjusting]" in out
     assert "Generic CTA" in out
     assert "Use a specific verb." in out
     # Substrate must never leak.
@@ -397,7 +397,7 @@ def test_print_result_review_recommended_shows_reason() -> None:
     }
     passed = print_result("Maybe?", payload, verbose=False, stream=buf)
     out = buf.getvalue()
-    assert "REVIEW" in out
+    assert "Worth a look" in out
     assert "low_confidence" in out
     # REVIEW counts as passed for exit-code purposes.
     assert passed is True

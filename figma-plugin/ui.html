@@ -3716,10 +3716,15 @@ function exportScanResults() {
 function renderNodeCard(result) {
   // v2 Session 10 — three-state verdict. Falls back to overallVerdict
   // for backward compat with older /api/check responses (pre-1.1.0).
+  // Per ADR 2026-04-29 §9 the customer-facing labels are calmer:
+  // "All clear" / "Worth a look" / "N findings to adjust". The
+  // raw `verdict` is preserved on dataset.verdict for filter logic;
+  // rendered text uses the humanized form.
   const verdict = result.verdict || result.overallVerdict;
   const isReview = verdict === "review_recommended";
   const isFail = verdict === "violation" || verdict === "fail";
   const isError = result.error && result.violations.length === 0;
+  const violationCount = result.violations.length;
   let dotClass, filterClass, statusLabel;
   if (isError) {
     dotClass = "dot-error";
@@ -3728,21 +3733,22 @@ function renderNodeCard(result) {
   } else if (isReview) {
     dotClass = "dot-review";
     filterClass = "review";
-    statusLabel = "Review";
+    statusLabel = "Worth a look";
   } else if (isFail) {
     dotClass = "dot-fail";
     filterClass = "fail";
-    statusLabel = null;  // violation count below
+    // Render the count form per ADR §9a — "1 finding to adjust" /
+    // "N findings to adjust" (replaces "N issues").
+    statusLabel = violationCount === 1
+      ? "1 finding to adjust"
+      : `${violationCount} findings to adjust`;
   } else {
     dotClass = "dot-pass";
     filterClass = "pass";
-    statusLabel = "Pass";
+    statusLabel = "All clear";
   }
   const preview = result.text.length > 60 ? result.text.slice(0, 60) + "…" : result.text;
-  const violationCount = result.violations.length;
-  const meta = violationCount > 0
-    ? `${violationCount} issue${violationCount !== 1 ? "s" : ""}${isReview ? " (review)" : ""}`
-    : statusLabel || "Pass";
+  const meta = statusLabel;
 
   const gotoLabel = `Go to layer in Figma${result.parentName ? " (" + result.parentName + ")" : ""}`;
   let html = `<div class="node-card" data-verdict="${filterClass}">`;
@@ -3870,14 +3876,38 @@ function deriveSeverityFromConfidence(confidence) {
 }
 
 
+// Customer-facing labels for ContentRX severities.
+//
+// Mirror of `src/lib/humanize.ts` (web app), `cli-client/contentrx/
+// humanize.py`, and the other thin-client humanize.py copies. Each
+// surface keeps its own copy because the Figma plugin has no shared
+// runtime with the rest of the repo. Locked by ADR 2026-04-29 §9.
+//
+// The substrate enums (high / medium / low) collapse to two visible
+// tiers in the default case: high+medium → "Worth adjusting" (amber),
+// low → "Quick polish" (stone). The "Don't ship" red tier is
+// reserved for ship-blockers; today the public envelope doesn't
+// carry the hard-rule signal so the flag stays unused.
+function humanizeSeverity(severity, isShipBlocker) {
+  if (isShipBlocker && severity === "high") {
+    return { label: "Don't ship", tone: "severity-shipblock" };
+  }
+  if (severity === "high" || severity === "medium") {
+    return { label: "Worth adjusting", tone: "severity-medium" };
+  }
+  if (severity === "low") {
+    return { label: "Quick polish", tone: "severity-low" };
+  }
+  const spaced = (severity || "").replace(/_/g, " ").trim();
+  const fallback = spaced
+    ? spaced.charAt(0).toUpperCase() + spaced.slice(1)
+    : (severity || "medium");
+  return { label: fallback, tone: "severity-low" };
+}
+
 function renderSeverityBadge(severity) {
-  const tone = severity === "high"
-    ? "severity-high"
-    : severity === "medium"
-      ? "severity-medium"
-      : "severity-low";
-  const text = (severity || "medium").toUpperCase();
-  return `<span class="severity-badge ${tone}">${text}</span>`;
+  const { label, tone } = humanizeSeverity(severity);
+  return `<span class="severity-badge ${tone}">${label}</span>`;
 }
 
 

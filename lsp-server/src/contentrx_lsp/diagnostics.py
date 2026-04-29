@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from .humanize import humanize_severity
 from .parser import ExtractedString
 
 
@@ -163,11 +164,15 @@ def violations_to_diagnostics(
         # longer carries `standard_id`, `rule`, or `docs_url`; the
         # apply-suggestion command operates on `suggestion` + byte
         # offsets alone.
+        # Per ADR 2026-04-29 §9 the `code` is humanized at the render
+        # boundary — "Worth adjusting" / "Quick polish" / "Don't ship"
+        # — rather than the raw substrate enum.
         lsp_severity = 2 if verdict == "violation" else 3
         for v in violations:
             issue = v.get("issue") or ""
             suggestion = v.get("suggestion") or ""
             sev_band = v.get("severity") or "medium"
+            sev_label, _ = humanize_severity(sev_band)
             message = _build_diagnostic_message(
                 issue=issue,
                 suggestion=suggestion,
@@ -177,7 +182,7 @@ def violations_to_diagnostics(
                 LspDiagnostic(
                     range=lsp_range,
                     severity=lsp_severity,
-                    code=sev_band.upper(),
+                    code=sev_label,
                     source="ContentRX",
                     message=message,
                     data={

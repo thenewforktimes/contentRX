@@ -18,6 +18,8 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Iterable
 
+from humanize import humanize_severity
+
 
 GITHUB_API = "https://api.github.com"
 
@@ -70,7 +72,7 @@ def render_markdown(
         body = (
             "### ContentRX\n\n"
             f"Checked {total_strings} string"
-            f"{'' if total_strings == 1 else 's'}. No content-standard violations.\n"
+            f"{'' if total_strings == 1 else 's'}. All clear.\n"
         )
         if truncation_notice:
             body += "\n" + truncation_notice + "\n"
@@ -93,9 +95,12 @@ def render_markdown(
 
     lines.append("### ContentRX")
     lines.append("")
+    # Per ADR 2026-04-29 §9 the customer-facing surface uses
+    # "findings to adjust", not "violations". Substrate enums stay
+    # in the API + DB.
     lines.append(
-        f"Found **{total_violations} violation"
-        f"{'' if total_violations == 1 else 's'}** across "
+        f"Found **{total_violations} finding"
+        f"{'' if total_violations == 1 else 's'} to adjust** across "
         f"**{len(reports)} file{'' if len(reports) == 1 else 's'}** "
         f"(checked {total_strings} string{'' if total_strings == 1 else 's'})."
     )
@@ -115,10 +120,13 @@ def render_markdown(
                 # Schema 2.0.0 — public Violation fields only.
                 # standard_id is substrate; the user-visible artifact is
                 # severity + issue + suggestion. ADR 2026-04-25.
-                severity = v.get("severity", "medium").upper()
+                # Per ADR 2026-04-29 §9 the severity enum is
+                # humanized to "Worth adjusting" / "Quick polish" /
+                # "Don't ship" at the rendering boundary.
+                sev_label, _ = humanize_severity(v.get("severity", "medium"))
                 issue = v.get("issue", "").strip()
                 suggestion = v.get("suggestion", "").strip()
-                lines.append(f"  - **{severity}**: {issue}")
+                lines.append(f"  - **{sev_label}**: {issue}")
                 if suggestion:
                     # PR-36 — render the suggestion as a `diff`-fenced
                     # code block. GitHub renders these natively with

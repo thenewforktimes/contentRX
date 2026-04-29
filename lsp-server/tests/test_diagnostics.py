@@ -82,7 +82,9 @@ def test_violations_emit_warning_severity():
     # Schema 2.0.0 — `code` is the severity band, not the substrate
     # standard_id. Editors render `code` visibly in the problem panel,
     # so it cannot leak the rule taxonomy.
-    assert d.code == "HIGH"
+    # Per ADR 2026-04-29 §9 — code is humanized at the rendering
+    # boundary, not the raw substrate enum.
+    assert d.code == "Worth adjusting"
     assert d.source == "ContentRX"
     assert "Generic CTA" in d.message
     assert "Start free trial" in d.message
@@ -227,4 +229,5 @@ def test_multiple_violations_become_multiple_diagnostics():
         verdict="violation",
     )
     # `code` is the severity band, not the standard_id.
-    assert {d.code for d in diagnostics} == {"HIGH", "MEDIUM"}
+    # high + medium both collapse to "Worth adjusting" per ADR §9b.
+    assert {d.code for d in diagnostics} == {"Worth adjusting"}

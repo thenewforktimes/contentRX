@@ -23,7 +23,9 @@ def _report(path: str, entries: list[dict]) -> FileReport:
 
 def test_no_violations_renders_clean_summary() -> None:
     md = render_markdown([], total_strings=8)
-    assert "No content-standard violations" in md
+    # Empty-state copy is a separate code path (in main.py / report.py
+    # earlier-branch), unchanged in this PR — pin remains the same.
+    assert "All clear" in md
     assert "8 strings" in md
 
 
@@ -58,7 +60,9 @@ def test_violations_rollup_counts() -> None:
         ),
     ]
     md = render_markdown(reports, total_strings=12)
-    assert "3 violations" in md
+    # Per ADR 2026-04-29 §9 the customer-facing label is "findings to
+    # adjust", not "violations". The substrate enums stay in the API.
+    assert "3 findings to adjust" in md
     assert "2 files" in md
     assert "12 strings" in md
     assert "`src/Button.tsx`" in md
@@ -207,7 +211,7 @@ def test_reports_with_only_non_violating_entries_are_hidden() -> None:
     ]
     md = render_markdown(reports, total_strings=1)
     # Falls through to the "no violations" path because nothing failed.
-    assert "No content-standard violations" in md
+    assert "All clear" in md
 
 
 def test_escapes_backticks_in_snippet() -> None:
