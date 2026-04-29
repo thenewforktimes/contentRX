@@ -53,7 +53,7 @@ export default function Home() {
       <header>
         <Eyebrow>ContentRX</Eyebrow>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-          Staff-level content design review. In every repo.
+          Staff-level content design review in every repo
         </h1>
         <p className="mt-6 text-lg text-stone-700 dark:text-stone-300">
           ContentRX reads the strings you ship with the judgment of a
@@ -122,19 +122,24 @@ export default function Home() {
         <p className="mt-3">
           ContentRX bakes the rules into the workflow. By the time
           you finish typing an error message, ContentRX has read
-          every error message in your repo and knows which voice you
-          ship in. The rationale chain explains its read, with{" "}
+          every error message in your repo and knows which voice
+          you ship in. Every verdict carries a rationale chain so
+          you can see the read.
+        </p>
+        <p className="mt-3">
+          And because the model is the product, the model is
+          accountable. Measured accuracy lives at{" "}
           <Link href="/accuracy" className="underline underline-offset-2">
-            published accuracy
+            /accuracy
           </Link>
-          {" "}you can audit and{" "}
+          . Drift gets reported in the weekly{" "}
           <Link
             href="/calibration"
             className="underline underline-offset-2"
           >
-            a weekly calibration log
+            /calibration
           </Link>
-          {" "}that reports drift in the open.
+          {" "}log.
         </p>
       </Section>
 
@@ -149,8 +154,8 @@ export default function Home() {
           moment. The filter narrows the standards down to the ones
           that apply. The reviewer evaluates against those standards
           with patterns built over years of practice. The validator
-          checks the work. The merger compresses everything into one
-          envelope: issue, suggestion, severity, confidence.
+          checks the work. The merger compresses everything into a
+          single envelope: issue, suggestion, severity, confidence.
         </p>
         <HowItWorksDiagram />
       </Section>
@@ -164,8 +169,9 @@ export default function Home() {
         </p>
         <ul className="mt-4 ml-5 list-disc space-y-2">
           <li>
-            <strong>MCP server.</strong> Claude Code, Cursor, and any
-            MCP client. Inline review during generation, not after.{" "}
+            <strong>MCP server</strong> for Claude Code, Cursor, and
+            any MCP client. Inline review during generation, not
+            after.{" "}
             <Link
               href="/install#mcp"
               className="underline underline-offset-2"
@@ -175,7 +181,7 @@ export default function Home() {
             .
           </li>
           <li>
-            <strong>CLI.</strong>{" "}
+            <strong>CLI</strong> for the terminal and CI.{" "}
             <code>contentrx &quot;Click here&quot;</code> or{" "}
             <code>--batch strings.txt</code>. <code>--explain</code>{" "}
             prints the rationale chain. Stdlib-only install.{" "}
@@ -188,9 +194,9 @@ export default function Home() {
             .
           </li>
           <li>
-            <strong>GitHub Action.</strong> Evaluates strings touched
-            in a pull request. <code>fail-on: review</code> gates
-            merge on review-recommended verdicts.{" "}
+            <strong>GitHub Action</strong> that evaluates strings
+            touched in a pull request. <code>fail-on: review</code>{" "}
+            gates merge on review-recommended verdicts.{" "}
             <Link
               href="/install#action"
               className="underline underline-offset-2"
@@ -200,8 +206,8 @@ export default function Home() {
             .
           </li>
           <li>
-            <strong>LSP.</strong> VS Code, Zed, any LSP editor.
-            Verdicts as diagnostics, inline.{" "}
+            <strong>LSP</strong> for VS Code, Zed, and any LSP
+            editor. Verdicts as diagnostics, inline.{" "}
             <Link
               href="/install#lsp"
               className="underline underline-offset-2"
@@ -211,8 +217,9 @@ export default function Home() {
             .
           </li>
           <li>
-            <strong>Figma plugin.</strong> Design-time review. Per
-            string verdicts with moment banners and rationale chains.{" "}
+            <strong>Figma plugin</strong> for design-time review.
+            Per-string verdicts with moment banners and rationale
+            chains.{" "}
             <Link
               href="/install#figma"
               className="underline underline-offset-2"
@@ -228,8 +235,8 @@ export default function Home() {
         <p>
           Robert Ballard, staff content designer at PayPal. Previously
           Intuit, Meta, and Opendoor. The moments, the weights, and
-          the standards all carry one designer&apos;s judgment calls,
-          attributed and published. Read the{" "}
+          the standards all carry a single designer&apos;s judgment
+          calls, attributed and published. Read the{" "}
           <Link href="/about" className="underline underline-offset-2">
             about-the-model
           </Link>

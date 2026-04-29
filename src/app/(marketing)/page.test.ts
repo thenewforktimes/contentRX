@@ -98,9 +98,13 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
   it("leads with generation-layer surfaces (MCP before Figma)", () => {
     // The Surfaces list must list MCP before Figma — Session 29
     // moved the Figma plugin off the flagship slot, and the
-    // post-pivot positioning kept it that way.
-    const mcpIdx = visible.indexOf("<strong>MCP server.</strong>");
-    const figmaIdx = visible.indexOf("<strong>Figma plugin.</strong>");
+    // post-pivot positioning kept it that way. The surface labels
+    // were restructured 2026-04-29 from "<strong>Name.</strong>
+    // sentence" to "<strong>Name</strong> for/that-clause" because
+    // trailing periods on bold labels read as terminal punctuation
+    // (engine flagged them; copy-vocabulary.md confirms).
+    const mcpIdx = visible.indexOf("<strong>MCP server</strong>");
+    const figmaIdx = visible.indexOf("<strong>Figma plugin</strong>");
     expect(mcpIdx).toBeGreaterThan(-1);
     expect(figmaIdx).toBeGreaterThan(-1);
     expect(mcpIdx).toBeLessThan(figmaIdx);
