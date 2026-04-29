@@ -61,3 +61,56 @@ export function dispatchCheckCompleted(detail: CheckCompletedDetail): void {
     new CustomEvent<CheckCompletedDetail>(CHECK_COMPLETED_EVENT, { detail }),
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// cx-suggestion-copied — fires when a customer copies a finding's
+// suggestion from a check result. Block 3a wires a listener that
+// records the signal as a low-weight CANDIDATE in the calibration
+// substrate. Until then this event is fire-and-forget; nothing
+// listens.
+//
+// Substrate boundary (ADR 2026-04-25): the payload carries ONLY
+// public-envelope fields. No `standard_id`, `moment`, or
+// `content_type` — those don't reach the browser. Block 3a's
+// server-side correlation will enrich the signal with substrate
+// context using `(submitted_text_hash, suggestion)` lookup against
+// the violations table.
+// ─────────────────────────────────────────────────────────────────────
+
+export const SUGGESTION_COPIED_EVENT = "cx-suggestion-copied";
+
+export type SuggestionCopiedDetail = {
+  /** What the user submitted to /api/check. Hashed server-side
+   *  before any persistence. */
+  submittedText: string;
+  /** The suggestion the user just copied. */
+  suggestion: string;
+  /** Public severity. Substrate kind/standard_id stay private. */
+  severity: string;
+  /** Public confidence (0–1). */
+  confidence: number;
+  /** Public issue text. Useful as a clustering hint server-side. */
+  issue: string;
+};
+
+export function isSuggestionCopiedEvent(
+  event: Event,
+): event is CustomEvent<SuggestionCopiedDetail> {
+  if (event.type !== SUGGESTION_COPIED_EVENT) return false;
+  if (!("detail" in event)) return false;
+  const d = (event as CustomEvent).detail as Partial<SuggestionCopiedDetail>;
+  return (
+    typeof d?.submittedText === "string" &&
+    typeof d?.suggestion === "string" &&
+    typeof d?.severity === "string"
+  );
+}
+
+export function dispatchSuggestionCopied(detail: SuggestionCopiedDetail): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent<SuggestionCopiedDetail>(SUGGESTION_COPIED_EVENT, {
+      detail,
+    }),
+  );
+}

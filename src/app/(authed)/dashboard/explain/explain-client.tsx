@@ -17,7 +17,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pill } from "@/components/ui/pill";
 import type { PublicCheckEnvelope } from "@/lib/api-envelope";
 import {
@@ -26,7 +26,10 @@ import {
   humanizeVerdict,
 } from "@/lib/humanize";
 import { wordDiff, type DiffToken } from "@/lib/text-diff";
-import { dispatchCheckCompleted } from "../dashboard-check-events";
+import {
+  dispatchCheckCompleted,
+  dispatchSuggestionCopied,
+} from "../dashboard-check-events";
 
 type CheckEnvelope = PublicCheckEnvelope & {
   latency_ms: number;
@@ -274,7 +277,18 @@ export function ExplainClient() {
                   key={i}
                   className="rounded-md border border-stone-200 bg-white p-3 text-sm dark:border-stone-800 dark:bg-stone-900"
                 >
-                  <SeverityBadge severity={v.severity} />
+                  <div className="flex items-start justify-between gap-3">
+                    <SeverityBadge severity={v.severity} />
+                    {v.suggestion && (
+                      <CopySuggestionButton
+                        submittedText={response.submittedText}
+                        suggestion={v.suggestion}
+                        severity={v.severity}
+                        confidence={v.confidence}
+                        issue={v.issue}
+                      />
+                    )}
+                  </div>
                   <p className="mt-2 text-stone-900 dark:text-stone-100">
                     {v.issue}
                   </p>
@@ -541,4 +555,82 @@ function SeverityBadge({ severity }: { severity: string }) {
   // future signal). All findings ship through the default path.
   const { label, tone } = humanizeSeverity(severity);
   return <Pill tone={tone}>{label}</Pill>;
+}
+
+/**
+ * CopySuggestionButton — copies the LLM's suggestion to the
+ * clipboard, shows a brief "Copied" affordance, and dispatches the
+ * cx-suggestion-copied event for the calibration substrate to pick
+ * up later (Block 3a will wire the listener).
+ *
+ * Block 1b of the calibration plan.
+ *
+ * Failure mode: if `navigator.clipboard.writeText` rejects (rare;
+ * happens in non-secure contexts or some embedded browsers), the
+ * button shows "Couldn't copy" instead. We don't fall back to a
+ * manual selection prompt — that's heavier than the failure case
+ * deserves.
+ */
+function CopySuggestionButton({
+  submittedText,
+  suggestion,
+  severity,
+  confidence,
+  issue,
+}: {
+  submittedText: string;
+  suggestion: string;
+  severity: string;
+  confidence: number;
+  issue: string;
+}) {
+  // "idle" → click → "copied" (or "error") → 2s timeout → "idle"
+  const [state, setState] = useState<"idle" | "copied" | "error">("idle");
+
+  useEffect(() => {
+    if (state === "idle") return;
+    const t = setTimeout(() => setState("idle"), 2000);
+    return () => clearTimeout(t);
+  }, [state]);
+
+  const onClick = async () => {
+    try {
+      await navigator.clipboard.writeText(suggestion);
+      setState("copied");
+      dispatchSuggestionCopied({
+        submittedText,
+        suggestion,
+        severity,
+        confidence,
+        issue,
+      });
+    } catch {
+      setState("error");
+    }
+  };
+
+  const label =
+    state === "copied"
+      ? "Copied"
+      : state === "error"
+        ? "Couldn't copy"
+        : "Copy suggestion";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Copy suggestion to clipboard"
+      className={[
+        "shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+        state === "copied"
+          ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+          : state === "error"
+            ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+            : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900",
+      ].join(" ")}
+    >
+      {label}
+    </button>
+  );
 }

@@ -17,6 +17,8 @@ import { describe, expect, it } from "vitest";
 import {
   CHECK_COMPLETED_EVENT,
   isCheckCompletedEvent,
+  isSuggestionCopiedEvent,
+  SUGGESTION_COPIED_EVENT,
 } from "./dashboard-check-events";
 
 function fakeEvent(type: string, detail: unknown): Event {
@@ -73,5 +75,67 @@ describe("isCheckCompletedEvent", () => {
       usage: { used: "7", quota: 1000, remaining: 993 },
     });
     expect(isCheckCompletedEvent(e)).toBe(false);
+  });
+});
+
+describe("isSuggestionCopiedEvent", () => {
+  // The cx-suggestion-copied event ships when a customer clicks
+  // Copy on a finding. Block 3a will wire a listener that records
+  // the signal as a low-weight CANDIDATE; the guard pins the
+  // detail-shape contract so dispatcher and listener can't drift.
+  const validDetail = {
+    submittedText: "Unable to complete operation. Please contact administrator.",
+    suggestion:
+      "Something's wrong and it's unclear what. Try again, and contact your admin if there's still trouble.",
+    severity: "high",
+    confidence: 0.95,
+    issue: "The message is cold and robotic.",
+  };
+
+  it("accepts a well-formed cx-suggestion-copied event", () => {
+    const e = fakeEvent(SUGGESTION_COPIED_EVENT, validDetail);
+    expect(isSuggestionCopiedEvent(e)).toBe(true);
+  });
+
+  it("rejects an event with the wrong type", () => {
+    const e = fakeEvent("some-other-event", validDetail);
+    expect(isSuggestionCopiedEvent(e)).toBe(false);
+  });
+
+  it("rejects an event missing .detail", () => {
+    const e = { type: SUGGESTION_COPIED_EVENT } as Event;
+    expect(isSuggestionCopiedEvent(e)).toBe(false);
+  });
+
+  it("rejects an event missing submittedText", () => {
+    const e = fakeEvent(SUGGESTION_COPIED_EVENT, {
+      ...validDetail,
+      submittedText: undefined,
+    });
+    expect(isSuggestionCopiedEvent(e)).toBe(false);
+  });
+
+  it("rejects an event missing suggestion", () => {
+    const e = fakeEvent(SUGGESTION_COPIED_EVENT, {
+      ...validDetail,
+      suggestion: undefined,
+    });
+    expect(isSuggestionCopiedEvent(e)).toBe(false);
+  });
+
+  it("rejects an event missing severity", () => {
+    const e = fakeEvent(SUGGESTION_COPIED_EVENT, {
+      ...validDetail,
+      severity: undefined,
+    });
+    expect(isSuggestionCopiedEvent(e)).toBe(false);
+  });
+
+  it("rejects an event with non-string suggestion", () => {
+    const e = fakeEvent(SUGGESTION_COPIED_EVENT, {
+      ...validDetail,
+      suggestion: { rewrite: "..." },
+    });
+    expect(isSuggestionCopiedEvent(e)).toBe(false);
   });
 });
