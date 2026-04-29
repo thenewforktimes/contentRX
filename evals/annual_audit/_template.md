@@ -18,8 +18,8 @@ ceiling; thresholds move with the measurement, not the target."}
 
 ## Standards with highest past/present disagreement
 
-The top 10 standards whose verdicts changed between past-Robo and
-current-Robo. A high disagreement rate on a single standard could be:
+The top 10 standards whose verdicts changed between past-Robert and
+current-Robert. A high disagreement rate on a single standard could be:
 
 1. **Intentional drift** — the standard was refined (check the
    `version_history`); past verdicts should no longer be trusted at
@@ -68,9 +68,9 @@ where re-label diverged on moment detection specifically. For each:
 
 ## Next year's taxonomy roadmap
 
-Robo fills this in by hand. One or two sentences per priority. The
+Robert fills this in by hand. One or two sentences per priority. The
 scored sections above are the inputs; this section is the output —
-what Robo plans to do with the audit's findings.
+what Robert plans to do with the audit's findings.
 
 - **Priority 1:** ...
 - **Priority 2:** ...

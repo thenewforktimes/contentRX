@@ -9,7 +9,7 @@ name: Case-study daily cron
 # over real OSS products and recording where it agrees with hand
 # judgment (and where it doesn't). The picker rotates through the
 # allow-list so we don't park on one target. The PR is the human's
-# review surface — Robo annotates `notes.md`, files refinement-log
+# review surface — Robert annotates `notes.md`, files refinement-log
 # entries from the inline form on `/admin/case-studies/<slug>`, and
 # merges (or closes) per the case-study-approval gate.
 #
@@ -188,7 +188,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           # Day-stamped branch so two runs on the same day re-use the
           # same PR (peter-evans updates the existing PR on rerun);
-          # different days open distinct PRs Robo can triage in batch.
+          # different days open distinct PRs Robert can triage in batch.
           branch: case-study/${{ steps.pick.outputs.slug }}-${{ steps.pick.outputs.today }}
           base: main
           commit-message: "chore(case-study): daily crawl of ${{ steps.pick.outputs.slug }}"

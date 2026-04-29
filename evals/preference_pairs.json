@@ -1,7 +1,7 @@
 {
   "description": "Pairwise preference elicitation pool. Human-eval build plan Session 31. Each pair is a hand-picked side-by-side judgement. When `expected_preferred` is set, that side is the author's best answer; responses aligning with it feed the auto-annotator's precedent index as a second signal source alongside approved annotations. Pairs without an `expected_preferred` are genuine probes — we record responses but don't score alignment.",
   "version": "1.0.0",
-  "authors": ["Robo (initial seed)"],
+  "authors": ["Robert (initial seed)"],
   "pairs": [
     {
       "seed_key": "destructive_action_delete_account_001",

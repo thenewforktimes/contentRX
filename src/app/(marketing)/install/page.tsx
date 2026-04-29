@@ -9,7 +9,7 @@
  * Each section has an anchor (#mcp, #cli, #action, #figma) so the
  * landing page's per-surface "Install" links deep-link here.
  *
- * Voice note for Robo: the prose is in my voice; the install
+ * Voice note for Robert: the prose is in my voice; the install
  * snippets are pinned against the real package metadata and should
  * stay in sync with cli-client + mcp-server version bumps. Snippet
  * correctness is the most important thing on this page — test

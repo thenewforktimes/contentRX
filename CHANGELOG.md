@@ -124,7 +124,7 @@ Session 18 — commit-message intent tagging + repo quality scorer:
   Produces a visible ranking for the review queue.
 - Extended `external_signal/allow_list.json` — every repo now carries
   a `quality_signals` block with best-guess values based on public
-  project metadata. Robo's review adjusts these as warranted.
+  project metadata. Robert's review adjusts these as warranted.
 - `external_signal/github_miner.py` tags each commit with
   `intent` + `suggested_triage_category`, and each repo's output
   file with `quality_score`. Output schema bumped 1.0.0 → 1.1.0.
@@ -165,7 +165,7 @@ Session 16 — design-system sources attribution + examples corpus:
 
 Reality-check notes:
   - Plan targets 50 corpus pairs + every standard attributed; this
-    PR ships 38 + 30/47. Both grow as Robo's audit continues.
+    PR ships 38 + 30/47. Both grow as Robert's audit continues.
   - PRF-* standards (preprocessor-only) aren't in
     `standards_library.json`; the patch no-ops on them. The corpus
     references them since they're legitimate standard IDs.
@@ -196,7 +196,7 @@ Session 15 — GitHub mining pipeline:
   auth/retry behavior. Network-free — tests mock urllib entirely.
 
 Deferred per scope:
-  - DB ingest path — today the miner writes JSON; Robo reviews the
+  - DB ingest path — today the miner writes JSON; Robert reviews the
     JSON. A future session wires ingest into the `external_signal`
     namespace once the review workflow is defined.
   - Classifier routing (push mined pairs through ContentRX's
@@ -221,7 +221,7 @@ Session 14 — ethical framework + /ethics page:
   crawls in the next cycle, best-effort remove derived signal in
   the release after.
 
-**Copy note:** the voice is plain + first-person — Robo should edit
+**Copy note:** the voice is plain + first-person — Robert should edit
 these pages into his own voice before launch. The commitments
 themselves are locked to the plan spec; the prose around them is
 editable.
@@ -417,7 +417,7 @@ Deferred per-scope:
 Session 8 — production override review queue:
 
 - New `tools/review_queue.py` — turns a stream of production override
-  events into an ordered, batched queue for Robo's 50-items-in-60-
+  events into an ordered, batched queue for Robert's 50-items-in-60-
   minutes review cadence. Stage-aware: phase auto-detects from the
   annotated corpus (`<500` high-confidence tuples → early/exploration,
   `≥500` → late/exploitation). Outer dimension is audience
@@ -530,7 +530,7 @@ Session 4 — structured override reasons + session aggregation:
 - New helper `src/lib/override-reasons.ts` codifies the five codes
   (`not_applicable_here`, `standard_too_strict`, `fix_is_worse`,
   `shipping_anyway`, `confusing_need_more_context`) plus each code's
-  *typical* (not mechanical) mapping to Robo's `triage_category`
+  *typical* (not mechanical) mapping to Robert's `triage_category`
   vocabulary.
 - New helper `src/lib/session-aggregation.ts` collapses three or more
   same-standard overrides from a single session into a

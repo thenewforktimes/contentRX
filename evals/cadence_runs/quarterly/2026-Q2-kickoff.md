@@ -1,6 +1,6 @@
 # Quarterly review — 2026-Q2 (kickoff cycle)
 
-**Reviewer:** Robo (instrumentation kickoff)
+**Reviewer:** Robert (instrumentation kickoff)
 **Completed:** 2026-04-24
 **Source artifact:** pending — first real drift report lands once
 `tools/drift_check.py score` has a panel to score against.

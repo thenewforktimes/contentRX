@@ -402,7 +402,7 @@ function DiffSpan({
  * + reset date, auth gets API-key guidance, rate-limit shows a
  * countdown, server errors stay generic.
  *
- * Tone matches Robo's voice (PR-42 vocabulary refactor):
+ * Tone matches Robert's voice (PR-42 vocabulary refactor):
  *   - direct, no jargon
  *   - states the fact + the next action
  *   - one CTA when there's a useful one, never a list of links

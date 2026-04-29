@@ -291,7 +291,7 @@ def _drift_status(snapshot: dict | None) -> str:
         return "Drift status: no self-drift signal in the snapshot."
     if sd.get("state") == "measured":
         v = sd.get("value")
-        return f"Self-drift κ = {v:.3f} (Robo vs past-Robo on the held-out panel)."
+        return f"Self-drift κ = {v:.3f} (Robert vs past-Robert on the held-out panel)."
     reason = sd.get("reason", "pending")
     return f"Self-drift status: pending — {reason}."
 

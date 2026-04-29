@@ -1,10 +1,10 @@
 """Score the annual taxonomy-audit panel.
 
 Human-eval build plan Session 36. Given the panel manifest
-(`tools/annual_audit_sample.py`) plus current-Robo's blind re-labels,
+(`tools/annual_audit_sample.py`) plus current-Robert's blind re-labels,
 compute the report structure the plan calls for:
 
-    - overall agreement + Cohen's κ (vs past-Robo)
+    - overall agreement + Cohen's κ (vs past-Robert)
     - standards with highest past/present disagreement
     - moments with most evolution
     - retired standards that might deserve reinstatement
@@ -386,7 +386,7 @@ def render_markdown(report: AuditReport) -> str:
     lines.append("## Next year's taxonomy roadmap")
     lines.append("")
     lines.append(
-        "Robo fills in one or two sentences per priority. The committed "
+        "Robert fills in one or two sentences per priority. The committed "
         "template at `evals/annual_audit/_template.md` carries the full "
         "prompt list for this section."
     )

@@ -36,7 +36,7 @@ Usage:
 `--dry-run` runs the filter logic against cached data without hitting
 the GitHub API — useful when iterating on filters.
 
-The output JSON is the raw mined signal; Robo reviews it before any
+The output JSON is the raw mined signal; Robert reviews it before any
 ingest into a shared surface. Nothing here writes to Supabase; that's
 a later session's job when the review workflow is defined.
 
@@ -166,7 +166,7 @@ def commit_message_soft_tagged(message: str) -> bool:
 
 # Diff-pattern extraction: find changed lines inside quoted strings.
 # Simple substring heuristic — catches most JSX text / string-literal
-# changes and produces false positives that Robo's review filters
+# changes and produces false positives that Robert's review filters
 # out (per plan: "disagreement cases are teaching moments or noise").
 #
 # A line starts with "-" or "+" in a unified diff; the extractor
@@ -202,7 +202,7 @@ def extract_pairs_from_patch(patch: str) -> list[dict[str, str]]:
             rem_strs = [m.group(2) for m in STRING_LITERAL_RE.finditer(rem_line)]
             add_strs = [m.group(2) for m in STRING_LITERAL_RE.finditer(add_line)]
             # Pair up to min(len, len) — a rearranged line won't pair
-            # cleanly but that's fine; Robo's review catches it.
+            # cleanly but that's fine; Robert's review catches it.
             for i in range(min(len(rem_strs), len(add_strs))):
                 old = rem_strs[i]
                 new = add_strs[i]

@@ -2,7 +2,7 @@
 
 Human-eval build plan Session 8. Takes a stream of production override
 events (from `violation_overrides`) and turns it into an ordered queue
-that Robo reviews via the existing Phase 2 CLI (`tools/triage.py`).
+that Robert reviews via the existing Phase 2 CLI (`tools/triage.py`).
 
 The review cadence target is 50 items in 60 minutes. The queue is
 organized so related items cluster together — same audience, same

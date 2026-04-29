@@ -60,12 +60,12 @@ export default async function AdminCalibrationPage() {
       <section className="grid gap-3 sm:grid-cols-3">
         <KappaCard
           label="Measured system κ"
-          subtitle="System verdicts vs Robo's golden labels"
+          subtitle="System verdicts vs Robert's golden labels"
           kappa={snapshot.measured_system}
         />
         <KappaCard
           label="Measured self-drift κ"
-          subtitle="Robo vs past-Robo on the held-out panel"
+          subtitle="Robert vs past-Robert on the held-out panel"
           kappa={snapshot.measured_self_drift}
         />
         <DesignTargetCard target={snapshot.design_target} />
@@ -109,10 +109,10 @@ export default async function AdminCalibrationPage() {
             count={snapshot.by_level.batch_approval}
           />
           <ThresholdCard
-            label="Robo labels"
+            label="Every verdict reviewed"
             value={null}
             count={snapshot.by_level.robo_labels}
-            note="No threshold — every verdict reviewed."
+            note="No threshold — manual review tier."
           />
         </dl>
       </section>

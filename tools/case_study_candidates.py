@@ -2,7 +2,7 @@
 
 Human-eval build plan Sessions 26–28 (the "careful" half). The plan
 requires three OSS case studies; maintainer contact + live API runs
-are on Robo's side, but candidate selection can be deterministic.
+are on Robert's side, but candidate selection can be deterministic.
 
 This tool reads `external_signal/allow_list.json` and scores every
 entry by quality signals (content-designer acknowledged, active

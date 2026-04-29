@@ -73,7 +73,7 @@ Granularity gaps in the content type taxonomy, surfaced through real-world triag
 Entries in this section are written by
 `tools/refinement_candidate_detector.py` (human-eval build plan
 Session 34) from the nightly signal dump. Each entry uses `REF-ANNN`
-ids so it can't collide with Robo-proposed `REF-NNN` ids. Robo triages
+ids so it can't collide with Robert-proposed `REF-NNN` ids. Robert triages
 these during the weekly review rhythm; approved candidates move to
 `## Approved refinements` below, declined ones to `## Declined
 refinements`, and the two-source minimum + verdict-impact test from

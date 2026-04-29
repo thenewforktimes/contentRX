@@ -1,6 +1,6 @@
 # Annual taxonomy audit — 2026 (kickoff cycle)
 
-**Reviewer:** Robo (instrumentation kickoff)
+**Reviewer:** Robert (instrumentation kickoff)
 **Completed:** 2026-04-24
 **Source artifacts:** pending — the first real audit runs once
 there's at least one year's worth of stored verdicts to re-label.

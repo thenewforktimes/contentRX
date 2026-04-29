@@ -40,7 +40,7 @@ These live in the **main** app (`contentrx.app`), not here:
   the parent repo.
 - `/calibration` — weekly calibration log entries. Source:
   `reports/calibration/<YYYY>-<WW>.md`.
-- `/essays` — monthly named-expert essays in Robo's voice.
+- `/essays` — monthly named-expert essays in Robert's voice.
   Source: `contentrx-docs/essays/` (target — the staging area is
   `essays/drafts/` in the parent repo until promotion).
 - `/reports` — quarterly reports. Source:

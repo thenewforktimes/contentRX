@@ -11,7 +11,7 @@ separate from examples" principle.
 
 ## Why this matters
 
-Robo's decision: standards carry their prescriptions
+Robert's decision: standards carry their prescriptions
 (`standards_library.json` `rule` + `correct` + `incorrect`);
 worked-out examples from external systems live here. Mixing them
 would bloat the library and entangle evolution — if the corpus grows
@@ -119,7 +119,7 @@ and where ContentRX's synthesis lands. This feeds Session 35's
 
 ## Growth rules
 
-- Add entries over time as Robo encounters them in review.
+- Add entries over time as Robert encounters them in review.
 - Prefer pairs that demonstrate a principle **the source itself
   articulates** — cite the section.
 - Never fabricate examples or attribute to a system where the

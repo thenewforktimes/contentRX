@@ -235,7 +235,7 @@ def render_markdown(report: QuarterlyReport) -> str:
         lines.append(
             f"- Self-drift κ = **{sd['value']:.3f}** "
             f"(95% CI [{sd['ci_low']:.3f}, {sd['ci_high']:.3f}]). The expert ceiling — "
-            "the system can't out-perform Robo against past-Robo."
+            "the system can't out-perform Robert against past-Robert."
         )
     else:
         lines.append("- Self-drift κ: _pending — drift panel awaiting blind re-label + score._")

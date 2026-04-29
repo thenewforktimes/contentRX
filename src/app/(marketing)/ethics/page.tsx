@@ -10,7 +10,7 @@
  * fills `/sources`).
  *
  * Copy notes: the voice here is plain + first-person. The plan spec
- * says "copy is in Robo's voice" — Robo will edit; this version
+ * says "copy is in Robert's voice" — Robert will edit; this version
  * exists to ship the commitments, not the prose.
  */
 

@@ -1,17 +1,17 @@
 /**
  * Override-reason vocabulary — human-eval build plan Session 4.
  *
- * User-facing reason codes. Distinct from Robo's `triage_category`
+ * User-facing reason codes. Distinct from Robert's `triage_category`
  * vocabulary (from EVAL_PROTOCOL: correct, misclassification,
  * hallucination, missing_standard, context_gap). The two feed
  * different loops:
  *
  *   - User reason codes → UX, weighting, which items escalate to
- *     Robo's queue.
- *   - Robo's triage_category → architectural responses (classifier
+ *     Robert's queue.
+ *   - Robert's triage_category → architectural responses (classifier
  *     work, standards library gap, audience/moment gating).
  *
- * During review, Robo reconciles the two on a case-by-case basis. The
+ * During review, Robert reconciles the two on a case-by-case basis. The
  * mapping below captures the *typical* correspondence — it's not a
  * mechanical translation. "not_applicable_here" frequently becomes
  * `context_gap` after review, but sometimes it becomes
@@ -111,7 +111,7 @@ export function overrideReasonOptions(): readonly OverrideReasonMeta[] {
 
 /**
  * The triage_category this reason code would *typically* map to on
- * Robo's review. Not a promise — reconciliation is a judgment call.
+ * Robert's review. Not a promise — reconciliation is a judgment call.
  */
 export function typicalTriageCategory(
   code: OverrideReasonCode,

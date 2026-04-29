@@ -162,7 +162,7 @@ overfitting to any one design language.
 
 Proposed changes land in
 [`taxonomy_refinement_log.md`](../taxonomy_refinement_log.md) (in
-the main repo today) as candidates. Robo triages them during the
+the main repo today) as candidates. Robert triages them during the
 quarterly cadence review. Approved refinements bump the library
 version and the affected standards' per-standard versions with
 `version_history` entries explaining what changed and why.

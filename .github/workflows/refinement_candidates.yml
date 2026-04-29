@@ -4,7 +4,7 @@ name: Refinement candidate detection
 # aggregated signal dump from the production admin endpoint and runs
 # `tools/refinement_candidate_detector.py` to propose candidate
 # entries in `taxonomy_refinement_log.md`. Opens a PR with the
-# updated log so Robo can triage during the weekly review rhythm.
+# updated log so Robert can triage during the weekly review rhythm.
 #
 # Opt-in: the job is skipped unless both REFINEMENT_SIGNALS_URL and
 # REFINEMENT_SIGNALS_TOKEN secrets are configured. Same safety-first
@@ -14,7 +14,7 @@ name: Refinement candidate detection
 on:
   schedule:
     # Nightly at 06:00 UTC. Early enough that the resulting PR lands
-    # well before Robo's weekly review rhythm; late enough that the
+    # well before Robert's weekly review rhythm; late enough that the
     # day's override stream has settled.
     - cron: "0 6 * * *"
   workflow_dispatch:

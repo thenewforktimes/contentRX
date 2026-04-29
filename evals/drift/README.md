@@ -1,6 +1,6 @@
 # Quarterly self-drift check
 
-Human-eval build plan Session 7. Measures Cohen's κ between past-Robo
+Human-eval build plan Session 7. Measures Cohen's κ between past-Robert
 verdicts and a fresh blind re-labeling pass on the same cases, quarterly.
 The resulting **measured ceiling** is the single most important number
 in the graduation ladder — Session 10's thresholds are expressed as
@@ -28,7 +28,7 @@ year's labeled data?") on a larger sample.
                      review surface (Session 8's queue UI will
                      consume this directly).
 
-3.  re-label         Robo re-labels blind. Output must have the
+3.  re-label         Robert re-labels blind. Output must have the
                      shape {entries: [{case_id, human_verdict,
                      human_confidence}, ...]}.
 
@@ -49,7 +49,7 @@ year's labeled data?") on a larger sample.
 # Build this quarter's panel from the private corpus.
 python3 tools/drift_check.py build-panel
 
-# Export the blind re-labeling file for Robo.
+# Export the blind re-labeling file for Robert.
 python3 tools/drift_check.py export-blind \
     --panel evals/drift/panels/2026-q2.json \
     --out   /tmp/drift-blind.json
@@ -135,11 +135,11 @@ It keeps:
 
 - `case_id`, `source_file` (for reference back)
 - `text` (the actual content to re-label)
-- `content_type`, `moment`, `standard_id` (the context Robo had the
+- `content_type`, `moment`, `standard_id` (the context Robert had the
   first time — stripping these would change the task, not just the
   bias)
 
-This way Robo's re-labeling task matches the original task shape but
+This way Robert's re-labeling task matches the original task shape but
 without the anchoring effect of seeing the past verdict.
 
 ## Schema: panel file
@@ -225,6 +225,6 @@ refinement log.
 ## Scheduling
 
 No cron yet. Plan-spec is quarterly; today the cadence is manual —
-Robo runs the three commands above at the start of each quarter. A
+Robert runs the three commands above at the start of each quarter. A
 GH Actions cron that opens a "drift panel ready" issue at the
 quarter boundary is a good future addition but not blocking.

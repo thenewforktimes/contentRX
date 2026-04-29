@@ -418,7 +418,7 @@ function monthResetISO(): string {
 
 function warningThreshold(_plan: "free" | "pro" | "team", quota: number): number {
   // 2026-04-27: aligned the email + dashboard at 80% used (= 20%
-  // remaining). Robo's call: gentle nudge as the customer approaches
+  // remaining). Robert's call: gentle nudge as the customer approaches
   // the cap, same threshold across plans for consistency. Floor at 1
   // so tiny quotas (test fixtures, downgrades) still emit at least one
   // warning email before the wall.

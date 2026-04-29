@@ -140,7 +140,7 @@ VALID_REVIEW_REASONS = frozenset({
 # situation_ambiguity (upstream moment routing). The two LLM passes —
 # scan and validate — are the first-pass ensemble; disagreement between
 # them signals either a prompt-layer issue or a content_type_notes gap,
-# both worth Robo's attention before lower-signal review reasons fire.
+# both worth Robert's attention before lower-signal review reasons fire.
 REVIEW_REASON_PRECEDENCE: tuple[str, ...] = (
     REVIEW_STANDARDS_CONFLICT,
     REVIEW_ENSEMBLE_DISAGREEMENT,
@@ -310,7 +310,7 @@ class Violation:
     # v1.6.0 addition (human-eval build plan Session 13): when this
     # Violation was proposed by scan but REJECTED by validate, the
     # rejection reasoning from validate lands here. Survives to the
-    # review queue so Robo can see scan's + validate's reasoning
+    # review queue so Robert can see scan's + validate's reasoning
     # side-by-side. None on confirmed violations (validate agreed,
     # there's nothing to disagree about) and on preprocessor-source
     # violations (no LLM second pass).
@@ -502,7 +502,7 @@ VALID_HOPS = frozenset({
 class RationaleHop:
     """One hop in the pipeline's reasoning chain.
 
-    When Robo (or any reviewer) sees a wrong verdict, the rationale chain
+    When Robert (or any reviewer) sees a wrong verdict, the rationale chain
     lets them pinpoint which hop went sideways without re-running the
     pipeline. Every hop captures a compact summary of its inputs, output,
     and the rule versions it consulted.
@@ -664,7 +664,7 @@ def derive_verdict(
     Note: review signals can flip the verdict to `review_recommended`
     even when `violations` is empty. Session 13 specifically: a
     validate-rejection with nothing surviving is still the ensemble
-    disagreeing with itself — Robo reviews regardless.
+    disagreeing with itself — Robert reviews regardless.
 
     Carve-out (v4.7.1): `situation_ambiguity` is uniquely weak among
     review signals — it just means "moment classifier confidence < 0.6,"

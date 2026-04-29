@@ -33,7 +33,7 @@ const SECTION_ORDER: Array<{
     status: "open",
     title: "Open",
     description:
-      "Refinement candidates Robo has triaged manually. Verdicts pending.",
+      "Refinement candidates Robert has triaged manually. Verdicts pending.",
     empty: "No open refinements.",
   },
   {

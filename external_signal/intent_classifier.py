@@ -1,7 +1,7 @@
 """Commit-message intent classifier — human-eval build plan Session 18.
 
 Tags each mined commit with one of six intent categories to prioritize
-Robo's review. Pure regex — the plan spec allows a fine-tuned
+Robert's review. Pure regex — the plan spec allows a fine-tuned
 sentence-transformer but commit messages have strong enough structure
 that regex carries the 80th-percentile case cleanly, and regex is
 deterministic + debuggable without an ML stack.
@@ -22,7 +22,7 @@ Intent → triage_category mapping (documented, not enforced):
     tone_shift       → `missing_standard`  (may point at a VT gap)
     restructure      → `context_gap`       (something larger is at play)
     i18n_motivated   → TRN-* family        (translation-readiness standards)
-    unknown          → no guidance; Robo reviews without prior
+    unknown          → no guidance; Robert reviews without prior
 
 Usage:
     from external_signal.intent_classifier import classify_intent
@@ -164,12 +164,12 @@ def classify_intent(message: str) -> IntentCategory:
 # Intent → triage_category mapping
 # ---------------------------------------------------------------------------
 
-# This is a reference table for Robo's review, NOT enforced. The plan
+# This is a reference table for Robert's review, NOT enforced. The plan
 # spec is explicit: "The mapping is documented, not enforced — the
-# intent is to give Robo a lens into what kind of signal each external
+# intent is to give Robert a lens into what kind of signal each external
 # pair represents."
 #
-# Robo's review reconciles each pair's actual triage_category based
+# Robert's review reconciles each pair's actual triage_category based
 # on inspection; this prior just gives the queue a reasonable starting
 # sort.
 INTENT_TO_TRIAGE: dict[IntentCategory, str] = {

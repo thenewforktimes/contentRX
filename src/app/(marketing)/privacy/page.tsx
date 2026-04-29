@@ -7,7 +7,7 @@
  * to us." If something matters less than the words around it, it
  * doesn't need to be here.
  *
- * Voice note for Robo: this is a starter draft. Have a lawyer review
+ * Voice note for Robert: this is a starter draft. Have a lawyer review
  * before paid customers land — especially the data-rights section
  * and the subprocessor list (which must match exactly what you've
  * actually contracted with).

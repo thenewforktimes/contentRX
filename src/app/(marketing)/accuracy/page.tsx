@@ -61,12 +61,12 @@ export default function AccuracyPage() {
       <section className="grid gap-4 sm:grid-cols-3">
         <MetricBlock
           label="Measured system κ"
-          sublabel="System vs Robo&apos;s held-out golden verdicts"
+          sublabel="System vs Robert&apos;s held-out golden verdicts"
           kappa={snap.measured_system}
         />
         <MetricBlock
           label="Measured self-drift κ"
-          sublabel="Robo vs past-Robo (quarterly blind re-label)"
+          sublabel="Robert vs past-Robert (quarterly blind re-label)"
           kappa={snap.measured_self_drift}
         />
         <MetricBlock
@@ -88,20 +88,23 @@ export default function AccuracyPage() {
         <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
           ContentRX evaluates against {snap.standards_total} standards. As
           standards accumulate enough labelled data, they graduate up the
-          ladder from <code className="font-mono">robo_labels</code> (every
-          verdict reviewed) to <code className="font-mono">batch_approval</code>{" "}
-          (sampled review) to <code className="font-mono">autonomous</code>{" "}
-          (no per-verdict review). Per-standard measurements are kept
-          internal. The page is a calibration surface, not a rule
-          catalogue.
+          ladder: every verdict reviewed → sampled review → no per-verdict
+          review. Per-standard measurements are kept internal. The page is
+          a calibration surface, not a rule catalogue.
         </p>
         <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
-          <LadderCell label="robo_labels" count={snap.by_level.robo_labels} />
           <LadderCell
-            label="batch_approval"
+            label="Every verdict reviewed"
+            count={snap.by_level.robo_labels}
+          />
+          <LadderCell
+            label="Sampled review"
             count={snap.by_level.batch_approval}
           />
-          <LadderCell label="autonomous" count={snap.by_level.autonomous} />
+          <LadderCell
+            label="No per-verdict review"
+            count={snap.by_level.autonomous}
+          />
         </dl>
         <p className="mt-3 text-xs text-stone-500">
           {snap.standards_measured} of {snap.standards_total} standards have
@@ -113,13 +116,13 @@ export default function AccuracyPage() {
         <h2 className="text-lg font-semibold">How these numbers come to be</h2>
         <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
           Each weekday the engine evaluates strings against the standards
-          library and a held-out golden set Robo maintains. The measured
+          library and a held-out golden set Robert maintains. The measured
           system κ is the agreement between what the engine says and what
-          Robo would say on the same input. The self-drift κ is the
-          agreement between Robo and a past version of Robo on the same
-          panel: the expert ceiling, since the system can&apos;t exceed
-          the labeller&apos;s agreement with themselves. The 0.90 design
-          target is a stated assumption, not a measurement.
+          Robert would say on the same input. The self-drift κ is the
+          agreement between Robert and a past version of Robert on the
+          same panel: the expert ceiling, since the system can&apos;t
+          exceed the labeller&apos;s agreement with themselves. The 0.90
+          design target is a stated assumption, not a measurement.
         </p>
         <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           Pending cells render as &ldquo;pending&rdquo;: never zero, never

@@ -16,7 +16,7 @@ situation, weighed the moment, and reached a decision. Not like a
 chatbot offering you options.
 
 The product's value is **informed content-design judgment**. That's
-Robo's role, baked into the model. Every string we ship has to feel
+Robert's role, baked into the model. Every string we ship has to feel
 like that judgment showed up.
 
 ### Five rules
@@ -122,7 +122,7 @@ a daily review rhythm. Don't soften /admin.
 
 **Marketing prose is owned by its page file.** Landing copy, /pricing
 hero, /about, /ethics, /privacy, /security, /sources, /accuracy,
-/calibration. These stay in their files. The voice is Robo's. This
+/calibration. These stay in their files. The voice is Robert's. This
 doc covers the load-bearing vocabulary, not the narrative.
 
 ## Engine output
@@ -395,7 +395,7 @@ Rules of thumb, not strings.
 ## What this doc isn't
 
 - A style guide for marketing prose. The landing page, /about, /ethics,
-  /pricing, /privacy stay in their page files. Voice is Robo's. This
+  /pricing, /privacy stay in their page files. Voice is Robert's. This
   doc covers vocabulary, not narrative.
 - A list of every error message in the app. Only the patterns and the
   recurring phrases.

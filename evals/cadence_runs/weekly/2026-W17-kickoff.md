@@ -1,6 +1,6 @@
 # Weekly review — 2026-W17 (kickoff cycle)
 
-**Reviewer:** Robo (instrumentation kickoff)
+**Reviewer:** Robert (instrumentation kickoff)
 **Completed:** 2026-04-24
 **Target window:** 2026-04-20 to 2026-04-24
 

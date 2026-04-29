@@ -30,7 +30,7 @@ LIBRARY_PATH = Path("src/content_checker/standards/standards_library.json")
 #     public style guides explicitly codify.
 #   - Attribution names the systems whose PUBLIC documentation clearly
 #     states the same principle.
-#   - Uncertain mappings are OMITTED here — Robo's review pass fills
+#   - Uncertain mappings are OMITTED here — Robert's review pass fills
 #     them based on his reading.
 #
 # Sources use short canonical names matching the examples corpus.
@@ -136,7 +136,7 @@ def main() -> int:
     print(
         "\nNOTE: This patch is intentionally conservative. Standards that "
         "would need single-system attribution or domain-specific judgment "
-        "are left alone for Robo's review pass."
+        "are left alone for Robert's review pass."
     )
     return 0
 
