@@ -645,6 +645,60 @@ The API surface is versioned via the `schema_version` field in every
 response envelope. Following semver; minor = additive, major =
 breaking. See `docs/API_VERSIONING.md`.
 
+### Phase 1 — Suggestion calibration substrate + customer UX (2026-04-29)
+
+Phase 1 of the suggestion calibration plan landed across 6 PRs.
+See [decisions/2026-04-29-suggestion-calibration-and-customer-ux.md](decisions/2026-04-29-suggestion-calibration-and-customer-ux.md)
+for the load-bearing rationale.
+
+**Customer-facing language pattern (ADR §9):**
+- `humanizeVerdict()` / `humanizeSeverity()` added to `src/lib/humanize.ts`.
+  All customer surfaces render *"All clear" / "Worth a look" /
+  "N findings to adjust"* and *"Worth adjusting" / "Quick polish" /
+  "Don't ship"* — the substrate enums (`pass`, `violation`, `high`,
+  `medium`, `low`) are render-internal and stay in API + DB.
+- Color rule locked: red is reserved for ship-blockers only.
+- New `no-violation-customer-word` lint rule blocks merge if the word
+  "Violation"/"Violations" appears in a customer-surface path.
+
+**Customer dashboard actions on each finding card:**
+- **Copy suggestion** with `cx-suggestion-copied` window event for
+  Block 3a's listener.
+- **Adjust** modal with two checkable dimensions (verdict and/or
+  suggestion). Writes to `violation_overrides` (verdict) and
+  `suggestion_candidates` (rewrite). Default-OFF
+  *"Help calibrate the ContentRX model"* opt-in checkbox.
+- **Make a rule** modal (Team plan) writing to `team_custom_examples`
+  with `verdict=pass` to short-circuit the same string on future
+  checks. Free/Pro see a styled upsell to `/pricing#team`.
+- Adjust → Make a rule escalation hand-off after a
+  verdict-disagreement save.
+
+**API surface additions:**
+- New `POST /api/violations/adjust` endpoint. Server-side substrate
+  correlation against `violations` recovers `(moment, content_type,
+  standard_id)` so the customer browser never sees substrate.
+- `/api/team-custom-examples` re-used unchanged.
+
+**Schema changes (db:push applied 2026-04-29):**
+- New `suggestion_candidates` table — substrate side of the two-tier
+  (CANDIDATES → PRECEDENTS) signal architecture from ADR §1.
+- Indexes: bucket+status (admin queue hot path), team scope, user FK,
+  created_at.
+
+**Cross-surface humanize wave (Block 1e):**
+- `humanize.py` (or inline `humanizeSeverity()` in JS) added to CLI,
+  GitHub Action, LSP server, MCP server, and Figma plugin. Every
+  surface now renders the same labels via the same logic.
+- MCP response gains `verdict_label` + per-violation `severity_label`
+  alongside the raw enums. Backward compatible.
+- LSP `LspDiagnostic.code` is the humanized severity (was leaking
+  raw "HIGH"/"MEDIUM"/"LOW" inline in the editor).
+
+PRs: [#253](../../pull/253) (ADR), [#254](../../pull/254) (1a),
+[#255](../../pull/255) (1b), [#256](../../pull/256) (1c),
+[#257](../../pull/257) (1d), [#258](../../pull/258) (1e).
+
 ### schema 1.1.0 — 2026-04-22 (PR #29)
 
 - Added: `verdict`, `confidence`, `review_reason` on every violation
