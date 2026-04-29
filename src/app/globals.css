@@ -24,3 +24,31 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+/* HowItWorksDiagram — three-dot "thinking" animation in the
+   Review stage. Defined here so the keyframe is registered globally;
+   the component applies it via the `.thinking-dot` class. */
+@keyframes thinking-pulse {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.thinking-dot {
+  animation: thinking-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Stop the dots if the viewer asked us to. The diagram's stage
+     cycle is also disabled via React state in
+     src/components/how-it-works-diagram.tsx; this is belt-to-
+     suspenders for the dot pulse. */
+  .thinking-dot {
+    animation: none;
+  }
+}

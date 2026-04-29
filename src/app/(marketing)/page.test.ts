@@ -49,21 +49,25 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(visible).toMatch(/in every repo/i);
   });
 
-  it("frames the wedge as a style guide you don't have to update", () => {
-    // The "situation-aware" term stays as a load-bearing concept;
-    // the customer-facing reframe is "style guide you don't have
-    // to update" plus "voice in the room when you don't have a
-    // content designer at the table."
-    expect(visible).toMatch(/style guide/i);
-    expect(visible).toMatch(/voice in the room/i);
-  });
-
   it("calls out the model around the model with the diagram", () => {
     // The how-it-works section visualises the pipeline. The
     // <HowItWorksDiagram /> import + render are the structural
     // gate against accidentally dropping the diagram.
     expect(source).toContain("HowItWorksDiagram");
     expect(visible).toMatch(/the model around the model/i);
+  });
+
+  it("closes with three value-prop cards", () => {
+    // The "Why it works" section is the closer. Three load-bearing
+    // value props per Robert's 2026-04-29 IA refresh:
+    //   1. Calibrated judgment
+    //   2. Style guides we maintain
+    //   3. Custom rules in the moment
+    // If a future edit drops one of these labels, the closer goes
+    // soft.
+    expect(visible).toMatch(/calibrated judgment/i);
+    expect(visible).toMatch(/style guides we maintain/i);
+    expect(visible).toMatch(/custom rules in the moment/i);
   });
 
   it("names the four orgs in the founder credit (Intuit, Meta, Opendoor, PayPal)", () => {

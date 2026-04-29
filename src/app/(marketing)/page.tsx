@@ -1,33 +1,20 @@
 /**
- * Landing page — 2026-04-29 rewrite.
+ * Landing page — 2026-04-29 IA refresh.
  *
- * Robert's brief (the previous landing's failure modes):
- *   - "Content model for product copy" was narrowing the market
- *     more than it was helping. The brand promise is staff-level
- *     content design review, in every repo.
- *   - The destructive-confirmation / error-message examples were
- *     the kind of thing a style guide would cover, so they didn't
- *     land as differentiators.
- *   - The "judgment calls, not rule books" frame implicitly
- *     disrespected style guides. The real story is that
- *     ContentRX takes the work of managing and enforcing the
- *     rules out of the human's hands, not that the rules don't
- *     matter.
- *   - The Grammarly contrast and Stripe Radar frame were earning
- *     no real estate. Cut.
- *   - "Built by a content designer" needed the org callouts —
- *     Intuit, Meta, Opendoor, PayPal — to anchor the named-expert
- *     positioning.
+ * Robert's brief on this pass: the animated diagram is doing the
+ * work of "what it does" + "why it works" combined, so those
+ * sections come out. Surfaces and the founder credit move up
+ * (they're concrete, they confirm legitimacy fast). Why it works
+ * comes back at the end, but tightened to three value props that
+ * say what the product is great at: calibrated judgment, less
+ * style/voice/ruleset maintenance, and custom rules in the moment.
  *
- * New section order:
- *   1. Hero — the brand promise, in the headline.
- *   2. What it does — situation-aware review framed as "the
- *      style guide you don't have to update."
- *   3. Why it works — the work without the maintenance.
- *   4. How it works — animated five-stage pipeline diagram.
- *      The model around the model is the moat in visual form.
- *   5. Where it runs — surfaces, condensed.
- *   6. Built by — Robert Ballard, with the org arc.
+ * Section order:
+ *   1. Hero — the brand promise.
+ *   2. How it works — animated pipeline carries the explanation.
+ *   3. Where it runs — surfaces.
+ *   4. Built by — Robert Ballard, with the org arc.
+ *   5. Why it works — three value-prop cards. Closer, not opener.
  *
  * Voice: per docs/copy-vocabulary.md. Calm, confident, charming.
  * No em dashes. Names the actor. Doesn't blame the reader. Points
@@ -84,90 +71,19 @@ export default function Home() {
       </header>
 
       <Section
-        eyebrow="What it does"
-        title="A style guide you don't have to update."
-      >
-        <p>
-          Style guides go stale. Voice docs live in a Notion that no
-          one can find. The judgment calls about how your product
-          should sound are real, and they matter, but they don&apos;t
-          show up in the moment you need them. Not at 4pm on Friday
-          when you&apos;re typing a button label.
-        </p>
-        <p className="mt-3">
-          ContentRX is the content design voice in the room when you
-          don&apos;t have a content designer at the table. It reads
-          what you wrote, recognises the moment you&apos;re writing
-          for, and applies the standards that match. The same sentence
-          reads differently in a destructive confirmation than on a
-          marketing page. ContentRX knows which one you&apos;re in.
-        </p>
-      </Section>
-
-      <Section
-        eyebrow="Why it works"
-        title="The work without the maintenance."
-      >
-        <p>
-          Style guides exist for good reason. The rules are real:
-          don&apos;t blame the user, name the consequence in a
-          destructive confirmation, write CTAs as action verbs. None
-          of this is news. The problem has never been that the rules
-          don&apos;t exist. The problem is keeping them current,
-          finding them when you&apos;re shipping, and applying them
-          consistently across everyone writing strings. Engineers,
-          PMs, content designers, the LLM that just drafted the
-          first pass.
-        </p>
-        <p className="mt-3">
-          ContentRX bakes the rules into the workflow. By the time
-          you finish typing an error message, ContentRX has read
-          every error message in your repo and knows which voice
-          you ship in. Every verdict carries a rationale chain so
-          you can see the read.
-        </p>
-        <p className="mt-3">
-          And because the model is the product, the model is
-          accountable. Measured accuracy lives at{" "}
-          <Link href="/accuracy" className="underline underline-offset-2">
-            /accuracy
-          </Link>
-          . Drift gets reported in the weekly{" "}
-          <Link
-            href="/calibration"
-            className="underline underline-offset-2"
-          >
-            /calibration
-          </Link>
-          {" "}log.
-        </p>
-      </Section>
-
-      <Section
         eyebrow="How it works"
         title="The model around the model."
       >
         <p>
           ContentRX isn&apos;t an LLM with a prompt. It&apos;s a
           content-design pipeline that gives the LLM the context it
-          needs to render a real judgment. The classifier reads the
-          moment. The filter narrows the standards down to the ones
-          that apply. The reviewer evaluates against those standards
-          with patterns built over years of practice. The validator
-          checks the work. The merger compresses everything into a
-          single envelope: issue, suggestion, severity, confidence.
+          needs to render a real judgment.
         </p>
         <HowItWorksDiagram />
       </Section>
 
       <Section eyebrow="Where it runs" title="Where you ship copy.">
-        <p>
-          Content review is moving upstream. PRs carry more strings
-          than design files. LLMs draft the first pass before a
-          content designer sees it. ContentRX leads with the
-          surfaces where copy gets written today.
-        </p>
-        <ul className="mt-4 ml-5 list-disc space-y-2">
+        <ul className="mt-1 ml-5 list-disc space-y-2">
           <li>
             <strong>MCP server</strong> for Claude Code, Cursor, and
             any MCP client. Inline review during generation, not
@@ -242,6 +158,48 @@ export default function Home() {
           </Link>
           {" "}page for the longer story.
         </p>
+      </Section>
+
+      <Section eyebrow="Why it works" title="What ContentRX is great at.">
+        <ul className="mt-2 grid gap-4 sm:grid-cols-3 sm:gap-3">
+          <li className="rounded-lg border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-950">
+            <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+              Calibrated judgment.
+            </p>
+            <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">
+              Content design discretion that&apos;s measured against
+              a held-out golden set, with a published kappa and a
+              95% confidence interval.{" "}
+              <Link
+                href="/accuracy"
+                className="underline underline-offset-2"
+              >
+                See the numbers
+              </Link>
+              .
+            </p>
+          </li>
+          <li className="rounded-lg border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-950">
+            <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+              Style guides we maintain.
+            </p>
+            <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">
+              Stop chasing voice docs and ruleset PDFs. ContentRX
+              holds the standards, watches the moment, and applies
+              them where you&apos;re shipping copy.
+            </p>
+          </li>
+          <li className="rounded-lg border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-950">
+            <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+              Custom rules in the moment.
+            </p>
+            <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">
+              Adjust ContentRX&apos;s recommendations with your
+              team&apos;s own rules. No retraining, no pipeline
+              changes, no waiting on a release.
+            </p>
+          </li>
+        </ul>
       </Section>
     </main>
   );
