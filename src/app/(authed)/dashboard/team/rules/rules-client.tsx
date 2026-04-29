@@ -16,6 +16,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertDialog } from "@/components/alert-dialog";
+import { Pill } from "@/components/ui/pill";
 import type { CategorySummary } from "@/lib/standards";
 
 export type TeamRule = {
@@ -315,11 +316,7 @@ function StandardRow({
           <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs dark:bg-stone-900">
             {standardId}
           </code>
-          {isDisabled && (
-            <span className="rounded bg-stone-200 px-1.5 py-0.5 text-[10px] font-medium uppercase text-stone-700 dark:bg-stone-800 dark:text-stone-300">
-              disabled
-            </span>
-          )}
+          {isDisabled && <Pill tone="stone">Disabled</Pill>}
         </div>
         <p
           className={`mt-1 text-xs ${

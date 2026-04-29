@@ -10,6 +10,7 @@
  */
 
 import { useState } from "react";
+import { Pill, type PillTone } from "@/components/ui/pill";
 import type { Plan } from "@/lib/quotas";
 
 // Hosts we will redirect the browser to. Any `url` field returned by
@@ -214,10 +215,10 @@ function PaidCard({
   }
 
   const planLabel = plan === "pro" ? "Pro" : `Team (${seats} seats)`;
-  const statusLabel =
-    subscriptionStatus && subscriptionStatus !== "active"
-      ? ` · ${humanizeStatus(subscriptionStatus)}`
-      : "";
+  const visibleStatus =
+    subscriptionStatus !== null && subscriptionStatus !== "active"
+      ? subscriptionStatus
+      : null;
 
   return (
     <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
@@ -227,9 +228,13 @@ function PaidCard({
           Billing handled by Stripe
         </span>
       </header>
-      <p className="mb-1 text-sm">
+      <p className="mb-1 flex flex-wrap items-center gap-2 text-sm">
         <span className="font-medium">{planLabel}</span>
-        <span className="text-stone-500">{statusLabel}</span>
+        {visibleStatus && (
+          <Pill tone={statusTone(visibleStatus)}>
+            {humanizeStatus(visibleStatus)}
+          </Pill>
+        )}
       </p>
       {currentPeriodEnd && (
         <p className="mb-3 text-xs text-stone-500">
@@ -350,5 +355,21 @@ function humanizeStatus(status: string): string {
       return "Paused";
     default:
       return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+}
+
+// Map Stripe lifecycle status to a Pill tone. Trialing reads as "worth
+// a look" (amber); anything in failed-payment territory is red; the
+// rest fall back to neutral.
+function statusTone(status: string): PillTone {
+  switch (status) {
+    case "trialing":
+      return "amber";
+    case "past_due":
+    case "unpaid":
+    case "incomplete_expired":
+      return "red";
+    default:
+      return "neutral";
   }
 }
