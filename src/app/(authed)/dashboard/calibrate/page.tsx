@@ -33,7 +33,7 @@ export default async function CalibratePage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-neutral-200 p-6 text-sm dark:border-neutral-800">
+      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -54,9 +54,9 @@ export default async function CalibratePage() {
 
   if (!gate.eligible) {
     return (
-      <section className="flex flex-col gap-4 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
+      <section className="flex flex-col gap-4 rounded-lg border border-stone-200 p-6 dark:border-stone-800">
         <header>
-          <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+          <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
             Calibration · help shape ContentRX
           </p>
           <h1 className="mt-2 text-2xl font-semibold">
@@ -65,7 +65,7 @@ export default async function CalibratePage() {
               : "You&apos;ve already helped this week. Thank you."}
           </h1>
         </header>
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
           {gate.reason === "opted_out"
             ? "Calibration prompts are a 60-second pairwise preference check, once a week. They feed the human-judgment signal behind the content model. You can opt back in whenever you want."
             : "Pairwise preference prompts surface once every 7 days. We don&apos;t want to make calibration a chore. Come back next week."}
@@ -85,14 +85,14 @@ export default async function CalibratePage() {
             */}
             <Link
               href="/dashboard"
-              className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+              className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
             >
               Back to dashboard
             </Link>
           </form>
         )}
         {"nextEligibleAt" in gate && gate.nextEligibleAt && (
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-stone-500">
             Next prompt available:{" "}
             <span className="font-mono">
               {gate.nextEligibleAt.toLocaleString()}
@@ -145,22 +145,22 @@ export default async function CalibratePage() {
 
   if (picked.length === 0) {
     return (
-      <section className="flex flex-col gap-4 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
+      <section className="flex flex-col gap-4 rounded-lg border border-stone-200 p-6 dark:border-stone-800">
         <header>
-          <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+          <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
             Calibration
           </p>
           <h1 className="mt-2 text-2xl font-semibold">
             You&apos;ve answered every pair in the current pool.
           </h1>
         </header>
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
           We&apos;ll add fresh pairs as the taxonomy evolves. Come back in a
           few weeks.
         </p>
         <Link
           href="/dashboard"
-          className="w-max rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          className="w-max rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
         >
           Back to dashboard
         </Link>
@@ -171,13 +171,13 @@ export default async function CalibratePage() {
   return (
     <section className="flex flex-col gap-6">
       <header>
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
           Calibration · 60 seconds
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
           Which of these reads better?
         </h1>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">
           {PAIRS_PER_SESSION} pairs, one minute. Your picks feed the
           human-judgment signal behind ContentRX&apos;s content model.
           Pick the side that reads better for the context, or{" "}
@@ -197,7 +197,7 @@ export default async function CalibratePage() {
           prompt: p.prompt,
         }))}
       />
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-stone-500">
         Not into this right now?{" "}
         <OptOutButton />
       </p>
@@ -209,7 +209,7 @@ function OptOutButton() {
   return (
     <button
       form="calibrate-opt-out"
-      className="underline underline-offset-2 hover:text-neutral-900 dark:hover:text-neutral-100"
+      className="underline underline-offset-2 hover:text-stone-900 dark:hover:text-stone-100"
       formAction="/api/preferences/opt-out"
       formMethod="post"
     >

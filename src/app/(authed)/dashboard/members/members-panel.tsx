@@ -79,9 +79,9 @@ export function MembersPanel({
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+      <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
         <h2 className="text-sm font-semibold">Invite a teammate</h2>
-        <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-300">
+        <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
           They&apos;ll get an email with a link that&apos;s good for 7 days.
           {seatsAvailable === 0 && (
             <>
@@ -98,12 +98,12 @@ export function MembersPanel({
             placeholder="teammate@example.com"
             required
             disabled={state === "submitting" || seatsAvailable === 0}
-            className="flex-1 min-w-[240px] rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+            className="flex-1 min-w-[240px] rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
           />
           <button
             type="submit"
             disabled={state === "submitting" || seatsAvailable === 0 || !email.trim()}
-            className="rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
+            className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
           >
             {state === "submitting" ? "Sending…" : "Send invite"}
           </button>
@@ -130,11 +130,11 @@ export function MembersPanel({
             {pendingInvitations.map((p) => (
               <li
                 key={p.id}
-                className="flex items-center justify-between gap-4 rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-800"
+                className="flex items-center justify-between gap-4 rounded-md border border-stone-200 p-3 text-sm dark:border-stone-800"
               >
                 <div>
                   <p className="font-medium">{p.email}</p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-stone-500">
                     Sent {formatDate(p.createdAt)} · expires{" "}
                     {formatDate(p.expiresAt)}
                   </p>
@@ -143,7 +143,7 @@ export function MembersPanel({
                   type="button"
                   onClick={() => onRevoke(p.id)}
                   disabled={revokingId === p.id}
-                  className="shrink-0 rounded-md border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+                  className="shrink-0 rounded-md border border-stone-300 px-2 py-1 text-xs hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-900"
                 >
                   {revokingId === p.id ? "Revoking…" : "Revoke"}
                 </button>
@@ -159,19 +159,19 @@ export function MembersPanel({
           {members.map((m) => (
             <li
               key={m.userId}
-              className="flex items-center justify-between gap-4 rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-800"
+              className="flex items-center justify-between gap-4 rounded-md border border-stone-200 p-3 text-sm dark:border-stone-800"
             >
               <div>
                 <p className="font-medium">
                   {m.email}
                   {m.isOwner && (
-                    <span className="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                    <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-stone-700 dark:bg-stone-800 dark:text-stone-300">
                       owner
                     </span>
                   )}
                 </p>
                 {!m.isOwner && (
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-stone-500">
                     Joined {formatDate(m.joinedAt)}
                   </p>
                 )}

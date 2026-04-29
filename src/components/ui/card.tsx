@@ -18,9 +18,9 @@ export type CardPadding = "sm" | "md" | "lg";
 
 const variantClasses: Record<CardVariant, string> = {
   default:
-    "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950",
+    "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950",
   emphasis:
-    "border-neutral-300 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900",
+    "border-stone-300 bg-stone-50 dark:border-stone-700 dark:bg-stone-900",
 };
 
 const paddingClasses: Record<CardPadding, string> = {

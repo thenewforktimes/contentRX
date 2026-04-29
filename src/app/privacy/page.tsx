@@ -33,11 +33,11 @@ export default function PrivacyPage() {
       <header className="mb-12">
         <Eyebrow>Privacy</Eyebrow>
         <h1 className="mt-3 text-3xl font-semibold">Privacy policy</h1>
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-500 dark:text-stone-400">
           Effective <time>{EFFECTIVE_DATE}</time>. Material changes get
           a new effective date and a note in the changelog.
         </p>
-        <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
+        <p className="mt-4 text-lg text-stone-700 dark:text-stone-300">
           ContentRX is a content-design review tool. To do that job,
           we have to receive the strings you check, run them through
           our evaluation engine (which uses Anthropic&apos;s Claude
@@ -171,13 +171,13 @@ export default function PrivacyPage() {
         </p>
         <table className="mt-4 w-full text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800">
+            <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500 dark:border-stone-800">
               <th className="py-2 pr-4">Subprocessor</th>
               <th className="py-2 pr-4">Purpose</th>
               <th className="py-2">Data they see</th>
             </tr>
           </thead>
-          <tbody className="text-neutral-700 dark:text-neutral-300">
+          <tbody className="text-stone-700 dark:text-stone-300">
             <SubprocessorRow
               name="Anthropic"
               purpose="LLM evaluation"
@@ -400,8 +400,8 @@ function SubprocessorRow({
   data: string;
 }) {
   return (
-    <tr className="border-b border-neutral-100 align-top dark:border-neutral-900">
-      <td className="py-3 pr-4 font-medium text-neutral-900 dark:text-neutral-100">
+    <tr className="border-b border-stone-100 align-top dark:border-stone-900">
+      <td className="py-3 pr-4 font-medium text-stone-900 dark:text-stone-100">
         {name}
       </td>
       <td className="py-3 pr-4 text-xs">{purpose}</td>

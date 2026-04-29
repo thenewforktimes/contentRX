@@ -110,10 +110,10 @@ function UpgradeCard() {
   }
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Upgrade</h2>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-stone-500">
           Billed monthly or annually. Cancel anytime.
         </span>
       </header>
@@ -143,7 +143,7 @@ function UpgradeCard() {
         <IntervalToggle value={interval} onChange={setInterval} />
         {selectedPlan === "team" && (
           <label className="flex items-center gap-2 text-sm">
-            <span className="text-neutral-600 dark:text-neutral-300">Seats</span>
+            <span className="text-stone-600 dark:text-stone-300">Seats</span>
             <input
               type="number"
               min={TEAM_MIN_SEATS}
@@ -152,7 +152,7 @@ function UpgradeCard() {
               onChange={(e) =>
                 setSeats(Math.max(TEAM_MIN_SEATS, Number(e.target.value) || TEAM_MIN_SEATS))
               }
-              className="w-20 rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              className="w-20 rounded-md border border-stone-300 bg-white px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-900"
             />
           </label>
         )}
@@ -168,7 +168,7 @@ function UpgradeCard() {
         type="button"
         onClick={submit}
         disabled={loading}
-        className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
+        className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
       >
         {loading ? "Redirecting to Stripe…" : "Continue to checkout"}
       </button>
@@ -220,19 +220,19 @@ function PaidCard({
       : "";
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Subscription</h2>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-stone-500">
           Billing handled by Stripe
         </span>
       </header>
       <p className="mb-1 text-sm">
         <span className="font-medium">{planLabel}</span>
-        <span className="text-neutral-500">{statusLabel}</span>
+        <span className="text-stone-500">{statusLabel}</span>
       </p>
       {currentPeriodEnd && (
-        <p className="mb-3 text-xs text-neutral-500">
+        <p className="mb-3 text-xs text-stone-500">
           Renews {formatDate(currentPeriodEnd)}
         </p>
       )}
@@ -245,7 +245,7 @@ function PaidCard({
         type="button"
         onClick={openPortal}
         disabled={loading}
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+        className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-900"
       >
         {loading ? "Redirecting to Stripe…" : "Manage subscription"}
       </button>
@@ -272,15 +272,15 @@ function PlanOption({
       onClick={onSelect}
       className={`flex flex-col rounded-md border p-3 text-left transition ${
         selected
-          ? "border-black bg-neutral-50 dark:border-white dark:bg-neutral-900"
-          : "border-neutral-200 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+          ? "border-black bg-stone-50 dark:border-white dark:bg-stone-900"
+          : "border-stone-200 hover:border-stone-400 dark:border-stone-800 dark:hover:border-stone-600"
       }`}
     >
       <div className="mb-1 flex items-baseline justify-between">
         <span className="text-sm font-semibold">{name}</span>
-        <span className="text-xs text-neutral-500">{price}</span>
+        <span className="text-xs text-stone-500">{price}</span>
       </div>
-      <p className="text-xs text-neutral-600 dark:text-neutral-300">
+      <p className="text-xs text-stone-600 dark:text-stone-300">
         {description}
       </p>
     </button>
@@ -298,7 +298,7 @@ function IntervalToggle({
     <div
       role="radiogroup"
       aria-label="Billing interval"
-      className="inline-flex rounded-md border border-neutral-200 p-0.5 dark:border-neutral-800"
+      className="inline-flex rounded-md border border-stone-200 p-0.5 dark:border-stone-800"
     >
       {(["monthly", "annual"] as Interval[]).map((opt) => (
         <button
@@ -310,7 +310,7 @@ function IntervalToggle({
           className={`rounded-[5px] px-3 py-1 text-xs font-medium transition ${
             value === opt
               ? "bg-black text-white dark:bg-white dark:text-black"
-              : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
+              : "text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100"
           }`}
         >
           {opt === "monthly" ? "Monthly" : "Annual"}

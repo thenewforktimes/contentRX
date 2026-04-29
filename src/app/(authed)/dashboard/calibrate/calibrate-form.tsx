@@ -70,7 +70,7 @@ export function CalibrateForm({ pairs }: { pairs: PairPublic[] }) {
     return (
       <section className="rounded-lg border border-emerald-300 bg-emerald-50 p-6 text-sm dark:border-emerald-800 dark:bg-emerald-950/40">
         <p className="font-semibold">Thank you.</p>
-        <p className="mt-1 text-neutral-700 dark:text-neutral-300">
+        <p className="mt-1 text-stone-700 dark:text-stone-300">
           Your picks land in the calibration set. The next prompt
           surfaces in seven days.
         </p>
@@ -83,10 +83,10 @@ export function CalibrateForm({ pairs }: { pairs: PairPublic[] }) {
       {pairs.map((p, i) => (
         <article
           key={p.pair_id}
-          className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800"
+          className="rounded-lg border border-stone-200 p-5 dark:border-stone-800"
         >
           <header className="mb-4">
-            <p className="text-xs font-mono uppercase tracking-widest text-neutral-500 dark:text-neutral-300">
+            <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-300">
               Pair {i + 1} of {pairs.length} · {p.moment} · {p.content_type}
             </p>
           </header>
@@ -114,7 +114,7 @@ export function CalibrateForm({ pairs }: { pairs: PairPublic[] }) {
               className={`text-xs underline-offset-2 ${
                 picks[p.pair_id] === "neither"
                   ? "font-semibold underline"
-                  : "text-neutral-500 hover:underline"
+                  : "text-stone-500 hover:underline"
               }`}
             >
               Neither reads well
@@ -129,7 +129,7 @@ export function CalibrateForm({ pairs }: { pairs: PairPublic[] }) {
                   [p.pair_id]: e.target.value.slice(0, 500),
                 }))
               }
-              className="flex-1 rounded-md border border-neutral-300 bg-transparent px-2 py-1 text-xs dark:border-neutral-700"
+              className="flex-1 rounded-md border border-stone-300 bg-transparent px-2 py-1 text-xs dark:border-stone-700"
             />
           </div>
         </article>
@@ -145,7 +145,7 @@ export function CalibrateForm({ pairs }: { pairs: PairPublic[] }) {
         type="button"
         disabled={!allAnswered || submitting}
         onClick={submit}
-        className="w-max rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-40 dark:bg-white dark:text-black"
+        className="w-max rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-40 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
       >
         {submitting ? "Submitting…" : "Submit picks"}
       </button>
@@ -170,11 +170,11 @@ function ChoiceCard({
       onClick={onClick}
       className={`flex flex-col items-start gap-2 rounded-md border p-3 text-left text-sm transition-colors ${
         selected
-          ? "border-black bg-neutral-100 dark:border-white dark:bg-neutral-900"
-          : "border-neutral-200 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+          ? "border-black bg-stone-100 dark:border-white dark:bg-stone-900"
+          : "border-stone-200 hover:border-stone-400 dark:border-stone-800 dark:hover:border-stone-600"
       }`}
     >
-      <span className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+      <span className="text-xs font-mono uppercase tracking-widest text-stone-500">
         {label}
       </span>
       <span className="whitespace-pre-wrap">{text}</span>

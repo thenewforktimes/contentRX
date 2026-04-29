@@ -37,7 +37,7 @@ export default async function StatusPage() {
         <h1 className="mt-3 text-3xl font-semibold">
           {report.ok ? "All systems operational" : "Degraded"}
         </h1>
-        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-500 dark:text-stone-400">
           Last checked{" "}
           <time dateTime={report.generatedAt}>
             {checkedAt.toLocaleString(undefined, {
@@ -61,9 +61,9 @@ export default async function StatusPage() {
         <CheckRow label="Rate limit / cache" check={report.checks.redis} />
       </ul>
 
-      <section className="mt-10 rounded-lg border border-neutral-200 p-5 text-sm dark:border-neutral-800">
+      <section className="mt-10 rounded-lg border border-stone-200 p-5 text-sm dark:border-stone-800">
         <h2 className="text-sm font-semibold">What this page covers</h2>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+        <p className="mt-2 text-stone-600 dark:text-stone-400">
           Database and Redis are the two pieces a slow page would point
           at first. The Anthropic-backed evaluation engine is health-
           checked implicitly. If <code>/api/check</code> returns
@@ -97,7 +97,7 @@ function CheckRow({ label, check }: { label: string; check: CheckResult }) {
         <span className="text-sm font-medium">{label}</span>
       </div>
       <div className="flex items-baseline gap-3 text-right">
-        <span className="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+        <span className="text-xs tabular-nums text-stone-500 dark:text-stone-400">
           {check.latencyMs} ms
         </span>
         <span

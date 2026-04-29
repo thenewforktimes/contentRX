@@ -170,7 +170,7 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
       )}
 
       {!isAdmin && (
-        <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="rounded-md border border-stone-200 bg-stone-50 p-3 text-sm dark:border-stone-800 dark:bg-stone-900">
           Read-only. Only the team owner can edit rules.
         </div>
       )}
@@ -309,14 +309,14 @@ function StandardRow({
   onDisable: () => void;
 }) {
   return (
-    <li className="flex items-start gap-3 rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
+    <li className="flex items-start gap-3 rounded-md border border-stone-200 p-3 dark:border-stone-800">
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs dark:bg-neutral-900">
+          <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs dark:bg-stone-900">
             {standardId}
           </code>
           {isDisabled && (
-            <span className="rounded bg-neutral-200 px-1.5 py-0.5 text-[10px] font-medium uppercase text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+            <span className="rounded bg-stone-200 px-1.5 py-0.5 text-[10px] font-medium uppercase text-stone-700 dark:bg-stone-800 dark:text-stone-300">
               disabled
             </span>
           )}
@@ -324,8 +324,8 @@ function StandardRow({
         <p
           className={`mt-1 text-xs ${
             isDisabled
-              ? "text-neutral-500 line-through dark:text-neutral-600"
-              : "text-neutral-600 dark:text-neutral-300"
+              ? "text-stone-500 line-through dark:text-stone-600"
+              : "text-stone-600 dark:text-stone-300"
           }`}
         >
           {rule}
@@ -337,7 +337,7 @@ function StandardRow({
             type="button"
             disabled={busy}
             onClick={isDisabled ? onEnable : onDisable}
-            className="rounded-md border border-neutral-300 px-2 py-1 text-xs font-medium hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            className="rounded-md border border-stone-300 px-2 py-1 text-xs font-medium hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-900"
           >
             {isDisabled ? "Enable" : "Disable"}
           </button>
@@ -377,10 +377,10 @@ function CustomRuleRow({
           </code>
           <span className="text-xs font-medium">{fields.title}</span>
         </div>
-        <p className="mt-1 text-xs text-neutral-700 dark:text-neutral-300">
+        <p className="mt-1 text-xs text-stone-700 dark:text-stone-300">
           {fields.rule}
         </p>
-        <p className="mt-1 font-mono text-[11px] text-neutral-500">
+        <p className="mt-1 font-mono text-[11px] text-stone-500">
           pattern: <code>{fields.pattern}</code>
         </p>
       </div>
@@ -474,7 +474,7 @@ function AddCustomRuleCard({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="self-start rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 dark:bg-white dark:text-black"
+        className="self-start rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
       >
         Add custom rule
       </button>
@@ -482,11 +482,11 @@ function AddCustomRuleCard({
   }
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
       <h2 className="mb-3 text-sm font-semibold">New custom rule</h2>
       <div className="flex flex-col gap-3">
         <label className="text-xs">
-          <span className="mb-1 block text-neutral-600 dark:text-neutral-300">
+          <span className="mb-1 block text-stone-600 dark:text-stone-300">
             Title
           </span>
           <input
@@ -494,11 +494,11 @@ function AddCustomRuleCard({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="No 'revolutionary'"
-            className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            className="w-full rounded-md border border-stone-300 bg-white px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-900"
           />
         </label>
         <label className="text-xs">
-          <span className="mb-1 block text-neutral-600 dark:text-neutral-300">
+          <span className="mb-1 block text-stone-600 dark:text-stone-300">
             Rule text (shown to anyone who trips this)
           </span>
           <textarea
@@ -506,11 +506,11 @@ function AddCustomRuleCard({
             value={rule}
             onChange={(e) => setRule(e.target.value)}
             placeholder="Avoid the word 'revolutionary'. Describe what's new and why instead."
-            className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            className="w-full rounded-md border border-stone-300 bg-white px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-900"
           />
         </label>
         <label className="text-xs">
-          <span className="mb-1 block text-neutral-600 dark:text-neutral-300">
+          <span className="mb-1 block text-stone-600 dark:text-stone-300">
             Regex pattern. Matched against the text being checked
           </span>
           <input
@@ -518,7 +518,7 @@ function AddCustomRuleCard({
             value={pattern}
             onChange={(e) => setPattern(e.target.value)}
             placeholder="\brevolutionary\b"
-            className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 font-mono text-xs dark:border-neutral-700 dark:bg-neutral-900"
+            className="w-full rounded-md border border-stone-300 bg-white px-2 py-1 font-mono text-xs dark:border-stone-700 dark:bg-stone-900"
           />
         </label>
         <div className="flex flex-wrap items-center gap-4 text-xs">
@@ -531,7 +531,7 @@ function AddCustomRuleCard({
             Case-insensitive
           </label>
           <label className="flex items-center gap-2">
-            <span className="text-neutral-600 dark:text-neutral-300">
+            <span className="text-stone-600 dark:text-stone-300">
               Severity
             </span>
             <select
@@ -539,7 +539,7 @@ function AddCustomRuleCard({
               onChange={(e) =>
                 setSeverity(e.target.value as "low" | "medium" | "high")
               }
-              className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+              className="rounded-md border border-stone-300 bg-white px-2 py-1 text-xs dark:border-stone-700 dark:bg-stone-900"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -552,14 +552,14 @@ function AddCustomRuleCard({
             type="button"
             disabled={busy || !title || !rule || !pattern}
             onClick={submit}
-            className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
+            className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
           >
             {busy ? "Saving…" : "Create rule"}
           </button>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
           >
             Cancel
           </button>

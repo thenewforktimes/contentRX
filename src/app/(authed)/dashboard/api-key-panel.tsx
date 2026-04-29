@@ -106,10 +106,10 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
   const hasKey = prefix !== null;
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold">API key</h2>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-stone-500">
           Used by the Figma plugin, CLI, and GitHub Action
         </span>
       </header>
@@ -120,13 +120,13 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
             Copy this key now. We won&apos;t show it again.
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 truncate rounded border border-amber-200 bg-white px-2 py-1 font-mono text-xs text-neutral-900 select-all dark:border-amber-800 dark:bg-neutral-900 dark:text-neutral-100">
+            <code className="flex-1 truncate rounded border border-amber-200 bg-white px-2 py-1 font-mono text-xs text-stone-900 select-all dark:border-amber-800 dark:bg-stone-900 dark:text-stone-100">
               {state.rawKey}
             </code>
             <button
               type="button"
               onClick={() => copyKey(state.rawKey)}
-              className="rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:bg-neutral-900 dark:text-amber-200 dark:hover:bg-neutral-800"
+              className="rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:bg-stone-900 dark:text-amber-200 dark:hover:bg-stone-800"
             >
               {copyState === "copied" ? "Copied" : "Copy"}
             </button>
@@ -151,11 +151,11 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       {hasKey ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <code className="rounded bg-neutral-100 px-2 py-1 font-mono text-xs text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">
+            <code className="rounded bg-stone-100 px-2 py-1 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">
               {prefix}…
             </code>
             {createdAt && (
-              <p className="mt-1 text-xs text-neutral-500">
+              <p className="mt-1 text-xs text-stone-500">
                 Created {formatDate(createdAt)}
               </p>
             )}
@@ -165,7 +165,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
               type="button"
               disabled={isLoading}
               onClick={rotate}
-              className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+              className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-900"
             >
               {isLoading && state.action === "rotate" ? "Rotating…" : "Rotate"}
             </button>
@@ -181,7 +181,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
         </div>
       ) : (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-neutral-600 dark:text-neutral-300">
+          <p className="text-sm text-stone-600 dark:text-stone-300">
             No active API key. Generate one to sign in from the Figma plugin
             or the CLI.
           </p>
@@ -189,7 +189,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
             type="button"
             disabled={isLoading}
             onClick={rotate}
-            className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
+            className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
           >
             {isLoading ? "Generating…" : "Generate key"}
           </button>

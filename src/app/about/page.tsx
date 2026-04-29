@@ -45,7 +45,7 @@ export default function AboutPage() {
         <h1 className="mt-3 text-3xl font-semibold">
           What a content designer sees
         </h1>
-        <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
+        <p className="mt-4 text-lg text-stone-700 dark:text-stone-300">
           ContentRX is the content model that a working senior content
           designer would run on their own UI copy. The standards,
           the moments, the weighting system that says &ldquo;in a
@@ -216,7 +216,7 @@ export default function AboutPage() {
         </p>
       </Section>
 
-      <footer className="mt-16 border-t border-neutral-200 pt-8 text-sm text-neutral-500 dark:border-neutral-800">
+      <footer className="mt-16 border-t border-stone-200 pt-8 text-sm text-stone-500 dark:border-stone-800">
         <p>
           Keep reading:{" "}
           <Link href="/accuracy" className="underline underline-offset-2">

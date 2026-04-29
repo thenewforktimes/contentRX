@@ -27,11 +27,11 @@ export default function CalibrationIndexPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
           Calibration log
         </p>
         <h1 className="mt-2 text-3xl font-semibold">Weekly calibration log</h1>
-        <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">
           Every Monday, the substrate-to-report pipeline emits a
           calibration log entry. Each entry covers the previous week&apos;s
           measured κ movement, drift signals, override counts, and active
@@ -39,7 +39,7 @@ export default function CalibrationIndexPage() {
           purpose: consistency week to week is what makes drift in the
           writing detectable.
         </p>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           See{" "}
           <Link href="/accuracy" className="underline underline-offset-2">
             /accuracy
@@ -49,7 +49,7 @@ export default function CalibrationIndexPage() {
       </header>
 
       {entries.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 bg-white px-4 py-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+        <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-6 text-center text-sm text-stone-500 dark:border-stone-700 dark:bg-stone-900">
           No calibration log entries yet. The Monday cron generator
           publishes new entries as they land.
         </p>
@@ -59,17 +59,17 @@ export default function CalibrationIndexPage() {
             <li key={entry.week}>
               <Link
                 href={`/calibration/${entry.week}`}
-                className="block rounded-lg border border-neutral-200 bg-white p-4 transition hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-600"
+                className="block rounded-lg border border-stone-200 bg-white p-4 transition hover:border-stone-400 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-600"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <h2 className="font-mono text-base font-semibold">
                     Week {entry.week}
                   </h2>
-                  <span className="font-mono text-[10px] text-neutral-500">
+                  <span className="font-mono text-[10px] text-stone-500">
                     {formatIso(entry.modified_at)}
                   </span>
                 </div>
-                <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+                <p className="mt-2 text-xs text-stone-600 dark:text-stone-400">
                   {extractHeadline(entry.contents)}
                 </p>
               </Link>

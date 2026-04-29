@@ -32,7 +32,7 @@ export default function SecurityPage() {
         <h1 className="mt-3 text-3xl font-semibold">
           Reporting a vulnerability
         </h1>
-        <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
+        <p className="mt-4 text-lg text-stone-700 dark:text-stone-300">
           If you&apos;ve found something that looks like a security issue
           in ContentRX, please tell us before you tell anyone else.
           We&apos;ll work with you on a fix and a coordinated disclosure

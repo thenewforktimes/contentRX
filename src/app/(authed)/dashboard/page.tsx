@@ -68,7 +68,7 @@ export default async function DashboardPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-neutral-200 p-6 text-sm dark:border-neutral-800">
+      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -138,7 +138,7 @@ export default async function DashboardPage() {
       */}
       <div
         aria-hidden
-        className="my-2 border-t border-neutral-200 dark:border-neutral-800"
+        className="my-2 border-t border-stone-200 dark:border-stone-800"
       />
 
       <SubscriptionPanel
@@ -174,10 +174,10 @@ export default async function DashboardPage() {
 
 function TryACheckPanel() {
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Try a check</h2>
-        <span className="text-xs text-neutral-500 dark:text-neutral-300">
+        <span className="text-xs text-stone-500 dark:text-stone-300">
           Paste any UI string · 1 check
         </span>
       </header>
@@ -246,20 +246,20 @@ function InsightsPanel({
 }) {
   const hasActivity = insights.violations > 0 || insights.overrides > 0;
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">This week</h2>
-        <span className="text-xs text-neutral-500 dark:text-neutral-300">Last 7 days</span>
+        <span className="text-xs text-stone-500 dark:text-stone-300">Last 7 days</span>
       </header>
       {!hasActivity ? (
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
           Nothing flagged yet this week. Run a check above or wire a
           surface to start seeing patterns. Insights show up after your
           first few checks.
         </p>
       ) : (
         <div className="flex flex-col gap-3 text-sm">
-          <p className="text-neutral-700 dark:text-neutral-300">
+          <p className="text-stone-700 dark:text-stone-300">
             <span className="font-semibold">{insights.violations.toLocaleString()}</span>{" "}
             {insights.violations === 1 ? "finding" : "findings"} flagged.{" "}
             {insights.overrides > 0 && (
@@ -276,7 +276,7 @@ function InsightsPanel({
             )}
           </p>
           {insights.topSourceLabel && (
-            <p className="text-neutral-700 dark:text-neutral-300">
+            <p className="text-stone-700 dark:text-stone-300">
               Most-active surface:{" "}
               <span className="font-medium">{insights.topSourceLabel}</span>
               {" "}with{" "}
@@ -287,7 +287,7 @@ function InsightsPanel({
             </p>
           )}
           {insights.patterns.length > 0 && (
-            <ul className="flex list-disc flex-col gap-1 pl-5 text-neutral-700 dark:text-neutral-300">
+            <ul className="flex list-disc flex-col gap-1 pl-5 text-stone-700 dark:text-stone-300">
               {insights.patterns.map((p, i) => (
                 <li key={`${p.kind}-${i}`}>
                   <PatternLine pattern={p} />
@@ -342,7 +342,7 @@ function PatternLine({ pattern }: { pattern: FindingPattern }) {
     return (
       <>
         Same file flagged most:{" "}
-        <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">
+        <code className="rounded bg-stone-100 px-1 py-0.5 text-xs dark:bg-stone-800">
           {pattern.filePath}
         </code>{" "}
         (
@@ -365,14 +365,14 @@ function PatternLine({ pattern }: { pattern: FindingPattern }) {
 
 function CalibrateLink({ optedOut }: { optedOut: boolean }) {
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Calibration</h2>
-        <span className="text-xs text-neutral-500 dark:text-neutral-300">
+        <span className="text-xs text-stone-500 dark:text-stone-300">
           {optedOut ? "Opted out" : "Weekly · 60 sec"}
         </span>
       </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
+      <p className="mb-3 text-sm text-stone-600 dark:text-stone-300">
         Three pairwise judgment prompts a week, optional. Picks feed
         the human-judgment signal behind the content model.
       </p>
@@ -388,11 +388,11 @@ function CalibrateLink({ optedOut }: { optedOut: boolean }) {
 
 function MembersLink() {
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Members</h2>
       </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
+      <p className="mb-3 text-sm text-stone-600 dark:text-stone-300">
         Invite teammates by email. They&apos;ll share the team&apos;s
         monthly check limit, custom rules, and custom examples.
       </p>
@@ -408,12 +408,12 @@ function MembersLink() {
 
 function OverridesLink() {
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Override report</h2>
-        <span className="text-xs text-neutral-500 dark:text-neutral-300">Last 30 days</span>
+        <span className="text-xs text-stone-500 dark:text-stone-300">Last 30 days</span>
       </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
+      <p className="mb-3 text-sm text-stone-600 dark:text-stone-300">
         The rules your team dismisses most. Use this to decide which
         rules to tune or disable in team rules.
       </p>
@@ -429,11 +429,11 @@ function OverridesLink() {
 
 function TeamRulesLink() {
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Team rules</h2>
       </header>
-      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-300">
+      <p className="mb-3 text-sm text-stone-600 dark:text-stone-300">
         Disable a built-in rule or add your own. Changes apply to every
         evaluation your team runs.
       </p>
@@ -729,7 +729,7 @@ function sourceLabel(source: string): string {
 
 function PlanPill({ plan }: { plan: Plan }) {
   const styles: Record<Plan, string> = {
-    free: "bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300",
+    free: "bg-stone-100 text-stone-700 dark:bg-stone-900 dark:text-stone-300",
     pro: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
     team: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
   };

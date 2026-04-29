@@ -99,10 +99,10 @@ export function UsagePanelLive({
   };
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-5 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Usage this month</h2>
-        <span className="text-xs text-neutral-500 dark:text-neutral-300">
+        <span className="text-xs text-stone-500 dark:text-stone-300">
           {currentMonth()}
         </span>
       </header>
@@ -110,27 +110,27 @@ export function UsagePanelLive({
         <span className="text-3xl font-semibold tabular-nums">
           {used.toLocaleString()}
         </span>
-        <span className="text-sm text-neutral-500 dark:text-neutral-300">
+        <span className="text-sm text-stone-500 dark:text-stone-300">
           of {quota.toLocaleString()} checks
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-900">
+      <div className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-900">
         <div
           className={`h-full transition-[width] duration-300 ${barClasses[tone]}`}
           style={{ width: `${usedPct}%` }}
         />
       </div>
-      <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-300">
+      <p className="mt-2 text-xs text-stone-500 dark:text-stone-300">
         Resets {nextMonthReset()}.
       </p>
       {tone === "warn" && (
-        <p className="mt-2 text-xs text-neutral-900 dark:text-neutral-100">
+        <p className="mt-2 text-xs text-stone-900 dark:text-stone-100">
           You&apos;re close to your monthly limit. Upgrade to keep
           checking before {nextMonthReset()}.
         </p>
       )}
       {tone === "exhausted" && (
-        <p className="mt-2 text-xs text-neutral-900 dark:text-neutral-100">
+        <p className="mt-2 text-xs text-stone-900 dark:text-stone-100">
           You&apos;ve run out of free content checks. Upgrade to keep
           checking.
         </p>
