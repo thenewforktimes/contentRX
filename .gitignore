@@ -65,3 +65,6 @@ Thumbs.db
 # --- Eval run artifacts (regenerable) ---
 evals/results/
 .env*.local
+
+# --- Local caches (regenerable) ---
+.cache/

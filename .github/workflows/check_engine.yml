@@ -21,9 +21,15 @@ name: Customer-copy engine check
 # is a quota burn we don't need.
 #
 # Cost note: each call hits Anthropic upstream. Diff scoping bounds
-# cost to actual change size (typically 5-50 strings). PR 5 adds a
-# response cache to avoid re-evaluating unchanged strings between
-# CI runs on the same branch.
+# cost to actual change size (typically 5-50 strings). The response
+# cache (PR 5) avoids re-evaluating unchanged strings across runs;
+# subsequent CI runs on the same branch (after force-push, retry,
+# or rebase) cost zero for cached strings.
+#
+# PR sticky comment (PR 5): findings post as a single comment on
+# the PR; subsequent runs update the existing comment instead of
+# stacking new ones. Keeps PR history readable and gives reviewers
+# a one-click view of the engine's read on changed copy.
 
 on:
   pull_request:
@@ -33,6 +39,11 @@ concurrency:
   # cancels the in-flight run; the freshest result wins.
   group: check-engine-${{ github.head_ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
+  # Posting / updating the sticky comment needs pull-requests: write.
+  pull-requests: write
 
 jobs:
   check-engine:
@@ -53,13 +64,57 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Restore the engine cache. Key includes the OS so we don't
+      # share a cache across runners that might serialize differently.
+      # The branch name is in the key too: each branch gets its own
+      # cache, but the restore-key falls back to main's cache so a
+      # fresh branch starts hot.
+      - name: Restore engine cache
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4
+        with:
+          path: .cache/contentrx-engine
+          key: contentrx-engine-${{ runner.os }}-${{ github.head_ref }}
+          restore-keys: |
+            contentrx-engine-${{ runner.os }}-main
+            contentrx-engine-${{ runner.os }}-
+
       - name: Run engine check (diff-scoped)
+        id: engine
         env:
           INTERNAL_EVAL_SECRET: ${{ secrets.INTERNAL_EVAL_SECRET }}
         run: |
           if [ -z "$INTERNAL_EVAL_SECRET" ]; then
             echo "INTERNAL_EVAL_SECRET is not set in repo secrets. Skipping engine check."
             echo "Add the secret in repo settings → Secrets and variables → Actions to enable."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          npm run check:engine -- --diff=origin/${{ github.event.pull_request.base.ref }} --pretty
+          # Capture JSONL findings to a file; the human-readable
+          # log goes to stderr via --pretty=false (default).
+          set +e
+          npm run --silent check:engine -- \
+            --diff=origin/${{ github.event.pull_request.base.ref }} \
+            > /tmp/findings.jsonl
+          rc=$?
+          set -e
+          # Mirror findings to the workflow log too so failures are
+          # visible in the run page without expanding the comment.
+          if [ -s /tmp/findings.jsonl ]; then
+            echo "Findings:"
+            cat /tmp/findings.jsonl
+          fi
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          # Don't exit yet; we want the comment poster to run first.
+          # We exit with the captured rc at the end of the job.
+
+      - name: Post or update PR comment
+        if: steps.engine.outputs.skipped != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat /tmp/findings.jsonl \
+            | npx --silent tsx scripts/post-engine-check-comment.ts || true
+
+      - name: Propagate engine-check exit code
+        if: steps.engine.outputs.skipped != 'true'
+        run: exit ${{ steps.engine.outputs.exit_code }}

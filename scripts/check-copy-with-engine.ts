@@ -37,15 +37,21 @@
  *
  * Cost note: each call hits Anthropic upstream. Diff scoping bounds
  * cost-per-PR to the actual change size (typically 5-50 strings).
- * PR 5 adds caching to avoid re-evaluating unchanged strings across
- * runs.
+ *
+ * PR 5 adds response caching keyed on
+ * sha256(text + content_type + moment + audience + endpoint). Cache
+ * hits skip the engine call entirely, so subsequent CI runs on the
+ * same branch (after a force-push, retry, or rebase) cost nothing.
+ * Cache lives at .cache/contentrx-engine/ by default; CI persists it
+ * across runs via actions/cache.
  */
 
+import { createHash } from "node:crypto";
 import { argv, exit, stderr, stdout, env } from "node:process";
 import { extractFromFile, isInScope, type ExtractedString } from "./extract-customer-strings";
 import { getChangedLinesFromGit } from "./lint-customer-strings";
 import { execSync } from "node:child_process";
-import { statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const REPO_ROOT = process.cwd();
@@ -92,6 +98,75 @@ export type EngineFinding = {
   review_reason: string | null;
   latency_ms: number;
 };
+
+// -----------------------------------------------------------------------------
+// Response cache
+// -----------------------------------------------------------------------------
+
+type CacheEntry = {
+  /** Wall-clock when the entry was written. ISO-8601. */
+  cached_at: string;
+  /** The cached engine response. */
+  response: EngineResponse;
+};
+
+/**
+ * Hash key for a cache entry. Stable across runs; sensitive to every
+ * input that affects the engine's verdict. Endpoint is in the key so
+ * staging vs prod don't share cache.
+ */
+export function cacheKey(
+  text: string,
+  content_type: string | null,
+  moment: string | null,
+  audience: string,
+  endpoint: string,
+): string {
+  const parts = [
+    text,
+    content_type ?? "",
+    moment ?? "",
+    audience,
+    endpoint,
+  ].join("\0");
+  return createHash("sha256").update(parts).digest("hex");
+}
+
+/**
+ * Read a cache entry if fresh enough. Returns null on miss, parse
+ * error, or expiry.
+ */
+export function readCache(
+  dir: string,
+  key: string,
+  ttlMs: number,
+): EngineResponse | null {
+  const path = join(dir, `${key}.json`);
+  if (!existsSync(path)) return null;
+  try {
+    const raw = readFileSync(path, "utf-8");
+    const entry = JSON.parse(raw) as CacheEntry;
+    const ageMs = Date.now() - new Date(entry.cached_at).getTime();
+    if (Number.isNaN(ageMs) || ageMs > ttlMs) return null;
+    return entry.response;
+  } catch {
+    return null;
+  }
+}
+
+export function writeCache(
+  dir: string,
+  key: string,
+  response: EngineResponse,
+): void {
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  const path = join(dir, `${key}.json`);
+  const entry: CacheEntry = {
+    cached_at: new Date().toISOString(),
+    response,
+  };
+  writeFileSync(path, JSON.stringify(entry), "utf-8");
+}
 
 // -----------------------------------------------------------------------------
 // Engine call
@@ -193,6 +268,9 @@ type CliArgs = {
   concurrency: number;
   maxStrings: number;
   timeoutMs: number;
+  cacheDir: string;
+  cacheTtlMs: number;
+  noCache: boolean;
 };
 
 function parseArgs(args: string[]): CliArgs {
@@ -206,9 +284,15 @@ function parseArgs(args: string[]): CliArgs {
     concurrency: 5,
     maxStrings: 200,
     timeoutMs: 20_000,
+    cacheDir: env.CONTENTRX_CACHE_DIR ?? ".cache/contentrx-engine",
+    // 90 days. Periodic re-evaluation catches model drift; longer
+    // would risk stale verdicts when we update the prompt.
+    cacheTtlMs: 90 * 24 * 60 * 60 * 1000,
+    noCache: false,
   };
   for (const a of args) {
     if (a === "--pretty") out.pretty = true;
+    else if (a === "--no-cache") out.noCache = true;
     else if (a === "--diff") out.diff = true;
     else if (a.startsWith("--diff=")) out.diff = a.slice("--diff=".length);
     else if (a.startsWith("--files=")) {
@@ -226,6 +310,13 @@ function parseArgs(args: string[]): CliArgs {
     } else if (a.startsWith("--timeout-ms=")) {
       const n = Number(a.slice("--timeout-ms=".length));
       if (Number.isFinite(n) && n > 0) out.timeoutMs = Math.floor(n);
+    } else if (a.startsWith("--cache-dir=")) {
+      out.cacheDir = a.slice("--cache-dir=".length);
+    } else if (a.startsWith("--cache-ttl-days=")) {
+      const n = Number(a.slice("--cache-ttl-days=".length));
+      if (Number.isFinite(n) && n > 0) {
+        out.cacheTtlMs = Math.floor(n) * 24 * 60 * 60 * 1000;
+      }
     }
   }
   return out;
@@ -324,15 +415,33 @@ async function main(): Promise<void> {
   let errors = 0;
   let warnings = 0;
   let evalErrors = 0;
+  let cacheHits = 0;
 
   await mapWithConcurrency(strings, args.concurrency, async (s) => {
     try {
-      const res = await evaluateString(s, {
-        endpoint: args.endpoint,
-        secret,
-        audience: args.audience,
-        timeoutMs: args.timeoutMs,
-      });
+      let res: EngineResponse;
+      const key = cacheKey(
+        s.text,
+        s.content_type_hint,
+        s.moment_hint,
+        args.audience,
+        args.endpoint,
+      );
+      const cached = args.noCache
+        ? null
+        : readCache(args.cacheDir, key, args.cacheTtlMs);
+      if (cached) {
+        res = cached;
+        cacheHits++;
+      } else {
+        res = await evaluateString(s, {
+          endpoint: args.endpoint,
+          secret,
+          audience: args.audience,
+          timeoutMs: args.timeoutMs,
+        });
+        if (!args.noCache) writeCache(args.cacheDir, key, res);
+      }
       const verdict = res.result.verdict;
       const severity = severityFromVerdict(verdict);
       const finding: EngineFinding = {
@@ -403,7 +512,10 @@ async function main(): Promise<void> {
     }
   }
 
-  const summary = `Evaluated ${strings.length}: ${errors} violation${errors === 1 ? "" : "s"}, ${warnings} review${warnings === 1 ? "" : "s"}, ${evalErrors} eval error${evalErrors === 1 ? "" : "s"}.`;
+  const cacheSegment = args.noCache
+    ? ""
+    : ` (cache hits: ${cacheHits}/${strings.length})`;
+  const summary = `Evaluated ${strings.length}${cacheSegment}: ${errors} violation${errors === 1 ? "" : "s"}, ${warnings} review${warnings === 1 ? "" : "s"}, ${evalErrors} eval error${evalErrors === 1 ? "" : "s"}.`;
   stderr.write(`${summary}\n`);
 
   if (errors > 0) exit(1);
