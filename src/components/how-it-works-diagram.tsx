@@ -1,20 +1,16 @@
 "use client";
 
 /**
- * HowItWorksDiagram — story-based pipeline animation, v3.
+ * HowItWorksDiagram — story-based pipeline animation, v4.
  *
- * v3 changes (2026-04-29):
- *   - Variable per-stage timing. The setup stages (Your string,
- *     Classify, Filter) tick fast at 1s each; Review pauses at 2s
- *     to suggest the LLM is working; Verdict lingers at 2.5s so
- *     the payoff has time to read before the loop resets.
- *   - Traveling pill on desktop. A small emerald marker rides a
- *     horizontal track at the top of the diagram, filling the
- *     trail behind it as it advances. Hidden on mobile where the
- *     stages stack vertically and the marker would be redundant.
- *   - Framer Motion drives the pill + trail + verdict-card pop.
- *     Stage cards still use Tailwind data-state transitions
- *     (simpler, no over-engineering for fade-in/out).
+ * v4 (2026-04-29): cut the traveling pill + progress track.
+ * Robert's call: the cards transitioning to emerald carry the
+ * story; the horizontal pill was extending past the visible work
+ * and reading as redundant. The cards do the work.
+ *
+ * v3 kept: variable per-stage timing (1s setup, 2s Review,
+ * 2.5s Verdict), framer-motion-driven verdict-card spring,
+ * Tailwind data-state transitions on the cards.
  *
  * Loop shape: 5 stages with variable durations + 1 reset tick.
  *   tick 0 (1.0s): "Your string"
@@ -22,22 +18,20 @@
  *   tick 2 (1.0s): "Filter" → standards narrowed
  *   tick 3 (2.0s): "Review" → thinking dots
  *   tick 4 (2.5s): "Verdict" → suggestion + severity + confidence
- *   tick 5 (1.0s): reset (all pending, pill off-screen)
- * Total ~8.5s loop. The setup-fast / payoff-slow shape was
- * Robert's call: the diagram now telegraphs the work that goes
- * into the verdict.
+ *   tick 5 (1.0s): reset (all pending)
+ * Total ~8.5s loop.
  *
  * Accessibility:
  *   - The whole thing is an ordered list; screen readers walk the
  *     stages in order with their static labels + captions.
  *   - prefers-reduced-motion: animation is disabled (the cycle
- *     stops, the pill is hidden, all stages render fully revealed).
+ *     stops, all stages render fully revealed).
  *
  * Substrate boundary (ADR 2026-04-25): customer-readable terms
  * only. No taxonomy names, no `standard_id`, no rule version.
  */
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 interface Stage {
@@ -130,11 +124,6 @@ export function HowItWorksDiagram() {
 
   return (
     <div className="my-8" aria-label="ContentRX evaluation pipeline">
-      <PillTrack
-        activeStage={activeStage}
-        stageCount={STAGES.length}
-        reduceMotion={reduceMotion}
-      />
       <ol className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-2">
         {STAGES.map((stage, i) => {
           const state: StageState = reduceMotion
@@ -164,66 +153,6 @@ export function HowItWorksDiagram() {
         standards that actually apply to your string in your moment.
         That&apos;s the model around the model.
       </p>
-    </div>
-  );
-}
-
-/**
- * PillTrack — horizontal progress track at the top of the diagram
- * with a traveling pill marker. Desktop only; on mobile the
- * stage stack reads top-to-bottom and a horizontal pill is
- * redundant.
- *
- * Position math: 5 stages, evenly spaced. Stage i sits at the
- * (i + 0.5) / N portion of the track. The pill targets that
- * position when stage i is active.
- */
-function PillTrack({
-  activeStage,
-  stageCount,
-  reduceMotion,
-}: {
-  activeStage: number;
-  stageCount: number;
-  reduceMotion: boolean;
-}) {
-  const isResetState = activeStage === -1;
-  const positionPct = isResetState
-    ? 0
-    : ((activeStage + 0.5) / stageCount) * 100;
-
-  if (reduceMotion) return null;
-
-  return (
-    <div className="relative mb-3 hidden h-1.5 w-full sm:block" aria-hidden>
-      <div className="absolute inset-0 rounded-full bg-stone-200 dark:bg-stone-800" />
-      {/* trail fills as the pill advances */}
-      <motion.div
-        className="absolute left-0 top-0 h-full rounded-full bg-emerald-500"
-        animate={{ width: `${positionPct}%` }}
-        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-      />
-      {/* leading pill marker */}
-      <AnimatePresence>
-        {!isResetState && (
-          <motion.div
-            key="pill"
-            className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.15)]"
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{
-              left: `${positionPct}%`,
-              opacity: 1,
-              scale: 1,
-            }}
-            exit={{ opacity: 0, scale: 0.6 }}
-            transition={{
-              left: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
-              opacity: { duration: 0.2 },
-              scale: { duration: 0.2 },
-            }}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
