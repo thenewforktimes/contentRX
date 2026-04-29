@@ -47,6 +47,12 @@ interface BucketStats {
   contentType: string | null;
   precedentCount: number;
   pendingCount: number;
+  // Block 3c: slop-rejection signal. Per-bucket rejected vs merged
+  // ratio. High reject rate on a cell means the LLM is producing
+  // bad suggestions there — informs retrieval + prompt-engineering
+  // priorities.
+  mergedCount: number;
+  rejectedCount: number;
 }
 
 export default async function CalibrationCoveragePage() {
@@ -83,6 +89,26 @@ export default async function CalibrationCoveragePage() {
       schema.suggestionCandidates.contentType,
     );
 
+  // Block 3c: per-bucket rejected + merged counts for the slop
+  // rejection rate. Same share_upstream=true scope so the rate
+  // reflects only the candidates Robert actually triaged.
+  const reviewedRows = await db
+    .select({
+      moment: schema.suggestionCandidates.moment,
+      contentType: schema.suggestionCandidates.contentType,
+      status: schema.suggestionCandidates.status,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(schema.suggestionCandidates)
+    .where(
+      sql`${schema.suggestionCandidates.status} IN ('rejected', 'merged') AND ${schema.suggestionCandidates.shareUpstream} = true`,
+    )
+    .groupBy(
+      schema.suggestionCandidates.moment,
+      schema.suggestionCandidates.contentType,
+      schema.suggestionCandidates.status,
+    );
+
   // Stitch into a single bucket map.
   const bucketMap = new Map<string, BucketStats>();
   function key(m: string | null, ct: string | null) {
@@ -97,6 +123,8 @@ export default async function CalibrationCoveragePage() {
         contentType: ct,
         precedentCount: 0,
         pendingCount: 0,
+        mergedCount: 0,
+        rejectedCount: 0,
       };
       bucketMap.set(k, b);
     }
@@ -108,15 +136,36 @@ export default async function CalibrationCoveragePage() {
   for (const r of pendingRows) {
     ensure(r.moment, r.contentType).pendingCount = Number(r.count);
   }
+  for (const r of reviewedRows) {
+    const b = ensure(r.moment, r.contentType);
+    if (r.status === "merged") b.mergedCount = Number(r.count);
+    else if (r.status === "rejected") b.rejectedCount = Number(r.count);
+  }
 
   const activeBuckets = Array.from(bucketMap.values())
-    .filter((b) => b.precedentCount + b.pendingCount > 0)
+    .filter(
+      (b) =>
+        b.precedentCount +
+          b.pendingCount +
+          b.mergedCount +
+          b.rejectedCount >
+        0,
+    )
     .sort(
       (a, b) =>
         b.precedentCount +
         b.pendingCount -
         (a.precedentCount + a.pendingCount),
     );
+
+  // Slop-rejection rate per bucket: rejected / (rejected + merged).
+  // Only computed when total_reviewed > 0 to avoid div-by-zero on
+  // brand-new buckets.
+  function rejectRate(b: BucketStats): number | null {
+    const total = b.rejectedCount + b.mergedCount;
+    if (total === 0) return null;
+    return b.rejectedCount / total;
+  }
 
   // Moments with zero activity in any content type — the "needs
   // annotation" backlog at the moment-axis level. Same for content
@@ -144,6 +193,18 @@ export default async function CalibrationCoveragePage() {
     (acc, b) => acc + b.pendingCount,
     0,
   );
+  const totalMerged = activeBuckets.reduce(
+    (acc, b) => acc + b.mergedCount,
+    0,
+  );
+  const totalRejected = activeBuckets.reduce(
+    (acc, b) => acc + b.rejectedCount,
+    0,
+  );
+  const overallRejectRate =
+    totalRejected + totalMerged > 0
+      ? totalRejected / (totalRejected + totalMerged)
+      : null;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
@@ -169,6 +230,23 @@ export default async function CalibrationCoveragePage() {
             label="Pending triage"
             value={totalPending.toLocaleString()}
             tone={totalPending > 0 ? "amber" : "stone"}
+          />
+          <Stat
+            label="Slop reject rate"
+            value={
+              overallRejectRate === null
+                ? "—"
+                : `${Math.round(overallRejectRate * 100)}%`
+            }
+            tone={
+              overallRejectRate === null
+                ? "stone"
+                : overallRejectRate >= 0.5
+                  ? "red"
+                  : overallRejectRate >= 0.25
+                    ? "amber"
+                    : "stone"
+            }
           />
           <Link
             href="/admin/suggestions"
@@ -204,6 +282,12 @@ export default async function CalibrationCoveragePage() {
                 </th>
                 <th className="px-2 py-2 text-right font-semibold text-stone-700 dark:text-stone-300">
                   Pending
+                </th>
+                <th
+                  className="px-2 py-2 text-right font-semibold text-stone-700 dark:text-stone-300"
+                  title="Rejected ÷ (rejected + merged). High = LLM is producing slop in this bucket."
+                >
+                  Reject rate
                 </th>
               </tr>
             </thead>
@@ -248,6 +332,13 @@ export default async function CalibrationCoveragePage() {
                         —
                       </span>
                     )}
+                  </td>
+                  <td className="px-2 py-2 text-right tabular-nums">
+                    <RejectRateCell
+                      rate={rejectRate(b)}
+                      rejected={b.rejectedCount}
+                      merged={b.mergedCount}
+                    />
                   </td>
                 </tr>
               ))}
@@ -308,14 +399,16 @@ function Stat({
 }: {
   label: string;
   value: string;
-  tone: "emerald" | "amber" | "stone";
+  tone: "emerald" | "amber" | "red" | "stone";
 }) {
   const toneClass =
     tone === "emerald"
       ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
       : tone === "amber"
         ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
-        : "border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300";
+        : tone === "red"
+          ? "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+          : "border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300";
   return (
     <span
       className={`inline-flex items-baseline gap-2 rounded-md border px-3 py-1.5 ${toneClass}`}
@@ -324,6 +417,45 @@ function Stat({
         {label}
       </span>
       <span className="text-sm font-semibold tabular-nums">{value}</span>
+    </span>
+  );
+}
+
+/**
+ * RejectRateCell — renders a per-bucket slop-rejection rate with
+ * tone scaled by severity. The thresholds (≥50% red, ≥25% amber)
+ * are tentative; once empirical baselines exist, the cutoffs can
+ * tighten.
+ */
+function RejectRateCell({
+  rate,
+  rejected,
+  merged,
+}: {
+  rate: number | null;
+  rejected: number;
+  merged: number;
+}) {
+  if (rate === null) {
+    return (
+      <span className="text-stone-400 dark:text-stone-600" title="No reviewed candidates yet">
+        —
+      </span>
+    );
+  }
+  const pct = Math.round(rate * 100);
+  const toneClass =
+    rate >= 0.5
+      ? "text-red-700 dark:text-red-300"
+      : rate >= 0.25
+        ? "text-amber-700 dark:text-amber-300"
+        : "text-stone-700 dark:text-stone-300";
+  return (
+    <span
+      className={`font-semibold ${toneClass}`}
+      title={`${rejected} rejected of ${rejected + merged} reviewed`}
+    >
+      {pct}%
     </span>
   );
 }
