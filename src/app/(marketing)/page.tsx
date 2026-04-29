@@ -149,9 +149,10 @@ export default function Home() {
 
       <Section eyebrow="Built by" title="Someone who has been in the room.">
         <p>
-          Robert Ballard, staff content designer at PayPal. Previously
-          Intuit, Meta, and Opendoor. The moments, the weights, and
-          the standards all carry a single designer&apos;s judgment
+          Robert Ballard, staff-level content designer. Career arc:
+          Intuit → Meta → Opendoor (where I reached the staff level)
+          → PayPal today. The moments, the weights, and the
+          standards all carry a single designer&apos;s judgment
           calls, attributed and published. Read the{" "}
           <Link href="/about" className="underline underline-offset-2">
             about-the-model

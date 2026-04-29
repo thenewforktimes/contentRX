@@ -57,7 +57,7 @@ export default function AboutPage() {
 
       <Section title="Who wrote the model">
         <p>
-          Robert, a staff content designer. {PLACEHOLDER_BIO} The pattern
+          Robert, a staff-level content designer. {PLACEHOLDER_BIO} The pattern
           recognition that gets built over a career of that work is what
           the model encodes. The rules you can look up in a style guide
           are one input; the judgment calls about{" "}

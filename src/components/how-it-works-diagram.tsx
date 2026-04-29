@@ -1,39 +1,43 @@
 "use client";
 
 /**
- * HowItWorksDiagram — story-based pipeline animation.
+ * HowItWorksDiagram — story-based pipeline animation, v3.
  *
- * v2 (2026-04-29): the animation went from "stages glow in sequence"
- * to "a real example travels through the pipeline." Each stage
- * reveals its output as the active step arrives. By the end of one
- * loop, the viewer has seen ContentRX evaluate one string end-to-end:
- * "Click here" → classified as a button label → standards narrowed →
- * reviewed → verdict card with suggestion + severity + confidence.
+ * v3 changes (2026-04-29):
+ *   - Variable per-stage timing. The setup stages (Your string,
+ *     Classify, Filter) tick fast at 1s each; Review pauses at 2s
+ *     to suggest the LLM is working; Verdict lingers at 2.5s so
+ *     the payoff has time to read before the loop resets.
+ *   - Traveling pill on desktop. A small emerald marker rides a
+ *     horizontal track at the top of the diagram, filling the
+ *     trail behind it as it advances. Hidden on mobile where the
+ *     stages stack vertically and the marker would be redundant.
+ *   - Framer Motion drives the pill + trail + verdict-card pop.
+ *     Stage cards still use Tailwind data-state transitions
+ *     (simpler, no over-engineering for fade-in/out).
  *
- * Why story over pulse: the pulse version was abstract (boxes light
- * up). The story version is concrete (you watch one string get
- * evaluated). Same six-second runtime; the read is dramatically
- * different.
- *
- * Loop shape: 6 ticks at 1.5s each.
- *   - ticks 0–4: each stage activates in turn
- *   - tick 5: all stages reset to pending (brief pause before relooping)
- * Total 9s loop. The pause prevents a hard snap when stage 4
- * (verdict) → stage 0 (input) on the next cycle.
+ * Loop shape: 5 stages with variable durations + 1 reset tick.
+ *   tick 0 (1.0s): "Your string"
+ *   tick 1 (1.0s): "Classify" → button label
+ *   tick 2 (1.0s): "Filter" → standards narrowed
+ *   tick 3 (2.0s): "Review" → thinking dots
+ *   tick 4 (2.5s): "Verdict" → suggestion + severity + confidence
+ *   tick 5 (1.0s): reset (all pending, pill off-screen)
+ * Total ~8.5s loop. The setup-fast / payoff-slow shape was
+ * Robert's call: the diagram now telegraphs the work that goes
+ * into the verdict.
  *
  * Accessibility:
- *   - The whole thing is an ordered list; screen readers walk
- *     the stages in order, including the example output baked into
- *     each stage's static text.
- *   - Animation respects `prefers-reduced-motion`. With reduce on,
- *     the diagram renders fully revealed (all stages "complete") so
- *     readers see the full pipeline at a glance, no motion.
+ *   - The whole thing is an ordered list; screen readers walk the
+ *     stages in order with their static labels + captions.
+ *   - prefers-reduced-motion: animation is disabled (the cycle
+ *     stops, the pill is hidden, all stages render fully revealed).
  *
- * Substrate boundary (ADR 2026-04-25): customer-readable terms only.
- * No taxonomy names, no `standard_id`, no rule version. The stages
- * are described in plain language.
+ * Substrate boundary (ADR 2026-04-25): customer-readable terms
+ * only. No taxonomy names, no `standard_id`, no rule version.
  */
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 interface Stage {
@@ -41,8 +45,7 @@ interface Stage {
   label: string;
   /** One-line description below the label, always visible. */
   caption: string;
-  /** What the stage outputs once active/complete. JSX so we can
-   *  render mini-pills, dots, etc. */
+  /** What the stage outputs once active/complete. */
   output: React.ReactNode;
 }
 
@@ -74,13 +77,17 @@ const STAGES: ReadonlyArray<Stage> = [
   },
 ];
 
-const TICK_MS = 1500;
-const TOTAL_TICKS = STAGES.length + 1; // +1 for the pause-before-loop tick
+/** Setup stages tick fast; Review + Verdict linger so the payoff reads. */
+const STAGE_DURATIONS_MS: ReadonlyArray<number> = [
+  1000, 1000, 1000, 2000, 2500,
+];
+const RESET_PAUSE_MS = 1000;
+const RESET_TICK = STAGE_DURATIONS_MS.length;
 
 type StageState = "pending" | "active" | "complete";
 
 export function HowItWorksDiagram() {
-  const [tick, setTick] = useState(0);
+  const [activeTick, setActiveTick] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
@@ -94,17 +101,40 @@ export function HowItWorksDiagram() {
 
   useEffect(() => {
     if (reduceMotion) return;
-    const interval = setInterval(() => {
-      setTick((prev) => (prev + 1) % TOTAL_TICKS);
-    }, TICK_MS);
-    return () => clearInterval(interval);
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let cancelled = false;
+
+    const tick = (current: number) => {
+      if (cancelled) return;
+      setActiveTick(current);
+      const duration =
+        current === RESET_TICK
+          ? RESET_PAUSE_MS
+          : STAGE_DURATIONS_MS[current];
+      timeoutId = setTimeout(() => {
+        const next = (current + 1) % (RESET_TICK + 1);
+        tick(next);
+      }, duration);
+    };
+
+    tick(0);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [reduceMotion]);
 
-  // tick 0..4 = active stage = tick. tick 5 = reset, no active stage.
-  const activeStage = tick < STAGES.length ? tick : -1;
+  const isResetState = activeTick === RESET_TICK;
+  const activeStage = isResetState ? -1 : activeTick;
 
   return (
     <div className="my-8" aria-label="ContentRX evaluation pipeline">
+      <PillTrack
+        activeStage={activeStage}
+        stageCount={STAGES.length}
+        reduceMotion={reduceMotion}
+      />
       <ol className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-2">
         {STAGES.map((stage, i) => {
           const state: StageState = reduceMotion
@@ -138,6 +168,66 @@ export function HowItWorksDiagram() {
   );
 }
 
+/**
+ * PillTrack — horizontal progress track at the top of the diagram
+ * with a traveling pill marker. Desktop only; on mobile the
+ * stage stack reads top-to-bottom and a horizontal pill is
+ * redundant.
+ *
+ * Position math: 5 stages, evenly spaced. Stage i sits at the
+ * (i + 0.5) / N portion of the track. The pill targets that
+ * position when stage i is active.
+ */
+function PillTrack({
+  activeStage,
+  stageCount,
+  reduceMotion,
+}: {
+  activeStage: number;
+  stageCount: number;
+  reduceMotion: boolean;
+}) {
+  const isResetState = activeStage === -1;
+  const positionPct = isResetState
+    ? 0
+    : ((activeStage + 0.5) / stageCount) * 100;
+
+  if (reduceMotion) return null;
+
+  return (
+    <div className="relative mb-3 hidden h-1.5 w-full sm:block" aria-hidden>
+      <div className="absolute inset-0 rounded-full bg-stone-200 dark:bg-stone-800" />
+      {/* trail fills as the pill advances */}
+      <motion.div
+        className="absolute left-0 top-0 h-full rounded-full bg-emerald-500"
+        animate={{ width: `${positionPct}%` }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+      />
+      {/* leading pill marker */}
+      <AnimatePresence>
+        {!isResetState && (
+          <motion.div
+            key="pill"
+            className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.15)]"
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{
+              left: `${positionPct}%`,
+              opacity: 1,
+              scale: 1,
+            }}
+            exit={{ opacity: 0, scale: 0.6 }}
+            transition={{
+              left: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+              opacity: { duration: 0.2 },
+              scale: { duration: 0.2 },
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function StageCard({
   stage,
   index,
@@ -147,19 +237,14 @@ function StageCard({
   index: number;
   state: StageState;
 }) {
-  // Active and complete reveal the output; pending hides it (with
-  // height preserved via min-h so the layout doesn't jump).
   return (
     <div
       data-state={state}
       className={[
         "flex flex-1 flex-col rounded-lg border px-4 py-3",
         "transition-all duration-500 ease-out",
-        // pending: stone, default
         "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950",
-        // active: emerald lift + glow
         "data-[state=active]:-translate-y-0.5 data-[state=active]:border-emerald-500 data-[state=active]:bg-emerald-50 data-[state=active]:shadow-sm data-[state=active]:dark:border-emerald-500 data-[state=active]:dark:bg-emerald-950/40",
-        // complete: emerald-tinted, no lift
         "data-[state=complete]:border-emerald-200 data-[state=complete]:bg-emerald-50/50 data-[state=complete]:dark:border-emerald-900 data-[state=complete]:dark:bg-emerald-950/20",
       ].join(" ")}
     >
@@ -187,10 +272,6 @@ function StageCard({
   );
 }
 
-/**
- * Connector — chevron between stages. Animates colour as the
- * preceding stage completes.
- */
 function Connector({ active }: { active: boolean }) {
   return (
     <div
@@ -213,11 +294,6 @@ function Connector({ active }: { active: boolean }) {
   );
 }
 
-/**
- * ThinkingDots — three dots that pulse to suggest the reviewer is
- * working. Only animates when the parent stage is in active state;
- * the parent's transition handles fade-in/out for the whole block.
- */
 function ThinkingDots() {
   return (
     <span className="inline-flex items-end gap-1" aria-label="Reviewing">
@@ -229,13 +305,18 @@ function ThinkingDots() {
 }
 
 /**
- * VerdictCard — the payoff. Shows a real-shaped verdict envelope
- * for the pipeline's example string. The four fields here are the
- * full public envelope: issue, suggestion, severity, confidence.
+ * VerdictCard — the payoff. Pops in with a small spring when the
+ * Verdict stage activates. Framer Motion's `key` reset on
+ * activation triggers the entrance animation each loop.
  */
 function VerdictCard() {
   return (
-    <div className="space-y-1 text-[11px] leading-tight">
+    <motion.div
+      initial={{ opacity: 0, y: 4, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      className="space-y-1 text-[11px] leading-tight"
+    >
       <p>
         <span className="font-mono text-stone-500 dark:text-stone-400">
           suggestion:
@@ -252,6 +333,6 @@ function VerdictCard() {
           0.96
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 }

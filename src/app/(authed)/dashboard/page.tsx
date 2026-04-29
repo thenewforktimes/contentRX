@@ -48,6 +48,7 @@ import {
 } from "@/lib/insight-patterns";
 import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
+import { MotionList } from "@/components/motion-list";
 import {
   ActiveSurfacesRowLive,
   type SurfaceActivity,
@@ -98,83 +99,85 @@ export default async function DashboardPage() {
   // its own state now and recomputes when used/quota change).
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
       {/*
         Visibility-aware poll that calls router.refresh() every 5s while
         the tab is focused. Lets external surfaces (MCP, Figma plugin,
         CLI, GitHub Action, LSP) reflect on the dashboard without a
-        manual page refresh. Renders nothing.
+        manual page refresh. Renders nothing — kept outside the
+        MotionList so the poll doesn't get a phantom motion wrapper.
       */}
       <DashboardLivenessRefresher />
-      <FirstCallBanner source={activatedSource} />
+      <MotionList className="flex flex-col gap-6">
+        <FirstCallBanner source={activatedSource} />
 
-      <header className="flex items-center justify-between">
-        <div>
-          <Eyebrow>Dashboard</Eyebrow>
-          <h1 className="mt-2 text-2xl font-semibold">{user.email}</h1>
-        </div>
-        <PlanPill plan={plan} />
-      </header>
+        <header className="flex items-center justify-between">
+          <div>
+            <Eyebrow>Dashboard</Eyebrow>
+            <h1 className="mt-2 text-2xl font-semibold">{user.email}</h1>
+          </div>
+          <PlanPill plan={plan} />
+        </header>
 
-      <TryACheckPanel />
+        <TryACheckPanel />
 
-      {/*
-        UsagePanelLive + ActiveSurfacesRowLive are Client Components
-        that take server-rendered initial values AND listen for the
-        cx-check-completed window event dispatched by ExplainClient.
-        After a check, the counter and Web app surface card jump
-        immediately from the response payload instead of waiting
-        ~200ms for router.refresh() to round-trip new HTML. The
-        server-authoritative values still flow in via re-render and
-        overwrite the optimistic state when they arrive.
-      */}
-      <UsagePanelLive initialUsed={used} initialQuota={quota} />
+        {/*
+          UsagePanelLive + ActiveSurfacesRowLive are Client Components
+          that take server-rendered initial values AND listen for the
+          cx-check-completed window event dispatched by ExplainClient.
+          After a check, the counter and Web app surface card jump
+          immediately from the response payload instead of waiting
+          ~200ms for router.refresh() to round-trip new HTML. The
+          server-authoritative values still flow in via re-render and
+          overwrite the optimistic state when they arrive.
+        */}
+        <UsagePanelLive initialUsed={used} initialQuota={quota} />
 
-      <InsightsPanel insights={insights} plan={plan} />
+        <InsightsPanel insights={insights} plan={plan} />
 
-      <ActiveSurfacesRowLive
-        surfaces={SURFACES}
-        initialActivity={surfaceActivity}
-      />
+        <ActiveSurfacesRowLive
+          surfaces={SURFACES}
+          initialActivity={surfaceActivity}
+        />
 
-      {/*
-        Divider between work surfaces (above) and account configuration
-        (below). The hairline puts a literal pause in the page so the
-        eye stops looking for "more work to do" and starts treating
-        the next sections as settings. Hidden visually if the page is
-        already short (Free user with no team panels).
-      */}
-      <div
-        aria-hidden
-        className="my-2 border-t border-stone-200 dark:border-stone-800"
-      />
+        {/*
+          Divider between work surfaces (above) and account configuration
+          (below). The hairline puts a literal pause in the page so the
+          eye stops looking for "more work to do" and starts treating
+          the next sections as settings.
+        */}
+        <div
+          aria-hidden
+          className="my-2 border-t border-stone-200 dark:border-stone-800"
+        />
 
-      <SubscriptionPanel
-        plan={plan}
-        seats={seats}
-        currentPeriodEnd={
-          activeSub?.currentPeriodEnd
-            ? activeSub.currentPeriodEnd.toISOString()
-            : null
-        }
-        subscriptionStatus={activeSub?.status ?? null}
-      />
+        <SubscriptionPanel
+          plan={plan}
+          seats={seats}
+          currentPeriodEnd={
+            activeSub?.currentPeriodEnd
+              ? activeSub.currentPeriodEnd.toISOString()
+              : null
+          }
+          subscriptionStatus={activeSub?.status ?? null}
+        />
 
-      <ApiKeyPanel
-        initialPrefix={user.apiKeyPrefix}
-        initialCreatedAt={
-          user.apiKeyCreatedAt ? user.apiKeyCreatedAt.toISOString() : null
-        }
-      />
+        <ApiKeyPanel
+          initialPrefix={user.apiKeyPrefix}
+          initialCreatedAt={
+            user.apiKeyCreatedAt ? user.apiKeyCreatedAt.toISOString() : null
+          }
+        />
 
-      {plan === "team" && (
-        <>
-          <MembersLink />
-          <TeamRulesLink />
-          <OverridesLink />
-        </>
-      )}
-    </div>
+        {plan === "team" && (
+          <>
+            <MembersLink />
+            <TeamRulesLink />
+            <OverridesLink />
+          </>
+        )}
+      </MotionList>
+    </>
   );
 }
 

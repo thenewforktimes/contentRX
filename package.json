@@ -38,6 +38,7 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
     "drizzle-orm": "^0.45.2",
+    "framer-motion": "^12.38.0",
     "jose": "^6.2.2",
     "next": "15.5.15",
     "postgres": "^3.4.9",
