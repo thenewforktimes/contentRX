@@ -1,6 +1,16 @@
 name: Customer-copy lint
 
-# Runs the mechanical lint over customer-facing strings on every PR.
+# Runs the mechanical lint over customer-facing strings.
+#
+# Two modes:
+#   - PR:           --diff vs the base branch. Only flags violations
+#                   on lines the PR introduced or modified.
+#   - push to main: full lint. Belt + suspenders against drift the
+#                   PR-mode might've missed (e.g. line moves that
+#                   carried existing violations into a "changed"
+#                   region without the PR having technically
+#                   introduced them).
+#
 # Catches em dashes, prohibited terms, generic CTAs, standard-ID
 # leaks, and plural bugs deterministically. The judgment-level
 # checks (calm/confident/charming, recovery-path quality) live in
@@ -11,10 +21,10 @@ name: Customer-copy lint
 # excluded — founder voice keeps em dashes and substrate jargon.
 #
 # The vitest "live codebase is clean" spec in
-# scripts/lint-customer-strings.test.ts already enforces zero
-# error-severity findings on main; this workflow runs the same
-# script directly so the failure surface is the lint output, not a
-# Vitest assertion message.
+# scripts/lint-customer-strings.test.ts ALSO enforces zero
+# error-severity findings on main. Two independent guards (the
+# vitest spec runs in the test workflow; this script runs here)
+# can't both regress without someone noticing.
 
 on:
   pull_request:
@@ -31,6 +41,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          # fetch-depth: 0 gives us the full history so `git diff`
+          # against the merge base works in --diff mode. Without
+          # this, GitHub does a shallow clone and the diff base
+          # isn't reachable.
+          fetch-depth: 0
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
@@ -40,5 +56,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run lint
+      - name: Run lint (PR — diff-scoped)
+        if: github.event_name == 'pull_request'
+        run: npm run lint:copy -- --diff=origin/${{ github.event.pull_request.base.ref }} --pretty
+
+      - name: Run lint (push to main — full)
+        if: github.event_name == 'push'
         run: npm run lint:copy -- --pretty

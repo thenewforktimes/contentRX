@@ -1,7 +1,7 @@
 /**
  * Mechanical lint over the extracted customer strings.
  *
- * PR 2 of 5 in the dogfood loop. Reads the output of PR 1's
+ * PR 2/3 of 5 in the dogfood loop. Reads the output of PR 1's
  * extractor (scripts/extract-customer-strings.ts) and runs
  * deterministic checks against each string. Two severity levels:
  *
@@ -15,12 +15,24 @@
  *
  * Usage:
  *
- *   npm run lint:copy                    # lint everything
- *   npm run lint:copy -- --pretty        # human-readable
+ *   npm run lint:copy                          # lint everything
+ *   npm run lint:copy -- --pretty              # human-readable
  *   npm run lint:copy -- --warnings-as-errors  # strict mode
  *   npm run lint:copy -- --files=a.tsx,b.ts    # specific files
+ *   npm run lint:copy -- --diff                # only strings on
+ *                                              # changed lines (vs
+ *                                              # origin/main)
+ *   npm run lint:copy -- --diff=HEAD~1         # vs a specific ref
  *
  * Exits 0 when no errors, 1 when any error-severity finding fires.
+ *
+ * Diff mode (PR 3): runs `git diff --unified=0` against the base
+ * ref, parses the +M,N hunk headers to compute changed line ranges,
+ * and filters extracted strings to those whose start line falls in
+ * a changed range. The full-codebase guard in
+ * lint-customer-strings.test.ts still enforces zero error-severity
+ * findings on main, so we can't accumulate skipped violations
+ * silently. CI uses --diff on PRs, full lint on push to main.
  */
 
 import { argv, exit, stderr, stdout } from "node:process";
@@ -220,6 +232,113 @@ export function lintFile(file: string): Finding[] {
   return out;
 }
 
+/**
+ * Lint a file but only emit findings whose start line falls in
+ * `changedLines`. Used by --diff mode so PRs only block on their
+ * own additions, not pre-existing violations.
+ */
+export function lintFileChangedLines(
+  file: string,
+  changedLines: Set<number>,
+): Finding[] {
+  if (changedLines.size === 0) return [];
+  const extracted = extractFromFile(file);
+  const out: Finding[] = [];
+  for (const s of extracted) {
+    if (!changedLines.has(s.line)) continue;
+    out.push(...lintString(s));
+  }
+  return out;
+}
+
+// -----------------------------------------------------------------------------
+// Diff scoping (PR 3)
+// -----------------------------------------------------------------------------
+
+/**
+ * Parse `git diff --unified=0` output into a map of file → changed
+ * line numbers (in the new file). Hunk headers look like:
+ *
+ *   @@ -42,1 +43,2 @@           old: 42,1 → new: 43,2
+ *   @@ -50 +51,3 @@             old: 50,1 (default) → new: 51,3
+ *   @@ -100,5 +99,0 @@          new count = 0 (pure deletion)
+ *
+ * We collect the new-side lines: starting at the +M position, for N
+ * lines. New count of 0 means a pure deletion; nothing to lint there.
+ *
+ * Files appear under `+++ b/<path>`. The leading `+++ /dev/null`
+ * (deleted file) and trailing newlines are skipped.
+ */
+export function parseChangedLines(diffOutput: string): Map<string, Set<number>> {
+  const out = new Map<string, Set<number>>();
+  let currentFile: string | null = null;
+  for (const line of diffOutput.split("\n")) {
+    if (line.startsWith("+++ ")) {
+      const m = /^\+\+\+ b\/(.+)$/.exec(line);
+      if (m) {
+        currentFile = m[1];
+        if (!out.has(currentFile)) {
+          out.set(currentFile, new Set());
+        }
+      } else {
+        // +++ /dev/null (file deleted) — drop currentFile
+        currentFile = null;
+      }
+    } else if (line.startsWith("@@") && currentFile) {
+      const m = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(line);
+      if (m) {
+        const start = Number(m[1]);
+        const count = m[2] !== undefined ? Number(m[2]) : 1;
+        if (count === 0) continue; // pure deletion
+        const set = out.get(currentFile)!;
+        for (let i = start; i < start + count; i++) {
+          set.add(i);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Resolve a base ref to a SHA. Falls back through a couple of
+ * sensible defaults so contributors don't have to know that
+ * `origin/main` doesn't exist on a fresh clone.
+ */
+function resolveDiffBase(arg: string | true): string {
+  if (typeof arg === "string" && arg.length > 0) {
+    return arg;
+  }
+  const candidates = ["origin/main", "main", "HEAD~1"];
+  for (const ref of candidates) {
+    try {
+      execSync(`git rev-parse --verify ${ref}`, { stdio: "ignore" });
+      return ref;
+    } catch {
+      continue;
+    }
+  }
+  throw new Error(
+    "Could not resolve a diff base. Tried origin/main, main, HEAD~1. Pass --diff=<ref> explicitly.",
+  );
+}
+
+/**
+ * Run `git diff --unified=0` between the base ref and HEAD, return
+ * the changed-lines map.
+ */
+export function getChangedLinesFromGit(baseArg: string | true): Map<string, Set<number>> {
+  const base = resolveDiffBase(baseArg);
+  // --no-color: clean output for parsing
+  // --unified=0: minimum context, hunk headers only show changed lines
+  // -- src/: scope the diff to the source tree (small speedup on big repos)
+  const out = execSync(
+    `git diff --unified=0 --no-color ${base}...HEAD -- src/`,
+    { encoding: "utf-8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  return parseChangedLines(out);
+}
+
 // -----------------------------------------------------------------------------
 // CLI
 // -----------------------------------------------------------------------------
@@ -228,13 +347,22 @@ type CliArgs = {
   pretty: boolean;
   warningsAsErrors: boolean;
   files: string[] | null;
+  /** false → no diff mode. true → resolve a default base. string → use this ref. */
+  diff: boolean | string;
 };
 
 function parseArgs(args: string[]): CliArgs {
-  const out: CliArgs = { pretty: false, warningsAsErrors: false, files: null };
+  const out: CliArgs = {
+    pretty: false,
+    warningsAsErrors: false,
+    files: null,
+    diff: false,
+  };
   for (const a of args) {
     if (a === "--pretty") out.pretty = true;
     else if (a === "--warnings-as-errors") out.warningsAsErrors = true;
+    else if (a === "--diff") out.diff = true;
+    else if (a.startsWith("--diff=")) out.diff = a.slice("--diff=".length);
     else if (a.startsWith("--files=")) {
       out.files = a.slice("--files=".length).split(",").filter(Boolean);
     }
@@ -249,6 +377,22 @@ function listAllCustomerFiles(): string[] {
 
 function main(): void {
   const args = parseArgs(argv.slice(2));
+
+  // Diff mode: scope to changed lines per file. If --files is also
+  // passed, intersect — only lint those files AND only on their
+  // changed lines.
+  let changedLines: Map<string, Set<number>> | null = null;
+  if (args.diff) {
+    try {
+      changedLines = getChangedLinesFromGit(args.diff);
+    } catch (err) {
+      stderr.write(
+        `${err instanceof Error ? err.message : String(err)}\n`,
+      );
+      exit(2);
+    }
+  }
+
   let files: string[];
   if (args.files) {
     files = args.files
@@ -261,12 +405,21 @@ function main(): void {
         }
       })
       .filter(isInScope);
+    if (changedLines) {
+      files = files.filter((f) => changedLines!.has(f));
+    }
+  } else if (changedLines) {
+    files = [...changedLines.keys()].filter(isInScope);
   } else {
     files = listAllCustomerFiles();
   }
 
   if (files.length === 0) {
-    stderr.write("No customer-facing files matched.\n");
+    if (changedLines) {
+      stderr.write("No customer-facing files changed in this diff.\n");
+    } else {
+      stderr.write("No customer-facing files matched.\n");
+    }
     exit(0);
   }
 
@@ -274,7 +427,10 @@ function main(): void {
   let warnings = 0;
 
   for (const file of files) {
-    for (const finding of lintFile(file)) {
+    const findings = changedLines
+      ? lintFileChangedLines(file, changedLines.get(file) ?? new Set())
+      : lintFile(file);
+    for (const finding of findings) {
       if (finding.severity === "error") errors++;
       else warnings++;
 
@@ -290,7 +446,8 @@ function main(): void {
     }
   }
 
-  const summary = `Linted ${files.length} file${files.length === 1 ? "" : "s"}: ${errors} error${errors === 1 ? "" : "s"}, ${warnings} warning${warnings === 1 ? "" : "s"}.`;
+  const mode = changedLines ? "diff-scoped" : "full";
+  const summary = `Linted ${files.length} file${files.length === 1 ? "" : "s"} (${mode}): ${errors} error${errors === 1 ? "" : "s"}, ${warnings} warning${warnings === 1 ? "" : "s"}.`;
   stderr.write(`${summary}\n`);
 
   if (errors > 0 || (args.warningsAsErrors && warnings > 0)) {

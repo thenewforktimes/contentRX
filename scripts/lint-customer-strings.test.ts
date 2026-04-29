@@ -9,7 +9,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { lintFile, lintString, type Finding } from "./lint-customer-strings";
+import {
+  lintFile,
+  lintFileChangedLines,
+  lintString,
+  parseChangedLines,
+  type Finding,
+} from "./lint-customer-strings";
 import type { ExtractedString } from "./extract-customer-strings";
 import { execSync } from "node:child_process";
 
@@ -156,6 +162,104 @@ describe("clean copy passes the lint", () => {
     const out = lintString(
       makeString("Manage members", { context: "button", content_type_hint: "button" }),
     );
+    expect(out).toEqual([]);
+  });
+});
+
+describe("parseChangedLines (diff parser)", () => {
+  it("parses a basic +M,N hunk", () => {
+    const diff = `diff --git a/src/app/page.tsx b/src/app/page.tsx
+index abc..def 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -42,1 +43,2 @@
++New line at 43
++New line at 44
+`;
+    const out = parseChangedLines(diff);
+    expect(out.has("src/app/page.tsx")).toBe(true);
+    expect([...(out.get("src/app/page.tsx") ?? new Set())].sort((a, b) => a - b)).toEqual([43, 44]);
+  });
+
+  it("treats +M (no count) as a single line", () => {
+    const diff = `+++ b/foo.tsx
+@@ -10 +10 @@
+-old
++new
+`;
+    const out = parseChangedLines(diff);
+    expect([...(out.get("foo.tsx") ?? new Set())]).toEqual([10]);
+  });
+
+  it("ignores hunks with new count = 0 (pure deletion)", () => {
+    const diff = `+++ b/foo.tsx
+@@ -10,3 +9,0 @@
+-line 10
+-line 11
+-line 12
+`;
+    const out = parseChangedLines(diff);
+    expect(out.get("foo.tsx")?.size ?? 0).toBe(0);
+  });
+
+  it("handles multiple files in one diff", () => {
+    const diff = `+++ b/a.tsx
+@@ -1 +1 @@
++a changed
++++ b/b.tsx
+@@ -5,2 +5,3 @@
++b changed
++b changed too
++b also
+`;
+    const out = parseChangedLines(diff);
+    expect(out.has("a.tsx")).toBe(true);
+    expect(out.has("b.tsx")).toBe(true);
+    expect(out.get("a.tsx")?.size).toBe(1);
+    expect(out.get("b.tsx")?.size).toBe(3);
+  });
+
+  it("skips files marked +++ /dev/null (deletions)", () => {
+    const diff = `+++ /dev/null
+@@ -1,5 +0,0 @@
+-deleted file content
+`;
+    const out = parseChangedLines(diff);
+    expect(out.size).toBe(0);
+  });
+
+  it("collects multiple hunks for the same file", () => {
+    const diff = `+++ b/foo.tsx
+@@ -10,1 +10,2 @@
++line 10
++line 11
+@@ -50,0 +52,1 @@
++line 52
+`;
+    const out = parseChangedLines(diff);
+    expect([...(out.get("foo.tsx") ?? new Set())].sort((a, b) => a - b)).toEqual([10, 11, 52]);
+  });
+});
+
+describe("lintFileChangedLines (diff-scoped lint)", () => {
+  it("returns empty when changedLines set is empty", () => {
+    const out = lintFileChangedLines("src/app/page.tsx", new Set());
+    expect(out).toEqual([]);
+  });
+
+  it("only flags strings whose start line is in changedLines", () => {
+    // src/app/page.tsx is em-dash-clean post-sweep, so a full lint
+    // returns 0 findings. Force a contrived test by using a file we
+    // know has extracted strings: filter to a line that DOES exist
+    // in the extraction and confirm 0 findings (clean copy).
+    const out = lintFileChangedLines("src/app/page.tsx", new Set([41]));
+    // Line 41 is the H1; clean post-sweep.
+    expect(out.filter((f) => f.severity === "error")).toEqual([]);
+  });
+
+  it("doesn't extract strings whose line falls outside changedLines", () => {
+    // Pick a line we know has no extractable string (a comment line).
+    const out = lintFileChangedLines("src/app/page.tsx", new Set([2]));
     expect(out).toEqual([]);
   });
 });
