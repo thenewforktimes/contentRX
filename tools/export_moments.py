@@ -37,7 +37,12 @@ from content_checker.moments import (  # noqa: E402
 )
 
 OUTPUT_PATH = (
-    REPO_ROOT / "src" / "content_checker" / "standards" / "moments_taxonomy.json"
+    REPO_ROOT
+    / "src"
+    / "content_checker"
+    / "standards"
+    / "private"
+    / "moments_taxonomy.json"
 )
 
 

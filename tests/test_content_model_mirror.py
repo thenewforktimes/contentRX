@@ -1,54 +1,40 @@
-"""Pin the public `content-model/` spec artifacts to the canonical
-sources in `src/content_checker/standards/`.
+"""Regression guard: the public `content-model/` directory must not
+contain the substrate JSON files.
 
-BUILD_PLAN_v2 Session 20 preparation. The plan is to extract
-`content-model/` to its own public repo
-(`github.com/contentrx/content-model`) and have the engine consume a
-pinned version. Until that happens, the two copies must stay in
-lockstep — otherwise the public spec drifts silently away from what
-the engine is actually enforcing. This test fails the build if they
-do.
+Per ADR 2026-04-25 (private-taxonomy pivot), the taxonomy is private.
+The `content-model/` directory was prepared to be a public CC BY 4.0
+spec repo and was considered against; the substrate JSON files were
+moved to private storage on 2026-04-29 (see CHANGELOG, "Repo —
+public-surface scope" entry).
 
-When you intentionally change the standards library or moments
-taxonomy, update BOTH locations in the same PR.
+This test exists to catch a future regression: anyone re-introducing
+the public mirror (intentionally or by accident) should land here and
+read the ADR before deciding the position has changed.
+
+When the position is reconsidered, the path is a new ADR superseding
+the 2026-04-25 pivot — not flipping these assertions in a routine PR.
 """
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CANONICAL_DIR = REPO_ROOT / "src" / "content_checker" / "standards"
 PUBLIC_DIR = REPO_ROOT / "content-model"
 
 
 @pytest.mark.parametrize(
     "filename",
-    ["standards_library.json", "moments_taxonomy.json"],
+    ["standards_library.json", "moments_taxonomy.json", "SPEC.md"],
 )
-def test_content_model_mirror_matches_canonical(filename: str) -> None:
-    canonical_path = CANONICAL_DIR / filename
+def test_content_model_substrate_not_publicly_mirrored(filename: str) -> None:
     public_path = PUBLIC_DIR / filename
-    assert canonical_path.exists(), (
-        f"Canonical source missing at {canonical_path}"
-    )
-    assert public_path.exists(), (
-        f"Public mirror missing at {public_path}. Update both when "
-        "the taxonomy changes."
-    )
-
-    canonical = json.loads(canonical_path.read_text(encoding="utf-8"))
-    public = json.loads(public_path.read_text(encoding="utf-8"))
-
-    # Compare the parsed JSON rather than raw bytes so formatting
-    # differences (trailing newlines, indent) don't fail the test.
-    # The cost is that semantically-identical but structurally-
-    # different files would pass; worth it.
-    assert canonical == public, (
-        f"content-model/{filename} has drifted from "
-        f"src/content_checker/standards/{filename}. Re-sync with:\n"
-        f"  cp src/content_checker/standards/{filename} content-model/{filename}"
+    assert not public_path.exists(), (
+        f"Substrate file {public_path} reappeared in the public tree. "
+        "ADR 2026-04-25 says the taxonomy is private — read "
+        "decisions/2026-04-25-private-taxonomy-pivot.md before deciding "
+        "this is intentional. If the position has actually changed, "
+        "delete this test and write a new ADR superseding the pivot."
     )

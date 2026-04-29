@@ -69,9 +69,10 @@ The public surface — what customers and prospects actually see — is:
 The substrate (private taxonomy + override stream + refinement log) produces
 the report (public artifacts) through scheduled generators in `reports/`.
 Nothing outside reads substrate. This separation is the load-bearing
-architectural choice; see [ARCHITECTURE.md](ARCHITECTURE.md) for the
-substrate-vs-report contract and [decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md)
-for the rationale and rejected alternatives.
+architectural choice; the substrate-vs-report contract is documented in
+`_private/architecture.md` (gitignored), and
+[decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md)
+records the rationale and rejected alternatives.
 
 **The moat is operational, not architectural.** If the calibration log goes
 stale for a quarter, the moat decays in public. The `reports/` module's

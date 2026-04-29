@@ -346,7 +346,7 @@ function readLastCrawlIndex(): Record<string, string> {
  */
 export function loadSourcesData(): SourcesData {
   const standards = readJson<StandardsLibraryFile>(
-    path.join("src", "content_checker", "standards", "standards_library.json"),
+    path.join("src", "content_checker", "standards", "private", "standards_library.json"),
   );
   const pairs = readJson<PairsFile>(
     path.join("evals", "examples_corpus", "pairs.json"),

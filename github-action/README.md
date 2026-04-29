@@ -120,17 +120,13 @@ update a button:
 
 The action posts this comment on the PR:
 
-> **ContentRX — 1 violation found**
+> **ContentRX — 1 finding**
 >
 > **`src/app/pricing/page.tsx`**
 >
 > - Line 47: `"Click here to see our pricing plans"`
->   - **ACT-02** [block] — Vague CTA. "Click here" doesn't name the
->     destination.
+>   - [block] Vague CTA. "Click here" doesn't name the destination.
 >     _Suggestion: "See pricing plans" or "View pricing"._
->
-> [See the ACT-02 standard](https://docs.contentrx.io/spec/standards/ACT-02)
-> for the full rule + examples.
 
 With `strict: false` (the default), the check still passes — the
 review is advisory. Engineer pushes a fix in the next commit; comment

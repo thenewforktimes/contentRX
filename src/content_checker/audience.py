@@ -78,7 +78,7 @@ class Audience(str, Enum):
 #   2. Verify with triage data (must have ≥3 confirmed context_gap cases)
 #   3. Add the ID here with a one-line rationale
 #   4. Add a test case in test_audience.py
-#   5. Document in ARCHITECTURE.md
+#   5. Note the addition in the internal architecture doc.
 
 UI_SPECIFIC_STANDARDS: Final[frozenset[str]] = frozenset({
     # ACT-01: "Start CTAs with a verb." Buttons in product UI need

@@ -76,3 +76,8 @@ evals/results/
 # Persist a copy somewhere outside the repo (e.g., ~/Desktop) for
 # durability across worktrees.
 _private/
+
+# Private substrate (ADR 2026-04-25): the engine loads these at runtime
+# but they're hosted in a private submodule, not the public repo.
+src/content_checker/standards/private/
+

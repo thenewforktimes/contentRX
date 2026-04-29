@@ -18,7 +18,7 @@ DISAGREEMENTS_PATH = (
     REPO_ROOT / "evals" / "examples_corpus" / "disagreement_map.json"
 )
 LIBRARY_PATH = (
-    REPO_ROOT / "src" / "content_checker" / "standards" / "standards_library.json"
+    REPO_ROOT / "src" / "content_checker" / "standards" / "private" / "standards_library.json"
 )
 
 # Known preprocessor-only standards that live in preprocess.py, not the

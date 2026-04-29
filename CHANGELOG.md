@@ -6,9 +6,80 @@ changes per surface, in reverse chronological order.
 
 ---
 
+## Repo — public-surface scope
+
+### 2026-04-29 — pre-launch IP audit and trust-frame
+
+The repo is public; the editorial library is not. This pass closes the
+gap between those two facts.
+
+**What moved off the public tree:**
+
+- `content-model/standards_library.json`, `content-model/moments_taxonomy.json`,
+  and `content-model/SPEC.md` — the publishable form of the taxonomy.
+  The directory was prepared as a public CC BY 4.0 spec repo and
+  considered against; the README, LICENSE, and CHANGELOG remain as a
+  record of the path not taken.
+- `ARCHITECTURE.md` — internal architecture narrative that named
+  every standard, every moment weight, and the rationale chain in
+  prose form. Will be replaced by a public-facing data-flow document
+  focused on what the engine does with customer text.
+- ~15 internal working documents from the repo root: pricing strategy,
+  design critiques, eval protocol, patch queues, code review notes,
+  and dated working session artifacts.
+
+**What stays public:**
+
+- All engine, web app, MCP, CLI, GitHub Action, LSP, editor extension,
+  and figma plugin code.
+- The three customer-data guard files: `src/lib/pii-screen.ts`,
+  `src/lib/sentry-scrub.ts`, `src/lib/safe-error-log.ts`.
+- The `decisions/` directory — every architectural decision recorded.
+- All tests across every surface.
+- `/accuracy`, `/calibration`, `/essays`, `/reports` are the public
+  accountability surface for measured behavior.
+
+**Published wire-format change.** The engine CLI's `--json` output now
+emits the schema 2.0.0 public envelope (`verdict`, no
+`overall_verdict`, no substrate fields). Programs parsing that output
+need to read `verdict` instead of `overall_verdict`. Per the zero-paying-customers
+state at the time of this change, no migration window is offered.
+
+**Not done in this pass:**
+
+- Engine-load-bearing substrate at `src/content_checker/standards/*.json`
+  is still in the tree pending the architectural decision on hosting
+  (private submodule vs build-time fetch). Tracked separately.
+- Git history rewrite was considered and chosen against — the
+  Wayback Machine and GitHub archive caches make the cleanup
+  imperfect anyway, and force-push on a public repo can read as
+  evasive. The honest position is to acknowledge the substrate was
+  briefly readable, fix the ongoing leak, and move on.
+
+---
+
 ## Engine — `src/content_checker/`
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
+
+### 4.7.3 — 2026-04-29 (CLI public-envelope cutover)
+
+**CLI behavior change.** `cli/main.py` text and `--json` output now
+emit only the schema 2.0.0 public envelope. The internal substrate
+fields (`standard_id`, `rule`, `rule_version`, `rationale_chain`,
+`related_standards`) are stripped from CLI output regardless of mode.
+The internal substrate object on the model is unchanged — the change
+is at the surface boundary.
+
+**New methods on `models.py`** for batch-result public envelopes:
+`ConsistencyViolation.to_public_dict`,
+`ItemResult.to_public_envelope`, and `BatchResult.to_public_envelope`.
+These are purely additive — existing `to_dict()` and
+`to_substrate_dict()` are unchanged, so internal callers
+(`api/evaluate.py`, eval harness, tools) are unaffected.
+
+**Version bumped 4.7.2 → 4.7.3.** Wire-format change on the CLI
+surface; no engine-pipeline change.
 
 ### 4.7.2 — 2026-04-29 (suggestion-voice prompt fix)
 

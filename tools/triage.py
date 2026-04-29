@@ -46,7 +46,7 @@ from typing import Any
 
 # Valid values for human triage fields. These are the contract between
 # the triage tool and downstream consumers (eval promotion, roadmap
-# clustering, ARCHITECTURE.md analysis).
+# clustering, architecture analysis).
 
 VERDICTS = ("pass", "fail")
 
@@ -767,7 +767,7 @@ def run_triage(
     means adding new navigation commands never touches review logic.
     """
     cases = data["cases"]
-    log_path = refinement_log or Path("taxonomy_refinement_log.md")
+    log_path = refinement_log or Path("_private/taxonomy_refinement_log.md")
 
     if not cases:
         print(f"{C.YELLOW}No cases in this file.{C.RESET}")
@@ -928,7 +928,7 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         help=(
             "Path to the taxonomy refinement log "
-            "(default: taxonomy_refinement_log.md in current directory)."
+            "(default: _private/taxonomy_refinement_log.md)."
         ),
     )
     return parser

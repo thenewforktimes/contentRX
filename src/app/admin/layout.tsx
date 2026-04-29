@@ -18,9 +18,9 @@
  *   3. Founders (Clerk IDs in `CONTENTRX_ADMIN_CLERK_IDS`) get the
  *      page content.
  *
- * The single-user-by-design principle (ARCHITECTURE.md §`/admin`
- * dashboard) means this layout doesn't try to model multi-tenant
- * permissions. There's one role: founder. Everyone else gets a 404.
+ * The single-user-by-design principle means this layout doesn't try
+ * to model multi-tenant permissions. There's one role: founder.
+ * Everyone else gets a 404.
  */
 
 import { auth } from "@clerk/nextjs/server";

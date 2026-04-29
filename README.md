@@ -4,9 +4,21 @@ The content model for product copy. Situation-aware review for the moments where
 
 This repository is **source-available** under the [Functional Source License](LICENSE) (FSL-1.1-MIT). You can read it, fork it, audit it, contribute to it, and use it internally. You can't ship a commercial replica. After two years from each release, the code converts to MIT.
 
+## Transparent about how, private about what
+
+You can audit how we handle your text — every line that touches a customer string is open. You can audit our decisions, our security model, and our published accuracy. The editorial judgment is proprietary, the way an editor's judgment at any serious publication is proprietary. What you're paying for is access to that judgment, calibrated weekly. This isn't a software tool you could build yourself.
+
+The split, concretely:
+
+- **Open**: the engine pipeline. The three data-handling guard files ([pii-screen](src/lib/pii-screen.ts), [sentry-scrub](src/lib/sentry-scrub.ts), [safe-error-log](src/lib/safe-error-log.ts)). The security architecture. The [decisions/](decisions/) record. Every test across every surface. The customer-not-product [contract](decisions/2026-04-28-customer-not-product.md).
+- **Private**: the editorial library. The specific standards and moments the engine evaluates against. The override stream, the refinement log, and the calibration internals. These live in a separate substrate that the engine loads at runtime.
+- **Public accountability for the private part**: `/accuracy` reports measured kappa with 95% CI. `/calibration` is the weekly calibration log. `/essays` and `/reports` carry the named-expert narrative and quarterly reports.
+
+The work is in maintaining the editorial judgment, not in the static rules. A published rulebook is stale within a quarter. What you verify is the integrity of the process — measured accuracy, weekly calibration, public decisions — not the contents of a snapshot.
+
 ## What it does
 
-Paste a piece of UI copy — a button label, error message, tooltip, onboarding flow — and the checker evaluates it against 46 content standards covering clarity, voice and tone, consistency, accessibility, action-oriented writing, content structure, grammar and mechanics, inclusive language, and translation readiness.
+Paste a piece of UI copy — a button label, error message, tooltip, onboarding flow — and the checker evaluates it against a private library of content standards covering clarity, voice and tone, consistency, accessibility, action-oriented writing, content structure, grammar and mechanics, inclusive language, and translation readiness.
 
 You get a pass/fail verdict, the specific standards violated, and a suggestion for each. You decide what to fix and how — the tool flags problems, it doesn't rewrite your copy.
 
@@ -88,7 +100,7 @@ items = [
 ]
 batch = check_batch(items)
 print(batch.overall_verdict)           # "fail"
-print(batch.consistency_violations)    # CON-01: terminology inconsistency
+print(batch.consistency_violations)    # cross-snippet terminology inconsistency
 ```
 
 ## How it works
@@ -96,12 +108,12 @@ print(batch.consistency_violations)    # CON-01: terminology inconsistency
 The checker runs a 5-stage pipeline:
 
 1. **Classify** — an LLM call identifies the content type (button, error message, confirmation, tooltip, label, short UI copy, or long-form copy). Falls back to a heuristic when no API key is available.
-2. **Filter** — the standards library is pruned to only the rules relevant to that content type. A button gets 6 standards, not 46. This reduces false positives and API costs.
-3. **Scan** — two parallel tracks: a deterministic pre-processor catches mechanical violations (Oxford commas, ampersands, numerals, date formats) at zero cost, while an LLM call checks the nuanced rules against the filtered set.
+2. **Filter** — the standards library is pruned to only the rules relevant to that content type. A button gets a much narrower set than long-form copy. This reduces false positives and API costs.
+3. **Scan** — two parallel tracks: a deterministic pre-processor catches mechanical violations at zero cost, while an LLM call checks the nuanced rules against the filtered set.
 4. **Validate** — a second LLM call reviews each candidate violation and confirms or rejects it with full context, including content-type-specific notes (e.g., passive voice is acceptable in confirmations).
 5. **Merge** — deterministic and LLM results are combined, deduplicated, and a final verdict is produced.
 
-For batch mode, each item runs through the pipeline individually, then a consistency pass checks CON-01, CON-04, and TRN-07 across the full set.
+For batch mode, each item runs through the pipeline individually, then a consistency pass checks for cross-snippet inconsistencies across the full set.
 
 ## Project structure
 
@@ -111,92 +123,33 @@ src/content_checker/       # Core library (pip installable)
   batch.py                 # Batch handler + consistency checker
   classify.py              # Content type classifier (LLM + heuristic)
   filter.py                # Standards filter by content type
-  preprocess.py            # Deterministic checks (GRM-01, GRM-04, GRM-05, CON-03)
-  validate.py              # Validation pass with content_type_notes
+  preprocess.py            # Deterministic mechanical checks
+  validate.py              # Validation pass with content-type notes
   models.py                # Typed data contracts (Violation, CheckResult, etc.)
   standards/
     loader.py              # Standards library path resolution
-    standards_library.json # 46 standards, v4.0.0
 cli/
   main.py                  # CLI entry point (single, interactive, batch modes)
 figma-plugin/              # Figma plugin (see figma-plugin/README.md)
-evals/
-  run_evals.py             # Eval runner (library + novel modes)
-  novel_cases.json         # 41 adversarial test cases
-tests/                     # 116 pytest tests
+tests/                     # Engine test suite
 ```
 
-## Standards library (v4.0.0)
+## Standards library
 
-A structured JSON file with 46 standards across 9 categories. Each standard has:
+The standards library is private. Per the [private-taxonomy ADR](decisions/2026-04-25-private-taxonomy-pivot.md),
+the per-standard rules and rationale are internal artifacts. The
+public-facing surfaces — `/accuracy`, the weekly calibration log, and
+the quarterly reports — describe what the library evaluates without
+enumerating it. See those surfaces for measured accuracy and drift
+data; the rules themselves do not ship.
 
-| Field | Description |
-|---|---|
-| `id` | Unique identifier (e.g., CLR-01, GRM-04) |
-| `rule` | The standard in plain language |
-| `correct` | Example that passes |
-| `incorrect` | Example that violates |
-| `rule_type` | `hard` (mechanical, binary) or `nuanced` (context-dependent) |
-| `checkable_from` | `plain_text`, `rich_text`, or `visual` |
-| `relevant_content_types` | Which content types this standard applies to |
-| `content_type_notes` | Context-specific evaluation guidance (optional) |
-| `requires_multi_snippet` | Whether this standard needs batch mode to evaluate (optional) |
+## Accuracy
 
-### Standards coverage
-
-| Category | Standards | Type |
-|---|---|---|
-| Clarity | CLR-01 through CLR-05 | Mostly nuanced |
-| Voice and tone | VT-01 through VT-05 | All nuanced |
-| Consistency | CON-01 through CON-05 | Mix of hard and nuanced |
-| Accessibility | ACC-01 through ACC-07 | Mix (2 require rich text or visual context) |
-| Action-oriented writing | ACT-01 through ACT-04 | All nuanced |
-| Content structure | STR-01 through STR-06 | Mix (1 requires rich text context) |
-| Grammar and mechanics | GRM-01 through GRM-05 | All hard |
-| Inclusive language | INC-01 through INC-02 | Mix |
-| Translation readiness | TRN-01 through TRN-07 | Mix |
-
-### Standards per content type
-
-| Content type | Standards checked | Reduction from full set |
-|---|---|---|
-| Button / CTA | 6 | 86% fewer |
-| Error message | 21 | 51% fewer |
-| Confirmation | 17 | 60% fewer |
-| Tooltip / microcopy | 23 | 47% fewer |
-| UI label | 11 | 74% fewer |
-| Short UI copy | 37 | 14% fewer |
-| Long-form copy | 37 | 14% fewer |
-
-## Eval results
-
-Current results (v4.0.0, Claude Sonnet):
-
-| Eval | Accuracy | False positive rate | Cost per run |
-|---|---|---|---|
-| Library (86 cases) | 100% | 0.0% | $1.36 |
-| Novel (41 adversarial cases) | 91.9% | 14.3% | $0.60 |
-
-Run evals:
-
-```bash
-# Library cases (regression gate)
-python -m evals.run_evals
-
-# Novel cases (real-world accuracy)
-python -m evals.run_evals --novel
-
-# Filter by category
-python -m evals.run_evals --novel --category GRM
-```
-
-## Roadmap
-
-- Code scanner: extract user-facing strings from JSX/TSX/HTML and check them automatically
-- Standards packs for specific industries and style guides (GOV.UK, Google, Microsoft)
-- Multi-layer text checking in the Figma plugin with batch consistency
-- Deterministic post-processing to suppress known LLM false positives
-- `pip install content-standards-checker` distribution via PyPI
+Measured system kappa, self-drift kappa with 95% CI, and a target
+ceiling are reported on `/accuracy`. The weekly calibration log on
+`/calibration` tracks kappa movement, drift signals, override count,
+and refinement-log activity. See those pages for the live numbers
+rather than this README.
 
 ## Contributing
 

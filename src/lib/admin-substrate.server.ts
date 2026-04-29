@@ -196,11 +196,14 @@ let cachedMoments: {
 
 function loadMoments() {
   if (cachedMoments) return cachedMoments;
+  // Substrate lives in the gitignored private/ subdir per ADR 2026-04-25.
+  // Local dev populates it from the private substrate repo (submodule).
   const p = path.join(
     process.cwd(),
     "src",
     "content_checker",
     "standards",
+    "private",
     "moments_taxonomy.json",
   );
   const raw = JSON.parse(fs.readFileSync(p, "utf-8")) as RawMomentsTaxonomy;

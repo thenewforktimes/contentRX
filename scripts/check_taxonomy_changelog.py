@@ -28,13 +28,13 @@ import subprocess
 import sys
 
 TAXONOMY_FILES = (
-    "src/content_checker/standards/standards_library.json",
-    "src/content_checker/standards/moments_taxonomy.json",
+    "src/content_checker/standards/private/standards_library.json",
+    "src/content_checker/standards/private/moments_taxonomy.json",
     "src/content_checker/moments.py",
 )
 
 CHANGELOG_FILES = (
-    "src/content_checker/standards/standards_library.json",
+    "src/content_checker/standards/private/standards_library.json",
     "taxonomy_refinement_log.md",
 )
 

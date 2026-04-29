@@ -46,10 +46,10 @@ def print_result(
     print(f"  {result.summary}")
 
     if result.violations:
-        print(f"\n  Violations ({len(result.violations)}):")
+        print(f"\n  Findings ({len(result.violations)}):")
         for v in result.violations:
             tag = " [deterministic]" if v.source == "deterministic" else ""
-            print(f"    [{v.standard_id}]{tag} {v.issue}")
+            print(f"    •{tag} {v.issue}")
             print(f"      → {v.suggestion}")
 
     if verbose:
@@ -93,13 +93,13 @@ def print_batch_result(batch: BatchResult, verbose: bool = False) -> None:
         if ir.result.violations:
             for viol in ir.result.violations:
                 tag = " [deterministic]" if viol.source == "deterministic" else ""
-                print(f"    [{viol.standard_id}]{tag} {viol.issue}")
+                print(f"    •{tag} {viol.issue}")
                 print(f"      → {viol.suggestion}")
 
     if batch.consistency_violations:
         print(f"\n  Consistency issues ({len(batch.consistency_violations)}):")
         for cv in batch.consistency_violations:
-            print(f"    [{cv.standard_id}] {cv.issue}")
+            print(f"    • {cv.issue}")
             print(f"      → {cv.suggestion}")
             if cv.items_involved:
                 print(f"      Strings: {', '.join(repr(s) for s in cv.items_involved)}")
@@ -235,7 +235,7 @@ def main() -> None:
         )
 
         if args.json:
-            print(json.dumps(batch.to_dict(), indent=2))
+            print(json.dumps(batch.to_public_envelope(), indent=2))
         else:
             print_batch_result(batch, verbose=args.verbose)
         return
@@ -270,7 +270,7 @@ def main() -> None:
                 print(f"Error: {e}", file=sys.stderr)
                 continue
             if args.json:
-                print(json.dumps(result.to_dict(), indent=2))
+                print(json.dumps(result.to_public_envelope(), indent=2))
             else:
                 print_result(text, result, latency, tokens, verbose=args.verbose)
             print()
@@ -281,7 +281,7 @@ def main() -> None:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
         if args.json:
-            print(json.dumps(result.to_dict(), indent=2))
+            print(json.dumps(result.to_public_envelope(), indent=2))
         else:
             print_result(args.text, result, latency, tokens, verbose=args.verbose)
 

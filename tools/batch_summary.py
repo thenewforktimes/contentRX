@@ -272,7 +272,7 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--batch", type=Path, required=True)
     d.add_argument(
         "--log", type=Path,
-        default=Path("taxonomy_refinement_log.md"),
+        default=Path("_private/taxonomy_refinement_log.md"),
     )
     d.add_argument(
         "--id", default=None,

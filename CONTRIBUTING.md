@@ -2,12 +2,27 @@
 
 Thanks for your interest in contributing. Here's how to get involved.
 
+## What's public, what's private
+
+The engine code, the data-handling guard files, the security architecture,
+the decisions, and the tests are all open. The editorial library — the
+specific standards and moments the engine evaluates against — is private,
+loaded from a separate gitignored substrate at runtime. See
+[decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md)
+for the rationale.
+
+This means external contributions to the engineering surfaces are welcome
+and reviewable in the open. Contributions that would change the editorial
+library itself (adding a new standard, tweaking a rule) cannot land
+through public PRs — that work happens in the private substrate. Open an
+issue to start that conversation.
+
 ## Setup
 
 ```bash
 # Clone and install in development mode
-git clone https://github.com/your-username/content-standards-checker.git
-cd content-standards-checker
+git clone https://github.com/thenewforktimes/contentRX.git
+cd contentRX
 pip install -e ".[dev]"
 
 # Set your API key (needed for evals, not for unit tests)
@@ -17,17 +32,39 @@ export ANTHROPIC_API_KEY=sk-ant-...
 pytest
 ```
 
+The engine reads its substrate from `src/content_checker/standards/private/`,
+which is gitignored. Public contributors get a project that imports cleanly
+and runs the suite for any tests that don't require the substrate; tests
+that do need it skip with a clear message. If you're working on the engine
+internals and need the live substrate, ask the maintainers.
+
 ## Ways to contribute
 
-**Add or improve standards.** The standards library is the heart of this project. If you have content standards from your org (or ideas for universal ones), open a PR to add them to `src/content_checker/standards/standards_library.json`.
+**Engine code.** The pipeline, classifier, filter, preprocessor, validator,
+and merge logic in `src/content_checker/` — all open for fixes and
+improvements. The deterministic preprocessor (`preprocess.py`) is the place
+to land mechanical-rule fixes that the LLM consistently misses.
 
-**Add novel test cases.** The novel eval suite (`evals/novel_cases.json`) tests whether the checker generalizes beyond its own examples. Edge cases, ambiguous copy, and content that's tricky to classify are especially valuable.
+**Surface code.** The CLI, MCP server, LSP server, GitHub Action, Figma
+plugin, and web app all live in this repo and welcome fixes / UX
+improvements. Each has its own README and CLAUDE.md with surface-specific
+conventions.
 
-**Improve the deterministic layer.** The pre-processor in `src/content_checker/preprocess.py` catches mechanical violations without an API call. If you find a hard rule the LLM consistently misses, a regex-based check here is the fix.
+**Customer-data handling.** The three guard files
+([src/lib/pii-screen.ts](src/lib/pii-screen.ts),
+[src/lib/sentry-scrub.ts](src/lib/sentry-scrub.ts),
+[src/lib/safe-error-log.ts](src/lib/safe-error-log.ts)) are open for
+review and tightening. If you find a category of leak the screen misses
+or a Sentry path that bypasses the scrub, that's a high-value PR.
 
-**Fix bugs or improve UX.** If something doesn't work as expected in the CLI, Figma plugin, or library API, open an issue or submit a fix.
+**Tests.** Engine, web app, MCP, CLI, LSP, GitHub Action — every surface
+has its own test suite. Adding regression coverage (especially around the
+schema 2.0.0 wire format and the substrate-stripping snapshot tests) is
+always welcome.
 
-**Documentation.** If setup was confusing, the README was unclear, or you had to figure something out that should have been documented — that's a contribution.
+**Documentation.** If setup was confusing, the README was unclear, or you
+had to figure something out that should have been documented — that's a
+contribution.
 
 ## How to submit changes
 
@@ -37,42 +74,6 @@ pytest
 4. Run `pytest` — all tests must pass
 5. If you changed the standards library, run the eval suite to verify accuracy
 6. Open a pull request with a clear description of what you changed and why
-
-## Standards library conventions
-
-Every standard in `standards_library.json` requires these fields:
-
-| Field | Required | Description |
-|---|---|---|
-| `id` | Yes | Category prefix + number (e.g., `CLR-06`, `ACC-08`) |
-| `rule` | Yes | The standard in plain language — this gets embedded in the LLM prompt |
-| `correct` | Yes | Example that clearly passes the rule |
-| `incorrect` | Yes | Example that clearly violates the rule |
-| `rule_type` | Yes | `hard` (mechanical, binary) or `nuanced` (context-dependent) |
-| `checkable_from` | Yes | `plain_text`, `rich_text`, or `visual` |
-| `relevant_content_types` | Yes | Array of content type IDs where this standard applies |
-| `content_type_notes` | No | Object mapping content type IDs to evaluation guidance |
-| `requires_multi_snippet` | No | `true` if the standard needs multiple strings to evaluate |
-
-When adding a standard:
-
-- Use the existing ID format: category prefix + sequential number
-- Write the rule in plain language — avoid jargon about content design
-- The correct example should clearly pass. The incorrect example should clearly violate.
-- Avoid ambiguous examples — the checker is tuned to pass when unsure, so borderline cases reduce accuracy
-- Assign `relevant_content_types` based on where the rule meaningfully applies. See `content_type_mapping_v2.md` for reasoning on existing assignments
-- If the rule only applies differently (not excluded entirely) for a content type, use `content_type_notes` instead of excluding it
-
-Valid content type IDs: `button_cta`, `error_message`, `confirmation`, `tooltip_microcopy`, `ui_label`, `short_ui_copy`, `long_form_copy`.
-
-## Novel test cases
-
-When adding cases to `evals/novel_cases.json`:
-
-- Each case must have a `content_type` field specifying what kind of content the input represents (e.g., `confirmation`, `error_message`). This is used to route the case through the correct pipeline path during evaluation.
-- Write cases that test generalization, not pattern matching. Use different vocabulary, sentence structures, and topics than the library examples.
-- Include both expected-pass and expected-fail cases for each standard you test.
-- Add a `note` field explaining what the case tests and why it's tricky.
 
 ## Project structure
 

@@ -256,9 +256,9 @@ classify_moment(text="Are you sure you want to delete this key?")
 ```
 
 Then `evaluate_copy` on candidate phrasings. The `destructive_action`
-moment weighs `CLR-02` (consequence clarity) and `TRS-01` (reversibility)
-more heavily — if the candidate doesn't mention "cannot be undone,"
-ContentRX flags it and Claude revises before you see the draft.
+moment weights consequence clarity and reversibility more heavily —
+if the candidate doesn't mention "cannot be undone," ContentRX flags
+it and Claude revises before you see the draft.
 
 ## Environment variables
 

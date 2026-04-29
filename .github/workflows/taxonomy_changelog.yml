@@ -1,24 +1,21 @@
 name: Taxonomy changelog gate
 
-# Human-eval build plan Session 23 — enforces that any PR editing the
-# taxonomy (standards_library.json, moments.py, moments_taxonomy.json)
-# either appends a version_history entry, adds an Approved refinement
-# to taxonomy_refinement_log.md, or explicitly opts out with a
-# `changelog-skip:` commit prefix.
+# DISABLED 2026-04-29 — operates on private substrate.
 #
-# The `/model/changelog` page on docs.contentrx.io reads those entries
-# verbatim — an unchronicled taxonomy change breaks the transparency
-# commitment to users.
+# Per ADR 2026-04-25 and the 2026-04-29 substrate-hosting move, the
+# substrate JSON files and the refinement log are gitignored. PRs in
+# the public repo cannot edit those paths, so this gate has no public
+# trigger. The equivalent enforcement lives in the private substrate
+# repo's CI.
+#
+# `moments.py` is the one taxonomy-touching file still in the public
+# tree. Keeping the trigger on it lets a future re-enable cover that
+# case; for now `if: false` no-ops the job.
 
 on:
   pull_request:
     paths:
-      - "src/content_checker/standards/standards_library.json"
-      - "src/content_checker/standards/moments_taxonomy.json"
       - "src/content_checker/moments.py"
-      - "taxonomy_refinement_log.md"
-      - "scripts/check_taxonomy_changelog.py"
-      - ".github/workflows/taxonomy_changelog.yml"
 
 concurrency:
   group: taxonomy-changelog-${{ github.workflow }}-${{ github.ref }}
@@ -28,6 +25,7 @@ jobs:
   changelog:
     name: taxonomy changelog entry
     runs-on: ubuntu-latest
+    if: false  # disabled — substrate is private (see header)
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4

@@ -438,7 +438,7 @@ def main(argv: list[str] | None = None) -> int:
     # Moments: load from the exported moments taxonomy where available.
     moment_ids: set[str] = set()
     moments_path = Path(library["__moments_taxonomy_path__"]) if "__moments_taxonomy_path__" in library else (
-        REPO_ROOT / "src" / "content_checker" / "standards" / "moments_taxonomy.json"
+        REPO_ROOT / "src" / "content_checker" / "standards" / "private" / "moments_taxonomy.json"
     )
     if moments_path.exists():
         mt = json.loads(moments_path.read_text(encoding="utf-8"))

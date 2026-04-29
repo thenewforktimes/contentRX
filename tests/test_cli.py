@@ -226,7 +226,12 @@ class TestPrintResult:
         print_result("A, B and C", _make_check_result("fail", [v]), 0.1, TokenUsage())
         out = capsys.readouterr().out
         assert "FAIL" in out
-        assert "GRM-01" in out
+        # ADR 2026-04-25: substrate fields (standard_id, rule) MUST NOT
+        # appear in CLI output. The internal substrate is unchanged on
+        # the model object — it just doesn't reach stdout.
+        assert "GRM-01" not in out
+        assert "Use Oxford commas." not in out
+        assert "Missing Oxford comma." in out
         assert "[deterministic]" in out
 
     def test_verbose_prints_pipeline(self, capsys):
@@ -264,7 +269,11 @@ class TestPrintBatchResult:
         print_batch_result(batch)
         out = capsys.readouterr().out
         assert "Consistency issues" in out
-        assert "CON-01" in out
+        # ADR 2026-04-25: substrate fields (standard_id, rule) MUST NOT
+        # appear in CLI output, including for consistency violations.
+        assert "CON-01" not in out
+        assert "Use consistent terminology." not in out
+        assert "'Settings' vs 'Preferences'" in out
 
 
 # ---------------------------------------------------------------------------
@@ -317,7 +326,17 @@ class TestMainDispatch:
         main()
         out = capsys.readouterr().out
         parsed = json.loads(out)
-        assert parsed["overall_verdict"] == "pass"
+        # Schema 2.0.0 (ADR 2026-04-25): CLI --json emits the public
+        # envelope, which uses `verdict` (not the legacy `overall_verdict`),
+        # carries `schema_version`, and has no substrate fields at any
+        # depth. The substrate-bearing `to_dict()` shape is reserved for
+        # internal callers.
+        assert parsed["verdict"] == "pass"
+        assert parsed["schema_version"] == "2.0.0"
+        assert "overall_verdict" not in parsed
+        assert "rationale_chain" not in parsed
+        assert "passes" not in parsed
+        assert "pipeline" not in parsed
 
     def test_type_override_forwarded(self, monkeypatch):
         calls = self._patch_check(monkeypatch)

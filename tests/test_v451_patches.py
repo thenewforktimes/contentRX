@@ -375,7 +375,7 @@ class TestComplianceDisclosurePrompt:
 
     def test_prompt_does_not_mention_hard_nuanced(self):
         """System prompt must never reference hard vs nuanced rule types.
-        This is a project-wide constraint from ARCHITECTURE.md.
+        This is a project-wide architectural constraint.
         """
         section = build_moment_prompt_section("compliance_disclosure")
         lower = section.lower()
@@ -459,7 +459,7 @@ class TestTRN04ContentTypeNotes:
 
     def test_trn04_routing_metadata_preserved(self, standards):
         """Surgical patch must not damage existing routing metadata.
-        This is the critical constraint from ARCHITECTURE.md.
+        This is the critical architectural constraint.
         """
         trn04 = self._find_standard(standards, "TRN-04")
         assert trn04["rule_type"] == "hard"

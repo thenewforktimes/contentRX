@@ -219,7 +219,7 @@ def test_committed_corpus_does_not_trip_default_threshold_on_current_library():
     standard that was added isn't attributed yet, or the new snippet
     was transcribed too close to a standard — both indicate a drift
     to fix."""
-    library_path = REPO_ROOT / "src" / "content_checker" / "standards" / "standards_library.json"
+    library_path = REPO_ROOT / "src" / "content_checker" / "standards" / "private" / "standards_library.json"
     corpus_path = REPO_ROOT / "evals" / "external_source_snippets.json"
     library = json.loads(library_path.read_text(encoding="utf-8"))
     snippets_raw = json.loads(corpus_path.read_text(encoding="utf-8"))

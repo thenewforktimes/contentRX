@@ -785,6 +785,15 @@ class ItemResult:
             "tokens": self.tokens.to_dict(),
         }
 
+    def to_public_envelope(self) -> dict:
+        """Public-facing form — wraps the result through `to_public_envelope`."""
+        return {
+            "item": self.item.to_dict(),
+            "result": self.result.to_public_envelope(),
+            "latency": self.latency,
+            "tokens": self.tokens.to_dict(),
+        }
+
 
 @dataclass
 class ConsistencyViolation:
@@ -804,6 +813,25 @@ class ConsistencyViolation:
             "suggestion": self.suggestion,
             "items_involved": self.items_involved,
         }
+
+    def to_public_dict(self) -> dict:
+        """Public-facing schema 2.0.0 shape — strips substrate fields.
+
+        Drops `standard_id` and `rule` (substrate) — only `issue`,
+        `suggestion`, and `items_involved` reach user-facing surfaces.
+        When `PUBLIC_TAXONOMY=true` the substrate fields are echoed back.
+        """
+        public: dict[str, Any] = {
+            "issue": self.issue,
+            "suggestion": self.suggestion,
+            "items_involved": self.items_involved,
+        }
+        if is_public_taxonomy_enabled():
+            public.update({
+                "standard_id": self.standard_id,
+                "rule": self.rule,
+            })
+        return public
 
 
 @dataclass
@@ -836,6 +864,27 @@ class BatchResult:
             "items_failed": self.items_failed,
             "consistency_violations": [v.to_dict() for v in self.consistency_violations],
             "item_results": [r.to_dict() for r in self.item_results],
+            "total_latency": self.total_latency,
+            "total_tokens": self.total_tokens.to_dict(),
+        }
+
+    def to_public_envelope(self) -> dict:
+        """Public-facing schema 2.0.0 shape for batch results.
+
+        Each item result is rendered through `to_public_envelope`;
+        consistency violations are stripped of substrate. Top-level
+        metadata (counts, latency, tokens) is non-substrate and stays.
+        """
+        return {
+            "schema_version": SCHEMA_VERSION,
+            "overall_verdict": self.overall_verdict,
+            "total_items": self.total_items,
+            "items_passed": self.items_passed,
+            "items_failed": self.items_failed,
+            "consistency_violations": [
+                v.to_public_dict() for v in self.consistency_violations
+            ],
+            "item_results": [r.to_public_envelope() for r in self.item_results],
             "total_latency": self.total_latency,
             "total_tokens": self.total_tokens.to_dict(),
         }

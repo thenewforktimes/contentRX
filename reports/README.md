@@ -5,8 +5,7 @@ data and emit markdown / JSON. The docs site renders these; the
 founder previews them at `/admin/reports` before publishing.
 
 See [decisions/2026-04-25-private-taxonomy-pivot.md](../decisions/2026-04-25-private-taxonomy-pivot.md)
-and [ARCHITECTURE.md](../ARCHITECTURE.md) for the full substrate-to-
-report contract.
+for the substrate-to-report contract and the rationale behind it.
 
 ## Subdirectories
 

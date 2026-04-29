@@ -664,7 +664,7 @@ def main() -> int:
     parser.add_argument(
         "--log",
         type=Path,
-        default=Path("taxonomy_refinement_log.md"),
+        default=Path("_private/taxonomy_refinement_log.md"),
         help="Path to the refinement log to update.",
     )
     parser.add_argument(

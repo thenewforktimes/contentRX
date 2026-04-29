@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "content-standards-checker"
-version = "4.7.2"
+version = "4.7.3"
 description = "ContentRX content model for product copy. Source-available."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -27,9 +27,16 @@ content-checker = "cli.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+# Exclude the private substrate directory from package discovery — its
+# JSON files are loaded from a private submodule per ADR 2026-04-25 and
+# must never end up in the published wheel.
+exclude = ["content_checker.standards.private*"]
 
-[tool.setuptools.package-data]
-"content_checker.standards" = ["*.json"]
+# No package-data declaration: the substrate JSON files used to be
+# bundled here (`"content_checker.standards" = ["*.json"]`) but the
+# substrate moved to the gitignored private/ subdir per ADR 2026-04-25.
+# Adding the line back would re-leak the taxonomy through pip-installed
+# wheels.
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

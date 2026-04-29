@@ -36,7 +36,7 @@ def script():
 
 def test_touches_taxonomy_true_for_library(script) -> None:
     assert script.touches_taxonomy({
-        "src/content_checker/standards/standards_library.json",
+        "src/content_checker/standards/private/standards_library.json",
         "README.md",
     })
 

@@ -62,12 +62,16 @@ def load_standards(path: str | Path | None = None) -> dict:
         return _cache
 
     # First call with default path: load, cache, return
-    default_path = Path(__file__).parent / "standards_library.json"
+    default_path = Path(__file__).parent / "private" / "standards_library.json"
 
     if not default_path.exists():
         raise FileNotFoundError(
             f"Standards library not found at {default_path}. "
-            f"Expected standards_library.json in {default_path.parent}."
+            "The substrate JSON files live in the private submodule per "
+            "ADR 2026-04-25. Local dev: clone the private substrate repo "
+            "into src/content_checker/standards/private/ (or pull via "
+            "submodule). Public CI: tests that need the substrate skip "
+            "automatically when this path is missing."
         )
 
     with open(default_path) as f:
