@@ -40,6 +40,75 @@ like that judgment showed up.
    *Improve* not *optimize*. The full prohibited list is in
    [Prohibited terms](#prohibited-terms) below.
 
+## Tone
+
+ContentRX is **calm, confident, and charming**. Not cloying. Not
+sarcastic.
+
+The three pillars hold each other in tension. Calm keeps charming from
+going cloying. Confidence keeps calm from going flat. Charm keeps
+confidence from going smug. Lose any one and the voice tilts.
+
+### Calm
+
+We don't catastrophize. A failed request is "We couldn't load your
+dashboard," not "Something went terribly wrong." We don't over-apologize.
+One honest "We're sorry" beats five performative ones. We let facts
+breathe. Anxiety in copy reads as anxiety in the team.
+
+| ✗ Anxious | ✓ Calm |
+|---|---|
+| "Oh no! It looks like something might have gone wrong somewhere. We're really sorry about this!" | "We couldn't load your dashboard. Try again. If it keeps happening, email hello@contentrx.io." |
+| "Apologies for the inconvenience! We promise we'll get this fixed ASAP!" | "We're working on it. Refresh in a minute." |
+
+The em-dash rule (Voice rule 2) is calm's enforcement arm. Em dashes
+carry a kind of breathless energy that works against calm. Periods,
+commas, colons, parens, sentence breaks. Take a breath.
+
+### Confident
+
+We make calls, not suggestions. The product's value is informed
+content-design judgment; hedging is the absence of value. We use the
+present tense for what's true. The confidence is earned, not asserted:
+/accuracy reports kappa with 95% CIs, /calibration logs the drift week
+by week.
+
+| ✗ Hedged | ✓ Confident |
+|---|---|
+| "This error message could perhaps be more user-friendly." | "This error blames the user instead of naming what the system couldn't do." |
+| "We feel 'utilize' might come across as jargon-y." | "'Utilize' is jargon. 'Use' is shorter and clearer." |
+| "In our humble opinion, you might want to consider..." | "Use 'Save changes' instead of 'Submit'." |
+
+### Charming
+
+Charm shows up in observation, not performance. We notice things; we
+don't perform attention. Specific beats friendly: detail-rich is
+charming, vague-warm is not. Charm is a seasoning, not a meal. It lands
+in the occasional turn of phrase, not in every sentence. The reader is
+the protagonist. ContentRX is the model in the corner doing the work.
+
+| ✗ Performed warmth | ✓ Charm |
+|---|---|
+| "We're so excited to help you ship great copy!" | "We email at 80% so you have warning before you hit the limit." |
+| "Welcome to the ContentRX family! 🎉" | "Welcome to ContentRX. Let's get your first check running." |
+| "You're amazing for choosing us!" | "Stripe-hosted Customer Portal, no email-us-to-cancel pattern, no retention dark patterns." |
+
+### What we don't do: cloying
+
+No "we're so excited." No stacked exclamation points. No decorative
+emoji (functional ✓ is fine; 🎉 is not). No "sweet," "lovely,"
+"wonderful." No "you've got this!" energy. No "Welcome to the family!"
+The trust we earn comes from the calibration log, not from tone alone.
+
+### What we don't do: sarcastic
+
+No "well, actually." No "obviously." No "clearly." No condescension. No
+dunking on the user's mistake. No edgy humor at the user's expense. The
+product flags wrong things; the tone never punishes the writer for them.
+
+The voice running through every customer surface is a staff content
+designer who happens to be in a good mood.
+
 ## Audience boundary
 
 **Customer surfaces follow this doc.** Dashboard, customer emails, API
