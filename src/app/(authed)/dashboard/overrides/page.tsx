@@ -211,7 +211,7 @@ export default async function OverridesPage() {
           label="Override rate"
           value={
             overrideRate === null
-              ? "—"
+              ? "n/a"
               : `${overrideRate.toLocaleString()}%`
           }
           tone={
@@ -222,7 +222,7 @@ export default async function OverridesPage() {
 
       {overrides_count === 0 ? (
         <section className="rounded-lg border border-dashed border-neutral-300 p-6 text-sm text-neutral-500 dark:border-neutral-700">
-          Nothing to show yet — your team hasn&apos;t dismissed any
+          Nothing to show yet. Your team hasn&apos;t dismissed any
           findings. Dismissals from the Figma plugin or{" "}
           <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-xs dark:bg-neutral-900">
             /contentrx ignore &lt;STD&gt;
@@ -287,7 +287,7 @@ export default async function OverridesPage() {
                   >
                     <td className="py-2 font-mono text-xs">{s.standard_id}</td>
                     <td className="py-2 text-xs text-neutral-600 dark:text-neutral-300">
-                      {s.moment ?? "—"}
+                      {s.moment ?? "n/a"}
                     </td>
                     <td className="py-2 text-right">
                       {s.count.toLocaleString()}
@@ -364,7 +364,7 @@ const QUADRANT_LABELS: Record<BehaviorQuadrant, string> = {
 
 const QUADRANT_TOOLTIPS: Record<BehaviorQuadrant, string> = {
   informed_reject:
-    "Teammate read the rationale and still pushed back. Highest-information signal — these are the cases worth investigating in team rules.",
+    "Teammate read the rationale and still pushed back. Highest-information signal: these are the cases worth investigating in team rules.",
   informed_accept:
     "Teammate read the rationale and accepted the finding. Confirms the rule landed correctly.",
   pattern_match_accept:

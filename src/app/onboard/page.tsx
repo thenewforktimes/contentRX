@@ -26,7 +26,7 @@ import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/eyebrow";
 
 export const metadata = {
-  title: "Welcome to ContentRX — pick a surface",
+  title: "Welcome to ContentRX. Pick a surface",
 };
 
 type SurfaceOption = {
@@ -50,7 +50,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     key: "lsp",
     name: "LSP server",
     description:
-      "Diagnostics in VS Code, Zed, JetBrains, Neovim — anywhere with an LSP client. Squiggle as you type.",
+      "Diagnostics in VS Code, Zed, JetBrains, Neovim, anywhere with an LSP client. Squiggle as you type.",
     href: "/install#lsp",
     cta: "Set up LSP →",
   },
@@ -66,7 +66,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     key: "figma",
     name: "Figma plugin",
     description:
-      "Catch strings during design — before they land in code. Per-frame verdicts in the side panel.",
+      "Catch strings during design, before they land in code. Per-frame verdicts in the side panel.",
     href: "/install#figma",
     cta: "Set up Figma →",
   },
@@ -95,7 +95,7 @@ export default async function OnboardPage() {
         </h1>
         <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
           Pick the surface you&apos;ll start with. You can use the others
-          later — one API key covers them all, and your 20 free checks
+          later. One API key covers them all, and your 20 free checks
           a month are shared across every surface.
         </p>
       </header>
@@ -132,7 +132,7 @@ export default async function OnboardPage() {
           >
             Skip and go to your dashboard
           </Link>
-          {" "}— you can pick a surface any time from{" "}
+          . You can pick a surface any time from{" "}
           <Link href="/install" className="underline underline-offset-2">
             /install
           </Link>

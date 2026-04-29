@@ -94,7 +94,7 @@ export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload })
           <Text style={sub}>Most-dismissed rules this week</Text>
           {payload.topStandards.map((s, i) => (
             <Text key={`top-${i}`} style={body}>
-              {ruleTextFor(s.standardId)} — {s.count}{" "}
+              {ruleTextFor(s.standardId)}: {s.count}{" "}
               {s.count === 1 ? "dismissal" : "dismissals"}
               {s.moment ? ` · ${humanizeMoment(s.moment)}` : ""}
             </Text>

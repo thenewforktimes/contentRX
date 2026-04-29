@@ -17,7 +17,7 @@ import { redirect } from "next/navigation";
 import { ExplainClient } from "./explain-client";
 
 export const metadata = {
-  title: "Explain a verdict — ContentRX",
+  title: "Explain a verdict. ContentRX",
 };
 
 export default async function ExplainPage() {
@@ -36,7 +36,7 @@ export default async function ExplainPage() {
         <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
           Paste a button label, error message, or paragraph. The
           evaluator surfaces the detected moment first, then returns a
-          three-state verdict plus the full rationale chain — moment
+          three-state verdict plus the full rationale chain: moment
           detected, standards applied, confidence at every hop.
           Misdetections route back to the review queue with one click.
         </p>

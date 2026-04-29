@@ -20,7 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/eyebrow";
 
 export const metadata: Metadata = {
-  title: "Pricing — ContentRX",
+  title: "Pricing. ContentRX",
   description:
     "Free and Pro. All plans share the same engine, the same calibrated reviewer, and the same surfaces. The only difference is how much you use it.",
 };
@@ -34,7 +34,7 @@ export default function PricingPage() {
           A senior content designer&apos;s verdict on every string you ship.
         </h1>
         <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
-          $29/month: in your repo, your PR, your Figma file, your terminal —
+          $29/month, in your repo, your PR, your Figma file, your terminal,
           without ever leaving the work.
         </p>
         <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
@@ -67,18 +67,18 @@ export default function PricingPage() {
       </section>
 
       <section className="mt-16 border-t border-neutral-200 pt-10 dark:border-neutral-800">
-        <h2 className="text-lg font-semibold">FAQ — quick</h2>
+        <h2 className="text-lg font-semibold">FAQ</h2>
         <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-6 text-sm sm:grid-cols-2">
           <Faq
             q="What's a check?"
             a={
               <>
                 One string up to 3,000 characters evaluated by the
-                engine — a verdict, a suggestion, a severity, a
-                confidence — in under a second. Longer text counts
+                engine (a verdict, a suggestion, a severity, a
+                confidence) in under a second. Longer text counts
                 proportionally (1 check per 3,000 characters, max 5
-                checks per call). The same cap applies on every surface
-                — web app, MCP, CLI, GitHub Action, Figma plugin.
+                checks per call). The same cap applies on every surface:
+                web app, MCP, CLI, GitHub Action, Figma plugin.
               </>
             }
           />
@@ -86,16 +86,16 @@ export default function PricingPage() {
             q="What happens if I hit my limit on Pro?"
             a={
               <>
-                Pro caps at 1,000 checks per month — a hard cap, no
+                Pro caps at 1,000 checks per month. A hard cap, no
                 surprise overage charges. We email at 80% so you have
                 warning before you hit the limit. If you&apos;re bumping
                 1,000 most months, the Team plan ($29/seat, 1,000/seat
-                shared pool) is the right next step —{" "}
+                shared pool) is the right next step.{" "}
                 <a
                   href="mailto:hello@contentrx.io?subject=Team plan"
                   className="underline underline-offset-2"
                 >
-                  email us
+                  Email us
                 </a>{" "}
                 and we&apos;ll set it up.
               </>
@@ -103,7 +103,7 @@ export default function PricingPage() {
           />
           <Faq
             q="Can I cancel anytime?"
-            a="Yes — Stripe-hosted Customer Portal, no email-us-to-cancel pattern, no retention dark patterns. Your team setup stays put for 90 days after cancellation; come back within that window and you pick up where you left off."
+            a="Yes. Stripe-hosted Customer Portal, no email-us-to-cancel pattern, no retention dark patterns. Your team setup stays put for 90 days after cancellation; come back within that window and you pick up where you left off."
           />
           <Faq
             q="Do I need a credit card to try it?"
@@ -117,7 +117,7 @@ export default function PricingPage() {
                 pool (1,000 checks per seat, pooled), member
                 management for the team owner, and team-level usage
                 analytics. For teams larger than 50 seats, custom
-                pricing — same product, conversation about what fits.{" "}
+                pricing. Same product, different conversation.{" "}
                 <a
                   href="mailto:hello@contentrx.io?subject=Team plan"
                   className="underline underline-offset-2"
@@ -133,10 +133,9 @@ export default function PricingPage() {
             a={
               <>
                 MCP (Claude Code, Cursor), LSP (VS Code, Zed, any LSP
-                editor), CLI, GitHub Action, and the Figma plugin —
-                {" "}
+                editor), CLI, GitHub Action, and the Figma plugin.{" "}
                 <Link href="/install" className="underline underline-offset-2">
-                  install instructions for each
+                  Install instructions for each
                 </Link>
                 .
               </>

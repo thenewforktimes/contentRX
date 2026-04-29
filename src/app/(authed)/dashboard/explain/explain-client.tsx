@@ -459,7 +459,7 @@ function ErrorBlock({ error }: { error: CheckError }) {
           Something broke on our end
         </h3>
         <p className="text-red-900 dark:text-red-300">
-          The check service hit an error. Try again — if it keeps happening,
+          The check service hit an error. Try again. If it keeps happening,
           it&apos;s on us.
         </p>
       </div>

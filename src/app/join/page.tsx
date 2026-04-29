@@ -28,7 +28,7 @@ interface PageProps {
 }
 
 export const metadata = {
-  title: "Join a team — ContentRX",
+  title: "Join a team. ContentRX",
 };
 
 export default async function JoinPage({ searchParams }: PageProps) {

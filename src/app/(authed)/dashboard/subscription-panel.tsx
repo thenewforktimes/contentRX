@@ -94,7 +94,7 @@ function UpgradeCard() {
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         throw new Error(
-          body?.error ?? "Couldn't start checkout. Try again — if it keeps happening, email hello@contentrx.io.",
+          body?.error ?? "Couldn't start checkout. Try again. If it keeps happening, email hello@contentrx.io.",
         );
       }
       const { url } = await res.json();
@@ -103,7 +103,7 @@ function UpgradeCard() {
       setError(
         err instanceof Error
           ? err.message
-          : "Couldn't start checkout. Try again — if it keeps happening, email hello@contentrx.io.",
+          : "Couldn't start checkout. Try again. If it keeps happening, email hello@contentrx.io.",
       );
       setLoading(false);
     }
@@ -198,7 +198,7 @@ function PaidCard({
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         throw new Error(
-          body?.error ?? "Couldn't open the billing portal. Try again — if it keeps happening, email hello@contentrx.io.",
+          body?.error ?? "Couldn't open the billing portal. Try again. If it keeps happening, email hello@contentrx.io.",
         );
       }
       const { url } = await res.json();
@@ -207,7 +207,7 @@ function PaidCard({
       setError(
         err instanceof Error
           ? err.message
-          : "Couldn't open the billing portal. Try again — if it keeps happening, email hello@contentrx.io.",
+          : "Couldn't open the billing portal. Try again. If it keeps happening, email hello@contentrx.io.",
       );
       setLoading(false);
     }
@@ -337,7 +337,7 @@ function humanizeStatus(status: string): string {
     case "trialing":
       return "Trialing";
     case "past_due":
-      return "Payment past due — update your card to keep access";
+      return "Payment past due. Update your card to keep access";
     case "incomplete":
       return "Setup incomplete";
     case "incomplete_expired":

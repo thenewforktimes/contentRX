@@ -28,7 +28,7 @@ import {
 } from "@/lib/sources-data";
 
 export const metadata: Metadata = {
-  title: "Sources — ContentRX",
+  title: "Sources. ContentRX",
   description:
     "Every design system, style guide, and OSS repo ContentRX has ingested, with roles, license, and opt-out paths.",
 };
@@ -56,8 +56,8 @@ export default function SourcesPage() {
         </p>
         <h1 className="mt-3 text-3xl font-semibold">Sources</h1>
         <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
-          Every public source that informs ContentRX — design systems,
-          style guides, OSS repositories — listed with its role, license,
+          Every public source that informs ContentRX (design systems,
+          style guides, OSS repositories) listed with its role, license,
           and opt-out path. This page is the accountability surface for{" "}
           <Link href="/ethics" className="underline underline-offset-2">
             /ethics
@@ -101,7 +101,7 @@ export default function SourcesPage() {
         <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
           {data.oss_repos.length} public repositories on the ContentRX
           content-mining allow-list. The miner extracts before/after
-          pairs from commit history — see{" "}
+          pairs from commit history. See{" "}
           <a
             href="https://github.com/thenewforktimes/contentRX/blob/main/external_signal/README.md"
             className="underline underline-offset-2"
@@ -110,7 +110,7 @@ export default function SourcesPage() {
           </a>{" "}
           for pipeline details. Each repo&apos;s quality signals indicate
           the presence of a content designer, active i18n, or a content-
-          design blog — proxies for the care taken with content.
+          design blog: proxies for the care taken with content.
         </p>
         <ul className="mt-6 space-y-6">
           {data.oss_repos.map((r) => (
@@ -126,7 +126,7 @@ export default function SourcesPage() {
             /accuracy
           </Link>
           : measured system κ with 95% CI, measured self-drift κ, and
-          the design target stated separately — no composite score.
+          the design target stated separately. No composite score.
         </p>
       </section>
 
@@ -211,9 +211,7 @@ function StyleGuideCard({ source }: { source: StyleGuideSource }) {
             Standards influenced
           </dt>
           <dd className="mt-0.5 tabular-nums">
-            {source.standards_count === 0
-              ? "—"
-              : source.standards_count.toString()}
+            {source.standards_count.toString()}
           </dd>
         </div>
         <div>
@@ -221,7 +219,7 @@ function StyleGuideCard({ source }: { source: StyleGuideSource }) {
             Example pairs
           </dt>
           <dd className="mt-0.5 tabular-nums">
-            {source.examples_count === 0 ? "—" : source.examples_count}
+            {source.examples_count}
           </dd>
         </div>
       </dl>
@@ -272,7 +270,7 @@ function OSSRepoCard({ repo }: { repo: OSSRepoSource }) {
             Quality signals
           </dt>
           <dd className="mt-0.5 text-xs">
-            {signals.length === 0 ? "—" : signals.join(" • ")}
+            {signals.length === 0 ? "None" : signals.join(" • ")}
           </dd>
         </div>
         <div>

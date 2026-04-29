@@ -111,7 +111,7 @@ const RequestSchema = z.object({
         `Text is too long (max ${MAX_CHECK_CHARS.toLocaleString()} characters per check). ` +
         `ContentRX bills 1 check per ${CHARS_PER_CHECK.toLocaleString()} ` +
         `characters across every surface (web app, MCP, CLI, GitHub Action, ` +
-        `Figma plugin) — even the batch tools enforce the per-string cap. ` +
+        `Figma plugin). Even the batch tools enforce the per-string cap. ` +
         `For copy longer than ${MAX_CHECK_CHARS.toLocaleString()} chars, ` +
         `split it into separate strings and use MCP evaluate_copy_batch ` +
         `(each string still capped here) or the GitHub Action (extracts ` +
@@ -435,7 +435,7 @@ async function notifyQuotaWarning(args: {
   try {
     await sendEmail({
       to: args.to,
-      subject: `Heads up — ${Math.max(0, args.quota - args.used)} ContentRX checks left this month`,
+      subject: `Heads up. ${Math.max(0, args.quota - args.used)} ContentRX checks left this month`,
       react: QuotaWarningEmail({
         appUrl: emailAppUrl(),
         used: args.used,

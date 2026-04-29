@@ -22,7 +22,7 @@ const EFFECTIVE_DATE = "April 27, 2026";
 const PRIVACY_EMAIL = "privacy@contentrx.io";
 
 export const metadata: Metadata = {
-  title: "Privacy — ContentRX",
+  title: "Privacy. ContentRX",
   description:
     "What ContentRX collects, how it's used, who else sees it, and how to delete or export it. Plain language; legal precision where it matters.",
 };
@@ -63,7 +63,7 @@ export default function PrivacyPage() {
             string passed to <code>/api/check</code>,{" "}
             <code>/api/classify</code>, or <code>/api/suggest-fix</code>{" "}
             is forwarded to the evaluation engine and to Anthropic. In
-            our own database we store only a sha256 hash of the text —
+            our own database we store only a sha256 hash of the text,
             never the plaintext. We do retain metadata: the verdict,
             severity, moment classification, content type, file path
             (if your tool supplied one), and the surface that called
@@ -88,18 +88,18 @@ export default function PrivacyPage() {
 
       <Section title="What we do with it">
         <p>
-          Account and billing data — to keep your account working and
+          Account and billing data: to keep your account working and
           send you the receipts you&apos;d expect.
         </p>
         <p className="mt-3">
-          Content strings — to run the evaluation, return verdicts,
+          Content strings: to run the evaluation, return verdicts,
           and (where you&apos;ve given a Team-plan opt-in) inform our
           calibration log so the model gets better. The hash we store
           lets us look up your history and aggregate dashboard
           insights without keeping the raw text.
         </p>
         <p className="mt-3">
-          Telemetry — to fix bugs (Sentry), bill correctly (token
+          Telemetry: to fix bugs (Sentry), bill correctly (token
           counts), enforce rate limits (Redis), and understand which
           public pages people read (Plausible). None of these
           subprocessors receive content strings.
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>We don&apos;t use your content to train any
-            model</strong> — ours, Anthropic&apos;s, anyone&apos;s —
+            model</strong> (ours, Anthropic&apos;s, anyone&apos;s)
             without your explicit, per-entry opt-in.
           </li>
           <li>
@@ -226,7 +226,7 @@ export default function PrivacyPage() {
             <SubprocessorRow
               name="Figma"
               purpose="Plugin distribution"
-              data="Whatever Figma collects when you install the plugin — see Figma's own privacy policy."
+              data="Whatever Figma collects when you install the plugin. See Figma's own privacy policy."
             />
           </tbody>
         </table>
@@ -240,8 +240,8 @@ export default function PrivacyPage() {
       <Section title="Where the data lives">
         <p>
           Our application data lives in US-region Supabase Postgres.
-          Anthropic processes content in its own infrastructure —
-          we&apos;re working toward a zero-data-retention agreement so
+          Anthropic processes content in its own infrastructure.
+          We&apos;re working toward a zero-data-retention agreement so
           inputs aren&apos;t retained beyond the request lifecycle, and
           we&apos;ll update this section once that&apos;s in place.
           Vercel runs functions in regions close to your users.
@@ -249,7 +249,7 @@ export default function PrivacyPage() {
         <p className="mt-3">
           If you have a regulatory requirement for EU-region data
           residency, email <code>{PRIVACY_EMAIL}</code> before signing
-          up — we&apos;ll be straight with you about whether we can
+          up. We&apos;ll be straight with you about whether we can
           meet it today.
         </p>
       </Section>
@@ -269,14 +269,14 @@ export default function PrivacyPage() {
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>Deleted</strong> — your team rules, custom
+            <strong>Deleted.</strong> Your team rules, custom
             examples, team-member records, and outstanding team
             invitations. These are the configuration you and your
             team built up over time; once you&apos;ve been gone for 90
             days they&apos;re removed entirely.
           </li>
           <li>
-            <strong>Anonymized, not deleted</strong> — historical
+            <strong>Anonymized, not deleted.</strong> Historical
             violation hashes and override records have their{" "}
             <code>user_id</code> set to null. The hashed text and the
             verdicts stay in our database (they fed engine
@@ -284,7 +284,7 @@ export default function PrivacyPage() {
             back to you is severed.
           </li>
           <li>
-            <strong>Cleared</strong> — email, API key, and Stripe
+            <strong>Cleared.</strong> Email, API key, and Stripe
             customer ID on your <code>users</code> row are replaced
             with sentinels. The row stays so foreign-key references
             in the anonymized history remain valid.
@@ -301,9 +301,9 @@ export default function PrivacyPage() {
         <p className="mt-3">
           <strong>If you delete on demand</strong>, the same
           pseudonymization runs immediately rather than after 90 days.
-          A few records have legally required retention periods —
-          Stripe receipts (7 years for tax purposes) and fraud-
-          prevention logs — and we&apos;ll tell you specifically which
+          A few records have legally required retention periods
+          (Stripe receipts at 7 years for tax purposes and fraud-
+          prevention logs), and we&apos;ll tell you specifically which
           when you ask.
         </p>
       </Section>
@@ -347,7 +347,7 @@ export default function PrivacyPage() {
       <Section title="Cookies">
         <p>
           The only cookie we set ourselves is the Clerk authentication
-          session — strictly necessary, expires when you sign out.
+          session: strictly necessary, expires when you sign out.
           Plausible is cookieless. We don&apos;t use third-party
           analytics, ad networks, or tracking pixels. If you&apos;re
           seeing a cookie banner request from a regulator, the

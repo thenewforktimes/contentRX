@@ -135,7 +135,7 @@ function describeAcceptError(reason: string): {
     default:
       return {
         status: 409,
-        message: "Couldn't accept the invitation. Try again — if it keeps happening, email hello@contentrx.io.",
+        message: "Couldn't accept the invitation. Try again. If it keeps happening, email hello@contentrx.io.",
       };
   }
 }

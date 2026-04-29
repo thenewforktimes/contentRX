@@ -29,7 +29,7 @@ import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { DeleteExampleButton } from "./delete-example-button";
 
 export const metadata = {
-  title: "Custom examples — ContentRX",
+  title: "Custom examples. ContentRX",
 };
 
 export default async function CustomExamplesPage() {
@@ -54,7 +54,7 @@ export default async function CustomExamplesPage() {
         <h1 className="text-lg font-semibold">Custom examples</h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-300">
           Available on the Team plan. Mark specific strings as correct
-          (or known-bad) for your product&apos;s voice — ContentRX
+          (or known-bad) for your product&apos;s voice. ContentRX
           short-circuits those strings on every subsequent check
           without running the LLM, without weakening any global rule.
         </p>
@@ -84,8 +84,8 @@ export default async function CustomExamplesPage() {
         <h1 className="text-2xl font-semibold">Custom examples</h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-300">
           {entries.length} of {CUSTOM_EXAMPLES_CAP_PER_TEAM}. Each
-          entry short-circuits <code>/api/check</code> for your team
-          — matching strings skip the LLM entirely and return the
+          entry short-circuits <code>/api/check</code> for your team:
+          matching strings skip the LLM entirely and return the
           stored verdict. The core model stays untouched.
         </p>
         <p className="text-sm text-neutral-600 dark:text-neutral-300">
@@ -107,7 +107,7 @@ export default async function CustomExamplesPage() {
       {entries.length === 0 ? (
         <section className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 p-6 text-sm dark:border-neutral-700 dark:bg-neutral-900">
           <p className="text-neutral-700 dark:text-neutral-300">
-            Nothing here yet — your team hasn&apos;t added a custom example.
+            Nothing here yet. Your team hasn&apos;t added a custom example.
             From the terminal:{" "}
             <code className="rounded bg-white px-1 py-0.5 dark:bg-neutral-950">
               contentrx example add &quot;Let&apos;s go.&quot; --verdict pass
@@ -170,7 +170,7 @@ export default async function CustomExamplesPage() {
                     {e.standardId ? (
                       <code className="font-mono">{e.standardId}</code>
                     ) : (
-                      <span className="text-neutral-500">—</span>
+                      <span className="text-neutral-500">none</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs">

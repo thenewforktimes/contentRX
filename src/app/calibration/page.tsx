@@ -16,7 +16,7 @@ import Link from "next/link";
 import { listCalibrationLogs } from "@/lib/calibration-loader.server";
 
 export const metadata: Metadata = {
-  title: "Calibration log — ContentRX",
+  title: "Calibration log. ContentRX",
   description:
     "Weekly calibration log: kappa movement, drift signals, override count, active refinement-log entries. Templated for consistency-of-format week to week.",
 };
@@ -36,7 +36,7 @@ export default function CalibrationIndexPage() {
           calibration log entry. Each entry covers the previous week&apos;s
           measured κ movement, drift signals, override counts, and active
           taxonomy refinement candidates. The format is templated on
-          purpose — consistency week to week is what makes drift in the
+          purpose: consistency week to week is what makes drift in the
           writing detectable.
         </p>
         <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">

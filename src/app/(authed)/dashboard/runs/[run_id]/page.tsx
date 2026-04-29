@@ -208,7 +208,7 @@ export default async function RunPage({ params }: RunParams) {
         <p className="rounded-md border border-amber-300 bg-amber-50/60 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
           Showing the first {rows.length.toLocaleString()} findings of{" "}
           {stats.total.toLocaleString()}. Earlier findings on the same files
-          aren&apos;t listed below — totals above remain accurate.
+          aren&apos;t listed below. Totals above remain accurate.
         </p>
       )}
 

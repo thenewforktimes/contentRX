@@ -62,7 +62,7 @@ export default async function CalibratePage() {
           <h1 className="mt-2 text-2xl font-semibold">
             {gate.reason === "opted_out"
               ? "You&apos;ve opted out of calibration prompts."
-              : "You&apos;ve already helped this week — thank you."}
+              : "You&apos;ve already helped this week. Thank you."}
           </h1>
         </header>
         <p className="text-sm text-neutral-600 dark:text-neutral-300">

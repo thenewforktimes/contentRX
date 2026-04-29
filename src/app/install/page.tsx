@@ -23,7 +23,7 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
 
 export const metadata: Metadata = {
-  title: "Install — ContentRX",
+  title: "Install. ContentRX",
   description:
     "Install ContentRX for Claude Code, Cursor, any LSP editor, your CLI, GitHub Actions, or Figma. Generation-layer surfaces lead; the Figma plugin sits alongside for design-time checks.",
 };
@@ -39,8 +39,8 @@ export default function InstallPage() {
         <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
           Content-standards enforcement is moving upstream into the
           generation layer. Install ContentRX where your team actually
-          writes product copy — in the IDE, on the command line, in
-          pull requests — with the Figma plugin alongside for the
+          writes product copy (in the IDE, on the command line, in
+          pull requests) with the Figma plugin alongside for the
           strings that arrive through design.
         </p>
         <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
@@ -62,13 +62,13 @@ export default function InstallPage() {
       <Section
         id="mcp"
         eyebrow="Surface 1"
-        title="MCP server — Claude Code, Cursor, any MCP client"
+        title="MCP server. Claude Code, Cursor, any MCP client"
       >
         <p>
           The ContentRX MCP server exposes <code>evaluate_copy</code>{" "}
           and <code>classify_moment</code> tools (plus team
           custom-example management) to any MCP client. Claude Code
-          or Cursor can check a string inline during generation — the
+          or Cursor can check a string inline during generation. The
           LLM narrates the moment first, then the verdict, then a
           suggested rewrite.
         </p>
@@ -98,7 +98,7 @@ uvx contentrx-mcp`}
       <Section
         id="lsp"
         eyebrow="Surface 2"
-        title="LSP server — inline diagnostics in any LSP editor"
+        title="LSP server. Inline diagnostics in any LSP editor"
       >
         <p>
           Diagnostics appear as you type, the same way TypeScript
@@ -109,7 +109,7 @@ uvx contentrx-mcp`}
           rationale page, or mark as false positive.
         </p>
         <p className="mt-3">
-          VS Code / Cursor (one-click — the extension launches
+          VS Code / Cursor (one-click, the extension launches
           the server for you):
         </p>
         <Code>
@@ -129,7 +129,7 @@ export CONTENTRX_API_KEY=cx_...
           (<code>alt</code>, <code>aria-label</code>,{" "}
           <code>placeholder</code>, <code>title</code>,{" "}
           <code>tooltip</code>, <code>label</code>). Random string
-          literals aren&apos;t extracted — false-positive risk is
+          literals aren&apos;t extracted: false-positive risk is
           too high. Source:{" "}
           <a
             href="https://github.com/thenewforktimes/contentRX/tree/main/lsp-server"
@@ -144,7 +144,7 @@ export CONTENTRX_API_KEY=cx_...
       <Section
         id="cli"
         eyebrow="Surface 3"
-        title="CLI — contentrx on PyPI"
+        title="CLI. contentrx on PyPI"
       >
         <p>
           Stdlib-only runtime (no <code>requests</code>, no{" "}
@@ -177,7 +177,7 @@ contentrx --explain "Are you sure?"`}
       <Section
         id="action"
         eyebrow="Surface 4"
-        title="GitHub Action — PR gate"
+        title="GitHub Action. PR gate"
       >
         <p>
           Drop a YAML snippet into{" "}
@@ -216,11 +216,11 @@ jobs:
       <Section
         id="figma"
         eyebrow="Surface 5 · alongside"
-        title="Figma plugin — design-time check"
+        title="Figma plugin. Design-time check"
       >
         <p>
           The Figma plugin catches strings that arrive through
-          design — badges, empty states, onboarding flows — before
+          design (badges, empty states, onboarding flows) before
           they land in code. Per-string verdicts, moment banners,
           three-button stance on every finding (Agree / Disagree /
           Ship anyway), and the rationale chain on demand.

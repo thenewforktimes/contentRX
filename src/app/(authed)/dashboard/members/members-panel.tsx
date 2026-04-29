@@ -86,7 +86,7 @@ export function MembersPanel({
           {seatsAvailable === 0 && (
             <>
               {" "}
-              No seats available — add seats from billing first.
+              No seats available. Add seats from billing first.
             </>
           )}
         </p>
@@ -207,7 +207,7 @@ function humanizeInviteError(reason: string): string {
     case "already_member":
       return "That email is already a member of your team.";
     case "is_team_owner":
-      return "That's your own email — you can't invite yourself.";
+      return "That's your own email. You can't invite yourself.";
     default:
       return `Invite failed (${reason}).`;
   }

@@ -171,7 +171,7 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
 
       {!isAdmin && (
         <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
-          Read-only — only the team owner can edit rules.
+          Read-only. Only the team owner can edit rules.
         </div>
       )}
 
@@ -260,7 +260,7 @@ function DisablePreviewDialog({
     if (!preview) return "";
     const removed = preview.would_remove_violations;
     if (preview.window_violations === 0) {
-      return "No team findings logged in the last 30 days — disabling this rule is safe.";
+      return "No team findings logged in the last 30 days. Disabling this rule is safe.";
     }
     if (removed === 0) {
       return (
@@ -511,7 +511,7 @@ function AddCustomRuleCard({
         </label>
         <label className="text-xs">
           <span className="mb-1 block text-neutral-600 dark:text-neutral-300">
-            Regex pattern — matched against the text being checked
+            Regex pattern. Matched against the text being checked
           </span>
           <input
             type="text"

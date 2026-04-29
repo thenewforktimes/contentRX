@@ -21,7 +21,7 @@ export function WelcomeEmail({
   pluginUrl: string;
 }) {
   return (
-    <EmailShell preview="Welcome to ContentRX — let's get your first check running.">
+    <EmailShell preview="Welcome to ContentRX. Let's get your first check running.">
       <Heading as="h1" style={{ fontSize: 22, marginBottom: 12 }}>
         Welcome to ContentRX.
       </Heading>
@@ -38,7 +38,7 @@ export function WelcomeEmail({
         2. <Link href={`${appUrl}/dashboard`}>Open your dashboard</Link> to
         grab an API key for the CLI or GitHub Action.
         <br />
-        3. Reply to this email — we read every message.
+        3. Reply to this email. We read every message.
       </Text>
       <Text style={{ marginTop: 20 }}>
         <Button href={`${appUrl}/dashboard`} style={button}>

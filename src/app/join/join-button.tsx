@@ -25,7 +25,7 @@ export function JoinButton({ token }: { token: string }) {
         // back to a generic message if the response shape is unexpected.
         throw new Error(
           body.error ??
-            "Couldn't accept the invitation. Try again — if it keeps happening, email hello@contentrx.io.",
+            "Couldn't accept the invitation. Try again. If it keeps happening, email hello@contentrx.io.",
         );
       }
       router.push("/dashboard?joined=1");
@@ -35,7 +35,7 @@ export function JoinButton({ token }: { token: string }) {
       setError(
         err instanceof Error
           ? err.message
-          : "Couldn't accept the invitation. Try again — if it keeps happening, email hello@contentrx.io.",
+          : "Couldn't accept the invitation. Try again. If it keeps happening, email hello@contentrx.io.",
       );
     }
   }

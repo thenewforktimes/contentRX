@@ -21,7 +21,7 @@ import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { MembersPanel } from "./members-panel";
 
 export const metadata = {
-  title: "Members — ContentRX",
+  title: "Members. ContentRX",
 };
 
 export default async function MembersPage() {
@@ -75,7 +75,7 @@ export default async function MembersPage() {
           {seats.used} of {seats.capacity} seats used
           {seats.pendingInviteCount > 0 && (
             <>
-              {" "}— including {seats.pendingInviteCount} pending{" "}
+              , including {seats.pendingInviteCount} pending{" "}
               {seats.pendingInviteCount === 1 ? "invite" : "invites"}
             </>
           )}

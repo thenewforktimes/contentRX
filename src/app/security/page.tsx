@@ -19,7 +19,7 @@ import { Section } from "@/components/ui/section";
 const SECURITY_EMAIL = "security@contentrx.io";
 
 export const metadata: Metadata = {
-  title: "Security — ContentRX",
+  title: "Security. ContentRX",
   description:
     "How to report a vulnerability in ContentRX. Coordinated disclosure, safe-harbor for good-faith research, response within 5 business days.",
 };
@@ -49,7 +49,7 @@ export default function SecurityPage() {
           >
             <code>{SECURITY_EMAIL}</code>
           </a>
-          . Include enough detail to reproduce — affected URL or
+          . Include enough detail to reproduce: affected URL or
           surface, request shape, what you expected vs. what happened.
           A proof-of-concept is welcome but not required.
         </p>
@@ -90,7 +90,7 @@ export default function SecurityPage() {
         <ul className="mt-3 ml-5 list-disc space-y-1.5">
           <li>
             Third-party services we depend on (Stripe, Clerk, Supabase,
-            Anthropic, Vercel, etc.) — please report those to the
+            Anthropic, Vercel, etc.). Please report those to the
             respective vendors&apos; programs.
           </li>
           <li>
@@ -99,7 +99,7 @@ export default function SecurityPage() {
           </li>
           <li>
             Reports that boil down to &ldquo;the rate limit is
-            X req/min, that&apos;s configurable&rdquo; — we welcome
+            X req/min, that&apos;s configurable&rdquo;. We welcome
             tuning suggestions but those aren&apos;t vulnerabilities.
           </li>
           <li>
@@ -140,7 +140,7 @@ export default function SecurityPage() {
         </ul>
         <p className="mt-3">
           If you&apos;re unsure whether something is in scope or
-          whether a test is OK, ask first — we&apos;ll respond with a
+          whether a test is OK, ask first. We&apos;ll respond with a
           plain answer.
         </p>
       </Section>
@@ -151,8 +151,8 @@ export default function SecurityPage() {
           credit researchers in our changelog when they request it,
           and we&apos;re happy to provide a written acknowledgment for
           your portfolio. If a bounty matters more than that, please
-          look at programs from companies set up to run them at scale
-          — we&apos;re a small team and disclosure quality matters
+          look at programs from companies set up to run them at scale.
+          We&apos;re a small team and disclosure quality matters
           more to us than payout volume.
         </p>
       </Section>

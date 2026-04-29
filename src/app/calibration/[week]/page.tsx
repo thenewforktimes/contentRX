@@ -19,7 +19,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { week } = await params;
   return {
-    title: `Calibration log — Week ${week} — ContentRX`,
+    title: `Calibration log. Week ${week}. ContentRX`,
     description: `Weekly calibration log entry for ISO week ${week}.`,
   };
 }

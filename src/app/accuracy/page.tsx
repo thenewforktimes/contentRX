@@ -26,9 +26,9 @@ import {
 } from "@/lib/accuracy-snapshot.server";
 
 export const metadata: Metadata = {
-  title: "Accuracy — ContentRX",
+  title: "Accuracy. ContentRX",
   description:
-    "Measured system κ, measured self-drift κ, and the design target — reported separately with 95% confidence intervals. No composite accuracy score.",
+    "Measured system κ, measured self-drift κ, and the design target. Reported separately with 95% confidence intervals. No composite accuracy score.",
 };
 
 export default function AccuracyPage() {
@@ -45,7 +45,7 @@ export default function AccuracyPage() {
         </h1>
         <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
           Three numbers govern how ContentRX evaluates its own calibration.
-          They are kept separate on purpose — a single &ldquo;accuracy score&rdquo;
+          They are kept separate on purpose. A single &ldquo;accuracy score&rdquo;
           would obscure the self-drift ceiling and misrepresent what the
           measurement can actually say. This follows Model Cards (Mitchell
           et al., 2019) guidance on honest metric reporting with
@@ -54,7 +54,7 @@ export default function AccuracyPage() {
         <p className="mt-3 text-xs text-neutral-500">
           {snap.generated_at
             ? `Snapshot generated ${formatIso(snap.generated_at)}.`
-            : "Snapshot pending — the nightly generator has not run yet."}
+            : "Snapshot pending. The nightly generator has not run yet."}
         </p>
       </header>
 
@@ -92,7 +92,7 @@ export default function AccuracyPage() {
           verdict reviewed) to <code className="font-mono">batch_approval</code>{" "}
           (sampled review) to <code className="font-mono">autonomous</code>{" "}
           (no per-verdict review). Per-standard measurements are kept
-          internal — the page is a calibration surface, not a rule
+          internal. The page is a calibration surface, not a rule
           catalogue.
         </p>
         <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
@@ -117,12 +117,12 @@ export default function AccuracyPage() {
           system κ is the agreement between what the engine says and what
           Robo would say on the same input. The self-drift κ is the
           agreement between Robo and a past version of Robo on the same
-          panel — the expert ceiling, since the system can&apos;t exceed
+          panel: the expert ceiling, since the system can&apos;t exceed
           the labeller&apos;s agreement with themselves. The 0.90 design
           target is a stated assumption, not a measurement.
         </p>
         <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-          Pending cells render as &ldquo;pending&rdquo; — never zero, never
+          Pending cells render as &ldquo;pending&rdquo;: never zero, never
           filled from the design target. Honest reporting of a
           measurement-in-progress is the whole point of the page.
         </p>
@@ -235,7 +235,7 @@ function LadderCell({
 }
 
 function formatIso(iso: string): string {
-  if (!iso) return "—";
+  if (!iso) return "pending";
   try {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso;

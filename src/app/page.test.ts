@@ -69,8 +69,8 @@ describe("landing page (src/app/page.tsx)", () => {
     // The Surfaces list must list MCP before Figma — the whole
     // point of Session 29 is that the Figma plugin is no longer the
     // flagship. This test is the structural gate.
-    const mcpIdx = visible.indexOf("<strong>MCP server</strong>");
-    const figmaIdx = visible.indexOf("<strong>Figma plugin</strong>");
+    const mcpIdx = visible.indexOf("<strong>MCP server.</strong>");
+    const figmaIdx = visible.indexOf("<strong>Figma plugin.</strong>");
     expect(mcpIdx).toBeGreaterThan(-1);
     expect(figmaIdx).toBeGreaterThan(-1);
     expect(mcpIdx).toBeLessThan(figmaIdx);

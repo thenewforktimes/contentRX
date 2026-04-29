@@ -219,7 +219,7 @@ export default async function FigmaCallbackPage({ searchParams }: PageProps) {
     <CallbackShell tone="ok">
       <h1 className="mb-3 text-2xl font-semibold">You&apos;re signed in.</h1>
       <p>
-        Head back to the Figma plugin — it&apos;s picking up your session now.
+        Head back to the Figma plugin. It&apos;s picking up your session now.
         You can close this tab.
       </p>
     </CallbackShell>

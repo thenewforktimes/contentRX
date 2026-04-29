@@ -57,7 +57,7 @@ export async function GET() {
     team_id: teamOwnerUserId,
     window_days: 90,
     count: rows.length,
-    note: "Metadata only. ContentRX never stores raw user text or evaluator outputs (issue / suggestion / confidence) — only sha256 hashes, severity, and routing context. See /ethics for the storage policy.",
+    note: "Metadata only. ContentRX never stores raw user text or evaluator outputs (issue / suggestion / confidence): only sha256 hashes, severity, and routing context. See /ethics for the storage policy.",
     verdicts: rows,
   });
 }

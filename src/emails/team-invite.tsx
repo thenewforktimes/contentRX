@@ -40,7 +40,7 @@ export function TeamInviteEmail({
         </Button>
       </Text>
       <Text style={{ fontSize: 12, color: "#777" }}>
-        If you didn't expect this, you can ignore the email — nothing
+        If you didn't expect this, you can ignore the email. Nothing
         happens until you click Accept. Or visit {appUrl} to learn more.
       </Text>
     </EmailShell>

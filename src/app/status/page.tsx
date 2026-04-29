@@ -21,7 +21,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Status — ContentRX",
+  title: "Status. ContentRX",
   description:
     "Live health for ContentRX's database and rate-limit infrastructure. Public, machine-readable JSON also at /api/status.",
 };
@@ -66,7 +66,7 @@ export default async function StatusPage() {
         <p className="mt-2 text-neutral-600 dark:text-neutral-400">
           Database and Redis are the two pieces a slow page would point
           at first. The Anthropic-backed evaluation engine is health-
-          checked implicitly — if <code>/api/check</code> returns
+          checked implicitly. If <code>/api/check</code> returns
           verdicts at all, the engine is reachable. For incident
           history beyond live status, watch{" "}
           <a

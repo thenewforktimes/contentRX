@@ -27,7 +27,7 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
 
 export const metadata: Metadata = {
-  title: "ContentRX — the content model for product copy",
+  title: "ContentRX. The content model for product copy",
   description:
     "Situation-aware review for error states, destructive confirmations, permissions flows, and the other moments where copy stops being decoration and starts being the product.",
 };
@@ -42,12 +42,12 @@ export default function Home() {
         </h1>
         <p className="mt-6 text-lg text-neutral-700 dark:text-neutral-300">
           Situation-aware review for the moments where copy stops being
-          decoration and starts being the product — error states, empty
+          decoration and starts being the product: error states, empty
           states, permissions flows, destructive confirmations, compliance
           disclosures. A senior content designer&apos;s pattern recognition,
           running where product copy is increasingly written:{" "}
           <strong>Claude Code, Cursor, your CLI, and every pull request</strong>
-          {" "}— with the Figma plugin alongside for design-time checks.
+          . With the Figma plugin alongside for design-time checks.
         </p>
         <div className="mt-8 flex flex-wrap gap-3 text-sm">
           <Link href="/sign-up" className={buttonStyles({ variant: "primary" })}>
@@ -95,9 +95,9 @@ export default function Home() {
         <p>
           A senior content designer looks at an error message and
           sees whether it owns the failure or blames the user.
-          That&apos;s not a rule you can look up in a style guide
-          — it&apos;s pattern recognition built from years of
-          practice. ContentRX encodes that pattern recognition.
+          That&apos;s not a rule you can look up in a style guide.
+          It&apos;s pattern recognition built from years of practice.
+          ContentRX encodes that pattern recognition.
           The evaluation chain publishes{" "}
           <Link href="/accuracy" className="underline underline-offset-2">
             its own accuracy
@@ -120,7 +120,7 @@ export default function Home() {
           <code>Submit</code>.
         </p>
         <p className="mt-3">
-          You can run both. The layers don&apos;t compete — they stack.
+          You can run both. The layers don&apos;t compete. They stack.
         </p>
       </Section>
 
@@ -129,7 +129,7 @@ export default function Home() {
         title="The model is the product"
       >
         <p>
-          Stripe Radar is a model. Stripe sells the model — the rules
+          Stripe Radar is a model. Stripe sells the model. The rules
           engineers write on top are secondary; the learned patterns
           from every transaction Stripe has ever seen are the moat.
         </p>
@@ -163,7 +163,7 @@ export default function Home() {
         </p>
         <ul className="mt-4 ml-5 list-disc space-y-2">
           <li>
-            <strong>MCP server</strong> — Claude Code, Cursor, and
+            <strong>MCP server.</strong> Claude Code, Cursor, and
             any MCP client call <code>evaluate_copy</code> and{" "}
             <code>classify_moment</code> directly. Inline content
             review during generation, not after.{" "}
@@ -173,7 +173,7 @@ export default function Home() {
             .
           </li>
           <li>
-            <strong>CLI</strong> —{" "}
+            <strong>CLI.</strong>{" "}
             <code>contentrx &quot;Click here&quot;</code> or{" "}
             <code>--batch strings.txt</code>. <code>--explain</code>{" "}
             prints the full rationale chain. Stdlib-only install.{" "}
@@ -183,7 +183,7 @@ export default function Home() {
             .
           </li>
           <li>
-            <strong>GitHub Action</strong> — evaluates strings touched
+            <strong>GitHub Action.</strong> Evaluates strings touched
             in a pull request. <code>fail-on: review</code> gates
             the merge on review-recommended verdicts. Drops into
             any repo with a YAML snippet.{" "}
@@ -193,7 +193,7 @@ export default function Home() {
             .
           </li>
           <li>
-            <strong>Figma plugin</strong> — design-time check.
+            <strong>Figma plugin.</strong> Design-time check.
             Scan a frame, per-string verdicts with moment banners
             and rationale chains. Three-button stance per finding
             (Agree / Disagree / Ship anyway). Best for the copy
@@ -208,8 +208,8 @@ export default function Home() {
 
       <Section eyebrow="About the voice" title="Built by a content designer">
         <p>
-          ContentRX is the content model that Robo — a senior content
-          designer — would run on their own work. The moments, the
+          ContentRX is the content model that Robo (a senior content
+          designer) would run on their own work. The moments, the
           weights, and the standards all carry one designer&apos;s
           judgment calls, attributed and published. Read the{" "}
           <Link href="/about" className="underline underline-offset-2">

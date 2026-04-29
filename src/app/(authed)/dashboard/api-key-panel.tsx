@@ -41,7 +41,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         throw new Error(
-          body?.error ?? "Couldn't rotate the key. Try again — if it keeps happening, email hello@contentrx.io.",
+          body?.error ?? "Couldn't rotate the key. Try again. If it keeps happening, email hello@contentrx.io.",
         );
       }
       const body = await res.json();
@@ -60,7 +60,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       const message =
         err instanceof Error
           ? err.message
-          : "Couldn't rotate the key. Try again — if it keeps happening, email hello@contentrx.io.";
+          : "Couldn't rotate the key. Try again. If it keeps happening, email hello@contentrx.io.";
       setState({ kind: "error", message });
     }
   }
@@ -73,7 +73,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         throw new Error(
-          body?.error ?? "Couldn't revoke the key. Try again — if it keeps happening, email hello@contentrx.io.",
+          body?.error ?? "Couldn't revoke the key. Try again. If it keeps happening, email hello@contentrx.io.",
         );
       }
       setPrefix(null);
@@ -84,7 +84,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       const message =
         err instanceof Error
           ? err.message
-          : "Couldn't revoke the key. Try again — if it keeps happening, email hello@contentrx.io.";
+          : "Couldn't revoke the key. Try again. If it keeps happening, email hello@contentrx.io.";
       setState({ kind: "error", message });
     }
   }
@@ -136,7 +136,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
               role="status"
               className="mt-2 text-xs text-amber-900 dark:text-amber-200"
             >
-              Copy failed — select the text above and copy it manually.
+              Copy failed. Select the text above and copy it manually.
             </p>
           )}
         </div>

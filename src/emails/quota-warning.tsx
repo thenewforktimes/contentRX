@@ -31,7 +31,7 @@ export function QuotaWarningEmail({
       preview={`${remaining} checks left this month on your ${planLabel} plan.`}
     >
       <Heading as="h1" style={{ fontSize: 20, marginBottom: 12 }}>
-        Heads up — you're approaching your monthly limit.
+        Heads up. You're approaching your monthly limit.
       </Heading>
       <Text>
         You've used {used} of {quota} checks on your {planLabel} plan this

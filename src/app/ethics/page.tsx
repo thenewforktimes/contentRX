@@ -18,9 +18,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Ethics — ContentRX",
+  title: "Ethics. ContentRX",
   description:
-    "How ContentRX collects, attributes, and uses external signal — five public commitments, plus the opt-out path.",
+    "How ContentRX collects, attributes, and uses external signal. Five public commitments, plus the opt-out path.",
 };
 
 const OPT_OUT_EMAIL = "hello@contentrx.io";
@@ -37,7 +37,7 @@ export default function EthicsPage() {
           How I collect, attribute, and use external signal
         </h1>
         <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
-          ContentRX learns from public sources — design systems, style
+          ContentRX learns from public sources: design systems, style
           guides, OSS repos that demonstrate content-design craft. Those
           sources deserve clear rules about how their work is used.
           Below are the five commitments I make. If any of them fail in
@@ -64,8 +64,8 @@ export default function EthicsPage() {
           </Link>{" "}
           lists every design system, style guide, and OSS repo that has
           informed ContentRX. For each entry you&apos;ll see the last
-          crawl timestamp, the license, and how the source contributed
-          — moment weights, standard influences, examples corpus, or
+          crawl timestamp, the license, and how the source contributed:
+          moment weights, standard influences, examples corpus, or
           training signal. Hidden contributions would be indistinguishable
           from theft; the page is the accountability surface.
         </p>
@@ -89,7 +89,7 @@ export default function EthicsPage() {
           When a ContentRX standard is influenced by a specific design
           system or style guide, the influence is recorded on the
           standard itself. When examples in the docs or product come
-          from a public source, the source is named inline — with a
+          from a public source, the source is named inline, with a
           commit hash or URL when the exact revision matters. Anyone
           can trace a rule back to its lineage.
         </p>
@@ -107,9 +107,9 @@ export default function EthicsPage() {
           </code>{" "}
           with a contact URL in the user-agent string. It honors
           robots.txt. It rate-limits requests so no host sees ContentRX
-          as a spike. Projects that ask to be excluded are excluded —
-          and signal already derived from them is removed from
-          subsequent training.
+          as a spike. Projects that ask to be excluded are excluded.
+          Signal already derived from them is removed from subsequent
+          training.
         </p>
         <p className="mt-3">
           To opt out, email{" "}
@@ -125,7 +125,7 @@ export default function EthicsPage() {
           </code>
           . I confirm receipt within a week and land the removal in the
           following release cycle. If you haven&apos;t heard back within
-          seven days, email again — something went wrong with the
+          seven days, email again. Something went wrong with the
           routing on my end.
         </p>
       </Section>
@@ -137,7 +137,7 @@ export default function EthicsPage() {
       >
         <ul className="ml-5 list-disc space-y-2">
           <li>
-            Permissive licenses — MIT, Apache 2.0, BSD, CC-BY — are
+            Permissive licenses (MIT, Apache 2.0, BSD, CC-BY) are
             default-in as training signal with attribution on{" "}
             <Link href="/sources" className="underline underline-offset-2">
               /sources
@@ -176,8 +176,8 @@ export default function EthicsPage() {
             disk.
           </li>
           <li>
-            The override dataset — what informs future rule calibration
-            — carries no user identity. Only the actor&apos;s
+            The override dataset (what informs future rule calibration)
+            carries no user identity. Only the actor&apos;s
             role-bucket (designer / engineer / PM / other) rides along
             for signal weighting.
           </li>
@@ -198,8 +198,8 @@ export default function EthicsPage() {
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            I don&apos;t sell your strings — hashed, anonymised, or
-            otherwise — to data brokers, advertisers, or anyone else.
+            I don&apos;t sell your strings (hashed, anonymised, or
+            otherwise) to data brokers, advertisers, or anyone else.
             There is no third-party broker contract; there will not be
             one.
           </li>
@@ -211,8 +211,8 @@ export default function EthicsPage() {
             on top.
           </li>
           <li>
-            I don&apos;t use your content to train a model — mine,
-            Anthropic&apos;s, anyone&apos;s — without your explicit,
+            I don&apos;t use your content to train a model (mine,
+            Anthropic&apos;s, anyone&apos;s) without your explicit,
             per-entry opt-in. The Team-plan custom-example contribution
             toggle is the only path by which a customer string ever
             joins the calibration corpus. It&apos;s off by default,
@@ -240,7 +240,7 @@ export default function EthicsPage() {
           public route that takes a string runs a pre-screen that
           refuses obvious credentials and PII (credit card numbers,
           SSNs, Stripe / OpenAI / Anthropic / GitHub keys, AWS access
-          keys) — those values never reach the engine, never reach
+          keys). Those values never reach the engine, never reach
           Anthropic, never reach the error logs. Sentry events have
           request bodies and auth headers stripped before send. Vercel
           function logs use a hand-shaped error format that omits
@@ -260,8 +260,8 @@ export default function EthicsPage() {
           if you want to verify against the source.
         </p>
         <p className="mt-3">
-          If any of this ever changes — say a future investor pitches
-          &ldquo;but think of the data&rdquo; — the policy here gets
+          If any of this ever changes (say a future investor pitches
+          &ldquo;but think of the data&rdquo;) the policy here gets
           superseded by an ADR I publish before any new collection
           starts, and existing customers are notified by email. The
           version of this commitment that&apos;s live is always the

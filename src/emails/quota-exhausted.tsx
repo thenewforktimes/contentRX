@@ -31,13 +31,13 @@ export function QuotaExhaustedEmail({
         You've used your {quota} checks this month.
       </Heading>
       <Text>
-        That's the {planLabel}-plan ceiling. Resets {resetsAt} — until then,
+        That's the {planLabel}-plan ceiling. Resets {resetsAt}. Until then,
         new check attempts return an "over quota" error.
       </Text>
       {plan === "free" ? (
         <Text>
-          Upgrade to Pro (1,000 checks / month) to keep going right now —
-          your remaining quota carries over for the rest of the month.
+          Upgrade to Pro (1,000 checks / month) to keep going right now.
+          Your remaining quota carries over for the rest of the month.
         </Text>
       ) : (
         <Text>

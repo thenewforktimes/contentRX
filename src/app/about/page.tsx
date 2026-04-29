@@ -29,12 +29,12 @@ import { Section } from "@/components/ui/section";
  * intentional rather than accidental.
  */
 const PLACEHOLDER_BIO =
-  "{bio: years shipping product copy, notable teams or companies, anything Robo wants surfaced here — brackets make this block fail the copy-pin test until edited}";
+  "{bio: years shipping product copy, notable teams or companies, anything Robo wants surfaced here. Brackets make this block fail the copy-pin test until edited}";
 
 export const metadata: Metadata = {
-  title: "About the model — ContentRX",
+  title: "About the model. ContentRX",
   description:
-    "The content model behind ContentRX — who wrote it, what it's calibrated against, and why moment-aware review isn't the job Grammarly is doing.",
+    "The content model behind ContentRX. Who wrote it, what it's calibrated against, and why moment-aware review isn't the job Grammarly is doing.",
 };
 
 export default function AboutPage() {
@@ -50,14 +50,14 @@ export default function AboutPage() {
           designer would run on their own UI copy. The standards,
           the moments, the weighting system that says &ldquo;in a
           destructive confirmation, emphasize the consequence; in an
-          onboarding flow, relax the tone&rdquo; — all of it carries
+          onboarding flow, relax the tone.&rdquo; All of it carries
           one designer&apos;s judgment calls, attributed and published.
         </p>
       </header>
 
       <Section title="Who wrote the model">
         <p>
-          Robo — a senior content designer. {PLACEHOLDER_BIO} The pattern
+          Robo, a senior content designer. {PLACEHOLDER_BIO} The pattern
           recognition that gets built over a career of that work is what
           the model encodes. The rules you can look up in a style guide
           are one input; the judgment calls about{" "}
@@ -102,7 +102,7 @@ export default function AboutPage() {
           </li>
           <li>
             <strong>Does it point somewhere?</strong> An error without a
-            next action is a dead end. <q>Try reloading — if it keeps
+            next action is a dead end. <q>Try reloading. If it keeps
             happening, let us know at support@example.com.</q> closes
             the loop.
           </li>
@@ -117,7 +117,7 @@ export default function AboutPage() {
 
       <Section title="Why the model stays honest">
         <p>
-          The hardest part of a content model isn&apos;t the rules — those
+          The hardest part of a content model isn&apos;t the rules. Those
           can be looked up in any style guide. It&apos;s the{" "}
           <em>weighting</em>: which standards matter most in which
           moment, and why. That&apos;s what a content designer builds
@@ -133,7 +133,7 @@ export default function AboutPage() {
           diverges from the design target, thresholds move with the
           measurement, not with the target. The model gets better every
           time Robo dismisses a verdict as &ldquo;the standard doesn&apos;t
-          apply here&rdquo; — the{" "}
+          apply here.&rdquo; The{" "}
           <Link href="/dashboard/overrides" className="underline underline-offset-2">
             override signal
           </Link>
@@ -164,20 +164,20 @@ export default function AboutPage() {
 
       <Section title="How to disagree with the model">
         <p>
-          Every finding ships with the rationale that produced it — the
+          Every finding ships with the rationale that produced it: the
           rule that fired, the moment it fired in, and a confidence
           score. If you read all of that and the verdict is still wrong,
           there are two paths:
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>Disagree with this finding</strong> — every finding
+            <strong>Disagree with this finding.</strong> Every finding
             has a three-button stance (agree / disagree / ship anyway)
             that captures your override for team-level analytics and,
             at scale, feeds the calibration log.
           </li>
           <li>
-            <strong>Correct the moment</strong> — if the tool read your
+            <strong>Correct the moment.</strong> If the tool read your
             string as a destructive confirmation when you were writing
             a first-encounter, the moment banner has a picker that
             routes the correction back into calibration.

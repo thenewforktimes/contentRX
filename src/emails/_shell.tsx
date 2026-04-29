@@ -54,7 +54,7 @@ export function EmailShell({
         <Section style={footer}>
           <Hr style={{ border: "none", borderTop: "1px solid #e5e5e5", margin: "16px auto", maxWidth: 560 }} />
           <Text style={footer}>
-            ContentRX — the content model for product copy.
+            ContentRX. The content model for product copy.
           </Text>
         </Section>
       </Body>
