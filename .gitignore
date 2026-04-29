@@ -68,3 +68,11 @@ evals/results/
 
 # --- Local caches (regenerable) ---
 .cache/
+
+# --- Private notes / plans (do NOT commit) ---
+# Internal sequencing docs — build plans, human-eval plan, dated
+# strategy snapshots — live here. Out of git so they don't ship to
+# the public repo while still letting Robo refer to them locally.
+# Persist a copy somewhere outside the repo (e.g., ~/Desktop) for
+# durability across worktrees.
+_private/

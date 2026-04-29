@@ -2,9 +2,12 @@
 
 **Read this file first. Every session. No exceptions.**
 
-After this file, read [BUILD_PLAN_v2.md](BUILD_PLAN_v2.md) for the
-current canonical build plan (v5.0.0). The historical v1 plan is at
-[docs/build-plan-v1-archive.md](docs/build-plan-v1-archive.md).
+The internal build plan lives at `_private/BUILD_PLAN_v2.md` (gitignored,
+local only). The human-eval companion is at `_private/HUMAN_EVAL_BUILD_PLAN.md`.
+Read whichever is relevant before touching the corresponding surface;
+ask Robo for a fresh copy if your worktree doesn't have them. Public
+contributors can ignore both — the ADRs in `decisions/` carry the
+load-bearing rationale that the build plans expand on.
 
 If a session involves a positioning-level decision (public/private boundary,
 moat hypothesis, wire-format break), also read
@@ -431,7 +434,8 @@ every API change, every new surface, every code review going forward.
   through scheduled generators. Nothing outside reads substrate.
 - BUILD_PLAN_v2 sessions 7, 19, 20 (and Phase 6 in full) are DEFERRED.
   Don't re-activate them without an ADR superseding the 2026-04-25 pivot.
-  See [BUILD_PLAN_v2.md](BUILD_PLAN_v2.md) for the deferred-section index.
+  Deferred-section index lives in the internal build plan
+  (`_private/BUILD_PLAN_v2.md`).
 
 ## Banned shortcuts
 
