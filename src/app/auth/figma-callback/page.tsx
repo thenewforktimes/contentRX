@@ -179,12 +179,12 @@ export default async function FigmaCallbackPage({ searchParams }: PageProps) {
           <input type="hidden" name="handoff" value={handoff} />
           <button
             type="submit"
-            className="w-full rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90 dark:bg-white dark:text-black"
+            className="w-full rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
           >
             Revoke existing key and sign in to plugin
           </button>
         </form>
-        <p className="text-xs text-neutral-600 dark:text-neutral-400">
+        <p className="text-xs text-stone-600 dark:text-stone-400">
           Revoking will immediately break any CLI or GitHub Action sessions
           using the old key. Prefer to rotate manually?{" "}
           <a href="/dashboard" className="underline">
@@ -238,7 +238,7 @@ function CallbackShell({
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
       <div
-        className={`w-full max-w-md rounded-lg border-t-4 bg-white px-7 py-6 leading-relaxed text-neutral-800 shadow-sm dark:bg-neutral-950 dark:text-neutral-200 ${accentBorder}`}
+        className={`w-full max-w-md rounded-lg border-t-4 bg-white px-7 py-6 leading-relaxed text-stone-800 shadow-sm dark:bg-stone-950 dark:text-stone-200 ${accentBorder}`}
       >
         {children}
       </div>

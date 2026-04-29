@@ -74,7 +74,7 @@ export default async function RunPage({ params }: RunParams) {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-neutral-200 p-6 text-sm dark:border-neutral-800">
+      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -134,8 +134,8 @@ export default async function RunPage({ params }: RunParams) {
       <div className="flex flex-col gap-4">
         <Eyebrow>Run</Eyebrow>
         <h1 className="text-2xl font-semibold">{run_id}</h1>
-        <section className="rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
-          <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <section className="rounded-lg border border-stone-200 p-6 dark:border-stone-800">
+          <p className="text-sm text-stone-600 dark:text-stone-300">
             This run has no findings on your account, or it expired.
             ContentRX retains run history for 90 days.
           </p>
@@ -188,7 +188,7 @@ export default async function RunPage({ params }: RunParams) {
       <header>
         <Eyebrow>Run</Eyebrow>
         <h1 className="mt-2 text-2xl font-semibold tabular-nums">{run_id}</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-300">
           {sourceLabel} · {formatTimeRange(earliestAt, latestAt)}
         </p>
       </header>
@@ -220,7 +220,7 @@ export default async function RunPage({ params }: RunParams) {
 
       <Link
         href="/dashboard"
-        className="text-sm text-neutral-600 underline hover:no-underline dark:text-neutral-300"
+        className="text-sm text-stone-600 underline hover:no-underline dark:text-stone-300"
       >
         ← Back to dashboard
       </Link>
@@ -241,11 +241,11 @@ function Stat({
     tone === "high"
       ? "text-red-700 dark:text-red-400"
       : tone === "muted"
-        ? "text-neutral-700 dark:text-neutral-300"
-        : "text-neutral-900 dark:text-neutral-100";
+        ? "text-stone-700 dark:text-stone-300"
+        : "text-stone-900 dark:text-stone-100";
   return (
-    <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-      <div className="text-xs uppercase tracking-wide text-neutral-500">
+    <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+      <div className="text-xs uppercase tracking-wide text-stone-500">
         {label}
       </div>
       <div className={`mt-1 text-2xl font-semibold tabular-nums ${valueClasses}`}>
@@ -263,10 +263,10 @@ function FileBlock({
   items: ViolationRow[];
 }) {
   return (
-    <section className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+    <section className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <code className="text-sm font-medium">{file}</code>
-        <span className="text-xs text-neutral-500">
+        <span className="text-xs text-stone-500">
           {items.length} {items.length === 1 ? "finding" : "findings"}
         </span>
       </header>
@@ -274,11 +274,11 @@ function FileBlock({
         {items.map((it) => (
           <li
             key={it.id}
-            className="flex items-start gap-3 rounded-md bg-neutral-50 p-3 text-sm dark:bg-neutral-900"
+            className="flex items-start gap-3 rounded-md bg-stone-50 p-3 text-sm dark:bg-stone-900"
           >
             <SeverityDot severity={it.severity} />
             <div className="flex-1">
-              <div className="text-neutral-700 dark:text-neutral-300">
+              <div className="text-stone-700 dark:text-stone-300">
                 {humanizeContentType(it.contentType)}
                 {it.moment && (
                   <>
@@ -307,7 +307,7 @@ function SeverityDot({ severity }: { severity: string }) {
       ? "bg-red-500"
       : severity === "medium"
         ? "bg-amber-500"
-        : "bg-neutral-400";
+        : "bg-stone-400";
   return (
     <span
       className={`mt-1.5 inline-block h-2 w-2 flex-none rounded-full ${tone}`}

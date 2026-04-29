@@ -112,7 +112,7 @@ function SurfaceCard({
 }) {
   const connected = count > 0 && lastAt !== null;
   return (
-    <div className="rounded-md border border-neutral-200 p-4 text-sm dark:border-neutral-800">
+    <div className="rounded-md border border-stone-200 p-4 text-sm dark:border-stone-800">
       <p className="font-medium">{label}</p>
       <div className="mt-2 flex items-center gap-1.5">
         <span
@@ -120,21 +120,21 @@ function SurfaceCard({
           className={
             connected
               ? "inline-block h-2 w-2 rounded-full bg-emerald-500"
-              : "inline-block h-2 w-2 rounded-full border border-neutral-300 dark:border-neutral-700"
+              : "inline-block h-2 w-2 rounded-full border border-stone-300 dark:border-stone-700"
           }
         />
-        <span className="text-xs text-neutral-600 dark:text-neutral-300">
+        <span className="text-xs text-stone-600 dark:text-stone-300">
           {connected && lastAt ? formatRelative(lastAt) : "Not connected"}
         </span>
       </div>
       {connected ? (
-        <p className="mt-1 text-xs tabular-nums text-neutral-600 dark:text-neutral-300">
+        <p className="mt-1 text-xs tabular-nums text-stone-600 dark:text-stone-300">
           {count.toLocaleString()} {count === 1 ? "check" : "checks"}
         </p>
       ) : (
         <Link
           href={installHref}
-          className="mt-1 inline-block text-xs text-neutral-900 underline dark:text-neutral-100"
+          className="mt-1 inline-block text-xs text-stone-900 underline dark:text-stone-100"
         >
           {installLabel} →
         </Link>

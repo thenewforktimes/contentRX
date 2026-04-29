@@ -40,7 +40,7 @@ export default function Home() {
         <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
           The content model for product copy.
         </h1>
-        <p className="mt-6 text-lg text-neutral-700 dark:text-neutral-300">
+        <p className="mt-6 text-lg text-stone-700 dark:text-stone-300">
           Situation-aware review for the moments where copy stops being
           decoration and starts being the product: error states, empty
           states, permissions flows, destructive confirmations, compliance
@@ -219,7 +219,7 @@ export default function Home() {
         </p>
       </Section>
 
-      <footer className="mt-16 border-t border-neutral-200 pt-8 text-sm text-neutral-500 dark:border-neutral-800">
+      <footer className="mt-16 border-t border-stone-200 pt-8 text-sm text-stone-500 dark:border-stone-800">
         <p>
           The accountability surface:{" "}
           <Link href="/accuracy" className="underline underline-offset-2">

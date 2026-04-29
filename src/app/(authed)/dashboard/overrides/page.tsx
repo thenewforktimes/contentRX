@@ -35,7 +35,7 @@ export default async function OverridesPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-neutral-200 p-6 text-sm dark:border-neutral-800">
+      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -43,16 +43,16 @@ export default async function OverridesPage() {
 
   if (user.plan !== "team") {
     return (
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
+      <section className="flex flex-col items-start gap-3 rounded-lg border border-stone-200 p-6 dark:border-stone-800">
         <h1 className="text-lg font-semibold">Override report</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
           Available on the Team plan. Surfaces the rules your team
           disagrees with most so you can disable or tune them in team
           rules.
         </p>
         <Link
           href="/dashboard"
-          className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 dark:bg-white dark:text-black"
+          className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
         >
           Upgrade to Team
         </Link>
@@ -184,11 +184,11 @@ export default async function OverridesPage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
           Last {RANGE_DAYS} days
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Override report</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-300">
           The rules your team dismisses most. Use this to decide which
           standards to disable or override in your{" "}
           <Link
@@ -221,10 +221,10 @@ export default async function OverridesPage() {
       </section>
 
       {overrides_count === 0 ? (
-        <section className="rounded-lg border border-dashed border-neutral-300 p-6 text-sm text-neutral-500 dark:border-neutral-700">
+        <section className="rounded-lg border border-dashed border-stone-300 p-6 text-sm text-stone-500 dark:border-stone-700">
           Nothing to show yet. Your team hasn&apos;t dismissed any
           findings. Dismissals from the Figma plugin or{" "}
-          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-xs dark:bg-neutral-900">
+          <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-xs dark:bg-stone-900">
             /contentrx ignore &lt;STD&gt;
           </code>{" "}
           comments on PRs land here, so you can decide which rules to
@@ -235,7 +235,7 @@ export default async function OverridesPage() {
           {pushbacks.length > 0 && (
             <section>
               <h2 className="mb-1 text-sm font-semibold">Standard pushbacks</h2>
-              <p className="mb-3 text-xs text-neutral-600 dark:text-neutral-300">
+              <p className="mb-3 text-xs text-stone-600 dark:text-stone-300">
                 Clusters of 3+ overrides on the same standard inside a
                 single session (scan, CI run, dashboard session).
                 Strongest signal that a rule needs a refinement-log look.
@@ -248,7 +248,7 @@ export default async function OverridesPage() {
                   >
                     <div>
                       <p className="font-mono text-xs">{p.standardId}</p>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-300">
+                      <p className="text-xs text-stone-600 dark:text-stone-300">
                         Session{" "}
                         <code className="font-mono">
                           {p.sessionKey.startsWith("pseudo:")
@@ -273,7 +273,7 @@ export default async function OverridesPage() {
             </h2>
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800">
+                <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500 dark:border-stone-800">
                   <th className="py-2">Standard</th>
                   <th className="py-2">Moment</th>
                   <th className="py-2 text-right">Overrides</th>
@@ -283,10 +283,10 @@ export default async function OverridesPage() {
                 {topStandards.map((s) => (
                   <tr
                     key={`${s.standard_id}|${s.moment ?? ""}`}
-                    className="border-b border-neutral-100 dark:border-neutral-900"
+                    className="border-b border-stone-100 dark:border-stone-900"
                   >
                     <td className="py-2 font-mono text-xs">{s.standard_id}</td>
-                    <td className="py-2 text-xs text-neutral-600 dark:text-neutral-300">
+                    <td className="py-2 text-xs text-stone-600 dark:text-stone-300">
                       {s.moment ?? "n/a"}
                     </td>
                     <td className="py-2 text-right">
@@ -304,7 +304,7 @@ export default async function OverridesPage() {
               {byType.map((t) => (
                 <li
                   key={t.override_type}
-                  className="flex items-center justify-between rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-800"
+                  className="flex items-center justify-between rounded-md border border-stone-200 p-3 text-sm dark:border-stone-800"
                 >
                   <span className="font-mono text-xs">{t.override_type}</span>
                   <span className="font-medium">
@@ -319,7 +319,7 @@ export default async function OverridesPage() {
             <h2 className="mb-1 text-sm font-semibold">
               How your team engaged
             </h2>
-            <p className="mb-3 text-xs text-neutral-600 dark:text-neutral-300">
+            <p className="mb-3 text-xs text-stone-600 dark:text-stone-300">
               Each finding falls into one of four buckets, depending on
               whether your teammate read the rationale before deciding
               and whether they agreed or disagreed. Hover any row for
@@ -330,7 +330,7 @@ export default async function OverridesPage() {
                 <li
                   key={q}
                   title={QUADRANT_TOOLTIPS[q]}
-                  className="flex items-center justify-between rounded-md border border-neutral-200 p-3 text-sm dark:border-neutral-800"
+                  className="flex items-center justify-between rounded-md border border-stone-200 p-3 text-sm dark:border-stone-800"
                 >
                   <span className="text-xs">{QUADRANT_LABELS[q]}</span>
                   <span className="font-medium">
@@ -387,10 +387,10 @@ function Stat({
   const valueColor =
     tone === "warn"
       ? "text-amber-700 dark:text-amber-300"
-      : "text-neutral-900 dark:text-neutral-100";
+      : "text-stone-900 dark:text-stone-100";
   return (
-    <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-      <p className="text-xs uppercase tracking-wider text-neutral-500">
+    <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+      <p className="text-xs uppercase tracking-wider text-stone-500">
         {label}
       </p>
       <p className={`mt-1 text-2xl font-semibold ${valueColor}`}>{value}</p>

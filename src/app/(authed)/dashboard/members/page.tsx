@@ -33,7 +33,7 @@ export default async function MembersPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-neutral-200 p-6 text-sm dark:border-neutral-800">
+      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -41,15 +41,15 @@ export default async function MembersPage() {
 
   if (user.plan !== "team") {
     return (
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
+      <section className="flex flex-col items-start gap-3 rounded-lg border border-stone-200 p-6 dark:border-stone-800">
         <h1 className="text-lg font-semibold">Members</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
           Available on the Team plan. Invite teammates to share your
           monthly check limit, custom rules, and custom examples.
         </p>
         <Link
           href="/dashboard"
-          className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 dark:bg-white dark:text-black"
+          className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
         >
           Upgrade to Team
         </Link>
@@ -67,11 +67,11 @@ export default async function MembersPage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
           Team
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Members</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-300">
           {seats.used} of {seats.capacity} seats used
           {seats.pendingInviteCount > 0 && (
             <>

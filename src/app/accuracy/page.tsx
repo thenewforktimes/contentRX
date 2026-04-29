@@ -37,13 +37,13 @@ export default function AccuracyPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
           Accountability surface
         </p>
         <h1 className="mt-2 text-3xl font-semibold">
           Accuracy, reported honestly
         </h1>
-        <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">
           Three numbers govern how ContentRX evaluates its own calibration.
           They are kept separate on purpose. A single &ldquo;accuracy score&rdquo;
           would obscure the self-drift ceiling and misrepresent what the
@@ -51,7 +51,7 @@ export default function AccuracyPage() {
           et al., 2019) guidance on honest metric reporting with
           intervals.
         </p>
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-xs text-stone-500">
           {snap.generated_at
             ? `Snapshot generated ${formatIso(snap.generated_at)}.`
             : "Snapshot pending. The nightly generator has not run yet."}
@@ -85,7 +85,7 @@ export default function AccuracyPage() {
 
       <section className="mt-10">
         <h2 className="text-lg font-semibold">Coverage</h2>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
           ContentRX evaluates against {snap.standards_total} standards. As
           standards accumulate enough labelled data, they graduate up the
           ladder from <code className="font-mono">robo_labels</code> (every
@@ -103,15 +103,15 @@ export default function AccuracyPage() {
           />
           <LadderCell label="autonomous" count={snap.by_level.autonomous} />
         </dl>
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-xs text-stone-500">
           {snap.standards_measured} of {snap.standards_total} standards have
           completed the weekly κ series.
         </p>
       </section>
 
-      <section className="mt-10 rounded-lg border border-neutral-300 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-900">
+      <section className="mt-10 rounded-lg border border-stone-300 bg-stone-50 p-6 dark:border-stone-700 dark:bg-stone-900">
         <h2 className="text-lg font-semibold">How these numbers come to be</h2>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
           Each weekday the engine evaluates strings against the standards
           library and a held-out golden set Robo maintains. The measured
           system κ is the agreement between what the engine says and what
@@ -121,12 +121,12 @@ export default function AccuracyPage() {
           the labeller&apos;s agreement with themselves. The 0.90 design
           target is a stated assumption, not a measurement.
         </p>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           Pending cells render as &ldquo;pending&rdquo;: never zero, never
           filled from the design target. Honest reporting of a
           measurement-in-progress is the whole point of the page.
         </p>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           The weekly{" "}
           <Link href="/calibration" className="underline underline-offset-2">
             calibration log
@@ -136,7 +136,7 @@ export default function AccuracyPage() {
         </p>
       </section>
 
-      <footer className="mt-16 text-xs text-neutral-500">
+      <footer className="mt-16 text-xs text-stone-500">
         <p>
           Public snapshot at{" "}
           <a
@@ -177,14 +177,14 @@ function MetricBlock({
     <article
       className={`rounded-md border p-4 ${
         isTarget
-          ? "border-dashed border-neutral-400 bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900"
-          : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950"
+          ? "border-dashed border-stone-400 bg-stone-50 dark:border-stone-600 dark:bg-stone-900"
+          : "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950"
       }`}
     >
-      <p className="text-xs font-mono uppercase tracking-wider text-neutral-500">
+      <p className="text-xs font-mono uppercase tracking-wider text-stone-500">
         {label}
       </p>
-      <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+      <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
         {sublabel}
       </p>
       <div className="mt-3">
@@ -194,11 +194,11 @@ function MetricBlock({
               {kappa.value.toFixed(3)}
             </p>
             {isTarget ? (
-              <p className="mt-1 text-xs text-neutral-500">
+              <p className="mt-1 text-xs text-stone-500">
                 Design assumption · stated separately from measurements
               </p>
             ) : (
-              <p className="mt-1 text-xs text-neutral-500 tabular-nums">
+              <p className="mt-1 text-xs text-stone-500 tabular-nums">
                 95% CI [{kappa.ci_low.toFixed(3)},{" "}
                 {kappa.ci_high.toFixed(3)}] · n = {kappa.sample_size}
               </p>
@@ -206,10 +206,10 @@ function MetricBlock({
           </>
         ) : (
           <>
-            <p className="font-mono text-2xl font-semibold text-neutral-500">
+            <p className="font-mono text-2xl font-semibold text-stone-500">
               pending
             </p>
-            <p className="mt-1 text-xs text-neutral-500">{kappa.reason}</p>
+            <p className="mt-1 text-xs text-stone-500">{kappa.reason}</p>
           </>
         )}
       </div>
@@ -225,8 +225,8 @@ function LadderCell({
   count: number;
 }) {
   return (
-    <div className="rounded-md border border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
-      <dt className="text-xs uppercase tracking-wide text-neutral-500">
+    <div className="rounded-md border border-stone-200 bg-white px-4 py-3 dark:border-stone-800 dark:bg-stone-950">
+      <dt className="text-xs uppercase tracking-wide text-stone-500">
         <code className="font-mono">{label}</code>
       </dt>
       <dd className="mt-1 text-lg font-semibold tabular-nums">{count}</dd>

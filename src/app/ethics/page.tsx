@@ -30,13 +30,13 @@ export default function EthicsPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
       <header className="mb-10">
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
           ContentRX ethical framework
         </p>
         <h1 className="mt-3 text-3xl font-semibold">
           How I collect, attribute, and use external signal
         </h1>
-        <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">
           ContentRX learns from public sources: design systems, style
           guides, OSS repos that demonstrate content-design craft. Those
           sources deserve clear rules about how their work is used.
@@ -102,7 +102,7 @@ export default function EthicsPage() {
       >
         <p>
           The external-signal crawler identifies itself as{" "}
-          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-xs dark:bg-neutral-900">
+          <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-xs dark:bg-stone-900">
             contentrx-research-bot
           </code>{" "}
           with a contact URL in the user-agent string. It honors
@@ -120,7 +120,7 @@ export default function EthicsPage() {
             {OPT_OUT_EMAIL}
           </a>{" "}
           with subject line{" "}
-          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-xs dark:bg-neutral-900">
+          <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-xs dark:bg-stone-900">
             {OPT_OUT_SUBJECT}
           </code>
           . I confirm receipt within a week and land the removal in the
@@ -246,15 +246,15 @@ export default function EthicsPage() {
           function logs use a hand-shaped error format that omits
           transitive properties of SDK errors (which sometimes carry
           the request payload). The hardening is in{" "}
-          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[11px] dark:bg-neutral-900">
+          <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-[11px] dark:bg-stone-900">
             src/lib/pii-screen.ts
           </code>
           ,{" "}
-          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[11px] dark:bg-neutral-900">
+          <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-[11px] dark:bg-stone-900">
             src/lib/sentry-scrub.ts
           </code>
           , and{" "}
-          <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[11px] dark:bg-neutral-900">
+          <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-[11px] dark:bg-stone-900">
             src/lib/safe-error-log.ts
           </code>{" "}
           if you want to verify against the source.
@@ -270,9 +270,9 @@ export default function EthicsPage() {
         </p>
       </Section>
 
-      <section className="mt-12 rounded-lg border border-neutral-300 bg-neutral-50 p-6 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+      <section className="mt-12 rounded-lg border border-stone-300 bg-stone-50 p-6 text-sm dark:border-stone-700 dark:bg-stone-900">
         <h2 className="text-base font-semibold">How to opt out</h2>
-        <p className="mt-2 text-neutral-700 dark:text-neutral-300">
+        <p className="mt-2 text-stone-700 dark:text-stone-300">
           If you maintain a project and don&apos;t want ContentRX to
           train on it, email{" "}
           <a
@@ -285,14 +285,14 @@ export default function EthicsPage() {
           Include the repo URL or style-guide URL you&apos;re speaking
           for. No justification required.
         </p>
-        <p className="mt-3 text-neutral-700 dark:text-neutral-300">
+        <p className="mt-3 text-stone-700 dark:text-stone-300">
           The commitment on my side: confirm receipt within a week,
           stop fresh crawls in the next cycle, and best-effort remove
           already-derived signal in the release that follows.
         </p>
       </section>
 
-      <footer className="mt-16 text-xs text-neutral-500">
+      <footer className="mt-16 text-xs text-stone-500">
         <p>
           Last updated 2026-04-23. This page lives under the ContentRX
           main site at <code className="font-mono">contentrx.io/ethics</code>
@@ -322,15 +322,15 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-8 border-t border-neutral-200 pt-8 first:border-t-0 first:pt-0 dark:border-neutral-800">
-      <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+    <section className="mt-8 border-t border-stone-200 pt-8 first:border-t-0 first:pt-0 dark:border-stone-800">
+      <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
         Commitment {number}
       </p>
       <h2 className="mt-2 text-xl font-semibold">{title}</h2>
-      <p className="mt-2 text-sm italic text-neutral-600 dark:text-neutral-400">
+      <p className="mt-2 text-sm italic text-stone-600 dark:text-stone-400">
         {summary}
       </p>
-      <div className="mt-4 text-sm text-neutral-700 dark:text-neutral-300">
+      <div className="mt-4 text-sm text-stone-700 dark:text-stone-300">
         {children}
       </div>
     </section>

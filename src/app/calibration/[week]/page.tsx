@@ -38,31 +38,31 @@ export default async function CalibrationWeekPage({
       <p className="text-xs">
         <Link
           href="/calibration"
-          className="text-neutral-600 hover:underline dark:text-neutral-400"
+          className="text-stone-600 hover:underline dark:text-stone-400"
         >
           ← Back to calibration log
         </Link>
       </p>
       <header className="mt-4 mb-6">
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
           Calibration log
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
           Week {entry.week}
         </h1>
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-stone-500">
           Generated {formatIso(entry.modified_at)} ·{" "}
           {entry.size_bytes.toLocaleString()} bytes
         </p>
       </header>
 
-      <article className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-        <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
+      <article className="rounded-lg border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
+        <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-stone-800 dark:text-stone-200">
 {entry.contents}
         </pre>
       </article>
 
-      <p className="mt-6 text-xs text-neutral-500">
+      <p className="mt-6 text-xs text-stone-500">
         Source:{" "}
         <a
           href={`https://github.com/thenewforktimes/contentRX/blob/main/reports/calibration/${entry.filename}`}

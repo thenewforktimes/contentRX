@@ -80,7 +80,7 @@ export function AlertDialog({
   const confirmClass =
     tone === "danger"
       ? "rounded-md border border-red-600 bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
-      : "rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 dark:bg-white dark:text-black";
+      : "rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300";
 
   return (
     <div
@@ -94,14 +94,14 @@ export function AlertDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="w-full max-w-sm rounded-lg border border-neutral-200 bg-white p-5 shadow-lg dark:border-neutral-800 dark:bg-neutral-950"
+        className="w-full max-w-sm rounded-lg border border-stone-200 bg-white p-5 shadow-lg dark:border-stone-800 dark:bg-stone-950"
       >
         <h2 id={titleId} className="mb-2 text-sm font-semibold">
           {title}
         </h2>
         <p
           id={descId}
-          className="mb-4 text-sm text-neutral-600 dark:text-neutral-400"
+          className="mb-4 text-sm text-stone-600 dark:text-stone-400"
         >
           {description}
         </p>
@@ -110,7 +110,7 @@ export function AlertDialog({
             ref={cancelBtnRef}
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
           >
             {cancelLabel}
           </button>

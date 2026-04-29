@@ -3,7 +3,7 @@
  *
  * The single most-repeated text pattern on the public surface
  * (~15+ inlined uses pre-extraction). Promotes the
- * `text-xs font-mono uppercase tracking-widest text-neutral-500`
+ * `text-xs font-mono uppercase tracking-widest text-stone-500`
  * recipe to a first-class component so future pages don't re-derive
  * it (and the eventual color/spacing tweak is a one-place change).
  */
@@ -19,7 +19,7 @@ export function Eyebrow({
 }) {
   return (
     <p
-      className={`text-xs font-mono uppercase tracking-widest text-neutral-500 ${className}`.trim()}
+      className={`text-xs font-mono uppercase tracking-widest text-stone-500 ${className}`.trim()}
     >
       {children}
     </p>

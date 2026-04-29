@@ -33,11 +33,11 @@ export default function PricingPage() {
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
           A senior content designer&apos;s verdict on every string you ship.
         </h1>
-        <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
+        <p className="mt-4 text-lg text-stone-700 dark:text-stone-300">
           $29/month, in your repo, your PR, your Figma file, your terminal,
           without ever leaving the work.
         </p>
-        <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">
           All plans share the same engine, the same calibrated reviewer,
           and the same five surfaces. The only difference is how much you
           use it.
@@ -66,7 +66,7 @@ export default function PricingPage() {
         />
       </section>
 
-      <section className="mt-16 border-t border-neutral-200 pt-10 dark:border-neutral-800">
+      <section className="mt-16 border-t border-stone-200 pt-10 dark:border-stone-800">
         <h2 className="text-lg font-semibold">FAQ</h2>
         <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-6 text-sm sm:grid-cols-2">
           <Faq
@@ -148,7 +148,7 @@ export default function PricingPage() {
         </dl>
       </section>
 
-      <footer className="mt-16 border-t border-neutral-200 pt-8 text-sm text-neutral-500 dark:border-neutral-800">
+      <footer className="mt-16 border-t border-stone-200 pt-8 text-sm text-stone-500 dark:border-stone-800">
         <p>
           Questions?{" "}
           <a
@@ -199,9 +199,9 @@ function PlanCard({
         <h2 className="text-lg font-semibold">{name}</h2>
         <p className="mt-1 text-2xl font-semibold">{price}</p>
       </div>
-      <div className="flex-1 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
+      <div className="flex-1 space-y-2 text-sm text-stone-700 dark:text-stone-300">
         <p className="font-medium">{quota}</p>
-        <p className="text-neutral-600 dark:text-neutral-400">
+        <p className="text-stone-600 dark:text-stone-400">
           All five surfaces.
         </p>
       </div>
@@ -220,10 +220,10 @@ function PlanCard({
 function Faq({ q, a }: { q: string; a: React.ReactNode }) {
   return (
     <div>
-      <dt className="font-medium text-neutral-900 dark:text-neutral-100">
+      <dt className="font-medium text-stone-900 dark:text-stone-100">
         {q}
       </dt>
-      <dd className="mt-1 text-neutral-700 dark:text-neutral-300">{a}</dd>
+      <dd className="mt-1 text-stone-700 dark:text-stone-300">{a}</dd>
     </div>
   );
 }

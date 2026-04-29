@@ -36,14 +36,14 @@ export default function InstallPage() {
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
           Five surfaces, one content model.
         </h1>
-        <p className="mt-4 text-lg text-neutral-700 dark:text-neutral-300">
+        <p className="mt-4 text-lg text-stone-700 dark:text-stone-300">
           Content-standards enforcement is moving upstream into the
           generation layer. Install ContentRX where your team actually
           writes product copy (in the IDE, on the command line, in
           pull requests) with the Figma plugin alongside for the
           strings that arrive through design.
         </p>
-        <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">
           All five surfaces hit the same public API. One{" "}
           <Link href="/dashboard" className="underline underline-offset-2">
             API key
@@ -85,7 +85,7 @@ export default function InstallPage() {
           {`export CONTENTRX_API_KEY=cx_...
 uvx contentrx-mcp`}
         </Code>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           Source + full tool surface:{" "}
           <a
             href="https://github.com/thenewforktimes/contentRX/tree/main/mcp-server"
@@ -126,7 +126,7 @@ uvx contentrx-mcp`}
 export CONTENTRX_API_KEY=cx_...
 # Point your editor's LSP client at \`contentrx-lsp\` (stdio)`}
         </Code>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           Scope: JSX / TSX text children + copy attributes
           (<code>alt</code>, <code>aria-label</code>,{" "}
           <code>placeholder</code>, <code>title</code>,{" "}
@@ -162,7 +162,7 @@ contentrx "Click here"
 contentrx --batch strings.txt --json
 contentrx --explain "Are you sure?"`}
         </Code>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           <code>--explain</code> prints the full rationale chain
           after the verdict. <code>--json</code> emits the raw API
           response for scripting. Full flag list:{" "}
@@ -203,7 +203,7 @@ jobs:
           api-key: \${{ secrets.CONTENTRX_API_KEY }}
           fail-on: violation  # or review`}
         </Code>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           Action source + the full input surface:{" "}
           <a
             href="https://github.com/thenewforktimes/contentRX/tree/main/github-action"
@@ -238,7 +238,7 @@ jobs:
             Figma Community →
           </a>
         </p>
-        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
           Sign in once via the dashboard to mint an API key;
           paste it into the plugin&apos;s sign-in panel.
         </p>
@@ -282,18 +282,18 @@ function SurfaceChip({
   return (
     <a
       href={href}
-      className="flex items-baseline gap-2 rounded-md border border-neutral-300 px-3 py-1.5 text-xs hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+      className="flex items-baseline gap-2 rounded-md border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
     >
       <span className="font-mono font-semibold">{label}</span>
-      <span className="text-neutral-500">{tagline}</span>
+      <span className="text-stone-500">{tagline}</span>
     </a>
   );
 }
 
 function Code({ children }: { children: string }) {
   return (
-    <pre className="mt-3 overflow-x-auto rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs dark:border-neutral-800 dark:bg-neutral-950">
-      <code className="font-mono text-neutral-800 dark:text-neutral-200">
+    <pre className="mt-3 overflow-x-auto rounded-md border border-stone-200 bg-stone-50 p-3 text-xs dark:border-stone-800 dark:bg-stone-950">
+      <code className="font-mono text-stone-800 dark:text-stone-200">
         {children}
       </code>
     </pre>

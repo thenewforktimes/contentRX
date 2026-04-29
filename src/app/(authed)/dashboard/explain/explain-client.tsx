@@ -189,7 +189,7 @@ export function ExplainClient() {
       <section className="space-y-2">
         <label
           htmlFor="explain-text"
-          className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+          className="block text-sm font-medium text-stone-700 dark:text-stone-300"
         >
           Text to evaluate
         </label>
@@ -198,10 +198,10 @@ export function ExplainClient() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={4}
-          className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-sm text-neutral-900 focus:outline-none focus:ring-1 dark:bg-neutral-950 dark:text-neutral-100 ${
+          className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-sm text-stone-900 focus:outline-none focus:ring-1 dark:bg-stone-950 dark:text-stone-100 ${
             text.length > MAX_CHECK_CHARS
               ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-              : "border-neutral-300 focus:border-neutral-500 focus:ring-neutral-500 dark:border-neutral-700"
+              : "border-stone-300 focus:border-stone-500 focus:ring-neutral-500 dark:border-stone-700"
           }`}
         />
         <div className="flex items-center justify-between gap-3 text-xs">
@@ -211,7 +211,7 @@ export function ExplainClient() {
                 ? "text-red-600 dark:text-red-400"
                 : text.length > MAX_CHECK_CHARS * 0.9
                   ? "text-amber-600 dark:text-amber-400"
-                  : "text-neutral-500 dark:text-neutral-300"
+                  : "text-stone-500 dark:text-stone-300"
             }`}
           >
             {text.length.toLocaleString()} characters
@@ -234,7 +234,7 @@ export function ExplainClient() {
               </Link>
             </span>
           ) : (
-            <span className="text-neutral-500 dark:text-neutral-300">
+            <span className="text-stone-500 dark:text-stone-300">
               1 check per {CHARS_PER_CHECK.toLocaleString()} chars
             </span>
           )}
@@ -247,7 +247,7 @@ export function ExplainClient() {
             text.trim().length === 0 ||
             text.length > MAX_CHECK_CHARS
           }
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
+          className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
         >
           {loading ? "Checking…" : "Check"}
         </button>
@@ -266,10 +266,10 @@ export function ExplainClient() {
               {response.violations.map((v, i) => (
                 <li
                   key={i}
-                  className="rounded-md border border-neutral-200 bg-white p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900"
+                  className="rounded-md border border-stone-200 bg-white p-3 text-sm dark:border-stone-800 dark:bg-stone-900"
                 >
                   <SeverityBadge severity={v.severity} />
-                  <p className="mt-2 text-neutral-900 dark:text-neutral-100">
+                  <p className="mt-2 text-stone-900 dark:text-stone-100">
                     {v.issue}
                   </p>
                   {v.suggestion && (
@@ -282,7 +282,7 @@ export function ExplainClient() {
               ))}
             </ul>
           )}
-          <p className="text-xs text-neutral-500 dark:text-neutral-300">
+          <p className="text-xs text-stone-500 dark:text-stone-300">
             Evaluated in {response.latency_ms} ms.
           </p>
         </section>
@@ -312,7 +312,7 @@ function VerdictHeader({
         {verdict}
       </span>
       {reviewReason && (
-        <span className="text-sm text-neutral-600 dark:text-neutral-300">
+        <span className="text-sm text-stone-600 dark:text-stone-300">
           {humanizeReviewReason(reviewReason)}
         </span>
       )}
@@ -337,11 +337,11 @@ function DiffBlock({ before, after }: { before: string; after: string }) {
       <div className="flex items-start gap-2">
         <span
           aria-hidden="true"
-          className="select-none text-neutral-400 dark:text-neutral-600"
+          className="select-none text-stone-400 dark:text-stone-600"
         >
           −
         </span>
-        <span className="break-words text-neutral-700 dark:text-neutral-300">
+        <span className="break-words text-stone-700 dark:text-stone-300">
           {tokens
             .filter((t) => t.kind === "equal" || t.kind === "removed")
             .map((t, i) => (
@@ -352,11 +352,11 @@ function DiffBlock({ before, after }: { before: string; after: string }) {
       <div className="flex items-start gap-2">
         <span
           aria-hidden="true"
-          className="select-none text-neutral-400 dark:text-neutral-600"
+          className="select-none text-stone-400 dark:text-stone-600"
         >
           +
         </span>
-        <span className="break-words text-neutral-700 dark:text-neutral-300">
+        <span className="break-words text-stone-700 dark:text-stone-300">
           {tokens
             .filter((t) => t.kind === "equal" || t.kind === "added")
             .map((t, i) => (
@@ -533,7 +533,7 @@ function SeverityBadge({ severity }: { severity: string }) {
       ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
       : severity === "medium"
         ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-        : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
+        : "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300";
   return (
     <span
       className={`inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${tone}`}

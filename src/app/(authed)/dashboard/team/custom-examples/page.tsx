@@ -42,7 +42,7 @@ export default async function CustomExamplesPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-neutral-200 p-6 text-sm dark:border-neutral-800">
+      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -50,9 +50,9 @@ export default async function CustomExamplesPage() {
 
   if (user.plan !== "team") {
     return (
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
+      <section className="flex flex-col items-start gap-3 rounded-lg border border-stone-200 p-6 dark:border-stone-800">
         <h1 className="text-lg font-semibold">Custom examples</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
           Available on the Team plan. Mark specific strings as correct
           (or known-bad) for your product&apos;s voice. ContentRX
           short-circuits those strings on every subsequent check
@@ -60,7 +60,7 @@ export default async function CustomExamplesPage() {
         </p>
         <Link
           href="/dashboard"
-          className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 dark:bg-white dark:text-black"
+          className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
         >
           Upgrade to Team
         </Link>
@@ -78,17 +78,17 @@ export default async function CustomExamplesPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <header className="mb-6 flex flex-col gap-2">
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
           Team plan · audit view
         </p>
         <h1 className="text-2xl font-semibold">Custom examples</h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
           {entries.length} of {CUSTOM_EXAMPLES_CAP_PER_TEAM}. Each
           entry short-circuits <code>/api/check</code> for your team:
           matching strings skip the LLM entirely and return the
           stored verdict. The core model stays untouched.
         </p>
-        <p className="text-sm text-neutral-600 dark:text-neutral-300">
+        <p className="text-sm text-stone-600 dark:text-stone-300">
           <strong>Ingestion lives in MCP + CLI</strong> (not here).
           Add entries via <code>custom_example_add</code> from Claude
           Code / Cursor, or <code>contentrx example add</code> from
@@ -105,16 +105,16 @@ export default async function CustomExamplesPage() {
       </header>
 
       {entries.length === 0 ? (
-        <section className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 p-6 text-sm dark:border-neutral-700 dark:bg-neutral-900">
-          <p className="text-neutral-700 dark:text-neutral-300">
+        <section className="rounded-md border border-dashed border-stone-300 bg-stone-50 p-6 text-sm dark:border-stone-700 dark:bg-stone-900">
+          <p className="text-stone-700 dark:text-stone-300">
             Nothing here yet. Your team hasn&apos;t added a custom example.
             From the terminal:{" "}
-            <code className="rounded bg-white px-1 py-0.5 dark:bg-neutral-950">
+            <code className="rounded bg-white px-1 py-0.5 dark:bg-stone-950">
               contentrx example add &quot;Let&apos;s go.&quot; --verdict pass
               --moment confirmation
             </code>
             . Or add one from Claude Code / Cursor with the{" "}
-            <code className="rounded bg-white px-1 py-0.5 dark:bg-neutral-950">
+            <code className="rounded bg-white px-1 py-0.5 dark:bg-stone-950">
               custom_example_add
             </code>{" "}
             MCP tool.
@@ -124,7 +124,7 @@ export default async function CustomExamplesPage() {
         <section className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
+              <tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500 dark:border-stone-800">
                 <th className="py-2 pr-4">Text</th>
                 <th className="py-2 pr-4">Verdict</th>
                 <th className="py-2 pr-4">Moment</th>
@@ -139,12 +139,12 @@ export default async function CustomExamplesPage() {
               {entries.map((e) => (
                 <tr
                   key={e.id}
-                  className="border-b border-neutral-100 dark:border-neutral-900"
+                  className="border-b border-stone-100 dark:border-stone-900"
                 >
                   <td className="max-w-[280px] truncate py-2 pr-4 font-mono text-xs">
                     <span title={e.text}>{e.text}</span>
                     {e.notes && (
-                      <p className="mt-1 text-[11px] font-normal text-neutral-500">
+                      <p className="mt-1 text-[11px] font-normal text-stone-500">
                         {e.notes}
                       </p>
                     )}
@@ -156,21 +156,21 @@ export default async function CustomExamplesPage() {
                     {e.moment ? (
                       <code className="font-mono">{e.moment}</code>
                     ) : (
-                      <span className="text-neutral-500">any</span>
+                      <span className="text-stone-500">any</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs">
                     {e.contentType ? (
                       <code className="font-mono">{e.contentType}</code>
                     ) : (
-                      <span className="text-neutral-500">any</span>
+                      <span className="text-stone-500">any</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs">
                     {e.standardId ? (
                       <code className="font-mono">{e.standardId}</code>
                     ) : (
-                      <span className="text-neutral-500">none</span>
+                      <span className="text-stone-500">none</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs">
@@ -179,10 +179,10 @@ export default async function CustomExamplesPage() {
                         upstream
                       </span>
                     ) : (
-                      <span className="text-neutral-500">private</span>
+                      <span className="text-stone-500">private</span>
                     )}
                   </td>
-                  <td className="py-2 pr-4 text-xs text-neutral-500 tabular-nums">
+                  <td className="py-2 pr-4 text-xs text-stone-500 tabular-nums">
                     {formatDate(e.createdAt)}
                   </td>
                   <td className="py-2 pr-4 text-right">
