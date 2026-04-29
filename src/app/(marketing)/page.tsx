@@ -167,9 +167,9 @@ export default function Home() {
               Calibrated judgment.
             </p>
             <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">
-              Content design discretion that&apos;s measured against
-              a held-out golden set, with a published kappa and a
-              95% confidence interval.{" "}
+              Content design discretion measured against a held-out
+              golden set. Published kappa with a 95% confidence
+              interval.{" "}
               <Link
                 href="/accuracy"
                 className="underline underline-offset-2"

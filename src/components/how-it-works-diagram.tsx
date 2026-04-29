@@ -241,7 +241,7 @@ function VerdictCard() {
           suggestion:
         </span>{" "}
         <span className="font-medium text-stone-900 dark:text-stone-100">
-          &quot;View pricing&quot;
+          &ldquo;View pricing&rdquo;
         </span>
       </p>
       <div className="flex gap-1">
