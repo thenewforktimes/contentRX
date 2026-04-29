@@ -30,6 +30,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { Pill } from "@/components/ui/pill";
 import { tags } from "@/lib/cache-tags";
 import { asDate, rehydrateMappedDates } from "@/lib/date-rehydrate";
 import { getDb, schema } from "@/db";
@@ -728,17 +729,13 @@ function sourceLabel(source: string): string {
 }
 
 function PlanPill({ plan }: { plan: Plan }) {
-  const styles: Record<Plan, string> = {
-    free: "bg-stone-100 text-stone-700 dark:bg-stone-900 dark:text-stone-300",
-    pro: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-    team: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-  };
+  // Free: muted neutral. Pro: emerald (the brand accent — Pro IS the
+  // primary subscription). Team: emerald too, distinguished by the
+  // seat count rendered next to it on the subscription panel rather
+  // than by hue. Keeping plan colors close to each other makes the
+  // accent system feel coherent rather than "every plan a new color."
+  const tone =
+    plan === "free" ? "neutral" : plan === "pro" ? "emerald" : "emerald";
   const label = plan.charAt(0).toUpperCase() + plan.slice(1);
-  return (
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-medium ${styles[plan]}`}
-    >
-      {label}
-    </span>
-  );
+  return <Pill tone={tone}>{label}</Pill>;
 }

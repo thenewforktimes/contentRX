@@ -15,6 +15,7 @@ import { auth } from "@clerk/nextjs/server";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
   summarizeQuadrants,
@@ -258,9 +259,9 @@ export default async function OverridesPage() {
                         · {p.firstAt.toLocaleString()}
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-800 dark:text-amber-100">
+                    <Pill tone="amber" className="shrink-0">
                       {p.count}× pushback
-                    </span>
+                    </Pill>
                   </li>
                 ))}
               </ul>

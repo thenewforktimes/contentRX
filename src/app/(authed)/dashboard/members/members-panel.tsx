@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Pill } from "@/components/ui/pill";
 
 type Member = {
   userId: string;
@@ -165,9 +166,9 @@ export function MembersPanel({
                 <p className="font-medium">
                   {m.email}
                   {m.isOwner && (
-                    <span className="ml-2 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-stone-700 dark:bg-stone-800 dark:text-stone-300">
-                      owner
-                    </span>
+                    <Pill tone="emerald" className="ml-2">
+                      Owner
+                    </Pill>
                   )}
                 </p>
                 {!m.isOwner && (

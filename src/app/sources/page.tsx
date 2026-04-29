@@ -20,6 +20,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Pill } from "@/components/ui/pill";
 import {
   loadSourcesData,
   type OSSRepoSource,
@@ -298,11 +299,7 @@ function OSSRepoCard({ repo }: { repo: OSSRepoSource }) {
 }
 
 function RoleBadge({ role }: { role: Role }) {
-  return (
-    <span className="rounded-full border border-stone-300 px-2 py-0.5 text-xs text-stone-700 dark:border-stone-700 dark:text-stone-300">
-      {ROLE_LABELS[role]}
-    </span>
-  );
+  return <Pill tone="neutral">{ROLE_LABELS[role]}</Pill>;
 }
 
 function formatDate(iso: string): string {

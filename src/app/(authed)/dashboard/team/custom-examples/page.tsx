@@ -23,6 +23,7 @@ import { auth } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import { CUSTOM_EXAMPLES_CAP_PER_TEAM } from "@/lib/custom-examples";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
@@ -175,11 +176,9 @@ export default async function CustomExamplesPage() {
                   </td>
                   <td className="py-2 pr-4 text-xs">
                     {e.contributeUpstream ? (
-                      <span className="rounded-full border border-green-300 bg-green-50 px-2 py-0.5 text-[10px] text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
-                        upstream
-                      </span>
+                      <Pill tone="emerald">Upstream</Pill>
                     ) : (
-                      <span className="text-stone-500">private</span>
+                      <Pill tone="stone">Private</Pill>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs text-stone-500 tabular-nums">
@@ -199,17 +198,10 @@ export default async function CustomExamplesPage() {
 }
 
 function VerdictPill({ verdict }: { verdict: string }) {
-  const className =
-    verdict === "pass"
-      ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
-      : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300";
-  return (
-    <span
-      className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide ${className}`}
-    >
-      {verdict}
-    </span>
-  );
+  if (verdict === "pass") {
+    return <Pill tone="emerald">Pass</Pill>;
+  }
+  return <Pill tone="red">Violation</Pill>;
 }
 
 function formatDate(d: Date): string {

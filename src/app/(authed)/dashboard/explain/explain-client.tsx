@@ -18,6 +18,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Pill } from "@/components/ui/pill";
 import type { PublicCheckEnvelope } from "@/lib/api-envelope";
 import { humanizeReviewReason } from "@/lib/humanize";
 import { wordDiff, type DiffToken } from "@/lib/text-diff";
@@ -298,19 +299,19 @@ function VerdictHeader({
   verdict: string;
   reviewReason: string | null;
 }) {
+  const tone =
+    verdict === "pass"
+      ? "emerald"
+      : verdict === "review_recommended"
+        ? "amber"
+        : "red";
+  const label =
+    verdict === "review_recommended"
+      ? "Review"
+      : verdict.charAt(0).toUpperCase() + verdict.slice(1);
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <span
-        className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-          verdict === "pass"
-            ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
-            : verdict === "review_recommended"
-              ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-              : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
-        }`}
-      >
-        {verdict}
-      </span>
+      <Pill tone={tone}>{label}</Pill>
       {reviewReason && (
         <span className="text-sm text-stone-600 dark:text-stone-300">
           {humanizeReviewReason(reviewReason)}
@@ -529,16 +530,7 @@ function formatResetDate(isoString: string): string {
 
 function SeverityBadge({ severity }: { severity: string }) {
   const tone =
-    severity === "high"
-      ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
-      : severity === "medium"
-        ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-        : "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300";
-  return (
-    <span
-      className={`inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${tone}`}
-    >
-      {severity}
-    </span>
-  );
+    severity === "high" ? "red" : severity === "medium" ? "amber" : "neutral";
+  const label = severity.charAt(0).toUpperCase() + severity.slice(1);
+  return <Pill tone={tone}>{label}</Pill>;
 }
