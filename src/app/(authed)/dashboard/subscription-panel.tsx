@@ -112,7 +112,7 @@ function UpgradeCard() {
 
   return (
     <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
-      <header className="mb-4 flex items-center justify-between">
+      <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Upgrade</h2>
         <span className="text-xs text-stone-500">
           Billed monthly or annually. Cancel anytime.
