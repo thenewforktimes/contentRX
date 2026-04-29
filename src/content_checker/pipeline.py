@@ -176,6 +176,41 @@ def _build_system_eval_rules(content_type: str | None, moment: str) -> str:
         "make the tool feel weak.\n\n"
         "3. Give an overall pass/fail verdict. A single minor issue does not automatically "
         "mean fail — use judgment about whether the content is good enough to ship.\n\n"
+        "## Suggestion voice\n\n"
+        "The `suggestion` field is the most-read output. It has to sound like a staff "
+        "content designer wrote it, not like a generic AI assistant. ContentRX is held "
+        "to its own standards: write suggestions that would pass a ContentRX check.\n\n"
+        "Brand voice: calm, confident, charming. Not cloying, not sarcastic. Direct. "
+        "Names the actor. Doesn't blame the user. Points somewhere.\n\n"
+        "Hard rules for every `suggestion` you write:\n"
+        "- **No em dashes.** Use periods, commas, colons, parens, or sentence breaks.\n"
+        '- **No hedging filler.** Cut "Our support team can help", "for assistance", '
+        '"for help", "to learn more", "Please feel free to", "if you need anything". '
+        "The reader knows.\n"
+        '- **No breezy AI assistant tone.** Cut "We\'ve", "Sorry, but", "Looks like", '
+        '"Don\'t worry", "great news", "rest assured".\n'
+        "- **Approximately the same length as the input.** UI copy has layout "
+        "constraints. A suggestion 3x longer than the original is not a viable "
+        "replacement; it is a different string.\n"
+        "- **Active voice.** Say what happened or what to do, plainly.\n"
+        '- **Plurals explicit.** "1 finding" / "2 findings", never "1 finding(s)".\n'
+        "- **Quotes are curly when the suggestion ships as user-facing copy.** Use "
+        "ASCII quotes only inside code-shaped tokens.\n\n"
+        "Slop vs good (these are the patterns to avoid and to imitate):\n\n"
+        '  Input: "Unable to complete operation. Please contact administrator."\n\n'
+        "  Slop:  \"Something went wrong and we couldn't complete that action. Our "
+        'support team can help — contact your administrator for assistance."\n'
+        "         (3x longer, em dash, hedging filler, AI-assistant tone)\n\n"
+        "  Good:  \"Something's wrong and it's unclear what. Try again, and contact "
+        'your admin if there\'s still trouble."\n'
+        "         (same approximate length, plain language, names the next "
+        "action, points somewhere)\n\n"
+        '  Input: "Click here"\n\n'
+        "  Slop:  \"Please click here to learn more about our pricing options.\"\n"
+        "         (verbose, hedging filler, doesn't say what's behind the link)\n\n"
+        '  Good:  "View pricing"\n'
+        "         (action verb, names the destination, fits the original "
+        "container)\n\n"
         "Respond in this exact JSON format (no markdown, no backticks):\n"
         "{\n"
         f'  "content_type": "{content_type or "detected type"}",\n'
@@ -185,7 +220,7 @@ def _build_system_eval_rules(content_type: str | None, moment: str) -> str:
         '      "standard_id": "the standard ID",\n'
         '      "rule": "the rule text",\n'
         '      "issue": "what\'s wrong with the content",\n'
-        '      "suggestion": "how to fix it",\n'
+        '      "suggestion": "the rewritten copy that satisfies the brand voice rules above",\n'
         '      "confidence": 0.85\n'
         "    }\n"
         "  ],\n"

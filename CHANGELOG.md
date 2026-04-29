@@ -10,6 +10,32 @@ changes per surface, in reverse chronological order.
 
 Source of truth: `src/content_checker/__init__.py` (`__version__`).
 
+### 4.7.2 — 2026-04-29 (suggestion-voice prompt fix)
+
+**Prompt change.** The scan system prompt now carries an explicit
+"Suggestion voice" block. Before this, the LLM was told to
+"suggest a fix" with zero voice guidance, so it filled the
+`suggestion` field in its trained generic-helpful-AI tone: 3x
+longer than the input, hedging filler ("Our support team can
+help", "for assistance"), em dashes, breezy AI tone ("We've",
+"Don't worry").
+
+ContentRX's own standards would have flagged that copy. The
+engine generating slop its own check would reject is the bug.
+The new prompt block names the brand voice (calm, confident,
+charming; not cloying, not sarcastic), lists hard prohibitions
+(no em dashes, no hedging filler, no breezy AI tone,
+approximately the same length as the input, active voice,
+plurals explicit), and provides slop-vs-good examples for two
+concrete inputs.
+
+**No schema change.** Wire format is unchanged; only the content
+of the `suggestion` field improves.
+
+**Version bumped 4.7.1 → 4.7.2.** Prompt content is behavior
+that downstream surfaces see, even though standards and
+preprocessor are unchanged.
+
 ### 4.7.1 — 2026-04-26 (situation_ambiguity carve-out)
 
 **Verdict policy change** — `derive_verdict` now suppresses the
