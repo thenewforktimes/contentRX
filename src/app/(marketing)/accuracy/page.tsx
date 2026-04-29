@@ -147,15 +147,7 @@ export default function AccuracyPage() {
           </a>
           , generated nightly by the substrate-to-report pipeline. The
           docs site picks up the file on next deploy. Schema version{" "}
-          <code className="font-mono">{snap.schema_version}</code>. See{" "}
-          <Link href="/ethics" className="underline underline-offset-2">
-            /ethics
-          </Link>{" "}
-          and{" "}
-          <Link href="/sources" className="underline underline-offset-2">
-            /sources
-          </Link>{" "}
-          for the rest of the accountability surface.
+          <code className="font-mono">{snap.schema_version}</code>.
         </p>
       </footer>
     </main>

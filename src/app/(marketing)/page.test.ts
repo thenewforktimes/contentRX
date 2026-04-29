@@ -17,7 +17,7 @@ import { describe, expect, it } from "vitest";
  * survives to main.
  */
 
-const ROOT = path.join(__dirname, "..", "..");
+const ROOT = path.join(__dirname, "..", "..", "..");
 
 function readSource(relPath: string): string {
   return fs.readFileSync(path.join(ROOT, relPath), "utf-8");
@@ -31,8 +31,8 @@ function visibleCopy(source: string): string {
     .replace(/(^|\s)\/\/.*$/gm, "$1");
 }
 
-describe("landing page (src/app/page.tsx)", () => {
-  const source = readSource("src/app/page.tsx");
+describe("landing page (src/app/(marketing)/page.tsx)", () => {
+  const source = readSource("src/app/(marketing)/page.tsx");
   const visible = visibleCopy(source);
 
   it("names both wedges with the plan's vocabulary", () => {
@@ -93,8 +93,8 @@ describe("landing page (src/app/page.tsx)", () => {
   });
 });
 
-describe("/about page (src/app/about/page.tsx)", () => {
-  const source = readSource("src/app/about/page.tsx");
+describe("/about page (src/app/(marketing)/about/page.tsx)", () => {
+  const source = readSource("src/app/(marketing)/about/page.tsx");
   const visible = visibleCopy(source);
 
   it("is present + names Robo", () => {
@@ -118,10 +118,15 @@ describe("/about page (src/app/about/page.tsx)", () => {
     expect(visible).toMatch(/rationale/i);
   });
 
-  it("cross-links the public accountability surface", () => {
-    for (const href of ["/accuracy", "/sources", "/ethics"]) {
-      expect(visible).toContain(`href="${href}"`);
-    }
+  it("inline-links at least one accountability surface from the body copy", () => {
+    // The full accountability surface (/accuracy, /calibration,
+    // /sources, /ethics) is reachable from the global <SiteFooter>
+    // shipped with the (marketing) route group's layout. /about can
+    // be lighter on inline cross-refs as a result, but at minimum it
+    // should still walk the reader to /accuracy from the body — the
+    // page is "about the model" and the model's measurement is the
+    // load-bearing claim.
+    expect(visible).toMatch(/href="\/(accuracy|calibration)"/);
   });
 
   it("does not link to the private /model surface", () => {

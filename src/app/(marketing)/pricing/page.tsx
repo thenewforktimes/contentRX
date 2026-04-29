@@ -148,30 +148,6 @@ export default function PricingPage() {
         </dl>
       </section>
 
-      <footer className="mt-16 border-t border-stone-200 pt-8 text-sm text-stone-500 dark:border-stone-800">
-        <p>
-          Questions?{" "}
-          <a
-            href="mailto:hello@contentrx.io"
-            className="underline underline-offset-2"
-          >
-            hello@contentrx.io
-          </a>
-          . The accountability surface:{" "}
-          <Link href="/accuracy" className="underline underline-offset-2">
-            /accuracy
-          </Link>{" "}
-          ·{" "}
-          <Link href="/sources" className="underline underline-offset-2">
-            /sources
-          </Link>{" "}
-          ·{" "}
-          <Link href="/ethics" className="underline underline-offset-2">
-            /ethics
-          </Link>
-          .
-        </p>
-      </footer>
     </main>
   );
 }

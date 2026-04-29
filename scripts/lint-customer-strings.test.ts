@@ -243,23 +243,32 @@ index abc..def 100644
 
 describe("lintFileChangedLines (diff-scoped lint)", () => {
   it("returns empty when changedLines set is empty", () => {
-    const out = lintFileChangedLines("src/app/page.tsx", new Set());
+    const out = lintFileChangedLines(
+      "src/app/(marketing)/page.tsx",
+      new Set(),
+    );
     expect(out).toEqual([]);
   });
 
   it("only flags strings whose start line is in changedLines", () => {
-    // src/app/page.tsx is em-dash-clean post-sweep, so a full lint
-    // returns 0 findings. Force a contrived test by using a file we
-    // know has extracted strings: filter to a line that DOES exist
-    // in the extraction and confirm 0 findings (clean copy).
-    const out = lintFileChangedLines("src/app/page.tsx", new Set([41]));
-    // Line 41 is the H1; clean post-sweep.
+    // src/app/(marketing)/page.tsx is em-dash-clean post-sweep, so a
+    // full lint returns 0 findings. Force a contrived test by using a
+    // file we know has extracted strings: filter to a line that DOES
+    // exist in the extraction and confirm 0 findings (clean copy).
+    const out = lintFileChangedLines(
+      "src/app/(marketing)/page.tsx",
+      new Set([41]),
+    );
+    // Line 41 is in the H1 region; clean post-sweep.
     expect(out.filter((f) => f.severity === "error")).toEqual([]);
   });
 
   it("doesn't extract strings whose line falls outside changedLines", () => {
     // Pick a line we know has no extractable string (a comment line).
-    const out = lintFileChangedLines("src/app/page.tsx", new Set([2]));
+    const out = lintFileChangedLines(
+      "src/app/(marketing)/page.tsx",
+      new Set([2]),
+    );
     expect(out).toEqual([]);
   });
 });

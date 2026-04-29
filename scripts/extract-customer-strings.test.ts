@@ -52,7 +52,7 @@ describe("isTrivial", () => {
 
 describe("isInScope", () => {
   it("includes customer-facing surfaces", () => {
-    expect(isInScope("src/app/page.tsx")).toBe(true);
+    expect(isInScope("src/app/(marketing)/page.tsx")).toBe(true);
     expect(isInScope("src/app/(authed)/dashboard/page.tsx")).toBe(true);
     expect(isInScope("src/emails/welcome.tsx")).toBe(true);
     expect(isInScope("src/components/sparkline.tsx")).toBe(true);
@@ -77,8 +77,8 @@ describe("isInScope", () => {
 });
 
 describe("extractFromFile (smoke against the live landing page)", () => {
-  it("pulls metadata title + description from src/app/page.tsx", () => {
-    const out = extractFromFile("src/app/page.tsx");
+  it("pulls metadata title + description from src/app/(marketing)/page.tsx", () => {
+    const out = extractFromFile("src/app/(marketing)/page.tsx");
 
     const title = out.find((r) => r.kind === "metadata-title");
     const description = out.find((r) => r.kind === "metadata-description");
@@ -90,20 +90,20 @@ describe("extractFromFile (smoke against the live landing page)", () => {
   });
 
   it("pulls the H1 with content_type_hint='heading'", () => {
-    const out = extractFromFile("src/app/page.tsx");
+    const out = extractFromFile("src/app/(marketing)/page.tsx");
     const h1 = out.find((r) => r.kind === "jsx-text" && r.context === "h1");
     expect(h1).toBeDefined();
     expect(h1?.content_type_hint).toBe("heading");
   });
 
   it("never emits a row inside a <code> tag", () => {
-    const out = extractFromFile("src/app/page.tsx");
+    const out = extractFromFile("src/app/(marketing)/page.tsx");
     const fromCode = out.filter((r) => r.context === "code");
     expect(fromCode).toEqual([]);
   });
 
   it("emits stable, sorted-by-line output", () => {
-    const out = extractFromFile("src/app/page.tsx");
+    const out = extractFromFile("src/app/(marketing)/page.tsx");
     const lines = out.map((r) => r.line);
     const sorted = [...lines].sort((a, b) => a - b);
     expect(lines).toEqual(sorted);

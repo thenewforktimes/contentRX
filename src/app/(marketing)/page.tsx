@@ -219,27 +219,6 @@ export default function Home() {
         </p>
       </Section>
 
-      <footer className="mt-16 border-t border-stone-200 pt-8 text-sm text-stone-500 dark:border-stone-800">
-        <p>
-          The accountability surface:{" "}
-          <Link href="/accuracy" className="underline underline-offset-2">
-            /accuracy
-          </Link>{" "}
-          ·{" "}
-          <Link href="/pricing" className="underline underline-offset-2">
-            /pricing
-          </Link>{" "}
-          ·{" "}
-          <Link href="/sources" className="underline underline-offset-2">
-            /sources
-          </Link>{" "}
-          ·{" "}
-          <Link href="/ethics" className="underline underline-offset-2">
-            /ethics
-          </Link>
-          .
-        </p>
-      </footer>
     </main>
   );
 }

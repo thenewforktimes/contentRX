@@ -63,8 +63,12 @@ describe("/accuracy page source", () => {
     expect(source).toContain("95% CI");
   });
 
-  it("links the rest of the accountability surface (/ethics, /sources)", () => {
-    expect(source).toContain("/ethics");
-    expect(source).toContain("/sources");
-  });
+  // Cross-references to the rest of the accountability surface
+  // (/ethics, /sources, /calibration) used to live at the bottom of
+  // this page. They moved to the global <SiteFooter> when the
+  // (marketing) route group's layout shipped — see
+  // src/components/site-footer.tsx for the canonical Trust column.
+  // The cross-link assertion now lives in
+  // src/components/site-footer.test.ts (one test, every marketing
+  // page).
 });
