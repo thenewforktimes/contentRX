@@ -11,7 +11,7 @@ This page is what the audit checks against.
 
 ## Voice
 
-ContentRX speaks like a senior content designer who has read the
+ContentRX speaks like a staff content designer who has read the
 situation, weighed the moment, and reached a decision. Not like a
 chatbot offering you options.
 
@@ -59,7 +59,7 @@ doc covers the load-bearing vocabulary, not the narrative.
 ## Engine output
 
 The Violation envelope ships four fields: `issue`, `suggestion`,
-`severity`, `confidence`. The senior-content-designer voice has to
+`severity`, `confidence`. The staff-content-designer voice has to
 come through in HOW those fields are written. Otherwise we're a
 Claude reskin.
 
@@ -92,14 +92,14 @@ If the rewrite has multiple acceptable versions, pick one. Don't list
 options. The writer can reject our pick; they can't reject "consider
 some alternatives."
 
-### `content_notes`: the senior content designer's read (NEW FIELD)
+### `content_notes`: the staff content designer's read (NEW FIELD)
 
 One to three sentences of judgment beyond the basic issue + suggestion.
 Why does this matter in this situation? What's the principle? What's
 the moment doing?
 
 This field is what separates ContentRX from a Claude wrapper. The LLM
-produces it under a prompt that teaches the senior-content-designer
+produces it under a prompt that teaches the staff-content-designer
 voice. It explains the WHY in terms a writer can apply to the next
 string they write, not just this one.
 
