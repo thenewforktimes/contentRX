@@ -452,6 +452,12 @@ every API change, every new surface, every code review going forward.
   moments by name; don't add a `docs_url` field to violations; don't
   reactivate `scripts/generate-spec.mjs` or the `contentrx-standards`
   repo without a new ADR superseding the pivot.
+- **No inventing customer-facing vocabulary.** Read
+  [docs/copy-vocabulary.md](docs/copy-vocabulary.md) before writing
+  any string a customer sees. *Findings* vs *violations* vs
+  *overrides*, *team owner* not *admin*, *Figma plugin* not *Figma*,
+  *monthly limit* not *quota* — these are settled calls, diverging
+  in a new surface is a regression.
 
 ## Customer data — non-negotiables
 
