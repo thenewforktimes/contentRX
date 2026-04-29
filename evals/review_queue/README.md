@@ -1,7 +1,7 @@
 # Production override review queue
 
 Human-eval build plan Session 8. Turns a stream of real-user override
-events into an ordered queue Robo reviews 50-at-a-time via the
+events into an ordered queue Robert reviews 50-at-a-time via the
 existing Phase 2 CLI (`tools/triage.py`). Target cadence: **50 items
 in 60 minutes**.
 
@@ -135,7 +135,7 @@ When a pattern fires, `batch_summary.py draft-refinement` appends a
 candidate to `taxonomy_refinement_log.md` under `## Open refinements`.
 The entry follows the existing format (current category → proposed
 change → triggering cases → architectural consequence → date →
-verdict: pending). It's marked pending auto-detected — Robo triages
+verdict: pending). It's marked pending auto-detected — Robert triages
 during the weekly cadence and promotes to approved only after the
 two-source rule is satisfied.
 

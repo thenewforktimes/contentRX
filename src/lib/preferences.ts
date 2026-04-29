@@ -5,14 +5,20 @@
  *
  *   1. A curated pool of `preferencePairs` lives in the DB (seeded
  *      from `evals/preference_pairs.json`).
- *   2. `/dashboard/calibrate` prompts opted-in users with three
- *      unseen pairs per session. Users pick "left", "right", or
- *      "neither". Answers land in `preferences`.
+ *   2. The /api/preferences/session endpoint serves opted-in callers
+ *      three unseen pairs per session. Callers pick "left", "right",
+ *      or "neither". Answers land in `preferences`.
  *   3. Weekly scheduling: a user who hasn't answered any pairs in the
  *      last 7 days and has no opt-out timestamp is eligible to be
- *      prompted. The UI enforces this; no background job runs.
+ *      prompted. The caller enforces this; no background job runs.
  *   4. The auto-annotator's precedent index consults the aggregated
  *      preference signal as a second precedent source.
+ *
+ * The customer-facing `/dashboard/calibrate` surface that originally
+ * drove this elicitation was removed 2026-04-29 — see
+ * `src/app/(authed)/dashboard/page.tsx` for the rationale. The
+ * substrate (this module + the API routes + the DB columns) stays
+ * in place; calibration continues behind the scenes via /admin.
  *
  * This module holds the pure logic — selection, scheduling gate,
  * signal aggregation. DB I/O lives in the route handlers.

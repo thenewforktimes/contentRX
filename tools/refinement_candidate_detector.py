@@ -2,7 +2,7 @@
 
 Human-eval build plan Session 34. Reads an aggregated signal dump
 (produced by the admin endpoint or a manual export) and proposes
-candidate entries for the taxonomy refinement log so Robo can triage
+candidate entries for the taxonomy refinement log so Robert can triage
 during the weekly review rhythm.
 
 Three candidate families:
@@ -70,7 +70,7 @@ OOD_WINDOW_DAYS = 60
 OOD_SOURCE_COUNT_MIN = 2
 
 # Auto-detected entries use a separate numeric space so they can't
-# collide with Robo-proposed REF-NNN entries. The REF-A prefix signals
+# collide with Robert-proposed REF-NNN entries. The REF-A prefix signals
 # "auto" at a glance.
 AUTO_REF_PREFIX = "REF-A"
 
@@ -501,7 +501,7 @@ def render_markdown(candidates: list[Candidate]) -> str:
         body.append("")
         body.append(f"**Date logged:** {c.date_logged}")
         body.append("")
-        body.append("**Verdict:** Pending — Robo triages during the weekly review rhythm.")
+        body.append("**Verdict:** Pending — Robert triages during the weekly review rhythm.")
         body.append("")
     return "\n".join(body) + "\n"
 
@@ -511,7 +511,7 @@ def splice_auto_section(log_text: str, new_section: str) -> str:
     section inside the refinement log.
 
     Placement rule: the auto-detected section lives BEFORE
-    `## Approved refinements` so triaging is natural — Robo reviews
+    `## Approved refinements` so triaging is natural — Robert reviews
     pending candidates first, then promotes approved ones.
 
     Whitespace invariant: the section body always ends with exactly

@@ -1,6 +1,6 @@
 """Quarterly self-drift check — human-eval build plan Session 7.
 
-Measures Cohen's κ between past-Robo verdicts and a fresh blind
+Measures Cohen's κ between past-Robert verdicts and a fresh blind
 re-labeling pass on the same cases. The resulting "measured ceiling"
 is the single most important number in the graduation ladder —
 Session 10's thresholds are expressed as ratios against it.
@@ -12,12 +12,12 @@ Workflow (one cycle per quarter):
                       Writes evals/drift/panels/<yyyy-qq>.json.
 
     2. export-blind   Strip past verdicts + rationale from the panel
-                      so Robo can re-label without bias. Writes a
+                      so Robert can re-label without bias. Writes a
                       standalone JSON suitable for any review surface
                       (the Session 8 queue UI will consume this
                       directly).
 
-    3. score          Given the panel and Robo's fresh labels, compute
+    3. score          Given the panel and Robert's fresh labels, compute
                       Cohen's κ + 95% CI + per-standard disagreement
                       breakdown + threshold-regime classification.
                       Writes evals/drift/reports/<yyyy-qq>.json; this
@@ -65,7 +65,7 @@ DEFAULT_REPORT_DIR = Path("evals/drift/reports")
 DEFAULT_PANEL_SIZE = 80
 
 # Age gate: drift panel items must be at least this old so re-labeling
-# is genuinely "past-Robo vs current-Robo", not "same-session double-
+# is genuinely "past-Robert vs current-Robert", not "same-session double-
 # tap." Expressed as days from the case's review time.
 MIN_AGE_DAYS = 90
 
@@ -410,7 +410,7 @@ def build_panel_manifest(
                 "moment": c.get("moment"),
                 "content_type": c.get("content_type"),
                 "standard_id": c.get("standard_id"),
-                # Historical verdict — the "past-Robo" baseline. This is
+                # Historical verdict — the "past-Robert" baseline. This is
                 # the value re-labeling will be compared against.
                 "past_human_verdict": c.get("human_verdict"),
                 "past_human_confidence": c.get("human_confidence"),
@@ -423,7 +423,7 @@ def build_panel_manifest(
 def build_blind_panel(panel: dict[str, Any], corpus_index: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
     """Strip past verdicts + rationale so re-labeling is truly blind.
 
-    The output file is what Robo sees during re-labeling. Keeps the
+    The output file is what Robert sees during re-labeling. Keeps the
     input text + content_type + moment + standard_id context so the
     re-labeling context matches the original, but hides the prior
     verdict, confidence, human_notes, and any triage commentary.
@@ -534,7 +534,7 @@ def compute_drift_report(
     thresholds = calibrate_thresholds(measured_ceiling)
 
     # Per-standard κ for the taxonomy-stabilization triage Session 7
-    # specifies: "items where past-Robo and current-Robo disagree are
+    # specifies: "items where past-Robert and current-Robert disagree are
     # logged with reasons; any standards implicated get flagged for
     # refinement-log review."
     per_standard: dict[str, Any] = {}

@@ -79,7 +79,7 @@ export function buildEssayScaffold(
   if (input.measured_self_drift.state === "measured") {
     const sd = input.measured_self_drift;
     lines.push(
-      `Self-drift κ — Robo vs past-Robo on the held-out panel — is ${sd.value.toFixed(3)} (95% CI [${sd.ci_low.toFixed(
+      `Self-drift κ — Robert vs past-Robert on the held-out panel — is ${sd.value.toFixed(3)} (95% CI [${sd.ci_low.toFixed(
         3,
       )}, ${sd.ci_high.toFixed(3)}]). That's the expert ceiling; the system can't out-perform the labeler against itself.`,
     );

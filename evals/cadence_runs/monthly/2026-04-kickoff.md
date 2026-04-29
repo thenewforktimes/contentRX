@@ -1,6 +1,6 @@
 # Monthly moment deep-review — kickoff cycle
 
-**Reviewer:** Robo (instrumentation kickoff)
+**Reviewer:** Robert (instrumentation kickoff)
 **Completed:** 2026-04-24
 **Moment in rotation:** n/a — kickoff, not a real rotation slot
 

@@ -19,7 +19,7 @@ All diagrams render natively in GitHub, GitLab, VS Code, Obsidian, and most mark
 
 ```mermaid
 journey
-  title  ContentRX customer lifecycle — Robo's promise made literal
+  title  ContentRX customer lifecycle — Robert's promise made literal
   section Discovery (day 0)
     Reads HN post / blog / colleague mention   : 4: Customer
     Visits contentrx.io                         : 4: Customer
@@ -46,7 +46,7 @@ journey
     Insights panel shows team patterns          : 5: Customer
     Calibration prompts shape the model         : 5: Customer, ContentRX
     Becomes evangelist inside their company     : 5: Customer
-    Ships content reviewed by Robo at scale     : 5: Customer
+    Ships content reviewed by Robert at scale     : 5: Customer
   section The sad day (eventually)
     Job change / project end / org consolidation: 2: Customer
     Cancellation flow — dignified, not punitive : 4: Customer
@@ -169,7 +169,7 @@ sequenceDiagram
     PM->>CC: "Use that suggestion."
     CC->>CC: Updates the JSX with the new copy
 
-    Note over PM,CC: One shippable string,<br/>reviewed by Robo,<br/>without leaving the editor
+    Note over PM,CC: One shippable string,<br/>reviewed by Robert,<br/>without leaving the editor
 
     PM->>DASH: (later) opens dashboard
     DASH->>DB: query: this-month checks,<br/>last-call timestamps per surface
@@ -212,17 +212,17 @@ flowchart TD
 
     K --> L["Team's overrides<br/>feed back into calibration<br/>(per refinement-log architecture)"]
 
-    L --> M[Robo's weekly review<br/>incorporates the override stream]
+    L --> M[Robert's weekly review<br/>incorporates the override stream]
 
     M --> N[Model gets sharper for<br/>this team specifically AND<br/>all teams generally]
 
     N --> O[Compounding moat:<br/>Every week the model reflects<br/>more of the team's house style<br/>without anyone writing rules]
 
-    O --> P([Team ships content<br/>reviewed by Robo at scale<br/>~thousands of strings/month])
+    O --> P([Team ships content<br/>reviewed by Robert at scale<br/>~thousands of strings/month])
 
 %% [Updated 2026-04-27: per-team model adaptation deferred. Today the
 %% model adapts to a team via team_rules + custom_examples (direct,
-%% instant) and via Robo's global calibration loop (indirect, slow).
+%% instant) and via Robert's global calibration loop (indirect, slow).
 %% Per-team ML fine-tuning is on the post-launch roadmap, not the
 %% launch SKU — pending customer-data validation that the demand is
 %% real. Don't ship marketing copy that claims "the model gets sharper
@@ -245,9 +245,9 @@ flowchart TD
 4. Three users from the same domain → team-grouping kicks in automatically (no purchase decision required).
 5. Team-level patterns become visible in the dashboard.
 6. Team admin tunes the rules → ContentRX now reflects this team's house style.
-7. The team's overrides feed back into Robo's calibration loop.
+7. The team's overrides feed back into Robert's calibration loop.
 8. The model gets sharper for this team specifically and all teams generally.
-9. The team is now shipping thousands of strings/month, all reviewed by Robo at scale.
+9. The team is now shipping thousands of strings/month, all reviewed by Robert at scale.
 
 **The brand promise made literal at scale:** one PM's $29/mo turns into a team's de facto content design standard. That's the moat — not a feature any competitor can ship, because it's built from the team's accumulated judgment over time.
 
@@ -420,7 +420,7 @@ The dashboard is not the verdict surface (that's MCP/LSP/PR/Figma). The dashboar
 │   │   [Open team rules →]                                  │     │
 │   │                                                        │     │
 │   │ ▸ priya (Figma): 2 destructive confirmations missing  │     │
-│   │   the consequence — same pattern Robo flagged in       │     │
+│   │   the consequence — same pattern Robert flagged in       │     │
 │   │   sam's PR last week. Worth a sync?                    │     │
 │   ╰────────────────────────────────────────────────────────╯     │
 │                                                                  │
@@ -448,7 +448,7 @@ flowchart TD
     C -->|Project ended| D1[Soft offer:<br/>'Audit Pack might be a<br/>better fit for occasional<br/>projects — $99 one-time']
     C -->|Cost / budget| D2[Soft offer:<br/>'Free tier keeps your<br/>API key + 250 checks/mo —<br/>switch to Free?']
     C -->|Job change| D3[No offer.<br/>'Take care.<br/>Here's how to come back.']
-    C -->|Outgrew the product| D4[Real conversation request:<br/>'We'd love to learn what<br/>we missed — 15 min with<br/>Robo?']
+    C -->|Outgrew the product| D4[Real conversation request:<br/>'We'd love to learn what<br/>we missed — 15 min with<br/>Robert?']
     C -->|Other / skip| D5[No offer. Just acknowledge.]
 
     D1 --> E[Customer either<br/>buys Audit Pack OR<br/>continues to cancel]
@@ -521,11 +521,11 @@ flowchart TD
     ○ Other
     [ skip ]
 
-  Take care. — Robo
+  Take care. — Robert
 ─────────────────────────────────────────────────────────────────
 ```
 
-The signature on the cancellation screen is **Robo**, not "the team" or "ContentRX." Named-expert positioning carries through to the exit. This is the small thing that turns a cancellation into a story the customer tells.
+The signature on the cancellation screen is **Robert**, not "the team" or "ContentRX." Named-expert positioning carries through to the exit. This is the small thing that turns a cancellation into a story the customer tells.
 
 ---
 
@@ -540,7 +540,7 @@ A summary of where "staff-level content design review in every repo, Figma file,
 | **#3 MCP loop** | The narration in step 12 *is* the promise made literal: a senior content designer's reflexive read on a string, in the editor, in under a second. |
 | **#4 Shipping at scale** | The team-pattern callout ("possible team blind spot") is what "staff-level review" looks like at team scale — observations no individual surface can make. |
 | **#5 Dashboard mockups** | Every state shows surface-level activity ("● MCP 4m ago, 924 checks ✓") — proof the promise is being delivered across the customer's actual stack. |
-| **#6 Cancellation** | The promise honored even at exit: "we'll keep your model warm." The named-expert sign-off (Robo) is the promise carried through to the last touchpoint. |
+| **#6 Cancellation** | The promise honored even at exit: "we'll keep your model warm." The named-expert sign-off (Robert) is the promise carried through to the last touchpoint. |
 
 ---
 

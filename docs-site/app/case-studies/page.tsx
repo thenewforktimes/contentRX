@@ -182,7 +182,7 @@ export default function CaseStudiesIndex() {
       <section>
         <h2>How case studies get published</h2>
         <p>
-          The publishing workflow is on Robo&apos;s side, not automated:
+          The publishing workflow is on Robert&apos;s side, not automated:
         </p>
         <ol>
           <li>Pick a candidate from the shortlist.</li>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignOutButton } from "@clerk/nextjs";
+import { SiteFooter } from "@/components/site-footer";
 
 export default function DashboardLayout({
   children,
@@ -7,7 +8,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-stone-950">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-stone-950">
       <header className="border-b border-stone-200 dark:border-stone-800">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-6 px-6 py-4">
           <Link href="/dashboard" className="text-sm font-semibold">
@@ -37,7 +38,10 @@ export default function DashboardLayout({
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-6 py-10">{children}</main>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
+        {children}
+      </main>
+      <SiteFooter />
     </div>
   );
 }

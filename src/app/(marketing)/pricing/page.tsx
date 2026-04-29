@@ -31,7 +31,7 @@ export default function PricingPage() {
       <header className="mb-12 max-w-3xl">
         <Eyebrow>Pricing</Eyebrow>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-          A senior content designer&apos;s verdict on every string you ship.
+          A staff content designer&apos;s verdict on every string you ship.
         </h1>
         <p className="mt-4 text-lg text-stone-700 dark:text-stone-300">
           $29/month, in your repo, your PR, your Figma file, your terminal,

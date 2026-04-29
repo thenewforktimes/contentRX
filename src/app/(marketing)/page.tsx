@@ -6,7 +6,7 @@
  *
  *   1. Situation-aware review — ContentRX holds the moment context that
  *      engineers and PMs without content-design training can't hold.
- *   2. Judgment calls — senior-content-designer pattern recognition
+ *   2. Judgment calls — staff-content-designer pattern recognition
  *      encoded, not a rule book.
  *
  * Plus a sharp Grammarly/LanguageTool/Alex contrast, the Stripe Radar
@@ -15,7 +15,7 @@
  * private per ADR 2026-04-25; the public surface is the kappa story
  * and the calibration log, not /model.
  *
- * Voice note for Robo: this draft is in my voice. Prose is editable;
+ * Voice note for Robert: this draft is in my voice. Prose is editable;
  * the structure + the five sections matter for the acceptance
  * criterion. Copy that changes the wedge will also need /about edits.
  */
@@ -44,7 +44,7 @@ export default function Home() {
           Situation-aware review for the moments where copy stops being
           decoration and starts being the product: error states, empty
           states, permissions flows, destructive confirmations, compliance
-          disclosures. A senior content designer&apos;s pattern recognition,
+          disclosures. A staff content designer&apos;s pattern recognition,
           running where product copy is increasingly written:{" "}
           <strong>Claude Code, Cursor, your CLI, and every pull request</strong>
           . With the Figma plugin alongside for design-time checks.
@@ -93,7 +93,7 @@ export default function Home() {
 
       <Section eyebrow="Wedge 2" title="Judgment calls, not rule books">
         <p>
-          A senior content designer looks at an error message and
+          A staff content designer looks at an error message and
           sees whether it owns the failure or blames the user.
           That&apos;s not a rule you can look up in a style guide.
           It&apos;s pattern recognition built from years of practice.
@@ -208,8 +208,8 @@ export default function Home() {
 
       <Section eyebrow="About the voice" title="Built by a content designer">
         <p>
-          ContentRX is the content model that Robo (a senior content
-          designer) would run on their own work. The moments, the
+          ContentRX is the content model that Robert (a staff content
+          designer) would run on his own work. The moments, the
           weights, and the standards all carry one designer&apos;s
           judgment calls, attributed and published. Read the{" "}
           <Link href="/about" className="underline underline-offset-2">

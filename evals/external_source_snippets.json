@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "description": "External style-guide snippets, transcribed for close-paraphrase detection (human-eval build plan Session 35). Each entry captures a short rule or principle from a public source. The close-paraphrase tool (`tools/check_close_paraphrase.py`) compares ContentRX standards against these snippets and warns when a standard's rule text is suspiciously close to one without naming the source.",
-  "note": "This corpus is intentionally small at seed time. Grow it as Robo audits new standards or adopts new sources. Each entry is a short transcription, fair-use quantity; attribution lives in the `source` field and (where available) the `url`.",
+  "note": "This corpus is intentionally small at seed time. Grow it as Robert audits new standards or adopts new sources. Each entry is a short transcription, fair-use quantity; attribution lives in the `source` field and (where available) the `url`.",
   "snippets": [
     {
       "source": "Shopify Polaris",

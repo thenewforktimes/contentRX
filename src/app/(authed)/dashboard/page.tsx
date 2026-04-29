@@ -12,7 +12,6 @@
  *   6. Subscription
  *   7. API key
  *   8. Team-tier surfaces (members, rules, overrides)
- *   9. Calibration (opt-in)
  *
  * Principle: work surfaces above the divider, configuration below.
  * Customers come back to do work, not to manage their account.
@@ -21,6 +20,14 @@
  * Usage + insights answer "am I about to hit a limit?" and "what
  * should I look at?" — those rise. API key is one-time-mint plus
  * occasional rotate; demoted below the work surfaces.
+ *
+ * Calibration (the pairwise-preference elicitation surface) used to
+ * live as section 9. Removed 2026-04-29 — customers don't have the
+ * context to know what calibration is or why they should engage,
+ * and the context-switching cost outweighed the data we collected
+ * via the dashboard. Calibration continues behind the scenes via
+ * the /admin substrate; the substrate columns and /api/preferences
+ * routes stay in place to support that.
  */
 
 import { auth } from "@clerk/nextjs/server";
@@ -167,8 +174,6 @@ export default async function DashboardPage() {
           <OverridesLink />
         </>
       )}
-
-      <CalibrateLink optedOut={user.preferenceOptedOutAt !== null} />
     </div>
   );
 }
@@ -361,29 +366,6 @@ function PatternLine({ pattern }: { pattern: FindingPattern }) {
       <span className="tabular-nums">{pattern.sharePct}%</span>
       ).
     </>
-  );
-}
-
-function CalibrateLink({ optedOut }: { optedOut: boolean }) {
-  return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
-      <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Calibration</h2>
-        <span className="text-xs text-stone-500 dark:text-stone-300">
-          {optedOut ? "Opted out" : "Weekly · 60 sec"}
-        </span>
-      </header>
-      <p className="mb-3 text-sm text-stone-600 dark:text-stone-300">
-        Three pairwise judgment prompts a week, optional. Picks feed
-        the human-judgment signal behind the content model.
-      </p>
-      <Link
-        href="/dashboard/calibrate"
-        className={buttonStyles({ variant: "secondary", size: "sm" })}
-      >
-        {optedOut ? "Manage calibration settings" : "Start calibration"}
-      </Link>
-    </section>
   );
 }
 

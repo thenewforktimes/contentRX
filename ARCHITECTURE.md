@@ -336,7 +336,7 @@ Input text + audience (product_ui | general)
 
 Every hop in the pipeline above appends a `RationaleHop` entry to `CheckResult.rationale_chain`. Each hop carries `step`, `inputs` (compact summary of what the stage saw), `output` (compact summary of what it produced), `confidence` (for LLM stages; `None` for deterministic ones), `rule_versions` (standard_id → per-standard version for the rules this hop consulted), and an optional typed `ambiguity_flag`.
 
-When Robo (or any reviewer) sees a wrong verdict, the chain lets them pinpoint which hop went sideways without re-running the pipeline. The chain is also the substrate for Session 21's "Why this verdict" UI on the product surface.
+When Robert (or any reviewer) sees a wrong verdict, the chain lets them pinpoint which hop went sideways without re-running the pipeline. The chain is also the substrate for Session 21's "Why this verdict" UI on the product surface.
 
 ### Typed review_reason subtypes (v1.3.0, human-eval build plan Session 2)
 
@@ -354,7 +354,7 @@ When `CheckResult.verdict == "review_recommended"`, `review_reason` carries one 
 
 Signals are passed as kwargs to `derive_verdict` in `models.py`; the pipeline wires two today (`scan_validate_disagreement` from validate's rejected count → emits `ensemble_disagreement`; `moment_ambiguous` from `detect_moment_with_confidence` → emits `situation_ambiguity`). The remaining kwargs — `standards_conflict`, `out_of_distribution`, `novel_pattern` — are reserved for future sessions to populate without a schema change.
 
-**First-pass ensemble: scan + validate (Session 13).** The pipeline runs two LLM passes — scan (proposes candidate violations) and validate (confirms or rejects each with `content_type_notes` injected). Disagreement between the two IS ensemble disagreement, already tracked in `PipelineMeta.validated_rejected`. Session 13 surfaces it as a first-class `ensemble_disagreement` review_reason subtype (distinct from `standards_conflict`, which is a multi-standard taxonomy conflict on the same moment). When validate rejects a scan candidate, the verdict flips to `review_recommended` — even when no violations survive — so Robo sees the disagreement rather than silently trusting one pass.
+**First-pass ensemble: scan + validate (Session 13).** The pipeline runs two LLM passes — scan (proposes candidate violations) and validate (confirms or rejects each with `content_type_notes` injected). Disagreement between the two IS ensemble disagreement, already tracked in `PipelineMeta.validated_rejected`. Session 13 surfaces it as a first-class `ensemble_disagreement` review_reason subtype (distinct from `standards_conflict`, which is a multi-standard taxonomy conflict on the same moment). When validate rejects a scan candidate, the verdict flips to `review_recommended` — even when no violations survive — so Robert sees the disagreement rather than silently trusting one pass.
 
 Rejected candidates carry validate's reasoning through `Violation.validate_rejection_reason`. The rationale-chain's HOP_VALIDATE entry preserves `rejected_details` — scan's issue + suggestion paired with validate's rejection reason — so any review surface sees both sides without re-running the pipeline.
 
@@ -388,7 +388,7 @@ Surface coverage as of Session 3: the Figma plugin is fully wired (three-button 
 
 ### Two-vocabulary pattern for overrides (v1.5.0, human-eval build plan Session 4)
 
-User override reasons and Robo's `triage_category` are two distinct vocabularies that feed two distinct loops. They are reconciled case-by-case during review, not translated mechanically.
+User override reasons and Robert's `triage_category` are two distinct vocabularies that feed two distinct loops. They are reconciled case-by-case during review, not translated mechanically.
 
 **User reason codes** (stored in `violation_overrides.override_reason_code`, defined in `src/lib/override-reasons.ts`):
 
@@ -400,11 +400,11 @@ User override reasons and Robo's `triage_category` are two distinct vocabularies
 | `shipping_anyway` | I agree — shipping anyway | `correct` |
 | `confusing_need_more_context` | Confusing, need more context | `missing_standard` |
 
-**Robo's `triage_category`** (from `EVAL_PROTOCOL.md`): `correct`, `misclassification`, `hallucination`, `missing_standard`, `context_gap`.
+**Robert's `triage_category`** (from `EVAL_PROTOCOL.md`): `correct`, `misclassification`, `hallucination`, `missing_standard`, `context_gap`.
 
-The "typical" column is a prior, not a promise. A user's `not_applicable_here` usually becomes `context_gap` on Robo's review, but sometimes becomes `misclassification` when the situation detector was right and the user misread the flagged string. The reconciliation is Session 8's job; Session 4 just captures the raw user signal.
+The "typical" column is a prior, not a promise. A user's `not_applicable_here` usually becomes `context_gap` on Robert's review, but sometimes becomes `misclassification` when the situation detector was right and the user misread the flagged string. The reconciliation is Session 8's job; Session 4 just captures the raw user signal.
 
-**Why two vocabularies?** User codes inform UX, weighting, and which items escalate to Robo's queue. Triage categories drive architectural responses (classifier work, standards library gap, audience/moment gating). Collapsing them into one vocabulary would force users to think like engine authors — and would deny Robo the room to decide that a user's "not applicable" actually isn't a gap at all.
+**Why two vocabularies?** User codes inform UX, weighting, and which items escalate to Robert's queue. Triage categories drive architectural responses (classifier work, standards library gap, audience/moment gating). Collapsing them into one vocabulary would force users to think like engine authors — and would deny Robert the room to decide that a user's "not applicable" actually isn't a gap at all.
 
 ### Session aggregation (v1.5.0, Session 4)
 
@@ -451,13 +451,13 @@ The gate runs on every PR touching the engine, the standards, the held-out manif
 1. **Commit-message convention (`convention` job).** Fast + free, no corpus needed. Walks every commit in the PR. If a commit edits `evals/held_out/manifest.json` or anything under `evals/industry/`, the subject line must start with `held-out-update: <reason>`. Enforced by `scripts/check_held_out_convention.py`.
 2. **Held-out run (`held-out` job).** Fetches the private corpus from `HELD_OUT_CORPUS_TARBALL_URL` (GH Actions secret), invokes `tools/run_held_out.py`, fails on any disagreement. Requires `ANTHROPIC_API_KEY` for pipeline execution. Current state: wired but not enabled — the workflow emits a notice and exits cleanly when either secret is missing, so the gate is never silently bypassed.
 
-**Why two jobs, not one.** The convention job is the always-on enforcement — catches held-out verdict edits in seconds without touching the private corpus. The execution job is opt-in because it depends on ops work (corpus tarball URL, API key) the repo owner chooses when to enable. Decoupling means the convention check protects the manifest from day one; the execution check flips on when Robo is ready.
+**Why two jobs, not one.** The convention job is the always-on enforcement — catches held-out verdict edits in seconds without touching the private corpus. The execution job is opt-in because it depends on ops work (corpus tarball URL, API key) the repo owner chooses when to enable. Decoupling means the convention check protects the manifest from day one; the execution check flips on when Robert is ready.
 
 **No env-var bypass.** The only path past a failing gate is a real `held-out-update:` commit that resolves the disagreement by updating the verdict with a documented reason. Approval ceremony is documented in `docs/HELD_OUT_GATE.md`.
 
 ### Quarterly self-drift check (human-eval build plan Session 7)
 
-Cohen's κ between past-Robo verdicts and a blind re-labeling pass on the same cases, quarterly. The resulting **measured ceiling** is the single most important number in the graduation ladder — Session 10's thresholds recalibrate as a ratio of the ceiling each cycle.
+Cohen's κ between past-Robert verdicts and a blind re-labeling pass on the same cases, quarterly. The resulting **measured ceiling** is the single most important number in the graduation ladder — Session 10's thresholds recalibrate as a ratio of the ceiling each cycle.
 
 Three-step cadence (one per quarter, all in `tools/drift_check.py`):
 
@@ -483,7 +483,7 @@ Three-step cadence (one per quarter, all in `tools/drift_check.py`):
 
 **Coverage gap:** the eligible pool is currently missing 4 moments (destructive_action, confirmation, empty_state, interruption). Drift measurement for those is impossible until annotation lands. Stratification skips missing moments rather than lowering the quota — the next `build-panel` run picks them up automatically when they appear.
 
-The panel, blind, and report files all live in `evals/drift/`. The README there is the canonical workflow doc for Robo's quarterly cycle.
+The panel, blind, and report files all live in `evals/drift/`. The README there is the canonical workflow doc for Robert's quarterly cycle.
 
 ### Review cadence orchestration (human-eval build plan Session 33)
 
@@ -528,11 +528,11 @@ Audit bands (distinct from Session 10's threshold regimes):
 - κ ≥ 0.65 → `watch`
 - κ < 0.65 → `material_drift`
 
-Output lands under `evals/annual_audit/`. The README there walks Robo through the one-cycle-per-year workflow.
+Output lands under `evals/annual_audit/`. The README there walks Robert through the one-cycle-per-year workflow.
 
 ### Production override review queue (human-eval build plan Session 8)
 
-Turns real-user override events (`violation_overrides`) into an ordered, batched queue that Robo reviews via the existing Phase 2 CLI (`tools/triage.py`). Target: 50 items in 60 minutes.
+Turns real-user override events (`violation_overrides`) into an ordered, batched queue that Robert reviews via the existing Phase 2 CLI (`tools/triage.py`). Target: 50 items in 60 minutes.
 
 **Stage-aware ordering (phase auto-detects from precedent-index size):**
 
@@ -555,9 +555,9 @@ Late:    audience → standards_conflict → ensemble_disagreement →
 
 Batches are size-3 clusters matching `triage.py`'s agree/override/skip UI. They never cross audience boundaries — when the outer bucket flips, the current batch closes even if it's under-sized.
 
-**Pattern detection + refinement-log draft.** After each batch, `tools/batch_summary.py analyze` counts actions and flags `recurring_standard_override` when 3+ overrides land on the same standard. `batch_summary.py draft-refinement` appends a candidate entry to `taxonomy_refinement_log.md` under "Open refinements" in the existing format, marked pending auto-detected — Robo triages during the weekly cadence and promotes to approved only after the two-source rule.
+**Pattern detection + refinement-log draft.** After each batch, `tools/batch_summary.py analyze` counts actions and flags `recurring_standard_override` when 3+ overrides land on the same standard. `batch_summary.py draft-refinement` appends a candidate entry to `taxonomy_refinement_log.md` under "Open refinements" in the existing format, marked pending auto-detected — Robert triages during the weekly cadence and promotes to approved only after the two-source rule.
 
-**Nightly auto-detection (human-eval build plan Session 34).** `tools/refinement_candidate_detector.py` extends the same pattern at production scale. It consumes an aggregated signal dump (fire counts, override rates, `standards_conflict` clusters from Session 2, `out_of_distribution` clusters from Session 2) and writes candidates to a new `## Proposed refinements (auto-detected)` section in `taxonomy_refinement_log.md`. Entries use `REF-ANNN` ids so they can't collide with Robo-proposed `REF-NNN` ids. The log now has three sibling sections — auto-detected (nightly), Open (Robo-proposed), Approved — each with distinct provenance; the weekly review rhythm triages auto-detected candidates first. Two-source minimum + verdict-impact test from the decision criterion still apply even when auto-detection has fired. Detection thresholds match the plan spec: retirement at ≤0.5% fire rate over 90 days or >30% override rate over 30 days; moment/content-type candidates at ≥5 OOD cases from ≥2 distinct sources over 60 days.
+**Nightly auto-detection (human-eval build plan Session 34).** `tools/refinement_candidate_detector.py` extends the same pattern at production scale. It consumes an aggregated signal dump (fire counts, override rates, `standards_conflict` clusters from Session 2, `out_of_distribution` clusters from Session 2) and writes candidates to a new `## Proposed refinements (auto-detected)` section in `taxonomy_refinement_log.md`. Entries use `REF-ANNN` ids so they can't collide with Robert-proposed `REF-NNN` ids. The log now has three sibling sections — auto-detected (nightly), Open (Robert-proposed), Approved — each with distinct provenance; the weekly review rhythm triages auto-detected candidates first. Two-source minimum + verdict-impact test from the decision criterion still apply even when auto-detection has fired. Detection thresholds match the plan spec: retirement at ≤0.5% fire rate over 90 days or >30% override rate over 30 days; moment/content-type candidates at ≥5 OOD cases from ≥2 distinct sources over 60 days.
 
 **Signal endpoint (Session 34 activation).** `GET /api/admin/refinement-signals` emits the `SignalDump` JSON the detector consumes. Auth: `Authorization: Bearer <CRON_SECRET>` — same tier as the weekly-digest cron. Two schema additions power the clustering layer: `violations.check_event_id` (cuid set per `/api/check` invocation) groups every violation row from the same evaluation so co-firing and `standards_conflict` clusters can be reconstructed; `violations.review_reason_subtype` denormalises `CheckResult.review_reason` (Session 2 / Session 13 subtypes) onto every row so OOD + conflict clusters can be filtered in SQL. Pure-logic aggregation lives in `src/lib/refinement-signals.ts` — the route does I/O, the library shapes the dump.
 
@@ -596,7 +596,7 @@ Auto-annotator integration (`tools/annotator_prompt.py`):
 - `_build_preference_conflict_index` surfaces contested tuples separately. The calibration prompt renders them in a `## Contested tuples` section so the annotator explicitly *lowers* confidence on rules with disputed preference signal — even when annotation precedent would otherwise be high.
 - `auto_annotate.py --preferences <export.json>` threads the file through the pipeline.
 
-Privacy: the pair texts are curated by Robo (not user-submitted). Responses store only `(user_id, pair_id, preferred_side, optional note, time_ms)`. The admin export route (`GET /api/preferences/export`) is gated by `CRON_SECRET` — same auth tier as the weekly-digest cron.
+Privacy: the pair texts are curated by Robert (not user-submitted). Responses store only `(user_id, pair_id, preferred_side, optional note, time_ms)`. The admin export route (`GET /api/preferences/export`) is gated by `CRON_SECRET` — same auth tier as the weekly-digest cron.
 
 **Deferred:** a second "opt back in" UI button for users who previously opted out (today they'd hit the API directly from the dashboard). Also deferred: admin UI for authoring new `preference_pairs` entries — the JSON file + seeder is the current authoring path.
 
@@ -644,7 +644,7 @@ Three levels per standard: `robo_labels` → `batch_approval` → `autonomous`. 
 | # | Criterion | Autonomous | Batch-approval |
 |---|---|---|---|
 | 1 | Sample size (4-week agreements) | ≥ 500 | ≥ 200 |
-| 2 | Cohen's κ vs Robo | ≥ `0.94 × ceiling` | ≥ `0.83 × ceiling` |
+| 2 | Cohen's κ vs Robert | ≥ `0.94 × ceiling` | ≥ `0.83 × ceiling` |
 | 3 | Raw agreement (McHugh floor) | ≥ 80% | ≥ 70% |
 | 4 | MCC (when prevalence < 15%) | ≥ 0.70 | ≥ 0.60 |
 | 5 | Production override rate (actor-weighted) | < 5% | < 10% |
@@ -694,7 +694,7 @@ Session 16 extended attribution from 17 to 30 of 47 standards using a
 conservative pass: only principles demonstrably canonical across
 multiple systems land here. `tools/patch_extend_sources.py` is the
 one-shot script (idempotent; safe to re-run). The remaining 17
-standards await Robo's domain-expertise audit.
+standards await Robert's domain-expertise audit.
 
 **`evals/examples_corpus/`** — the "this, not that" pairs artifact.
 Strictly separate from `standards_library.json` per the plan's
@@ -708,7 +708,7 @@ documents where canonical systems diverge and how ContentRX resolves
 
 **Doctrine:** the examples corpus is a **reference artifact, not a CI
 gate**. It never joins with `standards_library.json` at runtime, never
-blocks releases, never feeds the training-signal path. Robo reviews
+blocks releases, never feeds the training-signal path. Robert reviews
 attributions and pairs before they go in; the ethics commitments at
 `/ethics` govern source treatment.
 
@@ -722,9 +722,9 @@ Mines `(old_string, new_string)` copy-change pairs from a curated OSS allow-list
 
 **Ethics binding:** the miner identifies as `contentrx-research-bot` with a contact URL pointing at `/ethics`. Opt-outs land via `hello@contentrx.io` with `[OPTOUT] <source name>` subject; removal procedure in `external_signal/README.md`.
 
-**What Session 15 does NOT do:** DB ingest (the JSON output is the reviewer's workbench until the review workflow crystallizes), classifier routing for agreement/disagreement separation. Running the crawler requires `GITHUB_TOKEN` configured; today's PR ships the pipeline, the first real crawl happens when Robo flips it on.
+**What Session 15 does NOT do:** DB ingest (the JSON output is the reviewer's workbench until the review workflow crystallizes), classifier routing for agreement/disagreement separation. Running the crawler requires `GITHUB_TOKEN` configured; today's PR ships the pipeline, the first real crawl happens when Robert flips it on.
 
-**Session 18 additions.** Each mined commit gets an intent category tag (`typo_fix` / `i18n_motivated` / `tone_shift` / `clarification` / `restructure` / `unknown`) from a priority-ordered regex classifier. Each repo gets a 0–3 `quality_score` from three allow-list-configured signals (has_content_designer, active_i18n, content_design_blog). Intent tags carry a *suggested* triage_category prior — a lens for Robo's review, not a gate. Higher-quality repos rank earlier; lower scores sort later but never block.
+**Session 18 additions.** Each mined commit gets an intent category tag (`typo_fix` / `i18n_motivated` / `tone_shift` / `clarification` / `restructure` / `unknown`) from a priority-ordered regex classifier. Each repo gets a 0–3 `quality_score` from three allow-list-configured signals (has_content_designer, active_i18n, content_design_blog). Intent tags carry a *suggested* triage_category prior — a lens for Robert's review, not a gate. Higher-quality repos rank earlier; lower scores sort later but never block.
 
 ### Rollback + auto-demotion (human-eval build plan Session 12)
 
@@ -743,7 +743,7 @@ The thresholds mirror Session 10's graduation cutoffs exactly — the same line 
 
 **UI surface:** the demote button sits on each graduated standard's row in the `/dashboard/graduation` level breakdown, alongside its current level. Hidden for non-admin users.
 
-**Deferred for a later session:** suspending a standard entirely (pulling it out of engine evaluation). Today's soft-suspend = demote to `robo_labels` with a reason; the standard still evaluates but every verdict routes through Robo. Full suspend requires engine-side gating.
+**Deferred for a later session:** suspending a standard entirely (pulling it out of engine evaluation). Today's soft-suspend = demote to `robo_labels` with a reason; the standard still evaluates but every verdict routes through Robert. Full suspend requires engine-side gating.
 
 **Cron enablement:** same `CRON_SECRET` the weekly digest uses. Add to `vercel.json`:
 ```json

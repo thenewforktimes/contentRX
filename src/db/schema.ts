@@ -69,11 +69,13 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id").unique(),
   dittoApiKeyEncrypted: text("ditto_api_key_encrypted"),
   // Human-eval build plan Session 31. When set, the user opted out of
-  // pairwise-preference elicitation prompts. `/dashboard/calibrate`
-  // honors it immediately; weekly scheduler skips opted-out users.
-  // Null = opted in (default). The timestamp records when they opted
-  // out so we can distinguish "never asked" from "explicitly declined"
-  // in telemetry.
+  // pairwise-preference elicitation prompts. The /api/preferences/*
+  // routes honor it immediately; weekly scheduler skips opted-out
+  // users. Null = opted in (default). The timestamp records when
+  // they opted out so we can distinguish "never asked" from
+  // "explicitly declined" in telemetry. The customer-facing
+  // /dashboard/calibrate surface was removed 2026-04-29; the column
+  // stays for substrate-side scheduling and the /admin surface.
   preferenceOptedOutAt: timestamp("preference_opted_out_at", {
     withTimezone: true,
   }),
@@ -403,7 +405,7 @@ export const violationOverrides = pgTable(
     // Human-eval build plan Session 4 — structured reason + session.
     //
     // `overrideReasonCode` is the five-item user-facing vocabulary (see
-    // src/lib/override-reasons.ts). Distinct from Robo's triage_category
+    // src/lib/override-reasons.ts). Distinct from Robert's triage_category
     // — the two feed different loops. The existing free-text
     // `overrideReason` column stays for optional single-line detail.
     overrideReasonCode: text("override_reason_code", {
@@ -616,7 +618,7 @@ export const teamCustomExamples = pgTable(
     // the team's reasoning.
     notes: text("notes"),
     // Opt-in to anonymised contribution to the core content model
-    // when Robo reviews. Defaults to false — zero assumptions about
+    // when Robert reviews. Defaults to false — zero assumptions about
     // whether the team wants their voice decisions to flow upstream.
     contributeUpstream: boolean("contribute_upstream").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -653,17 +655,19 @@ export const teamCustomExamples = pgTable(
 //
 // Each row is a hand-picked pair of strings that ask a content-design
 // judgment call: given (moment, content_type, standard), which of
-// these two candidate strings is better? The `/dashboard/calibrate`
-// surface picks three unseen pairs per user per session (weekly) and
-// writes the user's answer into `preferences`.
+// these two candidate strings is better? The /api/preferences/session
+// endpoint picks three unseen pairs per user per session (weekly) and
+// writes the user's answer into `preferences`. The customer-facing
+// /dashboard/calibrate surface that originally drove this was removed
+// 2026-04-29; calibration runs from the /admin substrate now.
 //
 // Seed pool ships as a JSON artifact (`evals/preference_pairs.json`)
 // and is loaded into the DB via `tools/seed_preference_pairs.py`. New
 // pairs can be appended without a migration — the JSON is the source
 // of truth, the DB is the cache for fast lookup.
 //
-// Privacy: both `leftText` and `rightText` are author-curated (Robo +
-// collaborators), not user-submitted. Nothing here is PII.
+// Privacy: both `leftText` and `rightText` are author-curated (Robert
+// + collaborators), not user-submitted. Nothing here is PII.
 export const preferencePairs = pgTable(
   "preference_pairs",
   {

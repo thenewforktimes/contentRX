@@ -208,7 +208,7 @@ export async function maybeGroupByDomain(
 
   // Best-effort: apply the 10% domain-grouping coupon to each member's
   // subscription. Skip the entire step when the env var isn't set
-  // (Robo creates the coupon in Stripe Dashboard before flipping it on).
+  // (Robert creates the coupon in Stripe Dashboard before flipping it on).
   await applyDomainCoupon(sameDomain.map((u) => u.id)).catch((err) => {
     console.warn("domain coupon application failed (non-fatal)", err);
   });

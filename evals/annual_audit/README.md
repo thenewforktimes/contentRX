@@ -22,7 +22,7 @@ evals/annual_audit/
 ├── panels/             — per-year panel manifests (committed)
 │   └── <year>.json
 ├── blind/              — blind re-label surfaces (git-ignored; transient)
-├── labels/             — Robo's re-labels (committed; canonical)
+├── labels/             — Robert's re-labels (committed; canonical)
 │   └── <year>.json
 └── reports/            — scored reports (committed)
     ├── <year>.json
@@ -58,7 +58,7 @@ One cycle per year:
    Strips past verdicts + rationale so the re-label pass is truly
    blind. Output lands under `evals/annual_audit/blind/`.
 
-3. **Re-label.** Robo re-labels all 100 cases under the current
+3. **Re-label.** Robert re-labels all 100 cases under the current
    taxonomy. Output format: `evals/annual_audit/labels/<year>.json`
    with `{ "labels": { "<case_id>": "pass" | "violation" | "review_recommended" } }`.
 
@@ -76,7 +76,7 @@ One cycle per year:
    year's planning docs).
 
 5. **Write the narrative.** The markdown report has a blank "Next
-   year's taxonomy roadmap" section. Robo fills it in after reading
+   year's taxonomy roadmap" section. Robert fills it in after reading
    the scored findings and deciding priorities. Commit the edited
    markdown alongside the JSON.
 

@@ -323,7 +323,7 @@ class TestDeriveVerdictPrecedence:
 
     def test_ensemble_disagreement_flips_to_review_even_with_no_violations(self):
         """Session 13: validate-rejection-with-nothing-surviving is
-        still an ensemble disagreement worth Robo's review.
+        still an ensemble disagreement worth Robert's review.
 
         Overrides the Session 2 behavior that required at least one
         violation to flip to review_recommended.

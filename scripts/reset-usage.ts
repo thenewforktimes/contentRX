@@ -2,7 +2,7 @@
  * Reset a user's monthly check count. Founder utility.
  *
  * Use cases:
- *   - Robo testing the dashboard end-to-end and burning through 20
+ *   - Robert testing the dashboard end-to-end and burning through 20
  *     free checks faster than he can write a doc
  *   - A paid customer who hit a billing edge case and needs the
  *     month re-zeroed (rare; usually the Stripe Customer Portal

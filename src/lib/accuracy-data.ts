@@ -10,9 +10,9 @@
  * Three numbers must stay visually and logically distinct in the
  * rendered page — never combined into a composite "accuracy score":
  *
- *   1. Measured system κ (system vs Robo's held-out golden verdicts,
+ *   1. Measured system κ (system vs Robert's held-out golden verdicts,
  *      with 95% CI).
- *   2. Measured self-drift κ (Robo vs past-Robo from the Session 7
+ *   2. Measured self-drift κ (Robert vs past-Robert from the Session 7
  *      quarterly panel, with 95% CI). This is the expert ceiling.
  *   3. Design target κ = 0.90. A design assumption, not a measurement.
  *
@@ -50,9 +50,9 @@ export interface AccuracySnapshot {
   generated_at: string;
   /** When this aggregator ran (i.e. when the page was built). */
   built_at: string;
-  /** Overall system κ (system vs Robo golden verdicts). */
+  /** Overall system κ (system vs Robert's golden verdicts). */
   measured_system: Kappa;
-  /** Self-drift κ (Robo re-labelling the Session 7 panel). */
+  /** Self-drift κ (Robert re-labelling the Session 7 panel). */
   measured_self_drift: Kappa;
   /** Design target. Locked at 0.90 per the plan's acceptance criteria. */
   design_target: number;
@@ -265,7 +265,7 @@ function reviewQueuePhase(
     return {
       phase: "early",
       description:
-        "No standards have populated kappa series yet. The review queue is in its seeding phase — Robo is annotating the industry corpus.",
+        "No standards have populated kappa series yet. The review queue is in its seeding phase — Robert is annotating the industry corpus.",
     };
   }
   if (standardsWithKappa < totalStandards / 2) {

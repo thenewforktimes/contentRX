@@ -9,10 +9,10 @@ import { describe, expect, it } from "vitest";
  * criteria on the positioning copy: two wedges named, the Grammarly
  * contrast, the Stripe Radar frame, and the accountability surface
  * linked. These tests lock those sections as present — they don't
- * pin the prose itself, which is Robo's to edit.
+ * pin the prose itself, which is Robert's to edit.
  *
  * Bracketed placeholders (e.g. `{years shipping…}`) must never ship;
- * the shape lets Robo leave fill-in-later notes in the source without
+ * the shape lets Robert leave fill-in-later notes in the source without
  * shipping them to production. The test fails on any `{…}` that
  * survives to main.
  */
@@ -97,18 +97,18 @@ describe("/about page (src/app/(marketing)/about/page.tsx)", () => {
   const source = readSource("src/app/(marketing)/about/page.tsx");
   const visible = visibleCopy(source);
 
-  it("is present + names Robo", () => {
+  it("is present + names Robert", () => {
     expect(source.length).toBeGreaterThan(0);
-    expect(visible).toMatch(/Robo\b/);
+    expect(visible).toMatch(/Robert\b/);
   });
 
   it("flags pending bio content with a placeholder", () => {
-    // The copy-pin invariant: Robo's bio stays bracketed until Robo
-    // fills it in. Once Robo edits this copy, the placeholder
-    // disappears AND this test is replaced with a stronger assertion
-    // (author name, specific company, etc.).
+    // The copy-pin invariant: Robert's bio stays bracketed until
+    // Robert fills it in. Once Robert edits this copy, the
+    // placeholder disappears AND this test is replaced with a
+    // stronger assertion (author name, specific company, etc.).
     const hasPlaceholder = /\{[^}]*\bbio\b[^}]*\}/.test(visible);
-    const hasAuthorStatement = /written by Robo/i.test(visible);
+    const hasAuthorStatement = /written by Robert/i.test(visible);
     expect(hasPlaceholder || hasAuthorStatement).toBe(true);
   });
 

@@ -95,7 +95,7 @@ export const MOMENTS_PY_CITATIONS: ReadonlyArray<string> = [
  * system, aggregation throws so the mismatch is caught in CI, not at
  * runtime.
  *
- * Robo: verify these URLs + licenses once before publishing. Each is
+ * Robert: verify these URLs + licenses once before publishing. Each is
  * a well-known public style guide, but inline attribution is the
  * commitment from /ethics — accuracy matters.
  */

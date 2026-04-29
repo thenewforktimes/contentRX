@@ -109,7 +109,7 @@ def check(base: str, head: str) -> int:
             file=sys.stderr,
         )
     print(
-        "\nHeld-out verdict edits require Robo's approval. Prefix the "
+        "\nHeld-out verdict edits require Robert's approval. Prefix the "
         "commit subject with 'held-out-update:' and include a short reason. "
         "See docs/HELD_OUT_GATE.md.",
         file=sys.stderr,

@@ -105,7 +105,7 @@ def build_audit_panel_manifest(
     return {
         "description": (
             f"Annual taxonomy-audit panel for {year}. Sample drawn from "
-            f"cases older than {min_age_days} days so current-Robo can "
+            f"cases older than {min_age_days} days so current-Robert can "
             "re-label under the current schema and past/present "
             "disagreement surfaces overfit patterns the quarterly "
             "drift check cannot detect (Session 36)."

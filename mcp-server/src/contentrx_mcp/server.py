@@ -303,7 +303,7 @@ async def custom_example_add(
             to team members when the short-circuit fires.
         contribute_upstream: Default false. Set true to opt this example
             into anonymised contribution to the ContentRX content model
-            when Robo reviews. Off means team-private; the example
+            when Robert reviews. Off means team-private; the example
             never leaves the team's scope.
 
     Returns:

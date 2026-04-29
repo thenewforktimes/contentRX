@@ -85,7 +85,7 @@ an arm for `ensemble_disagreement`.
   and on preprocessor-source violations.
 - **Semantic change to `verdict`:** `ensemble_disagreement` flips the
   verdict to `review_recommended` even when `violations` is empty —
-  a validate-rejection with nothing surviving is still worth Robo's
+  a validate-rejection with nothing surviving is still worth Robert's
   review. Previously the verdict stayed `pass` when the violations
   list was empty.
 
@@ -99,7 +99,7 @@ supplying any of the new fields.
 - **`override_reason_code`** (one of `"not_applicable_here"` /
   `"standard_too_strict"` / `"fix_is_worse"` / `"shipping_anyway"` /
   `"confusing_need_more_context"`) — the user-facing five-item
-  vocabulary. Distinct from Robo's `triage_category` vocabulary
+  vocabulary. Distinct from Robert's `triage_category` vocabulary
   (from `EVAL_PROTOCOL.md`). The mapping between the two is a
   judgment call captured during review, not a mechanical translation.
   Typical mappings are documented in `src/lib/override-reasons.ts`.

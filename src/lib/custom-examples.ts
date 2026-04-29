@@ -17,7 +17,7 @@
  * normalized_text)` index in `schema.ts` makes the lookup O(log n).
  *
  * Upstream contribution: entries with `contributeUpstream: true` are
- * eligible for anonymised review by Robo and potential integration
+ * eligible for anonymised review by Robert and potential integration
  * into the core content model (Session 35's `influences` → /sources
  * attribution path). Defaults to false; no assumptions.
  */

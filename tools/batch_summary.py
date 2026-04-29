@@ -11,7 +11,7 @@ and emits:
      sudden content-type cluster, etc.).
   3. Optionally: a drafted candidate entry appended to
      `taxonomy_refinement_log.md` under "## Open refinements" for
-     Robo to triage during the weekly cadence.
+     Robert to triage during the weekly cadence.
 
 Usage:
     python3 tools/batch_summary.py analyze \\

@@ -166,7 +166,7 @@ The order is the inversion of the current dashboard, which puts subscription/bil
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│  Hi Robo                                  [Pro · $29]│
+│  Hi Robert                                  [Pro · $29]│
 │                                                       │
 │  ┌─────────────────────────────────────────────┐    │
 │  │ Try a check                                  │    │

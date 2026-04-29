@@ -5,7 +5,7 @@
 The internal build plan lives at `_private/BUILD_PLAN_v2.md` (gitignored,
 local only). The human-eval companion is at `_private/HUMAN_EVAL_BUILD_PLAN.md`.
 Read whichever is relevant before touching the corresponding surface;
-ask Robo for a fresh copy if your worktree doesn't have them. Public
+ask Robert for a fresh copy if your worktree doesn't have them. Public
 contributors can ignore both — the ADRs in `decisions/` carry the
 load-bearing rationale that the build plans expand on.
 
@@ -62,7 +62,7 @@ The public surface — what customers and prospects actually see — is:
   kappa with 95% CI, target ceiling stated separately. Generated nightly.
 - `/calibration` — weekly calibration log entries (kappa movement, drift
   signals, override count, refinement-log activity). Generated automatically.
-- `/essays` — monthly named-expert essays in Robo's voice. Hand-written.
+- `/essays` — monthly named-expert essays in Robert's voice. Hand-written.
 - `/reports` — quarterly accuracy reports. Generated scaffold, hand-edited
   narrative.
 
@@ -143,7 +143,7 @@ flipped to `true` so the path doesn't silently rot.
 - Next.js 15 App Router, TypeScript, Tailwind v4, React 19
 - Auth: Clerk v7 (do not consider alternatives)
 - Database: Supabase Postgres (BUILD_PLAN originally said Neon; swapped
-  because Robo had a Supabase account. Both are Postgres, Drizzle is
+  because Robert had a Supabase account. Both are Postgres, Drizzle is
   identical.)
 - DB driver: `postgres` (postgres.js) + `drizzle-orm/postgres-js`
 - Billing: Stripe Checkout + Customer Portal + webhooks (no custom UI)

@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-28
 **Status:** Accepted
-**Owner:** Robo
+**Owner:** Robert
 **Supersedes:** None
 **Amends:** [2026-04-25-private-taxonomy-pivot.md](2026-04-25-private-taxonomy-pivot.md)
 

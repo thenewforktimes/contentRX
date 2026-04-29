@@ -32,7 +32,7 @@ how the miner behaves, that page is the canonical contract.
      # JSON per repo: <owner>__<name>.json
      # Gitignored — never committed
 
-4. (future) Ingest into DB after Robo's review
+4. (future) Ingest into DB after Robert's review
      # Not wired today. The JSON output is the reviewer's workbench
      # until an ingest path lands in a later session.
 ```
@@ -51,7 +51,7 @@ Every run filters through a cascade:
 4. **Diff pattern** — pairs are extracted only from changed lines
    inside quoted strings. Pure hex / URL / version-bump pairs are
    rejected as noise. False positives are expected and acceptable;
-   Robo's review distinguishes the signal from the noise.
+   Robert's review distinguishes the signal from the noise.
 
 ## Allow-list management
 
@@ -140,7 +140,7 @@ Each mined commit gets an `intent` category attached to its record:
 
 Priority: i18n wins over typo wins over tone wins over clarification
 wins over restructure. The mapping is documented, **not enforced** —
-Robo reviews actual triage_category at review time.
+Robert reviews actual triage_category at review time.
 
 Each repo gets a `quality_score` (0..3) summed from three signals on
 the allow-list entry:
@@ -157,11 +157,11 @@ scores don't block — they just sort later. Set signals manually in
 
 - **No DB ingest.** The spec calls for a separate `external_signal`
   database namespace. The JSON output IS the namespace today. A
-  future session wires a TS-side ingest when Robo's review workflow
+  future session wires a TS-side ingest when Robert's review workflow
   for external signal is defined.
 - **No classifier routing.** The plan describes pushing mined pairs
   through ContentRX's classifier and surfacing disagreement cases in
-  Robo's review. That routing is a follow-up — the miner does step 1
+  Robert's review. That routing is a follow-up — the miner does step 1
   (extract); step 2 (classify + queue) lands separately.
 - **No intent tagging.** Session 18's job. The soft-tag list in
   `COMMIT_SOFT_TAGS` is a coarse filter, not the intent classifier.

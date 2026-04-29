@@ -6,9 +6,8 @@
  *   1. **Path-level** — `revalidatePath("/dashboard", "layout")`
  *      invalidates every route nested under the dashboard layout
  *      (/dashboard, /dashboard/runs/[id], /dashboard/overrides,
- *      /dashboard/members, /dashboard/team/*, /dashboard/calibrate,
- *      /dashboard/explain). Catches sub-pages whose loaders aren't
- *      tag-cached (yet).
+ *      /dashboard/members, /dashboard/team/*, /dashboard/explain).
+ *      Catches sub-pages whose loaders aren't tag-cached (yet).
  *
  *   2. **Tag-level** (audit Pf3) — when the caller provides
  *      `userId`/`teamId`/`ownerId`, the matching `unstable_cache`

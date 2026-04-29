@@ -24,20 +24,20 @@ export type GraduationLevel = (typeof GRADUATION_LEVELS)[number];
 
 /**
  * What changes when a standard graduates — shown on the approval UI
- * so Robo can confirm the consequences before clicking.
+ * so Robert can confirm the consequences before clicking.
  */
 export const LEVEL_CONSEQUENCES: Record<GraduationLevel, string> = {
   robo_labels:
-    "Every verdict on this standard routes to Robo's review queue. Default for new standards.",
+    "Every verdict on this standard routes to Robert's review queue. Default for new standards.",
   batch_approval:
-    "Verdicts ship in batches with Robo spot-checking samples. Reviews go from every case to a slice. Rollback trigger: 2-week override rate ≥ 10%.",
+    "Verdicts ship in batches with Robert spot-checking samples. Reviews go from every case to a slice. Rollback trigger: 2-week override rate ≥ 10%.",
   autonomous:
-    "Verdicts ship without Robo's review. A sampled audit pulls in a slice for calibration. Rollback trigger: 2-week override rate ≥ 5%.",
+    "Verdicts ship without Robert's review. A sampled audit pulls in a slice for calibration. Rollback trigger: 2-week override rate ≥ 5%.",
 };
 
 /**
  * Admin gate for graduation approval. Today: a single-founder product
- * — graduation decisions are Robo-only. The allow-list ships as an
+ * — graduation decisions are Robert-only. The allow-list ships as an
  * env-var-separated list of Clerk user IDs. Unset = no one can approve,
  * which is the safe default if the env var is missing in prod.
  *

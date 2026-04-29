@@ -11,7 +11,7 @@ graduate.
 | # | Criterion | Autonomous | Batch-approval |
 |---|---|---|---|
 | 1 | Sample size (4-week agreements) | ≥ 500 | ≥ 200 |
-| 2 | Cohen's κ vs Robo | ≥ 0.94 × ceiling | ≥ 0.83 × ceiling |
+| 2 | Cohen's κ vs Robert | ≥ 0.94 × ceiling | ≥ 0.83 × ceiling |
 | 3 | Raw agreement (McHugh floor) | ≥ 80% | ≥ 70% |
 | 4 | MCC (when prevalence < 15%) | ≥ 0.70 | ≥ 0.60 |
 | 5 | Production override rate | < 5% | < 10% |
