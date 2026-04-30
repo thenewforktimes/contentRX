@@ -115,13 +115,25 @@ class ContentRXClient:
         text: str,
         moment: str | None = None,
         content_type: str | None = None,
+        segment_type: str | None = None,
     ) -> CheckResult:
-        """POST /api/check — full evaluation. Counts against monthly quota."""
+        """POST /api/check — full evaluation. Counts against monthly quota.
+
+        `segment_type` declares the metering tier (Phase 3 of the
+        pre-pilot launch build). One of "standard" | "document" |
+        "surface"; if omitted, /api/check defaults to standard. Single-
+        string MCP calls (`evaluate_copy`) are standard; batch calls
+        (`evaluate_copy_batch`) declare per-string standard for now —
+        an aggregate-document mode could be added when a single LLM
+        round-trip across many strings is wired.
+        """
         body: dict[str, Any] = {"text": text, "source": "mcp"}
         if moment:
             body["moment"] = moment
         if content_type:
             body["content_type"] = content_type
+        if segment_type:
+            body["segment_type"] = segment_type
         # Closes audit M-26. Was source="plugin" because the engine's
         # source enum was locked; we widened it across /api/check,
         # /api/violations/override, log-violations.ts, and actor-role.ts

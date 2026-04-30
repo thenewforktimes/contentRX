@@ -103,11 +103,18 @@ def check_text(
     source: str = "cli",
     file_path: str | None = None,
     run_id: str | None = None,
+    segment_type: str | None = None,
     api_url: str | None = None,
     api_key: str | None = None,
     timeout: int = DEFAULT_TIMEOUT_SECONDS,
 ) -> dict[str, Any]:
-    """POST to /api/check and return the parsed JSON response."""
+    """POST to /api/check and return the parsed JSON response.
+
+    `segment_type` declares the metering tier (Phase 3 of the
+    pre-pilot launch build). One of "standard" | "document" |
+    "surface". When omitted, /api/check defaults to standard. CLI
+    callers default to standard for single-string invocations.
+    """
     payload: dict[str, Any] = {"text": text, "source": source}
     if content_type:
         payload["content_type"] = content_type
@@ -119,6 +126,8 @@ def check_text(
         payload["file_path"] = file_path
     if run_id:
         payload["run_id"] = run_id
+    if segment_type:
+        payload["segment_type"] = segment_type
 
     base = api_url or _api_base_url()
     url = f"{base}/api/check"
@@ -407,6 +416,16 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Client source tag stored alongside violations (default: cli).",
     )
     parser.add_argument(
+        "--segment-type",
+        dest="segment_type",
+        choices=["standard", "document", "surface"],
+        default=None,
+        help="Metering tier for this call (default: standard at the API). "
+        "standard = 1 unit per 300 chars (single-string default); "
+        "document = 8 units flat (end-to-end article/screen review); "
+        "surface = 25 units flat (full PR diff or whole frame).",
+    )
+    parser.add_argument(
         "--json",
         dest="json_output",
         action="store_true",
@@ -487,6 +506,7 @@ def run(argv: list[str]) -> int:
             file_path=args.file_path,
             run_id=args.run_id,
             source=args.source,
+            segment_type=args.segment_type,
         )
 
     response = check_text(
@@ -497,6 +517,7 @@ def run(argv: list[str]) -> int:
         file_path=args.file_path,
         run_id=args.run_id,
         source=args.source,
+        segment_type=args.segment_type,
         api_url=api_url,
         api_key=api_key,
     )
@@ -524,6 +545,7 @@ def _run_batch(
     file_path: str | None,
     run_id: str | None,
     source: str,
+    segment_type: str | None = None,
 ) -> int:
     all_passed = True
     collected: list[dict[str, Any]] = []
@@ -536,6 +558,11 @@ def _run_batch(
             file_path=item.get("file_path") or file_path,
             run_id=item.get("run_id") or run_id,
             source=source,
+            # Batch CLI runs are still per-string standard checks
+            # (one /api/check call per item). The --segment-type flag
+            # is plumbed for callers who want to declare document
+            # for cross-string consistency review.
+            segment_type=segment_type,
             api_url=api_url,
             api_key=api_key,
         )
