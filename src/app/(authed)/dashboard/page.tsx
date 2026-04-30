@@ -58,6 +58,7 @@ import { ApiKeyPanel } from "./api-key-panel";
 import { DashboardLivenessRefresher } from "./dashboard-liveness-refresher";
 import { ExplainClient } from "./explain/explain-client";
 import { FirstCallBanner } from "./first-call-banner";
+import { RulesDisclosurePanel } from "./rules-disclosure-panel";
 import { SubscriptionPanel } from "./subscription-panel";
 import { UsagePanelLive } from "./usage-panel-live";
 
@@ -84,13 +85,14 @@ export default async function DashboardPage() {
   }
 
   const plan = user.plan as Plan;
-  const [seats, used, activeSub, sourceStats, insights] =
+  const [seats, used, activeSub, sourceStats, insights, teamRuleCounts] =
     await Promise.all([
       loadSeats(user.id, plan, user.teamOwnerUserId),
       loadCurrentUsage(user.id),
       loadActiveSubscription(user.id, user.teamOwnerUserId),
       loadSourceStats(user.id, user.teamOwnerUserId),
       loadWeeklyInsights(user.id, user.teamOwnerUserId),
+      loadTeamRuleCounts(user.id, user.teamOwnerUserId),
     ]);
   const surfaceActivity = sourceStats.activity;
   const activatedSource = sourceStats.recentlyActivated;
@@ -120,6 +122,11 @@ export default async function DashboardPage() {
         </header>
 
         <TryACheckPanel plan={plan} />
+
+        <RulesDisclosurePanel
+          disabledCount={teamRuleCounts.disabled}
+          customRuleCount={teamRuleCounts.custom}
+        />
 
         {/*
           UsagePanelLive + ActiveSurfacesRowLive are Client Components
@@ -443,6 +450,29 @@ function TeamRulesLink() {
       </Link>
     </section>
   );
+}
+
+/** Count disabled standards + custom team rules for the current
+ * user's team-owner pivot. Powers the dashboard's RulesDisclosurePanel
+ * (Phase 7) — Free / Pro / Scale users see zeros (they can't edit
+ * team rules); Team users see whatever their owner has configured. */
+async function loadTeamRuleCounts(
+  userId: string,
+  teamOwnerUserId: string | null,
+): Promise<{ disabled: number; custom: number }> {
+  const ownerId = teamOwnerUserId ?? userId;
+  const db = getDb();
+  const rows = await db
+    .select({ action: schema.teamRules.action })
+    .from(schema.teamRules)
+    .where(eq(schema.teamRules.teamOwnerUserId, ownerId));
+  let disabled = 0;
+  let custom = 0;
+  for (const row of rows) {
+    if (row.action === "disable") disabled++;
+    if (row.action === "add") custom++;
+  }
+  return { disabled, custom };
 }
 
 async function loadSeats(
