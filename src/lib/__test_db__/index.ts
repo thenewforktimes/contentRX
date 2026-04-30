@@ -60,6 +60,7 @@ function loadSetupSql(): string {
 }
 
 const TABLES_TO_RESET = [
+  "violation_overrides",
   "violations",
   "usage_events",
   "usage",

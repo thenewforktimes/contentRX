@@ -197,6 +197,14 @@ export async function POST(req: Request) {
         source: "dashboard",
         overrideStance: "disagree",
         overrideReasonCode: override_reason_code ?? null,
+        // Corpus-loop opt-in (Session 8). Carry the same
+        // `share_upstream` consent that suggestion_candidates uses
+        // through to violation_overrides so the founder can triage
+        // the row to `addressed_corpus` from /admin/overrides.
+        // Text is already PII-screened above; default false means
+        // only `text_hash` lands.
+        contributeUpstream: share_upstream,
+        text: share_upstream ? text : null,
       });
     }
 

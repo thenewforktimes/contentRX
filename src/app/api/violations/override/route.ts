@@ -106,6 +106,14 @@ const RequestSchema = z.object({
   // scan; CLI/CI could use the run ID; dashboard could use a per-tab
   // UUID. Session 4 aggregates by this on read.
   session_id: z.string().min(1).max(64).optional(),
+  // Corpus-loop consent (Session 8, post-launch). When the pilot
+  // explicitly opts in to share this dismissal with calibration, the
+  // raw text is captured (after the same PII pre-screen as the rest
+  // of the request) so the founder can triage it into the private
+  // corpus at /admin/overrides. Default false; never inferred. When
+  // false, only `text_hash` lands and the row can't be triaged to
+  // `addressed_corpus`.
+  contribute_upstream: z.boolean().optional().default(false),
 });
 
 export async function POST(req: Request) {
@@ -183,6 +191,7 @@ export async function POST(req: Request) {
     applied_text,
     override_reason_code,
     session_id,
+    contribute_upstream,
   } = parsed.data;
 
   // team_id always equals "team-owner-or-self" (lib/team-scope.ts).
@@ -213,6 +222,12 @@ export async function POST(req: Request) {
         appliedTextHash: applied_text ? hashText(applied_text) : null,
         overrideReasonCode: override_reason_code ?? null,
         sessionId: session_id ?? null,
+        // Corpus-loop opt-in. Text is only retained when the pilot
+        // explicitly checked the consent box at dismiss time. The
+        // PII pre-screen above already ran on this same string;
+        // sentinel-shaped credentials and PII can't reach storage.
+        contributeUpstream: contribute_upstream,
+        text: contribute_upstream ? text : null,
       })
       .returning();
     // Override report at /dashboard/overrides reads from this table.

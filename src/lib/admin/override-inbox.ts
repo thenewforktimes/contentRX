@@ -43,6 +43,12 @@ export interface InboxRow {
   source: string;
   status: OverrideStatus;
   createdAt: Date;
+  // Corpus-loop fields (Session 8). `text` is null unless the pilot
+  // explicitly opted in at dismiss time; `exportedAt` is set after
+  // the export script writes the row to the private corpus.
+  contributeUpstream: boolean;
+  text: string | null;
+  exportedAt: Date | null;
 }
 
 export interface InboxFilters {
@@ -102,6 +108,9 @@ export async function loadOverrideInbox(
       source: schema.violationOverrides.source,
       status: schema.violationOverrides.overrideStatus,
       createdAt: schema.violationOverrides.createdAt,
+      contributeUpstream: schema.violationOverrides.contributeUpstream,
+      text: schema.violationOverrides.text,
+      exportedAt: schema.violationOverrides.exportedAt,
     })
     .from(schema.violationOverrides)
     .leftJoin(
@@ -126,6 +135,9 @@ export async function loadOverrideInbox(
     source: r.source,
     status: r.status as OverrideStatus,
     createdAt: r.createdAt,
+    contributeUpstream: r.contributeUpstream,
+    text: r.text,
+    exportedAt: r.exportedAt,
   }));
 }
 

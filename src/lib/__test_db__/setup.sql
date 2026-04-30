@@ -84,6 +84,50 @@ CREATE UNIQUE INDEX subscriptions_user_active_idx
   ON subscriptions (user_id) WHERE status = 'active';
 CREATE INDEX subscriptions_user_id_idx ON subscriptions (user_id);
 
+-- violation_overrides ---------------------------------------------------
+CREATE TABLE violation_overrides (
+  id text PRIMARY KEY,
+  team_id text REFERENCES users(id) ON DELETE SET NULL,
+  user_id text REFERENCES users(id) ON DELETE SET NULL,
+  violation_id text,
+  standard_id text NOT NULL,
+  moment text,
+  text_hash text NOT NULL,
+  override_type text NOT NULL,
+  override_reason text,
+  source text NOT NULL,
+  override_stance text,
+  actor_role text,
+  rationale_expanded boolean,
+  time_to_action_ms int,
+  suggested_text_hash text,
+  applied_text_hash text,
+  override_reason_code text,
+  session_id text,
+  override_status text NOT NULL DEFAULT 'open',
+  override_status_updated_by text REFERENCES users(id) ON DELETE SET NULL,
+  override_status_updated_at timestamptz,
+  override_status_notes text,
+  contribute_upstream boolean NOT NULL DEFAULT false,
+  text text,
+  exported_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX violation_overrides_team_std_idx
+  ON violation_overrides (team_id, standard_id);
+CREATE INDEX violation_overrides_user_created_idx
+  ON violation_overrides (user_id, created_at);
+CREATE INDEX violation_overrides_team_std_moment_idx
+  ON violation_overrides (team_id, standard_id, moment);
+CREATE INDEX violation_overrides_violation_idx
+  ON violation_overrides (violation_id);
+CREATE INDEX violation_overrides_session_std_idx
+  ON violation_overrides (session_id, standard_id);
+CREATE INDEX violation_overrides_open_created_idx
+  ON violation_overrides (created_at)
+  WHERE override_status = 'open';
+
 -- violations ------------------------------------------------------------
 CREATE TABLE violations (
   id text PRIMARY KEY,

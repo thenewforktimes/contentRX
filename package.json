@@ -28,7 +28,8 @@
     "extract-strings": "tsx scripts/extract-customer-strings.ts",
     "lint:copy": "tsx scripts/lint-customer-strings.ts",
     "check:engine": "tsx scripts/check-copy-with-engine.ts",
-    "reset-usage": "dotenv -e .env.local -- tsx scripts/reset-usage.ts"
+    "reset-usage": "dotenv -e .env.local -- tsx scripts/reset-usage.ts",
+    "export-corpus": "dotenv -e .env.local -- tsx scripts/export-corpus.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.3",

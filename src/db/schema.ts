@@ -509,6 +509,29 @@ export const violationOverrides = pgTable(
       withTimezone: true,
     }),
     overrideStatusNotes: text("override_status_notes"),
+    // Corpus-loop opt-in (Session 8, post-launch). When the pilot
+    // explicitly checks "share with calibration" at dismiss time,
+    // `contribute_upstream` is true AND `text` carries the
+    // PII-screened plaintext that the founder needs to triage. Without
+    // consent, only `text_hash` lands; `text` stays null and the row
+    // can't be triaged to `addressed_corpus`.
+    //
+    // Privacy contract:
+    //   - default false; never set without an explicit pilot opt-in
+    //   - `text` is nullable; populated only when consent is true
+    //   - PII pre-screen runs at write time (same path as /api/check)
+    //   - per-entry display only on the founder surface; never
+    //     aggregated, never default-on (mirrors team_custom_examples
+    //     contributeUpstream rules per CLAUDE.md customer-data section)
+    contributeUpstream: boolean("contribute_upstream")
+      .notNull()
+      .default(false),
+    text: text("text"),
+    // Set by `scripts/export-corpus.ts` when the row's contribution
+    // lands in the private substrate's `pilot_corrections.json`. Used
+    // for idempotent re-runs (already-exported rows are skipped) and
+    // for the "exported [date]" pill on /admin/overrides.
+    exportedAt: timestamp("exported_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

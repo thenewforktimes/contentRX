@@ -209,14 +209,45 @@ export default async function AdminOverridesPage({
                   )}
                 </p>
               )}
-              <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                Status:{" "}
-                <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                  {STATUS_LABEL[row.status]}
+              {row.contributeUpstream && row.text ? (
+                <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950">
+                  <p className="text-xs font-medium text-emerald-900 dark:text-emerald-200">
+                    Pilot consented to share this string with calibration
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap font-mono text-sm text-emerald-950 dark:text-emerald-100">
+                    {row.text}
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+                  Text not retained &mdash; pilot did not opt in to share.
+                  Triage to corpus is unavailable for this row.
+                </p>
+              )}
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                <span>
+                  Status:{" "}
+                  <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                    {STATUS_LABEL[row.status]}
+                  </span>
                 </span>
+                {row.status === "addressed_corpus" && row.exportedAt && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    Exported {row.exportedAt.toISOString().slice(0, 10)}
+                  </span>
+                )}
+                {row.status === "addressed_corpus" && !row.exportedAt && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                    Pending export &mdash; run npm run export-corpus
+                  </span>
+                )}
               </p>
               {row.status === "open" && (
-                <TriageForm overrideId={row.id} action={triageAction} />
+                <TriageForm
+                  overrideId={row.id}
+                  action={triageAction}
+                  canAddToCorpus={row.contributeUpstream && row.text !== null}
+                />
               )}
             </li>
           ))}
@@ -229,9 +260,11 @@ export default async function AdminOverridesPage({
 function TriageForm({
   overrideId,
   action,
+  canAddToCorpus,
 }: {
   overrideId: string;
   action: (formData: FormData) => Promise<void>;
+  canAddToCorpus: boolean;
 }) {
   return (
     <form action={action} className="mt-3 flex flex-wrap items-center gap-2">
@@ -246,7 +279,13 @@ function TriageForm({
         type="submit"
         name="newStatus"
         value="addressed_corpus"
-        className="rounded-md bg-emerald-700 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
+        disabled={!canAddToCorpus}
+        title={
+          canAddToCorpus
+            ? undefined
+            : "Pilot did not opt in to share text; triage to corpus unavailable"
+        }
+        className="rounded-md bg-emerald-700 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-300 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300 dark:disabled:bg-emerald-900 dark:disabled:text-emerald-700"
       >
         Add to corpus
       </button>
