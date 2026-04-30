@@ -1,16 +1,20 @@
 /**
  * /pricing — public pricing page.
  *
- * Two self-serve SKUs at launch: Free and Pro. The Team plan is in
- * flight (per-seat pricing + admin features + shared quota pool, see
- * the 2026-04-28 strategy session); a "Talk to us" CTA serves
- * teams + enterprise until the self-serve Team flow lands.
+ * Five-tier structure (locked pre-pilot, 2026-04-30 strategy):
+ *   - Free:       20 checks/mo, 1 repo. Acquisition flywheel.
+ *   - Pro:        $39/mo ($32 annual). 2,000 checks/mo. Solo PMs / designers.
+ *   - Team:       $59/seat (5-seat min, annual). 5,000 checks/seat pooled.
+ *                 Sales-assisted at launch; self-serve post-pilot.
+ *   - Scale:      $1,499/mo flat. 10-seat cap, 50,000 checks/mo,
+ *                 multi-brand voices, agency multi-client. Sales-assisted.
+ *   - Enterprise: Coming soon. SSO/SAML, SCIM, audit logs, custom rules,
+ *                 dedicated CSM, SOC 2 Type II. $36k/yr floor when ready.
  *
- * Quotas re-anchored 2026-04-28 alongside the proportional-billing
- * rollout (1 check = up to 3,000 characters):
- *   - Free: 20 checks/month — meaningful flow audit, no scan-the-product
- *   - Pro:  1,000 checks/month at $29 — sustained daily use + bursts
- *   - Team: 1,000/seat shared, $29/seat — coming soon
+ * Metering shape (Phase 3 ships the engine; this page documents it):
+ *   - 1 standard check  = up to 300 characters of UI copy
+ *   - 1 document check  = up to 5,000 chars (8× standard equivalents)
+ *   - 1 surface check   = up to 50,000 chars (25× standard equivalents)
  */
 
 import type { Metadata } from "next";
@@ -22,47 +26,108 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 export const metadata: Metadata = {
   title: "Pricing. ContentRX",
   description:
-    "Free and Pro. All plans share the same engine, the same calibrated reviewer, and the same surfaces. The only difference is how much you use it.",
+    "Free for solo evaluation. $39/month for individual professionals. $59/seat for small teams. $1,499/mo flat for agencies and design-system orgs. Enterprise coming soon.",
 };
 
 export default function PricingPage() {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-20">
+    <main className="mx-auto max-w-6xl px-6 py-20">
       <header className="mb-12 max-w-3xl">
         <Eyebrow>Pricing</Eyebrow>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
           A staff content designer&apos;s verdict on every string you ship.
         </h1>
         <p className="mt-4 text-lg text-stone-700 dark:text-stone-300">
-          $29/month, in your repo, your PR, your Figma file, your terminal,
-          without ever leaving the work.
+          Free to start, $39/month to use it daily, $59/seat for teams.
+          In your repo, your PR, your Figma file, your terminal, without
+          ever leaving the work.
         </p>
         <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">
-          All plans share the same engine, the same calibrated reviewer,
-          and the same five surfaces. The only difference is how much you
-          use it.
+          All paid plans share the same engine, the same calibrated reviewer,
+          and the same five surfaces. The differences are seat count, monthly
+          checks, and admin features.
         </p>
       </header>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section
+        className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+        aria-label="Self-serve and small-team plans"
+      >
         <PlanCard
           name="Free"
           price="$0"
           quota="20 checks per month"
-          cta={{ href: "/sign-up", label: "Try free" }}
+          features={[
+            "1 repo",
+            "Standard checks only",
+            "All five surfaces",
+          ]}
+          cta={{ href: "/sign-up", label: "Start free" }}
         />
         <PlanCard
           name="Pro"
-          price="$29 / month"
-          quota="1,000 checks per month"
-          cta={{ href: "/sign-up?plan=pro", label: "Start Pro" }}
+          price="$39 / month"
+          priceSubnote="$32/month billed annually"
+          quota="2,000 checks per month"
+          features={[
+            "Standard, document, and surface checks",
+            "Custom rule overrides",
+            "Slack + Figma plugin + GitHub Action",
+          ]}
+          cta={{ href: "/sign-up?plan=pro", label: "Start free trial" }}
           emphasized
+          mostPopular
         />
         <PlanCard
           name="Team"
+          price="$59 / seat / month"
+          priceSubnote="annual billing, 5-seat minimum"
+          quota="5,000 checks per seat, pooled"
+          features={[
+            "Everything in Pro",
+            "Rule sharing across the team",
+            "Member management + analytics",
+            "GitHub PR bot at the org level",
+          ]}
+          cta={{
+            href: "mailto:hello@contentrx.io?subject=Team plan",
+            label: "Contact sales",
+          }}
+        />
+      </section>
+
+      <section
+        className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
+        aria-label="Larger-team and enterprise plans"
+      >
+        <PlanCard
+          name="Scale"
+          price="$1,499 / month"
+          priceSubnote="flat, billed annually"
+          quota="50,000 checks per month, pooled"
+          features={[
+            "Everything in Team",
+            "10-seat cap, multi-brand voices",
+            "Agency multi-client billing",
+            "$0.05 per check overage",
+          ]}
+          cta={{
+            href: "mailto:hello@contentrx.io?subject=Scale plan",
+            label: "Contact sales",
+          }}
+        />
+        <PlanCard
+          name="Enterprise"
           price="Coming soon"
-          quota="$29/seat, 1,000/seat shared pool, member management + analytics"
-          cta={{ href: "mailto:hello@contentrx.io?subject=Team plan", label: "Talk to us" }}
+          priceSubnote="SSO + SOC 2 Type II in progress"
+          quota="Custom checks, custom seats"
+          features={[
+            "Everything in Scale",
+            "SSO/SAML + SCIM + audit logs",
+            "Custom rules + dedicated CSM",
+            "Self-hosted option + IP indemnification",
+          ]}
+          unavailable
         />
       </section>
 
@@ -73,24 +138,33 @@ export default function PricingPage() {
             q="What's a check?"
             a={
               <>
-                One string up to 3,000 characters evaluated by the
-                engine (a verdict, a suggestion, a severity, a
-                confidence) in under a second. Longer text counts
-                proportionally (1 check per 3,000 characters, max 5
-                checks per call). The same cap applies on every surface:
-                web app, MCP, CLI, GitHub Action, Figma plugin.
+                One pass of the engine over your content. Three sizes:
+                a <strong>standard check</strong> covers up to 300
+                characters of UI copy (a button label, an error message,
+                a single string in context) and bills as 1 unit.
+                A <strong>document check</strong> covers an end-to-end
+                screen or article up to 5,000 characters and bills as 8
+                units. A <strong>surface check</strong> covers a full
+                PR diff or Figma frame up to 50,000 characters and
+                bills as 25 units. The estimator in your dashboard shows
+                the unit cost before you submit.
               </>
             }
+          />
+          <Faq
+            q="Why three sizes instead of one?"
+            a="Because reviewing one button label and reviewing a full PR diff aren't the same work. Standard checks run in under a second; document and surface checks do cross-string consistency reasoning that costs more. Tiered metering makes the cost match the work — you never overpay for a button label and never underpay for a full review."
           />
           <Faq
             q="What happens if I hit my limit on Pro?"
             a={
               <>
-                Pro caps at 1,000 checks per month. A hard cap, no
-                surprise overage charges. We email at 80% so you have
-                warning before you hit the limit. If you&apos;re bumping
-                1,000 most months, the Team plan ($29/seat, 1,000/seat
-                shared pool) is the right next step.{" "}
+                Pro caps at 2,000 standard-equivalent checks per month.
+                A hard cap, no surprise overage charges. We email at 80%
+                so you have warning before you hit the limit. If
+                you&apos;re bumping 2,000 most months, the Team plan
+                ($59/seat with 5,000 pooled per seat) is the right next
+                step.{" "}
                 <a
                   href="mailto:hello@contentrx.io?subject=Team plan"
                   className="underline underline-offset-2"
@@ -130,23 +204,8 @@ export default function PricingPage() {
             a="No. ContentRX includes the LLM. You bring your subscription; we handle the AI vendor relationship. No procurement conversation, no security review of another LLM provider, no separate Anthropic billing account to set up. One ContentRX API key covers all five surfaces."
           />
           <Faq
-            q="What about teams?"
-            a={
-              <>
-                Team is in early access: $29/seat with a shared quota
-                pool (1,000 checks per seat, pooled), member
-                management for the team owner, and team-level usage
-                analytics. For teams larger than 50 seats, custom
-                pricing. Same product, different conversation.{" "}
-                <a
-                  href="mailto:hello@contentrx.io?subject=Team plan"
-                  className="underline underline-offset-2"
-                >
-                  Email us
-                </a>{" "}
-                and we&apos;ll get you set up.
-              </>
-            }
+            q="When does Enterprise become available?"
+            a="When SOC 2 Type II is in hand and SSO/SAML/SCIM are wired. Enterprise pricing starts at $36,000/year and includes audit logs, custom rules, dedicated CSM, a self-hosted option, and IP indemnification. If you have an Enterprise procurement timeline, email us and we'll let you know when we're ready."
           />
           <Faq
             q="Where do I install it?"
@@ -163,7 +222,6 @@ export default function PricingPage() {
           />
         </dl>
       </section>
-
     </main>
   );
 }
@@ -171,15 +229,23 @@ export default function PricingPage() {
 function PlanCard({
   name,
   price,
+  priceSubnote,
   quota,
+  features,
   cta,
   emphasized = false,
+  mostPopular = false,
+  unavailable = false,
 }: {
   name: string;
   price: string;
+  priceSubnote?: string;
   quota: string;
-  cta: { href: string; label: string };
+  features: string[];
+  cta?: { href: string; label: string };
   emphasized?: boolean;
+  mostPopular?: boolean;
+  unavailable?: boolean;
 }) {
   return (
     <Card
@@ -188,23 +254,55 @@ function PlanCard({
       className="flex flex-col gap-4"
     >
       <div>
-        <h2 className="text-lg font-semibold">{name}</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{name}</h2>
+          {mostPopular && (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+              Most popular
+            </span>
+          )}
+          {unavailable && (
+            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
+              In progress
+            </span>
+          )}
+        </div>
         <p className="mt-1 text-2xl font-semibold">{price}</p>
+        {priceSubnote && (
+          <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
+            {priceSubnote}
+          </p>
+        )}
       </div>
       <div className="flex-1 space-y-2 text-sm text-stone-700 dark:text-stone-300">
         <p className="font-medium">{quota}</p>
-        <p className="text-stone-600 dark:text-stone-400">
-          All five surfaces.
-        </p>
+        <ul className="space-y-1 text-stone-600 dark:text-stone-400">
+          {features.map((feature) => (
+            <li key={feature} className="flex gap-2">
+              <span aria-hidden>·</span>
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
       </div>
-      <Link
-        href={cta.href}
-        className={buttonStyles({
-          variant: emphasized ? "primary" : "secondary",
-        })}
-      >
-        {cta.label}
-      </Link>
+      {cta ? (
+        <Link
+          href={cta.href}
+          className={buttonStyles({
+            variant: emphasized ? "primary" : "secondary",
+          })}
+        >
+          {cta.label}
+        </Link>
+      ) : (
+        <p className="text-xs text-stone-600 dark:text-stone-400">
+          We&apos;ll announce availability on{" "}
+          <Link href="/calibration" className="underline underline-offset-2">
+            /calibration
+          </Link>{" "}
+          and via email when SOC 2 Type II clears.
+        </p>
+      )}
     </Card>
   );
 }

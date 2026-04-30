@@ -5,6 +5,7 @@ import {
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -37,7 +38,7 @@ export const users = pgTable("users", {
   // "finishing setting up" placeholder until backfill / manual
   // cleanup. Acceptable trade-off vs. silently accumulating dup rows.
   email: text("email").notNull().unique(),
-  plan: text("plan", { enum: ["free", "pro", "team"] })
+  plan: text("plan", { enum: ["free", "pro", "scale", "team"] })
     .notNull()
     .default("free"),
   // Team-id-as-user-id pattern: a "team" is just a user.id (the
@@ -90,6 +91,26 @@ export const users = pgTable("users", {
   // appears as a fresh signup to themselves, but their anonymized
   // signal continues to feed engine calibration.
   pseudonymizedAt: timestamp("pseudonymized_at", { withTimezone: true }),
+  // Cost monitor (Phase 1, pre-pilot launch). Daily and monthly thresholds
+  // for runaway-script detection. Defaults are anomaly-catching, not
+  // normal-usage-capping — Free/Pro at typical Anthropic rates of
+  // $0.01–0.20 per check would never approach $50/day or $500/month.
+  // Lower per-user via /admin/costs when a pilot needs tighter control.
+  // When `costPauseActive` is true, /api/check returns 402 until the
+  // founder clears the flag.
+  dailyCostThresholdUsd: numeric("daily_cost_threshold_usd", {
+    precision: 10,
+    scale: 2,
+  })
+    .notNull()
+    .default("50.00"),
+  monthlyCostThresholdUsd: numeric("monthly_cost_threshold_usd", {
+    precision: 10,
+    scale: 2,
+  })
+    .notNull()
+    .default("500.00"),
+  costPauseActive: boolean("cost_pause_active").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -121,6 +142,48 @@ export const usage = pgTable(
       .defaultNow(),
   },
   (t) => [uniqueIndex("usage_user_month_idx").on(t.userId, t.month)],
+).enableRLS();
+
+// Per-call usage event log for daily-granularity cost roll-ups. Phase 1,
+// pre-pilot launch. The existing `usage` table is monthly-aggregate; this
+// table is per-call so the cost monitor can compute per-day spend without
+// over-counting. One row per /api/check completion. Read by /admin/costs
+// (per-day per-user spend) and the threshold-evaluation logic that pauses
+// users crossing daily/monthly cost caps.
+export const usageEvents = pgTable(
+  "usage_events",
+  {
+    id: cuid(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    segmentType: text("segment_type", {
+      enum: ["standard", "document", "surface"],
+    }).notNull(),
+    unitsConsumed: integer("units_consumed").notNull(),
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    cacheReadInputTokens: integer("cache_read_input_tokens")
+      .notNull()
+      .default(0),
+    cacheCreationInputTokens: integer("cache_creation_input_tokens")
+      .notNull()
+      .default(0),
+    modelId: text("model_id"),
+    estimatedCostUsd: numeric("estimated_cost_usd", {
+      precision: 10,
+      scale: 6,
+    }),
+  },
+  (t) => [
+    // Primary access pattern: sum estimated_cost_usd for one user across
+    // a time window (today, this month). The composite (userId, createdAt)
+    // covers both per-user and per-user-per-day rollups efficiently.
+    index("usage_events_user_created_idx").on(t.userId, t.createdAt),
+  ],
 ).enableRLS();
 
 export const subscriptions = pgTable(
@@ -1050,6 +1113,7 @@ export const teamInvitations = pgTable(
 
 export type User = InferSelectModel<typeof users>;
 export type Usage = InferSelectModel<typeof usage>;
+export type UsageEvent = InferSelectModel<typeof usageEvents>;
 export type Subscription = InferSelectModel<typeof subscriptions>;
 export type TeamMember = InferSelectModel<typeof teamMembers>;
 export type TeamInvitation = InferSelectModel<typeof teamInvitations>;

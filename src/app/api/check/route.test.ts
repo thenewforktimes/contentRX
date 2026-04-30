@@ -134,7 +134,9 @@ beforeEach(async () => {
   rateLimit.current = { success: true, reset: 0 };
 });
 
-async function seedAuthedUser(plan: "free" | "pro" | "team" = "pro"): Promise<string> {
+async function seedAuthedUser(
+  plan: "free" | "pro" | "scale" | "team" = "pro",
+): Promise<string> {
   return await seedUser(harness, {
     id: "alice",
     plan,
@@ -245,52 +247,57 @@ describe("/api/check — auth + input", () => {
     expect(res.status).toBe(400);
   });
 
-  it("rejects text longer than the 15,000-char hard ceiling", async () => {
-    // Defense against pasted-codebase abuse: even with proportional
-    // billing, a single call can't exceed MAX_CHECK_CHARS = 15,000
-    // (CHARS_PER_CHECK 3,000 × MAX_CHECKS_PER_CALL 5). The message
-    // must be honest about the cap applying across every surface
-    // (web, MCP, CLI, GHA, Figma) so a routed user doesn't bounce
-    // off the same 400 from the next surface they try.
+  it("rejects text longer than the 50,000-char hard ceiling", async () => {
+    // Defense against pasted-codebase abuse: even with tier-aware
+    // billing, a single call can't exceed MAX_INPUT_CHARS = 50,000
+    // (the surface-tier natural cap). The message must be honest
+    // about the cap applying across every surface (web, MCP, CLI,
+    // GHA, Figma) so a routed user doesn't bounce off the same 400
+    // from the next surface they try.
     await seedAuthedUser();
-    const res = await POST(makeReq({ text: "x".repeat(15_001) }));
+    const res = await POST(makeReq({ text: "x".repeat(50_001) }));
     expect(res.status).toBe(400);
     const body = await res.json();
     const messageBlob = JSON.stringify(body);
-    expect(messageBlob).toMatch(/15,000 characters/);
-    expect(messageBlob).toMatch(/3,000/); // CHARS_PER_CHECK in the message
+    expect(messageBlob).toMatch(/50,000/);
     expect(messageBlob.toLowerCase()).toContain("every surface");
     expect(messageBlob).toMatch(/MCP|GitHub Action/);
   });
 
-  it("accepts text right at the 15,000-char ceiling", async () => {
-    // Boundary check — exactly 15,000 should pass and consume 5 checks.
+  it("accepts text right at the 50,000-char ceiling at surface tier", async () => {
+    // Boundary check — exactly 50,000 chars at surface tier should
+    // pass and bill 25 units flat.
     await seedAuthedUser("pro");
     cannedEval.current = VIOLATION_RESULT;
-    const res = await POST(makeReq({ text: "x".repeat(15_000) }));
+    const res = await POST(
+      makeReq({ text: "x".repeat(50_000), segment_type: "surface" }),
+    );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.usage.checks_consumed).toBe(5);
+    expect(body.usage.checks_consumed).toBe(25);
+    expect(body.metering.tier).toBe("surface");
+    expect(body.metering.units_consumed).toBe(25);
   });
 });
 
 // ---------------------------------------------------------------------------
-// Proportional billing — re-anchored 2026-04-28 to 3,000 chars per check
+// Tier-aware metering — pre-pilot launch (300-char standard / 8x doc / 25x surface)
 // ---------------------------------------------------------------------------
 
-describe("/api/check — proportional billing", () => {
-  // Boundary table: every step on the ceil(text.length / 3000) ladder
-  // gets a test so a future refactor that breaks the math at the
-  // boundaries (off-by-one, wrong rounding) fails loudly.
+describe("/api/check — standard tier (default) proportional billing", () => {
+  // Standard tier bills 1 unit per 300 chars, rounded up. Boundary
+  // table catches off-by-ones (a regression that turns 300→2 units or
+  // 301→1 unit shows up loudly). Empty input is excluded from this
+  // table because the request schema rejects 0-length strings.
   const cases = [
-    { len: 1, expected: 1, label: "1 char → 1 check" },
-    { len: 2_999, expected: 1, label: "2,999 chars → 1 check (just under boundary)" },
-    { len: 3_000, expected: 1, label: "3,000 chars → 1 check (at boundary)" },
-    { len: 3_001, expected: 2, label: "3,001 chars → 2 checks (just over boundary)" },
-    { len: 6_000, expected: 2, label: "6,000 chars → 2 checks" },
-    { len: 6_001, expected: 3, label: "6,001 chars → 3 checks" },
-    { len: 14_999, expected: 5, label: "14,999 chars → 5 checks" },
-    { len: 15_000, expected: 5, label: "15,000 chars → 5 checks (ceiling)" },
+    { len: 1, expected: 1, label: "1 char → 1 unit" },
+    { len: 299, expected: 1, label: "299 chars → 1 unit (just under boundary)" },
+    { len: 300, expected: 1, label: "300 chars → 1 unit (at boundary)" },
+    { len: 301, expected: 2, label: "301 chars → 2 units (just over boundary)" },
+    { len: 600, expected: 2, label: "600 chars → 2 units" },
+    { len: 601, expected: 3, label: "601 chars → 3 units" },
+    { len: 1_500, expected: 5, label: "1,500 chars → 5 units" },
+    { len: 3_000, expected: 10, label: "3,000 chars → 10 units" },
   ];
 
   for (const c of cases) {
@@ -302,31 +309,103 @@ describe("/api/check — proportional billing", () => {
       const body = await res.json();
       expect(body.usage.checks_consumed).toBe(c.expected);
       expect(body.usage.used).toBe(c.expected);
+      expect(body.metering.tier).toBe("standard");
+      expect(body.metering.units_consumed).toBe(c.expected);
+      expect(body.metering.input_chars).toBe(c.len);
     });
   }
 
   it("rejects with 402 when the proportional cost exceeds remaining quota", async () => {
-    // The all-or-nothing claim: a 4,500-char input costs 2 checks,
-    // and a Free user with 19/20 checks already used can't run it
-    // even though they have 1 slot remaining. No partial fulfillment.
+    // The all-or-nothing claim: a 600-char input at standard tier
+    // costs 2 units, and a Free user with 19/20 already used can't
+    // run it even though they have 1 slot remaining. No partial
+    // fulfillment.
     const userId = await seedAuthedUser("free");
-    // Directly bump the user's usage to 19/20 by inserting a usage row.
     await harness.db
       .insert(schema.usage)
       .values({ userId, month: new Date().toISOString().slice(0, 7), count: 19 });
     cannedEval.current = VIOLATION_RESULT;
 
-    // 4,500 chars = 2 checks needed; only 1 slot left = 402.
-    const res = await POST(makeReq({ text: "x".repeat(4_500) }));
+    const res = await POST(makeReq({ text: "x".repeat(600) }));
     expect(res.status).toBe(402);
     const body = await res.json();
     expect(body.checks_required).toBe(2);
-    // Usage row didn't budge — the claim was atomic, no partial spend.
     const [row] = await harness.db
       .select({ count: schema.usage.count })
       .from(schema.usage)
       .where(eq(schema.usage.userId, userId));
     expect(row.count).toBe(19);
+  });
+});
+
+describe("/api/check — document tier", () => {
+  it("bills 8 units flat regardless of input length", async () => {
+    await seedAuthedUser("pro");
+    cannedEval.current = VIOLATION_RESULT;
+
+    // Short input declared as document — caller chose to pay flat.
+    const shortRes = await POST(
+      makeReq({ text: "Save changes", segment_type: "document" }),
+    );
+    expect(shortRes.status).toBe(200);
+    const shortBody = await shortRes.json();
+    expect(shortBody.usage.checks_consumed).toBe(8);
+    expect(shortBody.metering.tier).toBe("document");
+    expect(shortBody.metering.units_consumed).toBe(8);
+  });
+
+  it("still bills 8 units flat at the document-tier sweet spot (~5,000 chars)", async () => {
+    await seedAuthedUser("pro");
+    cannedEval.current = VIOLATION_RESULT;
+    const res = await POST(
+      makeReq({ text: "x".repeat(5_000), segment_type: "document" }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.usage.checks_consumed).toBe(8);
+    expect(body.metering.tier).toBe("document");
+    expect(body.metering.input_chars).toBe(5_000);
+  });
+});
+
+describe("/api/check — surface tier", () => {
+  it("bills 25 units flat regardless of input length", async () => {
+    await seedAuthedUser("pro");
+    cannedEval.current = VIOLATION_RESULT;
+
+    const res = await POST(
+      makeReq({ text: "x".repeat(10_000), segment_type: "surface" }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.usage.checks_consumed).toBe(25);
+    expect(body.metering.tier).toBe("surface");
+    expect(body.metering.units_consumed).toBe(25);
+  });
+});
+
+describe("/api/check — metering response block (schema 2.1.0)", () => {
+  it("includes a top-level `metering` block on every successful response", async () => {
+    await seedAuthedUser("pro");
+    cannedEval.current = VIOLATION_RESULT;
+
+    const res = await POST(makeReq({ text: "Save changes" }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.metering).toBeDefined();
+    expect(body.metering.tier).toBe("standard");
+    expect(body.metering.units_consumed).toBe(1);
+    expect(body.metering.input_chars).toBe(12);
+    expect(body.metering.input_segments).toBe(1);
+    expect(body.metering.split_applied).toBe(false);
+  });
+
+  it("rejects unknown segment_type values with a 400 (zod schema)", async () => {
+    await seedAuthedUser();
+    const res = await POST(
+      makeReq({ text: "Save changes", segment_type: "novel" }),
+    );
+    expect(res.status).toBe(400);
   });
 });
 
@@ -343,7 +422,7 @@ describe("/api/check — happy path", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    expect(body.schema_version).toBe("2.0.0");
+    expect(body.schema_version).toBe("2.1.0");
     expect(body.verdict).toBe("violation");
     expect(Array.isArray(body.violations)).toBe(true);
     expect(body.violations).toHaveLength(1);
@@ -503,5 +582,55 @@ describe("/api/check — engine failure", () => {
     expect(body.error).toBe("Evaluation service unavailable");
     // The internal error message must not leak.
     expect(JSON.stringify(body)).not.toContain("python engine down");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cost-pause middleware (Phase 4 cost monitor)
+// ---------------------------------------------------------------------------
+
+describe("/api/check — cost pause", () => {
+  it("returns 402 with a paused message when cost_pause_active is true", async () => {
+    const userId = await seedAuthedUser("pro");
+    await harness.db
+      .update(schema.users)
+      .set({ costPauseActive: true })
+      .where(eq(schema.users.id, userId));
+    cannedEval.current = PASS_RESULT;
+    // Clear accumulated mock calls from earlier tests in the suite —
+    // we only want to assert the engine wasn't called for THIS request.
+    const { evaluate } = await import("@/lib/evaluate");
+    vi.mocked(evaluate).mockClear();
+
+    const res = await POST(makeReq({ text: "anything" }));
+    expect(res.status).toBe(402);
+    const body = await res.json();
+    expect(body.paused).toBe(true);
+    expect(body.error).toMatch(/paused/i);
+    // Engine must NOT be called for paused users.
+    expect(vi.mocked(evaluate)).not.toHaveBeenCalled();
+  });
+
+  it("writes a usage_events row on every successful check", async () => {
+    const userId = await seedAuthedUser("pro");
+    cannedEval.current = PASS_RESULT;
+
+    const res = await POST(
+      makeReq({ text: "Save changes", segment_type: "standard" }),
+    );
+    expect(res.status).toBe(200);
+
+    const events = await harness.db
+      .select()
+      .from(schema.usageEvents)
+      .where(eq(schema.usageEvents.userId, userId));
+    expect(events).toHaveLength(1);
+    expect(events[0]!.segmentType).toBe("standard");
+    expect(events[0]!.unitsConsumed).toBe(1);
+    expect(events[0]!.inputTokens).toBe(800);
+    expect(events[0]!.outputTokens).toBe(50);
+    expect(parseFloat(events[0]!.estimatedCostUsd ?? "0")).toBeGreaterThan(
+      0,
+    );
   });
 });

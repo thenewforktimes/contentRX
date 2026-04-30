@@ -343,10 +343,10 @@ describe("recomputeVerdict", () => {
     const out = recomputeVerdict({
       violations: [],
       passes: [{ standard_id: "GRM-01" }],
-      schema_version: "2.0.0",
+      schema_version: "2.1.0",
     });
     expect(out.passes).toEqual([{ standard_id: "GRM-01" }]);
-    expect(out.schema_version).toBe("2.0.0");
+    expect(out.schema_version).toBe("2.1.0");
   });
 
   it("overrides a stale overall_verdict on the input", () => {

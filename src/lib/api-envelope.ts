@@ -66,7 +66,16 @@
 //         Cutover is atomic: zero customers in flight; no deprecation
 //         window; no field-level shim for old clients. The Python
 //         engine bumps from 4.6.1 → 4.7.0 in lock-step.
-export const SCHEMA_VERSION = "2.0.0" as const;
+// 2.1.0 — Pre-pilot metering rebuild. Adds top-level `metering` block
+//         to /api/check responses: `{tier, units_consumed, input_chars,
+//         input_segments, split_applied}`. Tier is one of
+//         `standard | document | surface` and units_consumed is
+//         denominated in standard-check equivalents (1× standard /
+//         8× document / 25× surface). Additive — clients that don't
+//         read `metering` continue to work unchanged. The /api/check
+//         request schema gains an optional `segment_type` parameter
+//         (defaults to `"standard"`).
+export const SCHEMA_VERSION = "2.1.0" as const;
 
 /**
  * Adds `schema_version` and `warnings` to a response payload. Existing

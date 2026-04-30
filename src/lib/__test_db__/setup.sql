@@ -25,6 +25,9 @@ CREATE TABLE users (
   ditto_api_key_encrypted text,
   preference_opted_out_at timestamptz,
   pseudonymized_at timestamptz,
+  daily_cost_threshold_usd numeric(10, 2) NOT NULL DEFAULT 50.00,
+  monthly_cost_threshold_usd numeric(10, 2) NOT NULL DEFAULT 500.00,
+  cost_pause_active boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -42,6 +45,24 @@ CREATE TABLE usage (
 );
 
 CREATE UNIQUE INDEX usage_user_month_idx ON usage (user_id, month);
+
+-- usage_events ----------------------------------------------------------
+CREATE TABLE usage_events (
+  id text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  segment_type text NOT NULL,
+  units_consumed int NOT NULL,
+  input_tokens int NOT NULL DEFAULT 0,
+  output_tokens int NOT NULL DEFAULT 0,
+  cache_read_input_tokens int NOT NULL DEFAULT 0,
+  cache_creation_input_tokens int NOT NULL DEFAULT 0,
+  model_id text,
+  estimated_cost_usd numeric(10, 6)
+);
+
+CREATE INDEX usage_events_user_created_idx
+  ON usage_events (user_id, created_at);
 
 -- subscriptions ---------------------------------------------------------
 CREATE TABLE subscriptions (
