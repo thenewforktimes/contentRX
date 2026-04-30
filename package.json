@@ -9,9 +9,10 @@
   },
   "scripts": {
     "check:no-dup-files": "bash scripts/check_no_dup_files.sh",
-    "predev": "npm run check:no-dup-files",
+    "fetch:substrate": "bash scripts/fetch-substrate.sh",
+    "predev": "npm run check:no-dup-files && npm run fetch:substrate",
     "dev": "next dev",
-    "prebuild": "npm run check:no-dup-files",
+    "prebuild": "npm run check:no-dup-files && npm run fetch:substrate",
     "build": "next build",
     "analyze": "ANALYZE=true next build",
     "start": "next start",

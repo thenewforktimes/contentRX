@@ -77,3 +77,9 @@ evals/results/
 # durability across worktrees.
 _private/
 
+# Private substrate (ADR 2026-04-25): the engine loads this at runtime
+# but the JSON files live in a separate private repo. Local dev clones
+# them in via `npm run fetch:substrate` (or manually); Vercel does the
+# same at build time using SUBSTRATE_TOKEN. See scripts/fetch-substrate.sh.
+src/content_checker/standards/private/
+
