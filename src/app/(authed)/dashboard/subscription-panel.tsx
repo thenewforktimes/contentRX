@@ -183,7 +183,11 @@ function PaidCard({
   currentPeriodEnd,
   subscriptionStatus,
 }: {
-  plan: "pro" | "team";
+  // Scale is sales-assisted at launch (no Stripe Checkout), so a Scale
+  // user lands here only via founder-side provisioning. The label
+  // mapping below renders "Scale" for that case; everything else stays
+  // a Pro-or-Team flow.
+  plan: "pro" | "scale" | "team";
   seats: number;
   currentPeriodEnd: string | null;
   subscriptionStatus: string | null;
@@ -214,7 +218,12 @@ function PaidCard({
     }
   }
 
-  const planLabel = plan === "pro" ? "Pro" : `Team (${seats} seats)`;
+  const planLabel =
+    plan === "pro"
+      ? "Pro"
+      : plan === "scale"
+        ? "Scale"
+        : `Team (${seats} seats)`;
   const visibleStatus =
     subscriptionStatus !== null && subscriptionStatus !== "active"
       ? subscriptionStatus

@@ -21,10 +21,17 @@ export function QuotaExhaustedEmail({
 }: {
   appUrl: string;
   quota: number;
-  plan: "free" | "pro" | "team";
+  plan: "free" | "pro" | "scale" | "team";
   resetsAt: string;
 }) {
-  const planLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Team";
+  const planLabel =
+    plan === "free"
+      ? "Free"
+      : plan === "pro"
+        ? "Pro"
+        : plan === "scale"
+          ? "Scale"
+          : "Team";
   return (
     <EmailShell preview={`Used all ${quota} ${planLabel} checks for the month.`}>
       <Heading as="h1" style={{ fontSize: 20, marginBottom: 12 }}>

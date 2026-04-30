@@ -22,6 +22,14 @@ import { FindingAdjustModal } from "@/components/finding-adjust-modal";
 import { FindingMakeRuleModal } from "@/components/finding-make-rule-modal";
 import { Pill } from "@/components/ui/pill";
 import type { PublicCheckEnvelope, PublicViolation } from "@/lib/api-envelope";
+import {
+  CHECK_TIERS,
+  MAX_INPUT_CHARS,
+  STANDARD_CHAR_CAP,
+  UNIT_COST_FLAT,
+  type CheckTier,
+  meter,
+} from "@/lib/metering";
 import type { Plan } from "@/lib/quotas";
 import {
   humanizeReviewReason,
@@ -54,23 +62,19 @@ type CheckEnvelope = PublicCheckEnvelope & {
   submittedText: string;
 };
 
-// Mirrors the /api/check billing constants. Kept in sync by hand
-// because TypeScript-importing zod schemas across the route boundary
-// adds overhead for two numbers. If either number changes, update
-// route.ts as well — the API enforces independently.
-const CHARS_PER_CHECK = 3_000;
-const MAX_CHECKS_PER_CALL = 5;
-const MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL; // 15_000
-
-/**
- * Proportional billing preview: 1 check per CHARS_PER_CHECK characters,
- * rounded up. Capped at MAX_CHECKS_PER_CALL so the live counter never
- * shows numbers larger than the API will accept.
- */
-function checksFor(text: string): number {
-  if (text.length === 0) return 0;
-  return Math.min(MAX_CHECKS_PER_CALL, Math.ceil(text.length / CHARS_PER_CHECK));
-}
+// Tier metadata for the selector. Labels stay user-facing; the
+// underlying tier values (`standard | document | surface`) match the
+// /api/check `segment_type` enum.
+const TIER_LABELS: Record<CheckTier, string> = {
+  standard: "Standard",
+  document: "Document",
+  surface: "Surface",
+};
+const TIER_HINTS: Record<CheckTier, string> = {
+  standard: `1 unit per ${STANDARD_CHAR_CAP} chars`,
+  document: `${UNIT_COST_FLAT.document} units flat`,
+  surface: `${UNIT_COST_FLAT.surface} units flat`,
+};
 
 /**
  * Structured error states the inline check can render. Mapping API
@@ -90,6 +94,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
   const [text, setText] = useState(
     "Unable to complete operation. Please contact administrator.",
   );
+  const [tier, setTier] = useState<CheckTier>("standard");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<CheckError | null>(null);
   const [response, setResponse] = useState<CheckEnvelope | null>(null);
@@ -102,7 +107,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
       const res = await fetch("/api/check", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, source: "dashboard" }),
+        body: JSON.stringify({ text, source: "dashboard", segment_type: tier }),
       });
       if (!res.ok) {
         const body = await res.text();
@@ -195,22 +200,57 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
     return { kind: "unknown", status, message };
   }
 
+  const decision = meter(text, tier);
+  const overLimit = text.length > MAX_INPUT_CHARS;
+
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <label
-          htmlFor="explain-text"
-          className="block text-sm font-medium text-stone-700 dark:text-stone-300"
-        >
-          Text to evaluate
-        </label>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <label
+            htmlFor="explain-text"
+            className="block text-sm font-medium text-stone-700 dark:text-stone-300"
+          >
+            Text to evaluate
+          </label>
+          <fieldset className="flex items-center gap-2 text-xs">
+            <legend className="sr-only">Check tier</legend>
+            <span className="text-stone-500 dark:text-stone-400">
+              Tier
+            </span>
+            <div
+              role="radiogroup"
+              aria-label="Check tier"
+              className="inline-flex rounded-md border border-stone-300 bg-white p-0.5 dark:border-stone-700 dark:bg-stone-950"
+            >
+              {CHECK_TIERS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  role="radio"
+                  aria-checked={tier === t}
+                  onClick={() => setTier(t)}
+                  className={`rounded-sm px-2 py-1 transition ${
+                    tier === t
+                      ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
+                      : "text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100"
+                  }`}
+                  title={TIER_HINTS[t]}
+                >
+                  {TIER_LABELS[t]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        </div>
         <textarea
           id="explain-text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={4}
+          placeholder="Try pasting a button label, an error message, or a paragraph from your latest PR"
           className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-sm text-stone-900 focus:outline-none focus:ring-1 dark:bg-stone-950 dark:text-stone-100 ${
-            text.length > MAX_CHECK_CHARS
+            overLimit
               ? "border-red-500 focus:border-red-500 focus:ring-red-500"
               : "border-stone-300 focus:border-stone-500 focus:ring-neutral-500 dark:border-stone-700"
           }`}
@@ -218,9 +258,9 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
         <div className="flex items-center justify-between gap-3 text-xs">
           <span
             className={`tabular-nums ${
-              text.length > MAX_CHECK_CHARS
+              overLimit
                 ? "text-red-600 dark:text-red-400"
-                : text.length > MAX_CHECK_CHARS * 0.9
+                : text.length > MAX_INPUT_CHARS * 0.9
                   ? "text-amber-600 dark:text-amber-400"
                   : "text-stone-500 dark:text-stone-300"
             }`}
@@ -230,23 +270,24 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
               <>
                 {" · "}
                 <strong className="font-semibold">
-                  {checksFor(text)}{" "}
-                  {checksFor(text) === 1 ? "check" : "checks"}
-                </strong>
+                  {decision.unitsConsumed}{" "}
+                  {decision.unitsConsumed === 1 ? "unit" : "units"}
+                </strong>{" "}
+                ({TIER_LABELS[tier].toLowerCase()})
               </>
             )}
           </span>
-          {text.length > MAX_CHECK_CHARS ? (
+          {overLimit ? (
             <span className="text-right text-red-600 dark:text-red-400">
-              Too long. Split into pieces ≤ {MAX_CHECK_CHARS.toLocaleString()}{" "}
-              chars, or use{" "}
+              Too long. Split into pieces ≤{" "}
+              {MAX_INPUT_CHARS.toLocaleString()} chars, or use{" "}
               <Link href="/install" className="underline underline-offset-2">
                 another surface →
               </Link>
             </span>
           ) : (
             <span className="text-stone-500 dark:text-stone-300">
-              1 check per {CHARS_PER_CHECK.toLocaleString()} chars
+              {TIER_HINTS[tier]}
             </span>
           )}
         </div>
@@ -256,7 +297,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           disabled={
             loading ||
             text.trim().length === 0 ||
-            text.length > MAX_CHECK_CHARS
+            overLimit
           }
           className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
         >

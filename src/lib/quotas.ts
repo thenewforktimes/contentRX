@@ -2,23 +2,29 @@
  * Plan → monthly evaluation quota.
  *
  * Team quota scales by seat count from the subscriptions row.
- * Re-anchored 2026-04-28 alongside the proportional-billing rollout
- * (1 check = up to 3,000 characters, see src/app/api/check/route.ts).
+ * Re-anchored 2026-04-30 alongside the pre-pilot launch (300-char
+ * standard tier; document at 8 units flat; surface at 25 units flat —
+ * see src/lib/metering.ts).
  *
- * Pricing rationale (per the 2026-04-28 strategy session):
- *   - free:  20 checks lets a new user audit one full flow with margin
- *            for setup mistakes, without giving away enough to scan a
- *            whole product. Conversion-funnel sized.
- *   - pro:   1,000 checks at $29/month = $0.029/check. Comfortable for
- *            sustained daily use (~33/day) AND burst months. Tight
- *            enough that scanning a 1,500-string product in one month
- *            is just barely impossible — forces upgrade or multi-month
- *            spread, both of which are good for retention.
- *   - team:  1,000/seat shared pool. Same per-check economics as Pro;
- *            value-add is the shared pool + admin features, not a
- *            per-seat discount. Industry norm: per-seat is flat or
- *            higher for teams (Linear, Vercel, Slack), discounts only
- *            appear at enterprise scale via sales conversations.
+ * Pricing rationale (per the 2026-04-30 launch pricing):
+ *   - free:  20 checks lets a new user audit a couple of strings with
+ *            margin for setup mistakes, without giving away enough to
+ *            scan a whole product. Acquisition flywheel.
+ *   - pro:   2,000 standard-equivalent checks at $39/month
+ *            ($0.0195/check at the listed rate). Comfortable for
+ *            sustained daily use AND burst months on standard checks.
+ *            A document call costs 8 units; a surface call costs 25;
+ *            a Pro user can comfortably mix ~250 standard + 50 document
+ *            + 8 surface checks per month.
+ *   - team:  5,000 standard-equivalents per seat, pooled across the
+ *            team. Pooling matters because team usage isn't uniform —
+ *            one designer scanning a release on the last week of the
+ *            sprint hits 1,000+ on their own; pooling absorbs that
+ *            without the admin re-licensing.
+ *   - scale: 50,000 standard-equivalents pooled, flat $1,499/mo. 10
+ *            seats max. For agencies running multiple clients and
+ *            in-house design-system teams. Above 50,000 the customer
+ *            is on the Enterprise sales motion.
  *
  * Revisit at 50 paying customers — see the strategy session notes for
  * the metrics that should drive any change (p50/p95 monthly usage,
@@ -27,14 +33,16 @@
 
 export const QUOTAS = {
   free: 20,
-  pro: 1000,
-  team: 1000, // per seat, pooled across the team
+  pro: 2_000,
+  team: 5_000, // per seat, pooled across the team
+  scale: 50_000, // pooled across the team (10-seat cap)
 } as const;
 
 export type Plan = keyof typeof QUOTAS;
 
 export function monthlyQuota(plan: Plan, seats = 1): number {
   if (plan === "team") return QUOTAS.team * Math.max(seats, 1);
+  // Scale is a flat pool — seat count doesn't scale the cap.
   return QUOTAS[plan];
 }
 

@@ -22,10 +22,17 @@ export function QuotaWarningEmail({
   appUrl: string;
   used: number;
   quota: number;
-  plan: "free" | "pro" | "team";
+  plan: "free" | "pro" | "scale" | "team";
 }) {
   const remaining = Math.max(0, quota - used);
-  const planLabel = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Team";
+  const planLabel =
+    plan === "free"
+      ? "Free"
+      : plan === "pro"
+        ? "Pro"
+        : plan === "scale"
+          ? "Scale"
+          : "Team";
   return (
     <EmailShell
       preview={`${remaining} checks left this month on your ${planLabel} plan.`}

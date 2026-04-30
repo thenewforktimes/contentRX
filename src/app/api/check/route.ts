@@ -26,12 +26,18 @@ import { appUrl as emailAppUrl, sendEmail } from "@/lib/email";
 import { AUDIENCES, CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 import { evaluate, type EvaluateResponse } from "@/lib/evaluate";
 import { hashText, logViolations } from "@/lib/log-violations";
+import {
+  MAX_INPUT_CHARS,
+  meter,
+  meteringBlock,
+  meterTierSchema,
+} from "@/lib/metering";
 import { fetchPrecedentsForCheck } from "@/lib/precedents";
 import {
   detectSensitivePatterns,
   sensitiveDataErrorMessage,
 } from "@/lib/pii-screen";
-import { currentMonth, monthlyQuota } from "@/lib/quotas";
+import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { logSafeError } from "@/lib/safe-error-log";
 import { checkRateLimit } from "@/lib/ratelimit";
 import {
@@ -49,29 +55,24 @@ import { QuotaWarningEmail } from "@/emails/quota-warning";
 
 // ----- billing model ---------------------------------------------------------
 //
-// One check = up to CHARS_PER_CHECK characters of input. Longer text is
-// stepped: 3,001-6,000 chars = 2 checks, 6,001-9,000 = 3, etc. Hard
-// ceiling at MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL.
+// Tier-aware metering (pre-pilot launch, schema 2.1.0). The /api/check
+// route accepts an optional `segment_type` field; if absent, the call
+// defaults to standard tier. The actual unit math lives in
+// `src/lib/metering.ts` so the dashboard's real-time estimator can
+// import the same function and stay in lock-step.
 //
-// 3,000-char unit (re-anchored 2026-04-28): a generous editorial
-// "paragraph" is 250-750 chars; 3,000 chars covers ~5 paragraphs, which
-// is far more than any single tactical UI string. The 5,000 unit from
-// the initial proportional rollout was overgenerous — most legitimate
-// long-form copy fits comfortably in 3,000, and tighter unit means
-// less cost-per-call exposure if a free user concatenates content.
+//   - standard (default): 1 unit per 300 characters of input, rounded
+//                         up. A 50-char button label is 1 unit; a
+//                         600-char paragraph is 2; a 1,500-char screen
+//                         is 5.
+//   - document: 8 units flat, regardless of length. Caller declares
+//               this for end-to-end help articles, full empty states,
+//               multi-paragraph onboarding flows.
+//   - surface:  25 units flat. Caller declares this for full PR diffs,
+//               complete Figma frames, multi-file content audits.
 //
-// These constants ARE the contract. Change either and the API response,
-// the web app counter (explain-client.tsx mirrors), and any client-side
-// preview need to stay in sync.
-const CHARS_PER_CHECK = 3_000;
-const MAX_CHECKS_PER_CALL = 5;
-const MAX_CHECK_CHARS = CHARS_PER_CHECK * MAX_CHECKS_PER_CALL; // 15_000
-
-/** Proportional billing: 1 check per CHARS_PER_CHECK characters, rounded up. */
-function checksFor(text: string): number {
-  if (text.length === 0) return 0;
-  return Math.min(MAX_CHECKS_PER_CALL, Math.ceil(text.length / CHARS_PER_CHECK));
-}
+// Hard input ceiling is MAX_INPUT_CHARS = 50,000 across all tiers.
+// Beyond that the caller splits into multiple calls.
 
 // CORS allowlist (audit S5): see `lib/cors.ts`. The Figma plugin
 // iframe sends `Origin: null`; the marketing site is same-origin to
@@ -84,40 +85,46 @@ export async function OPTIONS(req: Request) {
 }
 
 const RequestSchema = z.object({
-  // Hard ceiling: 25,000 characters per call. Proportional billing
-  // applies (1 check per 5,000 chars, see CHARS_PER_CHECK below) so a
-  // single call can cost up to MAX_CHECKS_PER_CALL = 5 quota units.
+  // Hard ceiling: MAX_INPUT_CHARS = 50,000 per call. Tier-aware
+  // metering bills the call by `segment_type` (1 unit per 300 chars at
+  // standard, 8 flat at document, 25 flat at surface). A single call
+  // can cost from 1 unit (button label at standard) to 167 units
+  // (50,000 chars at standard — economically silly, the caller would
+  // declare surface for 25 units instead).
   //
-  // Why proportional instead of a flat 1-check-per-call cap:
-  //   - A flat cap at 25,000 would let a Free user spend 1 check on a
-  //     25,000-char block (~$0.25 in Anthropic input tokens). That's
-  //     500x the leverage of a tactical 50-char button label and
-  //     reintroduces the gaming vector PR-224 was designed to close.
-  //   - Proportional billing makes the gamer's leverage equal to
-  //     everyone else's: 1 check buys 5,000 chars, period. Long-form
-  //     legitimate users (FAQ entries, error pages) pay for what they
-  //     consume; nobody gets locked out for having 2,500-char copy.
+  // Why a hard ceiling at 50,000 instead of letting the caller send
+  // arbitrary length: defense-in-depth against runaway tokens reaching
+  // Anthropic. The engine has its own MAX_CONTENT_LENGTH = 100,000 as
+  // a backstop, but /api/check is the only public surface and bears
+  // primary responsibility.
   //
-  // Same cap applies to every surface (web app, MCP, CLI, GitHub
-  // Action, Figma plugin). The error message names them explicitly so
-  // a user routed here from one surface knows the cap follows them.
-  //
-  // Engine's MAX_CONTENT_LENGTH=100_000 is unchanged — defense-in-depth
-  // backstop if anything ever bypasses /api/check.
+  // Beyond 50,000 chars: callers must split into multiple calls.
+  // Each surface (CLI, GitHub Action, MCP) implements split client-side
+  // and submits per-batch. Future work may push this server-side via a
+  // batch endpoint.
   text: z
     .string()
     .min(1)
-    .max(MAX_CHECK_CHARS, {
+    .max(MAX_INPUT_CHARS, {
       message:
-        `Text is too long (max ${MAX_CHECK_CHARS.toLocaleString()} characters per check). ` +
-        `ContentRX bills 1 check per ${CHARS_PER_CHECK.toLocaleString()} ` +
-        `characters across every surface (web app, MCP, CLI, GitHub Action, ` +
-        `Figma plugin). Even the batch tools enforce the per-string cap. ` +
-        `For copy longer than ${MAX_CHECK_CHARS.toLocaleString()} chars, ` +
-        `split it into separate strings and use MCP evaluate_copy_batch ` +
-        `(each string still capped here) or the GitHub Action (extracts ` +
-        `each source-file string individually).`,
+        `Text is too long (max ${MAX_INPUT_CHARS.toLocaleString()} ` +
+        `characters per call). ContentRX bills checks by tier — a ` +
+        `standard check is 1 unit per 300 chars, document is 8 flat, ` +
+        `surface is 25 flat. The same cap applies on every surface ` +
+        `(web app, MCP, CLI, GitHub Action, Figma plugin). For copy ` +
+        `longer than ${MAX_INPUT_CHARS.toLocaleString()} chars, split ` +
+        `into multiple calls — MCP evaluate_copy_batch and the GitHub ` +
+        `Action handle this client-side.`,
     }),
+  // Optional billing tier. If absent, defaults to standard (per-300-char
+  // proportional billing). Callers that already know the shape of their
+  // input declare it explicitly:
+  //   - MCP `evaluate_copy` → standard
+  //   - MCP `evaluate_copy_batch` → document or surface based on size
+  //   - Figma plugin → standard (one layer per call)
+  //   - GitHub Action → surface (whole PR diff)
+  //   - CLI: standard or document depending on the --batch flag
+  segment_type: meterTierSchema.optional().default("standard"),
   // content_type and moment go INTO the LLM system prompt verbatim.
   // Accepting arbitrary strings here is a prompt-injection vector.
   content_type: z.enum(CONTENT_TYPES).optional(),
@@ -177,6 +184,7 @@ export async function POST(req: Request) {
     source,
     file_path,
     run_id,
+    segment_type,
   } = parsed.data;
 
   // PII pre-screen — refuse credit cards, SSNs, and credential-shaped
@@ -215,13 +223,15 @@ export async function POST(req: Request) {
     );
   }
 
-  // Proportional quota claim. A 50-char button label still costs 1
-  // check; a 7,500-char FAQ entry costs 2 checks; a 25,000-char doc
-  // costs 5. The atomic claim is all-or-nothing — if the user has 1
-  // check left and this call costs 2, we 402 without touching the
-  // engine. Burst concurrency is still safe (the upsert + setWhere
+  // Tier-aware quota claim. A 50-char button label at standard tier
+  // costs 1 unit; a 600-char paragraph at standard costs 2; a 5,000-char
+  // help article at document costs 8 flat; a 30,000-char PR diff at
+  // surface costs 25 flat. The atomic claim is all-or-nothing — if the
+  // user has 1 unit left and this call costs 8, we 402 without touching
+  // the engine. Burst concurrency is still safe (the upsert + setWhere
   // guard composes the same way for n > 1).
-  const checksNeeded = checksFor(text);
+  const meterDecision = meter(text, segment_type);
+  const checksNeeded = meterDecision.unitsConsumed;
   const claim = await claimQuotaSlots(auth.user.id, checksNeeded, quota);
   if (!claim.granted) {
     void notifyQuotaExhausted({
@@ -418,15 +428,23 @@ export async function POST(req: Request) {
     ...publicCheckEnvelope(result),
     latency_ms: evalResponse.latency_ms,
     tokens: evalResponse.tokens,
+    // Schema 2.1.0: top-level metering block with the tier billed
+    // (standard/document/surface), units consumed in standard-check
+    // equivalents, raw character count, segment count (always 1 in
+    // single-string regime), and split flag. Callers that don't read
+    // `metering` keep working — `usage.checks_consumed` mirrors
+    // `metering.units_consumed` for backwards-compatible consumers.
+    metering: meteringBlock(meterDecision),
     usage: {
       plan: auth.plan,
       used: newUsed,
       quota,
       remaining: Math.max(0, quota - newUsed),
-      // checks_consumed reflects the proportional billing for this
-      // single call. Callers (web app counter, MCP agents) use it to
-      // explain "this paste cost you 2 checks" without re-implementing
-      // the chars/check math client-side.
+      // checks_consumed reflects the tier-aware billing for this
+      // single call. Mirrors `metering.units_consumed`. Callers (web
+      // app counter, MCP agents) use either to explain "this paste
+      // cost you 8 units (document tier)" without re-implementing
+      // the metering math client-side.
       checks_consumed: checksNeeded,
       month: currentMonth(),
       text_hash: hashText(text),
@@ -444,7 +462,7 @@ function monthResetISO(): string {
   return next.toISOString();
 }
 
-function warningThreshold(_plan: "free" | "pro" | "team", quota: number): number {
+function warningThreshold(_plan: Plan, quota: number): number {
   // 2026-04-27: aligned the email + dashboard at 80% used (= 20%
   // remaining). Robert's call: gentle nudge as the customer approaches
   // the cap, same threshold across plans for consistency. Floor at 1
@@ -457,7 +475,7 @@ async function notifyQuotaWarning(args: {
   to: string;
   used: number;
   quota: number;
-  plan: "free" | "pro" | "team";
+  plan: Plan;
   userId: string;
 }) {
   try {
@@ -479,7 +497,7 @@ async function notifyQuotaWarning(args: {
 
 async function notifyQuotaExhausted(args: {
   to: string;
-  plan: "free" | "pro" | "team";
+  plan: Plan;
   quota: number;
   userId: string;
 }) {
