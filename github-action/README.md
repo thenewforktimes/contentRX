@@ -145,7 +145,7 @@ Once the team's ready, flip `strict: true`:
 
 Now any PR with a new violation fails the check, blocking merge under
 a branch-protection rule. Useful for teams whose designer has signed
-off on the 47-standard library as a hard gate.
+off on the content standards as a hard gate.
 
 ### 3. Gradual rollout on a monorepo
 
