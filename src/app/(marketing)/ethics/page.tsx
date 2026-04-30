@@ -179,7 +179,13 @@ export default function EthicsPage() {
             The override dataset (what informs future rule calibration)
             carries no user identity. Only the actor&apos;s
             role-bucket (designer / engineer / PM / other) rides along
-            for signal weighting.
+            for signal weighting. The dataset gets curated by hand
+            into refinement candidates, never absorbed by an automated
+            training pipeline; see{" "}
+            <Link href="/about" className="underline underline-offset-2">
+              how customer interactions improve the model
+            </Link>{" "}
+            for the loop.
           </li>
         </ul>
       </Section>
