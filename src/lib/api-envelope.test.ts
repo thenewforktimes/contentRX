@@ -31,9 +31,11 @@ describe("api-envelope", () => {
     expect(SCHEMA_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it("SCHEMA_VERSION is 2.0.0 (post-pivot)", () => {
-    // Lock the post-pivot major. Bumping requires a new ADR.
-    expect(SCHEMA_VERSION).toBe("2.0.0");
+  it("SCHEMA_VERSION is 2.1.0 (pre-pilot metering rebuild)", () => {
+    // Locks the metering-rebuild minor. Additive `metering` block on
+    // /api/check responses; bumping requires updating every surface
+    // that reads the wire format.
+    expect(SCHEMA_VERSION).toBe("2.1.0");
   });
 });
 
@@ -167,7 +169,7 @@ describe("publicCheckEnvelope", () => {
       "violations",
       "warnings",
     ]);
-    expect(env.schema_version).toBe("2.0.0");
+    expect(env.schema_version).toBe("2.1.0");
   });
 
   it("strips substrate top-level fields", () => {
@@ -249,7 +251,7 @@ describe("publicCheckEnvelope", () => {
     // surprises across runs.
     expect(JSON.stringify(env, null, 2)).toMatchInlineSnapshot(`
       "{
-        "schema_version": "2.0.0",
+        "schema_version": "2.1.0",
         "violations": [
           {
             "issue": "This destructive confirmation does not name what gets deleted.",

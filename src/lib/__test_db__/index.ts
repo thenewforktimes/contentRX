@@ -61,6 +61,7 @@ function loadSetupSql(): string {
 
 const TABLES_TO_RESET = [
   "violations",
+  "usage_events",
   "usage",
   "subscriptions",
   "users",
