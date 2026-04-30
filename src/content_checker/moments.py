@@ -56,39 +56,47 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from content_checker.standards.loader import load_moments_taxonomy
+
 
 # ---------------------------------------------------------------------------
 # Taxonomy: the 13 canonical moments
 # ---------------------------------------------------------------------------
+#
+# The moment IDs, descriptions, situation_property mappings, and weight
+# adjustments all live in the private substrate at
+# standards/private/moments_taxonomy.json (ADR 2026-04-25, substrate-
+# extraction follow-up 2026-04-30). Loaded at module-import time and
+# cached by the loader.
+#
+# The dataclasses, helper functions, and detection logic in this file
+# stay public — they're the engine code that operates on the
+# (privately loaded) editorial values.
 
-MOMENT_TAXONOMY: dict[str, str] = {
-    "first_encounter":        "Onboarding, setup, first-run. Clarity above all.",
-    "browsing_discovery":     "Homepages, landing pages, feature tours. Scannability matters.",
-    "decision_point":         "Pricing, plan selection, upgrade prompts. No dark patterns.",
-    "task_execution":         "Form filling, configuration, multi-step flows. Actionable labels.",
-    "confirmation":           "Success, saved, completed. Brevity, passive voice is fine.",
-    "celebration":            "Achievement, milestone, streak. Enthusiasm is earned, not excessive.",
-    "error_recovery":         "Validation, system errors, failed states. No blame, clear next step.",
-    "destructive_action":     "Delete, cancel, irreversible. Explicit consequences, friction OK.",
-    "empty_state":            "Zero data, no results. Helpful, suggest next action.",
-    "interruption":           "Modals, toasts, notifications. Brevity critical, clear dismiss.",
-    "trust_permission":       "Consent, verification, permissions. Precision over warmth, hedging OK.",
-    "wayfinding":             "Navigation, breadcrumbs, section labels. Consistency, space-constrained OK.",
-    "compliance_disclosure":  "Regulatory disclaimers, legal mandates, FDIC notices. Mandated language takes precedence.",
-}
+
+def _load_moment_taxonomy() -> dict[str, str]:
+    data = load_moments_taxonomy()
+    return {m["id"]: m["description"] for m in data["moments"]}
+
+
+def _load_situation_properties() -> dict[str, str]:
+    data = load_moments_taxonomy()
+    return {
+        m["id"]: m["situation_property"]
+        for m in data["moments"]
+        if m.get("situation_property")
+    }
+
+
+MOMENT_TAXONOMY: dict[str, str] = _load_moment_taxonomy()
 
 VALID_MOMENTS = frozenset(MOMENT_TAXONOMY.keys())
 
 # Moments that represent situation-like properties — flag for UI
-# filtering on /admin/model and the moment banner. Single source of
-# truth: tools/export_moments.py imports this; the TS mirror in
-# src/lib/moment-metadata.ts is pinned to it via
+# filtering on /admin/model and the moment banner. The TS mirror in
+# src/lib/moment-metadata.ts is pinned to this via
 # tests/test_moment_metadata_ts_mirror.py.
-SITUATION_PROPERTY_BY_MOMENT: dict[str, str] = {
-    "destructive_action":    "destructive",
-    "trust_permission":      "permission-gated",
-    "compliance_disclosure": "compliance",
-}
+SITUATION_PROPERTY_BY_MOMENT: dict[str, str] = _load_situation_properties()
 
 # The default moment when no pattern matches. Not shown in UI.
 DEFAULT_MOMENT = "browsing_discovery"
@@ -337,155 +345,31 @@ class MomentWeight:
         return ""
 
 
-MOMENT_WEIGHTS: dict[str, list[MomentWeight]] = {
-    "first_encounter": [
-        MomentWeight("CLR-01", "emphasize",
-                     "First-time users have zero context. Plain language is critical."),
-        MomentWeight("CLR-03", "emphasize",
-                     "Keep sentences short — cognitive load is highest on first use."),
-        MomentWeight("ACC-01", "emphasize",
-                     "New users rely on clear link text to orient themselves."),
-        MomentWeight("GRM-03", "relax",
-                     "An exclamation in a welcome message is warmer, not louder."),
-        MomentWeight("PRF-11", "emphasize",
-                     "Dismissive language is most harmful during onboarding — users have no context yet."),
-    ],
+def _load_moment_weights() -> dict[str, list[MomentWeight]]:
+    """Build the per-moment weight map from the private substrate.
 
-    "browsing_discovery": [
-        # Default evaluation — minimal adjustments.
-        MomentWeight("PRF-11", "suppress",
-                     "Marketing pages legitimately use 'easy' and 'simple' as value propositions."),
-        MomentWeight("PRF-03", "relax",
-                     "Trailing periods on marketing headings are rhetorical devices for cadence and emphasis."),
-    ],
+    Each moment in moments_taxonomy.json carries a `weights` array of
+    {standard_id, modifier, rationale} entries; this turns each into a
+    `MomentWeight` instance and groups by moment id.
 
-    "decision_point": [
-        MomentWeight("CLR-01", "emphasize",
-                     "Users making decisions need precise, jargon-free language."),
-        MomentWeight("VT-01", "emphasize",
-                     "Active voice keeps decision copy direct and scannable."),
-        MomentWeight("GRM-05", "emphasize",
-                     "Use numerals in pricing and comparisons for quick scanning."),
-        MomentWeight("CON-02", "emphasize",
-                     "Inconsistent casing undermines trust at the point of purchase."),
-        MomentWeight("PRF-11", "suppress",
-                     "Decision pages legitimately describe features as 'easy' to influence choice."),
-    ],
+    Empty `weights` arrays are kept (so unknown moments and the default
+    `browsing_discovery` moment fall through to an empty list as before).
+    """
+    data = load_moments_taxonomy()
+    out: dict[str, list[MomentWeight]] = {}
+    for moment in data["moments"]:
+        out[moment["id"]] = [
+            MomentWeight(
+                standard_id=w["standard_id"],
+                modifier=w["modifier"],
+                rationale=w["rationale"],
+            )
+            for w in moment.get("weights", [])
+        ]
+    return out
 
-    "task_execution": [
-        MomentWeight("ACT-01", "emphasize",
-                     "Labels and instructions must start with clear action verbs."),
-        MomentWeight("CLR-03", "emphasize",
-                     "Keep helper text short — users are mid-task, not reading."),
-        MomentWeight("ACC-07", "emphasize",
-                     "Form fields need accessible labels and helper text."),
-        MomentWeight("PRF-11", "emphasize",
-                     "Telling users to 'simply enter' dismisses the friction they may be experiencing."),
-    ],
 
-    "confirmation": [
-        MomentWeight("VT-01", "relax",
-                     "Passive voice is natural in confirmations: 'Your changes are saved.'"),
-        MomentWeight("ACT-01", "relax",
-                     "Confirmations describe what happened, not what to do next."),
-        MomentWeight("CLR-03", "relax",
-                     "Brevity trumps sentence structure rules in success states."),
-    ],
-
-    "celebration": [
-        MomentWeight("GRM-03", "relax",
-                     "Exclamation marks are earned in achievement moments."),
-        MomentWeight("CON-02", "relax",
-                     "Achievement copy uses branded/stylized casing as intentional emphasis."),
-        MomentWeight("PRF-11", "suppress",
-                     "Enthusiasm is legitimate in celebrations, not dismissive."),
-        MomentWeight("VT-05", "emphasize",
-                     "Celebration copy should feel genuinely warm."),
-        MomentWeight("VT-02", "emphasize",
-                     "Use 'you/your' — this is the user's achievement, not the product's."),
-        MomentWeight("VT-03", "emphasize",
-                     "Robotic tone undermines the earned emotional beat."),
-    ],
-
-    "error_recovery": [
-        MomentWeight("VT-05", "emphasize",
-                     "Empathetic tone is critical. Never blame the user."),
-        MomentWeight("CLR-01", "emphasize",
-                     "Error messages must be jargon-free — the user is already stressed."),
-        MomentWeight("ACT-01", "emphasize",
-                     "Every error must suggest a clear next action."),
-        MomentWeight("GRM-03", "suppress",
-                     "Exclamation marks in errors feel like shouting at a struggling user."),
-        MomentWeight("PRF-11", "emphasize",
-                     "'Simply re-enter your password' is the worst thing to say to a struggling user."),
-        MomentWeight("VT-03", "emphasize",
-                     "Robotic error copy alienates users when they need empathy most."),
-        MomentWeight("ACT-03", "emphasize",
-                     "Negative framing compounds anxiety in error states."),
-        MomentWeight("ACT-04", "emphasize",
-                     "Errors need actionable next steps, not just a description of what went wrong."),
-    ],
-
-    "destructive_action": [
-        MomentWeight("CLR-01", "emphasize",
-                     "Consequences must be stated in plain, unambiguous language."),
-        MomentWeight("VT-05", "emphasize",
-                     "Acknowledge the weight of the action. Don't be flippant."),
-        MomentWeight("STR-02", "relax",
-                     "Extra content density is acceptable — friction prevents mistakes."),
-        MomentWeight("CLR-03", "relax",
-                     "Longer sentences are fine when explaining irreversible consequences."),
-    ],
-
-    "empty_state": [
-        MomentWeight("ACT-01", "emphasize",
-                     "Empty states should guide the user to a first action."),
-        MomentWeight("VT-02", "emphasize",
-                     "Use 'you/your' to make the empty state feel personal, not broken."),
-        MomentWeight("GRM-03", "relax",
-                     "A friendly exclamation in an empty state is encouraging, not excessive."),
-        MomentWeight("ACT-04", "emphasize",
-                     "Empty states need concrete next steps — don't leave the user stranded."),
-    ],
-
-    "interruption": [
-        MomentWeight("CLR-03", "emphasize",
-                     "Interruptions must justify themselves in as few words as possible."),
-        MomentWeight("STR-02", "emphasize",
-                     "Dense modals and toasts overwhelm. One message, one action."),
-        MomentWeight("ACT-01", "emphasize",
-                     "Dismiss and action buttons must be unambiguous."),
-    ],
-
-    "trust_permission": [
-        MomentWeight("CLR-01", "emphasize",
-                     "Users can't consent to what they don't understand."),
-        MomentWeight("VT-04", "relax",
-                     "Hedging is precision in consent contexts, not weakness."),
-        MomentWeight("ACT-01", "emphasize",
-                     "Permission actions must be unambiguous ('Allow' vs 'Deny')."),
-        MomentWeight("TRN-01", "emphasize",
-                     "Trust copy must be transparent about what happens next."),
-    ],
-
-    "wayfinding": [
-        MomentWeight("CON-02", "emphasize",
-                     "Navigation labels must use consistent casing across the product."),
-        MomentWeight("GRM-04", "relax",
-                     "Ampersands are conventional in navigation: 'Docs & Guides.'"),
-        MomentWeight("CLR-03", "suppress",
-                     "Navigation labels are fragments, not sentences. Length rules don't apply."),
-        MomentWeight("ACT-01", "suppress",
-                     "Nav labels are nouns, not verbs: 'Settings', not 'Go to settings.'"),
-    ],
-
-    "compliance_disclosure": [
-        MomentWeight("CON-02", "suppress",
-                     "Regulatory disclaimers use Title Case by convention or legal mandate."),
-        MomentWeight("CLR-01", "relax",
-                     "Legal and financial terms may be mandated precision, not jargon."),
-    ],
-}
+MOMENT_WEIGHTS: dict[str, list[MomentWeight]] = _load_moment_weights()
 
 
 def get_moment_weights(moment: str) -> list[MomentWeight]:

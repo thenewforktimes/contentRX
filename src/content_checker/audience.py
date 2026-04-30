@@ -36,6 +36,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import Final
 
+from content_checker.standards.loader import load_ui_specific_standards
+
 
 # ---------------------------------------------------------------------------
 # Audience types
@@ -70,35 +72,21 @@ class Audience(str, Enum):
 # UI-specific standards: suppressed in general mode
 # ---------------------------------------------------------------------------
 #
-# Each suppression is individually justified by triage evidence.
-# Standards NOT on this list apply universally regardless of audience.
+# The set of standard IDs and the per-entry rationales live in the
+# private substrate at standards/private/ui_specific_standards.json
+# (ADR 2026-04-25, substrate-extraction follow-up 2026-04-30). Loaded
+# at module-import time and cached. Standards NOT on this list apply
+# universally regardless of audience.
 #
 # To add a new suppression:
 #   1. Identify the standard causing false positives in non-UI content
 #   2. Verify with triage data (must have ≥3 confirmed context_gap cases)
-#   3. Add the ID here with a one-line rationale
+#   3. Add the entry to ui_specific_standards.json in the private
+#      substrate repo with a one-line rationale
 #   4. Add a test case in test_audience.py
 #   5. Note the addition in the internal architecture doc.
 
-UI_SPECIFIC_STANDARDS: Final[frozenset[str]] = frozenset({
-    # ACT-01: "Start CTAs with a verb." Buttons in product UI need
-    # imperative verbs; presentation instructions and general headings
-    # do not. Triage: 8 false positives on Opendoor presentation.
-    "ACT-01",
-
-    # PRF-03: "No trailing period on headings and labels." Product UI
-    # headings don't take periods, but presentation subheadings and
-    # document section headers often do (they're complete sentences).
-    # Triage: 1 misclassification (subtitle classified as ui_label).
-    # Also connected to REF-001 (ui_label vs section_header).
-    "PRF-03",
-
-    # CON-02: "Use sentence case in UI." Presentations and marketing
-    # materials frequently use title case deliberately for headings.
-    # Suppressing in general mode prevents false positives on intentional
-    # stylistic choices outside product UI context.
-    "CON-02",
-})
+UI_SPECIFIC_STANDARDS: Final[frozenset[str]] = load_ui_specific_standards()
 
 
 # ---------------------------------------------------------------------------

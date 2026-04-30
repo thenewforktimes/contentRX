@@ -26,11 +26,29 @@ import json
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Module-level cache
+# Module-level caches
 # ---------------------------------------------------------------------------
+#
+# Each substrate JSON file has its own cache. All three live in the
+# gitignored private/ subdir per ADR 2026-04-25.
 
 _cache: dict | None = None
 _cache_path: Path | None = None
+
+_moments_cache: dict | None = None
+_ui_specific_cache: frozenset[str] | None = None
+
+
+def _missing_substrate_error(path: Path) -> FileNotFoundError:
+    return FileNotFoundError(
+        f"Substrate file not found at {path}. "
+        "Substrate JSON lives in the gitignored private/ subdir per "
+        "ADR 2026-04-25. Local dev: clone the private substrate repo "
+        "into src/content_checker/standards/private/ (or run "
+        "`npm run fetch:substrate` with SUBSTRATE_TOKEN set). Public "
+        "CI: tests that need the substrate skip automatically when "
+        "this path is missing."
+    )
 
 
 def load_standards(path: str | Path | None = None) -> dict:
@@ -65,14 +83,7 @@ def load_standards(path: str | Path | None = None) -> dict:
     default_path = Path(__file__).parent / "private" / "standards_library.json"
 
     if not default_path.exists():
-        raise FileNotFoundError(
-            f"Standards library not found at {default_path}. "
-            "The substrate JSON files live in the private submodule per "
-            "ADR 2026-04-25. Local dev: clone the private substrate repo "
-            "into src/content_checker/standards/private/ (or pull via "
-            "submodule). Public CI: tests that need the substrate skip "
-            "automatically when this path is missing."
-        )
+        raise _missing_substrate_error(default_path)
 
     with open(default_path) as f:
         data = json.load(f)
@@ -82,6 +93,73 @@ def load_standards(path: str | Path | None = None) -> dict:
     _cache_path = default_path
 
     return _cache
+
+
+def load_moments_taxonomy() -> dict:
+    """Load the moments taxonomy JSON from the private substrate.
+
+    Cached per process. Source of truth for moment IDs, descriptions,
+    situation_property mappings, and per-standard moment weights.
+
+    Raises:
+        FileNotFoundError: if the substrate isn't present.
+        json.JSONDecodeError: if the file is malformed.
+    """
+    global _moments_cache
+
+    if _moments_cache is not None:
+        return _moments_cache
+
+    default_path = Path(__file__).parent / "private" / "moments_taxonomy.json"
+
+    if not default_path.exists():
+        raise _missing_substrate_error(default_path)
+
+    with open(default_path) as f:
+        data = json.load(f)
+
+    if "moments" not in data or not isinstance(data["moments"], list):
+        raise ValueError(f"{default_path}: missing or invalid `moments` array")
+
+    _moments_cache = data
+    return _moments_cache
+
+
+def load_ui_specific_standards() -> frozenset[str]:
+    """Load the UI-specific standards frozenset from the private substrate.
+
+    These are the standard IDs suppressed in 'general' audience mode
+    (presentations, marketing, internal docs) but enforced in
+    'product_ui' mode. Each suppression is justified by triage
+    evidence; the rationale strings live alongside the IDs in the
+    JSON for traceability.
+
+    Cached per process.
+
+    Raises:
+        FileNotFoundError: if the substrate isn't present.
+    """
+    global _ui_specific_cache
+
+    if _ui_specific_cache is not None:
+        return _ui_specific_cache
+
+    default_path = Path(__file__).parent / "private" / "ui_specific_standards.json"
+
+    if not default_path.exists():
+        raise _missing_substrate_error(default_path)
+
+    with open(default_path) as f:
+        data = json.load(f)
+
+    if "standards" not in data or not isinstance(data["standards"], list):
+        raise ValueError(
+            f"{default_path}: missing or invalid `standards` array"
+        )
+
+    ids = frozenset(entry["id"] for entry in data["standards"] if "id" in entry)
+    _ui_specific_cache = ids
+    return _ui_specific_cache
 
 
 # Required keys per node. Validated at load time so a malformed library
@@ -156,11 +234,13 @@ def get_cache_info() -> dict:
 # ---------------------------------------------------------------------------
 
 def _reset_cache():
-    """Clear the cached standards library. For testing only.
+    """Clear all substrate caches. For testing only.
 
     Call this in test fixtures when you need to ensure a fresh load,
-    e.g., after patching the JSON file on disk.
+    e.g., after patching the JSON files on disk.
     """
-    global _cache, _cache_path
+    global _cache, _cache_path, _moments_cache, _ui_specific_cache
     _cache = None
     _cache_path = None
+    _moments_cache = None
+    _ui_specific_cache = None
