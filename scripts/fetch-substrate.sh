@@ -64,8 +64,13 @@ if [ -d "${SUBSTRATE_DIR}" ]; then
 fi
 
 echo "[substrate] Cloning ${SUBSTRATE_REPO} into ${SUBSTRATE_DIR}..."
+# Use the explicit x-access-token: username form. This is the format
+# GitHub documents for fine-grained PATs and works for classic PATs
+# too. The plain `https://TOKEN@host` form (no username, token-as-user)
+# can return 403 because git's URL parser treats the token as the
+# username rather than the password.
 git clone --depth 1 --quiet \
-  "https://${SUBSTRATE_TOKEN}@${SUBSTRATE_REPO}" \
+  "https://x-access-token:${SUBSTRATE_TOKEN}@${SUBSTRATE_REPO}" \
   "${SUBSTRATE_DIR}"
 
 if [ ! -f "${SUBSTRATE_FILE}" ]; then
