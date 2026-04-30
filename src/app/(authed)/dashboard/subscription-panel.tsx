@@ -51,7 +51,7 @@ type Props = {
 
 type Interval = "monthly" | "annual";
 
-const TEAM_MIN_SEATS = 3;
+const TEAM_MIN_SEATS = 5;
 
 export function SubscriptionPanel({
   plan,
@@ -122,8 +122,8 @@ function UpgradeCard() {
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
         <PlanOption
           name="Pro"
-          price={interval === "monthly" ? "$29/mo" : "$24/mo billed annually"}
-          description="1,000 checks per month. For solo designers and small teams."
+          price={interval === "monthly" ? "$39/mo" : "$32/mo billed annually"}
+          description="2,000 checks per month. For solo designers and small teams."
           selected={selectedPlan === "pro"}
           onSelect={() => setSelectedPlan("pro")}
         />
@@ -131,10 +131,10 @@ function UpgradeCard() {
           name="Team"
           price={
             interval === "monthly"
-              ? "$29/seat/mo"
-              : "$24/seat/mo billed annually"
+              ? "$69/seat/mo"
+              : "$59/seat/mo billed annually"
           }
-          description={`${TEAM_MIN_SEATS}-seat minimum. 1,000 checks per seat, pooled across the team.`}
+          description={`${TEAM_MIN_SEATS}-seat minimum. 5,000 checks per seat, pooled across the team.`}
           selected={selectedPlan === "team"}
           onSelect={() => setSelectedPlan("team")}
         />
