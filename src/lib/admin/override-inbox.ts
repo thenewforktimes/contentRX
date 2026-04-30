@@ -141,9 +141,14 @@ export async function loadOverrideInbox(
   }));
 }
 
-/** Triage one override into a resolved state. Returns whether the
- * row was actually updated (false when the row was already in the
- * target status — idempotent). */
+/** Triage one override from `open` into a resolved state. Returns
+ * whether the row was actually flipped (false when another founder
+ * already triaged it, or when the row doesn't exist). The
+ * `override_status = 'open'` guard makes the UPDATE atomic against
+ * concurrent triage actions: the second writer gets a clean
+ * rejection instead of silently overwriting attribution. The UI
+ * surfaces the rejection as "already triaged by another admin"
+ * (or stale-state) rather than a successful-but-stale write. */
 export async function triageOverride(args: {
   overrideId: string;
   newStatus: Exclude<OverrideStatus, "open">;
@@ -159,7 +164,12 @@ export async function triageOverride(args: {
       overrideStatusUpdatedAt: new Date(),
       overrideStatusNotes: args.notes ?? null,
     })
-    .where(eq(schema.violationOverrides.id, args.overrideId))
+    .where(
+      and(
+        eq(schema.violationOverrides.id, args.overrideId),
+        eq(schema.violationOverrides.overrideStatus, "open"),
+      ),
+    )
     .returning({ id: schema.violationOverrides.id });
   return result.length > 0;
 }

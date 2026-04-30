@@ -214,9 +214,15 @@ export async function POST(req: Request) {
   // founder Resume from /admin/costs clears the flag. Defaults are
   // permissive ($50/day, $500/month) — this only fires on runaway
   // scripts or misconfigured CI loops, not normal heavy use.
+  // Fail-closed: if the pause-check itself errors (DB outage, query
+  // bug), default to paused. The whole point of cost-pause is fail-
+  // safe runaway-cost protection; a transient DB error must NOT let
+  // a possibly-paused account keep accruing charges. Healthy accounts
+  // get a transient 402 during the outage; that's the correct
+  // trade-off for a guardrail feature.
   const isPaused = await checkCostPause(auth.user.id).catch((err) => {
-    logSafeError("checkCostPause failed; defaulting to not-paused", err);
-    return false;
+    logSafeError("checkCostPause failed; defaulting to paused", err);
+    return true;
   });
   if (isPaused) {
     return json(

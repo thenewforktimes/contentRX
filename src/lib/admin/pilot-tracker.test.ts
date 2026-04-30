@@ -38,6 +38,27 @@ describe("activityStatus()", () => {
       activityStatus(new Date(now.getTime() - 8 * DAY_MS), now),
     ).toBe("red");
   });
+
+  it("locks the exact 48h boundary as green (inclusive)", () => {
+    // The function uses `<=` for the green threshold; lock that
+    // contract so a `<` regression fails loudly.
+    expect(
+      activityStatus(new Date(now.getTime() - 48 * HOUR_MS), now),
+    ).toBe("green");
+    expect(
+      activityStatus(new Date(now.getTime() - 48 * HOUR_MS - 1), now),
+    ).toBe("amber");
+  });
+
+  it("locks the exact 7-day boundary as amber (inclusive)", () => {
+    // Same contract for the amber→red threshold.
+    expect(
+      activityStatus(new Date(now.getTime() - 7 * DAY_MS), now),
+    ).toBe("amber");
+    expect(
+      activityStatus(new Date(now.getTime() - 7 * DAY_MS - 1), now),
+    ).toBe("red");
+  });
 });
 
 describe("conversationTriggers()", () => {

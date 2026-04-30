@@ -58,6 +58,21 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        // Phase 6 of the pre-pilot launch build promoted
+        // /dashboard/team/rules to /dashboard/rules (canonical for
+        // every plan tier, with conditional rendering). Keep the
+        // legacy URL working for in-the-wild bookmarks + emails.
+        // 308 (permanent) so browsers + crawlers update their
+        // caches; the route is gone for good.
+        source: "/dashboard/team/rules",
+        destination: "/dashboard/rules",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 // Compose: bundle analyzer wraps the base config first (so it sees
