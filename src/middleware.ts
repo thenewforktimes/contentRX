@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isProtected = createRouteMatcher([
   "/dashboard(.*)",
@@ -42,7 +43,30 @@ export default clerkMiddleware(async (auth, req) => {
     return;
   }
 
-  await auth.protect();
+  // Differentiate API routes from page routes when auth is missing.
+  // `auth.protect()` defaults to `notFound()` (HTML 404), which is
+  // confusing for both audiences:
+  //   - Pages: a customer typing /dashboard or following a stale link
+  //     sees "this page doesn't exist" instead of a sign-in prompt.
+  //   - APIs: an integrator's CLI/curl client gets HTML at a JSON
+  //     endpoint, breaks parsing, makes the failure mode opaque.
+  // Branching here gives each audience the response they expect.
+  const { userId } = await auth();
+  if (userId) return;
+
+  if (req.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.json(
+      { error: "Authentication required" },
+      { status: 401 },
+    );
+  }
+
+  const signInUrl = new URL("/sign-in", req.url);
+  signInUrl.searchParams.set(
+    "redirect_url",
+    req.nextUrl.pathname + req.nextUrl.search,
+  );
+  return NextResponse.redirect(signInUrl);
 });
 
 export const config = {

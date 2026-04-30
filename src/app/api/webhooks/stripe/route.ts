@@ -64,6 +64,24 @@ type SubscriptionItemWithPeriodEnd = {
 };
 
 export async function POST(req: Request) {
+  // Top-level boundary: any throw before an explicit response (missing
+  // env var, Stripe SDK init failure, body-read crash) becomes a clean
+  // JSON 500 instead of an HTML 500 with an empty content-type. The
+  // 500 still lands in Sentry; only the response shape changes, so
+  // operators (curl) and Stripe's retry logic both get something
+  // parseable.
+  try {
+    return await handleStripeWebhook(req);
+  } catch (err) {
+    console.error("Stripe webhook handler unhandled error", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+async function handleStripeWebhook(req: Request): Promise<Response> {
   // requireEnv throws on missing OR empty — Next.js catches → 500 + Sentry.
   // Same fix as the Clerk webhook (2026-04-24 incident).
   const secret = requireEnv("STRIPE_WEBHOOK_SECRET");
