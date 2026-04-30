@@ -55,6 +55,7 @@ import {
 import { teamScope } from "@/lib/team-scope";
 import { claimQuotaSlots, recordTokenUsage } from "@/lib/usage";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
+import { CostPauseAlertEmail } from "@/emails/cost-pause-alert";
 import { QuotaExhaustedEmail } from "@/emails/quota-exhausted";
 import { QuotaWarningEmail } from "@/emails/quota-warning";
 
@@ -464,7 +465,7 @@ export async function POST(req: Request) {
     void evaluateAndPauseIfExceeded(auth.user.id)
       .then((result) => {
         if (result?.pausedNow) {
-          notifyCostPause({
+          void notifyCostPause({
             userEmail: auth.user.email,
             userId: auth.user.id,
             ...result,
@@ -591,13 +592,14 @@ async function notifyQuotaExhausted(args: {
 
 /**
  * Founder alert: a user crossed their daily/monthly cost threshold and
- * the cost monitor flipped `cost_pause_active`. Logs a structured
- * warning to Vercel function logs (Sentry ingests). Email-template
- * build is deferred — the founder reads the pause from /admin/costs
- * on next login. The threshold-evaluator's atomic UPDATE guard
- * de-dupes re-pause attempts so this fires at most once per crossing.
+ * the cost monitor flipped `cost_pause_active`. Sends a Resend email
+ * to the founder address (FOUNDER_EMAIL env var; falls back to
+ * hello@contentrx.io) AND logs a structured warning to Vercel
+ * function logs as a backstop so a Resend outage can't lose the
+ * signal. The threshold-evaluator's atomic UPDATE guard de-dupes
+ * re-pause attempts so this fires at most once per crossing.
  */
-function notifyCostPause(args: {
+async function notifyCostPause(args: {
   userEmail: string;
   userId: string;
   dailySpendUsd: number;
@@ -607,6 +609,8 @@ function notifyCostPause(args: {
 }) {
   const trigger: "daily" | "monthly" =
     args.dailySpendUsd >= args.dailyThresholdUsd ? "daily" : "monthly";
+  // Backstop log — Sentry / Vercel function logs ingest this even if
+  // Resend is unavailable. Keep this regardless of email success.
   console.warn(
     JSON.stringify({
       kind: "cost-pause",
@@ -617,7 +621,32 @@ function notifyCostPause(args: {
       monthlySpendUsd: args.monthlySpendUsd,
       dailyThresholdUsd: args.dailyThresholdUsd,
       monthlyThresholdUsd: args.monthlyThresholdUsd,
-      message: `Cost-pause triggered. Resume at /admin/costs.`,
+      message: "Cost-pause triggered. Resume at /admin/costs.",
     }),
   );
+  const founderEmail = process.env.FOUNDER_EMAIL ?? "hello@contentrx.io";
+  try {
+    await sendEmail({
+      to: founderEmail,
+      subject: `Cost-pause: ${args.userEmail} crossed the ${trigger} threshold`,
+      react: CostPauseAlertEmail({
+        userEmail: args.userEmail,
+        userId: args.userId,
+        dailySpendUsd: args.dailySpendUsd,
+        monthlySpendUsd: args.monthlySpendUsd,
+        dailyThresholdUsd: args.dailyThresholdUsd,
+        monthlyThresholdUsd: args.monthlyThresholdUsd,
+        trigger,
+        appUrl: emailAppUrl(),
+      }),
+      // The threshold-evaluator's atomic UPDATE guard already de-dupes
+      // re-pause attempts, so this won't fire twice for the same
+      // crossing. No Redis dedupe key needed.
+    });
+  } catch (err) {
+    logSafeError(
+      "cost-pause email failed (backstop logged via console.warn)",
+      err,
+    );
+  }
 }

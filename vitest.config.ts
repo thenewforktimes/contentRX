@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
 import path from "node:path";
 
 /**
@@ -13,8 +14,18 @@ import path from "node:path";
  * Python engine tests still run via pytest (src/content_checker/).
  * This config does NOT cover those — npm test and pytest run as
  * independent suites.
+ *
+ * @vitejs/plugin-react fixes a vite import-analysis interaction with
+ * the project's `jsx: preserve` tsconfig setting (Next.js needs that
+ * setting; vite doesn't transform JSX without an explicit plugin).
+ * Without this plugin, any new .tsx file imported by a test would
+ * fail with "Failed to parse source for import analysis." Existing
+ * .tsx files happened to work because of cached pre-bundling on the
+ * first run; new files added during a session triggered the parse
+ * error. The plugin handles JSX → JS uniformly, removing the gap.
  */
 export default defineConfig({
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
