@@ -64,13 +64,18 @@ if [ -d "${SUBSTRATE_DIR}" ]; then
 fi
 
 echo "[substrate] Cloning ${SUBSTRATE_REPO} into ${SUBSTRATE_DIR}..."
-# Use the explicit x-access-token: username form. This is the format
-# GitHub documents for fine-grained PATs and works for classic PATs
-# too. The plain `https://TOKEN@host` form (no username, token-as-user)
-# can return 403 because git's URL parser treats the token as the
-# username rather than the password.
+# URL form: `https://oauth2:TOKEN@github.com/...`.
+#
+# Why oauth2 specifically: GitHub treats a few usernames specially.
+# `x-access-token:TOKEN` is the auth path for GitHub App installation
+# tokens — using it with a fine-grained user PAT triggers App-specific
+# permission checks that fail with "Write access to repository not
+# granted" even on read-only clones. `oauth2:TOKEN` is the standard
+# username-as-placeholder form: any string works as the username when
+# using a PAT as the password, and `oauth2` is the conventional choice
+# that works for both fine-grained and classic PATs.
 git clone --depth 1 --quiet \
-  "https://x-access-token:${SUBSTRATE_TOKEN}@${SUBSTRATE_REPO}" \
+  "https://oauth2:${SUBSTRATE_TOKEN}@${SUBSTRATE_REPO}" \
   "${SUBSTRATE_DIR}"
 
 if [ ! -f "${SUBSTRATE_FILE}" ]; then
