@@ -49,7 +49,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       <header className="border-b border-neutral-200 bg-white px-6 py-4 dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+        <div className="mx-auto max-w-6xl space-y-3">
           <Link
             href="/admin"
             className="text-sm font-semibold text-neutral-900 dark:text-neutral-100"
@@ -58,40 +58,65 @@ export default async function AdminLayout({
           </Link>
           <nav
             aria-label="Admin sections"
-            className="flex gap-4 text-sm text-neutral-600 dark:text-neutral-400"
+            className="flex flex-wrap gap-x-6 gap-y-2 text-sm"
           >
-            <Link href="/admin/model" className="hover:underline">
-              Model
-            </Link>
-            <Link href="/admin/queue" className="hover:underline">
-              Queue
-            </Link>
-            <Link href="/admin/refinement-log" className="hover:underline">
-              Refinement log
-            </Link>
-            <Link href="/admin/calibration" className="hover:underline">
-              Calibration
-            </Link>
-            <Link href="/admin/reports" className="hover:underline">
-              Reports
-            </Link>
-            <Link href="/admin/essay-drafts" className="hover:underline">
-              Essay drafts
-            </Link>
-            <Link href="/admin/case-studies" className="hover:underline">
-              Case studies
-            </Link>
-            <Link href="/admin/rule-review" className="hover:underline">
-              Rule review
-            </Link>
-            {/* Phase B mainline complete; follow-ups B3b/B4b/B5b/B6b/B7b
-                add decision-recording, form entry, charts, approvals,
-                and draft persistence. */}
+            <NavGroup label="Pilots">
+              <NavLink href="/admin">Tracker</NavLink>
+              <NavLink href="/admin/overrides">Override inbox</NavLink>
+              <NavLink href="/admin/costs">Costs</NavLink>
+            </NavGroup>
+            <NavGroup label="Rules">
+              <NavLink href="/admin/model">Library</NavLink>
+              <NavLink href="/admin/rule-review">Override rates</NavLink>
+              <NavLink href="/admin/suggestions">Suggestions</NavLink>
+              <NavLink href="/admin/refinement-log">Refinement</NavLink>
+              <NavLink href="/admin/queue">Review queue</NavLink>
+            </NavGroup>
+            <NavGroup label="Reports">
+              <NavLink href="/admin/calibration">Calibration</NavLink>
+              <NavLink href="/admin/reports">Reports</NavLink>
+              <NavLink href="/admin/essay-drafts">Essay drafts</NavLink>
+              <NavLink href="/admin/case-studies">Case studies</NavLink>
+            </NavGroup>
           </nav>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
     </div>
+  );
+}
+
+function NavGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function NavLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="text-neutral-700 hover:underline dark:text-neutral-300"
+    >
+      {children}
+    </Link>
   );
 }
 

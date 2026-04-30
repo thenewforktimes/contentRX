@@ -486,6 +486,29 @@ export const violationOverrides = pgTable(
     // review queue (dashboard + Session 8). Nullable — legacy rows
     // without a session fall back to user+time-window grouping.
     sessionId: text("session_id"),
+    // Founder-side triage state (Phase 5, pre-pilot launch). Every
+    // dismissal lands as `open`; the founder triages each into one of
+    // three resolved states from `/admin/overrides`:
+    //   - addressed_corpus    → added to the eval corpus as a pass
+    //                           example (the pilot was right)
+    //   - addressed_patch     → routed into the patch queue
+    //                           (rule needs work)
+    //   - not_actionable      → pilot was wrong; rule fired correctly
+    // `open` overrides surface in the inbox by default; resolved ones
+    // hide unless explicitly filtered in.
+    overrideStatus: text("override_status", {
+      enum: ["open", "addressed_corpus", "addressed_patch", "not_actionable"],
+    })
+      .notNull()
+      .default("open"),
+    overrideStatusUpdatedBy: text("override_status_updated_by").references(
+      () => users.id,
+      { onDelete: "set null" },
+    ),
+    overrideStatusUpdatedAt: timestamp("override_status_updated_at", {
+      withTimezone: true,
+    }),
+    overrideStatusNotes: text("override_status_notes"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -506,6 +529,12 @@ export const violationOverrides = pgTable(
     // Session aggregation hot path (Session 4): group-by
     // (session_id, standard_id) to collapse into standard_pushback.
     index("violation_overrides_session_std_idx").on(t.sessionId, t.standardId),
+    // Inbox hot path (Phase 5): the override inbox lists rows where
+    // override_status = 'open' sorted by created_at DESC. Partial
+    // index keeps the index small since most resolved rows fall out.
+    index("violation_overrides_open_created_idx")
+      .on(t.createdAt)
+      .where(sql`override_status = 'open'`),
   ],
 ).enableRLS();
 
