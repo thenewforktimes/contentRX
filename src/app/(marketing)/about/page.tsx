@@ -192,7 +192,7 @@ export default function AboutPage() {
           committee. Six months in, the work has shipped without them.
         </p>
         <p className="mt-3">
-          ContentRX is one approval away. A $29-a-month SaaS tool, not
+          ContentRX is one approval away. A $39-a-month SaaS tool, not
           another LLM relationship to negotiate. No Anthropic or OpenAI
           key required from you or your org. No second vendor agreement.
           The senior content-design judgment your team needs, abstracted

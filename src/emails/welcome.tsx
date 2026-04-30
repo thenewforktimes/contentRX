@@ -27,8 +27,8 @@ export function WelcomeEmail({
       </Heading>
       <Text>
         You're on the Free plan: 20 checks a month, every standard, every
-        moment, no card required. (1 check = up to 3,000 characters of
-        UI copy.)
+        moment, no card required. (1 standard check = up to 300 characters
+        of UI copy.)
       </Text>
       <Text>Three ways to start:</Text>
       <Text>

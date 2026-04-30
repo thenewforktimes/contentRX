@@ -3,20 +3,23 @@
  *
  * Price IDs live in env, not in code, so we can swap between test mode
  * and live mode without redeploying. The plan/interval combinations we
- * sell, anchored to the 2026-04-28 pricing re-anchor (commit ce5ec13)
- * and the 2026-04-28 UX-copy audit:
+ * sell, anchored to the 2026-04-30 pre-pilot launch pricing
+ * (PR #280):
  *
- *   - Pro Monthly:   $29/mo                  (STRIPE_PRICE_PRO_MONTHLY)
- *   - Pro Annual:    $24/mo billed annually  (STRIPE_PRICE_PRO_ANNUAL)
- *   - Team Monthly:  $29/seat, 3-seat min    (STRIPE_PRICE_TEAM_MONTHLY)
- *   - Team Annual:   $24/seat billed annually (STRIPE_PRICE_TEAM_ANNUAL)
+ *   - Pro Monthly:   $39/mo                       (STRIPE_PRICE_PRO_MONTHLY)
+ *   - Pro Annual:    $32/mo billed annually       (STRIPE_PRICE_PRO_ANNUAL)
+ *   - Team Monthly:  $69/seat, 5-seat min         (STRIPE_PRICE_TEAM_MONTHLY)
+ *   - Team Annual:   $59/seat billed annually     (STRIPE_PRICE_TEAM_ANNUAL)
+ *   - Scale:         $1,499/mo flat, annual only  (STRIPE_PRICE_SCALE_ANNUAL,
+ *                                                   sales-assisted; no
+ *                                                   self-serve checkout yet)
  *
- * IMPORTANT: the price IDs in env still need to point at $29-anchored
- * Stripe products. If a Stripe product is at the old $24/$35 price,
- * update the product in the Stripe Dashboard or re-create at the new
- * price and update the env. The display copy in
- * src/app/(authed)/dashboard/subscription-panel.tsx and
- * src/app/pricing/page.tsx now states $29 — Stripe must match.
+ * IMPORTANT: the env vars must point at price IDs anchored to the new
+ * numbers above. The display copy in subscription-panel.tsx and
+ * (marketing)/pricing/page.tsx already states the launch prices —
+ * Stripe must match. To update: create new prices in the Stripe
+ * Dashboard at the launch numbers and update STRIPE_PRICE_*_MONTHLY /
+ * _ANNUAL env vars in Vercel for production AND preview environments.
  *
  * Everything else (trial policy, promo codes, tax, proration rules) is
  * configured in the Stripe Dashboard — the app stays thin.
@@ -42,7 +45,7 @@ export function getStripe(): Stripe {
 export type PaidPlan = "pro" | "team";
 export type Interval = "monthly" | "annual";
 
-export const TEAM_MIN_SEATS = 3;
+export const TEAM_MIN_SEATS = 5;
 
 export function priceIdFor(plan: PaidPlan, interval: Interval): string | null {
   const key = (() => {
