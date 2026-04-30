@@ -61,12 +61,12 @@ export default function AccuracyPage() {
       <section className="grid gap-4 sm:grid-cols-3">
         <MetricBlock
           label="Measured system κ"
-          sublabel="System vs Robert&apos;s held-out golden verdicts"
+          sublabel="System vs Robert Ballard&apos;s held-out golden verdicts"
           kappa={snap.measured_system}
         />
         <MetricBlock
           label="Measured self-drift κ"
-          sublabel="Robert vs past-Robert (quarterly blind re-label)"
+          sublabel="Robert Ballard vs past Robert Ballard (quarterly blind re-label)"
           kappa={snap.measured_self_drift}
         />
         <MetricBlock
