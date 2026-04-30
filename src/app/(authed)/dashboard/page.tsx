@@ -191,6 +191,18 @@ function TryACheckPanel({ plan }: { plan: Plan }) {
         </span>
       </header>
       <ExplainClient plan={plan} />
+      <p className="mt-3 text-xs text-stone-500 dark:text-stone-400">
+        Your text is reviewed by ContentRX and discarded after the
+        check. We don&apos;t retain, sell, or train models on what you
+        paste.{" "}
+        <Link
+          href="/privacy"
+          className="underline underline-offset-2 hover:text-stone-700 dark:hover:text-stone-200"
+        >
+          How we handle your text
+        </Link>
+        .
+      </p>
     </section>
   );
 }

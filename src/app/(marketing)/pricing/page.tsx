@@ -106,6 +106,22 @@ export default function PricingPage() {
             a="Yes. Stripe-hosted Customer Portal, no email-us-to-cancel pattern, no retention dark patterns. Your team setup stays put for 90 days after cancellation; come back within that window and you pick up where you left off."
           />
           <Faq
+            q="How do I know the accuracy holds up over time?"
+            a={
+              <>
+                Every Monday, the calibration log at{" "}
+                <Link href="/calibration" className="underline underline-offset-2">
+                  /calibration
+                </Link>
+                {" "}publishes the previous week&apos;s measured accuracy,
+                drift signals, and which standards were refined. The
+                discernment loop is public: you can read what changed
+                and why. If kappa drops, you&apos;ll see it before you
+                feel it.
+              </>
+            }
+          />
+          <Faq
             q="Do I need a credit card to try it?"
             a="No. Free is 20 checks/mo, no card required. Sign up, install on your surface of choice, and run your first check."
           />

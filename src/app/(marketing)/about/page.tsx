@@ -145,6 +145,27 @@ export default function AboutPage() {
         </p>
       </Section>
 
+      <Section title="How customer interactions improve the model">
+        <p>
+          Every time you flag a verdict as wrong (or accept one that
+          almost wasn&apos;t), that signal lands in the refinement log
+          Robert Ballard reads each week. Patterns get curated by
+          hand, not absorbed by a training pipeline.
+        </p>
+        <p className="mt-3">
+          The distinction matters. Training averages everyone&apos;s
+          strings into a black box; calibration is one editor reading
+          patterns and making judgment calls. The model gets better
+          because a content designer is doing the work, not because
+          your strings became someone else&apos;s data. You can read
+          what changed and why on the{" "}
+          <Link href="/calibration" className="underline underline-offset-2">
+            weekly log
+          </Link>
+          .
+        </p>
+      </Section>
+
       <Section title="Why this isn't the layer you already have">
         <p>
           Grammarly checks grammar. LanguageTool checks grammar plus

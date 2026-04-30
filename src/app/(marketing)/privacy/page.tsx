@@ -241,10 +241,17 @@ export default function PrivacyPage() {
         <p>
           Our application data lives in US-region Supabase Postgres.
           Anthropic processes content in its own infrastructure.
-          We&apos;re working toward a zero-data-retention agreement so
-          inputs aren&apos;t retained beyond the request lifecycle, and
-          we&apos;ll update this section once that&apos;s in place.
           Vercel runs functions in regions close to your users.
+        </p>
+        <p className="mt-3">
+          <strong>Anthropic retention, current state:</strong>{" "}
+          Anthropic retains API inputs for up to 30 days under their
+          standard policy. We&apos;re negotiating a zero-data-retention
+          agreement that would limit retention to the request
+          lifecycle. Once that&apos;s in place, this section will
+          reflect it. If your compliance program needs ZDR before then,
+          email <code>{PRIVACY_EMAIL}</code> and we&apos;ll tell you
+          the timeline directly.
         </p>
         <p className="mt-3">
           If you have a regulatory requirement for EU-region data

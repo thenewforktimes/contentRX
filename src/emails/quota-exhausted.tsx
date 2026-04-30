@@ -31,8 +31,8 @@ export function QuotaExhaustedEmail({
         You've used your {quota} checks this month.
       </Heading>
       <Text>
-        That's the {planLabel}-plan ceiling. Resets {resetsAt}. Until then,
-        new check attempts return an "over quota" error.
+        That's the {planLabel}-plan ceiling. Resets {resetsAt}. Until
+        then, new checks won't run.
       </Text>
       {plan === "free" ? (
         <Text>

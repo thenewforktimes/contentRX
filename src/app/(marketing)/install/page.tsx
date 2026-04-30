@@ -48,9 +48,10 @@ export default function InstallPage() {
           <Link href="/dashboard" className="underline underline-offset-2">
             API key
           </Link>
-          {" "}covers them all. No Anthropic or OpenAI key required;
-          ContentRX handles the LLM relationship. Pick the surfaces
-          your team lives in.
+          {" "}covers them all. ContentRX handles the LLM relationship,
+          which means your text travels through one vendor relationship
+          (us to Anthropic), not two. You don&apos;t need an Anthropic
+          or OpenAI key. Pick the surfaces your team lives in.
         </p>
         <nav className="mt-6 flex flex-wrap gap-2 text-sm">
           <SurfaceChip href="#mcp" label="MCP" tagline="Claude Code · Cursor" />
