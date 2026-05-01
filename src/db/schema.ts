@@ -1189,6 +1189,130 @@ export const teamInvitations = pgTable(
   ],
 ).enableRLS();
 
+// Customer-flagged reviews — per the redesigned /admin loop step 5.
+//
+// Customers can flag a check (text + verdict + finding context) for the
+// founder to review, opening a contribution channel that improves the
+// rulesets and the model. Distinct from `violation_overrides` (which
+// captures *disagreements* with a finding) — a flagged review is a
+// proactive "this is worth your eyes," even when the verdict was
+// technically correct.
+//
+// Privacy contract — the row only exists because the customer gave
+// explicit per-flag consent. Plaintext is stored (the founder needs to
+// see it to act on the flag), but:
+//   - `consent_recorded_at` captures the moment of consent
+//   - PII pre-screen runs at write time (same path as /api/check)
+//   - Per-entry display only on the founder surface; never aggregated,
+//     never default-on (mirrors team_custom_examples contributeUpstream
+//     and violation_overrides.contribute_upstream rules per CLAUDE.md
+//     customer-data section)
+//
+// Triage parallels violation_overrides:
+//   - addressed_corpus    → added to the eval corpus as a calibration
+//                           example
+//   - addressed_taxonomy  → routed into a standards-library refinement
+//   - addressed_patch     → fix landed elsewhere (engine prompt, etc)
+//   - not_actionable      → flagged in good faith but no model change
+//                           is the right response
+export const customerFlaggedReviews = pgTable(
+  "customer_flagged_reviews",
+  {
+    id: cuid(),
+    teamId: text("team_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    userId: text("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    // Optional pointer to the originating violation when the flag came
+    // from a /api/check result that contained one. Null when the flag
+    // was on a `pass` verdict (the customer believes a finding SHOULD
+    // have fired).
+    violationId: text("violation_id").references(() => violations.id, {
+      onDelete: "set null",
+    }),
+    // Plaintext that was checked. Populated unconditionally because the
+    // existence of a row implies consent — the consent gate is in the
+    // API route, not the schema.
+    text: text("text").notNull(),
+    textHash: text("text_hash").notNull(),
+    contentType: text("content_type"),
+    moment: text("moment"),
+    // Engine verdict at the moment of the flag. Mirrors the wire-format
+    // three-state vocabulary so we can reconstruct what the customer
+    // was looking at.
+    verdict: text("verdict", {
+      enum: ["pass", "violation", "review_recommended"],
+    }),
+    // What the customer is asking us to look at. Drives triage routing
+    // — wrong_verdict and should_have_flagged route to taxonomy review;
+    // wrong_suggestion routes to suggestion-corpus review; the rest
+    // route to general triage.
+    flagReason: text("flag_reason", {
+      enum: [
+        "wrong_verdict",
+        "wrong_suggestion",
+        "should_have_flagged",
+        "standard_unclear",
+        "other",
+      ],
+    }).notNull(),
+    customerNote: text("customer_note"),
+    source: text("source", {
+      enum: ["dashboard", "plugin", "cli", "action", "lsp", "mcp"],
+    }).notNull(),
+    // Captured at insert time. Audit trail for the consent moment —
+    // useful for a future privacy review or a customer's own data-export
+    // request.
+    consentRecordedAt: timestamp("consent_recorded_at", {
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    // Triage state. Mirrors violation_overrides.overrideStatus shape so
+    // the founder uses the same mental model on both inboxes.
+    status: text("status", {
+      enum: [
+        "open",
+        "addressed_corpus",
+        "addressed_taxonomy",
+        "addressed_patch",
+        "not_actionable",
+      ],
+    })
+      .notNull()
+      .default("open"),
+    triagedBy: text("triaged_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    triagedAt: timestamp("triaged_at", { withTimezone: true }),
+    triageNotes: text("triage_notes"),
+    // Substrate-export tracking. Mirrors violation_overrides.exportedAt
+    // — set by `scripts/export-corpus.ts` (or a sibling) when the row's
+    // contribution lands in the private substrate.
+    exportedAt: timestamp("exported_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    // Inbox hot path: list open flags ordered by recency. Partial
+    // index keeps it small as triaged rows fall out.
+    index("customer_flagged_reviews_open_created_idx")
+      .on(t.createdAt)
+      .where(sql`status = 'open'`),
+    // User activity lookup (founder filtering by customer).
+    index("customer_flagged_reviews_user_created_idx").on(
+      t.userId,
+      t.createdAt,
+    ),
+    // Cross-reference with violation_overrides via text_hash so the
+    // founder can see "this string was flagged AND overridden."
+    index("customer_flagged_reviews_text_hash_idx").on(t.textHash),
+  ],
+).enableRLS();
+
 export type User = InferSelectModel<typeof users>;
 export type Usage = InferSelectModel<typeof usage>;
 export type UsageEvent = InferSelectModel<typeof usageEvents>;
@@ -1208,3 +1332,6 @@ export type PreferencePair = InferSelectModel<typeof preferencePairs>;
 export type Preference = InferSelectModel<typeof preferences>;
 export type CreditPack = InferSelectModel<typeof creditPacks>;
 export type OverageState = InferSelectModel<typeof overageState>;
+export type CustomerFlaggedReview = InferSelectModel<
+  typeof customerFlaggedReviews
+>;
