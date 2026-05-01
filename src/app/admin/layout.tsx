@@ -1,10 +1,12 @@
 /**
  * `/admin` founder dashboard layout.
  *
- * Phase B1 of the post-pivot rolling plan. Centralizes the founder-only
- * auth gate that every admin page would otherwise repeat. Pages under
- * `/admin/*` inherit this layout, so adding a new admin surface only
- * requires building the page — never re-implementing auth.
+ * Vertical left rail with weighted IA: MODEL primary, PILOTS and
+ * REPORTS secondary. The MODEL group surfaces inline counts so the
+ * rail itself flags what needs eyes — Today's queue, Override inbox,
+ * Customer flags. The rail is always visible across every /admin/*
+ * route so navigation never competes with page content for horizontal
+ * real estate.
  *
  * Auth contract (per
  * `decisions/2026-04-25-private-taxonomy-pivot.md`):
@@ -17,10 +19,6 @@
  *      founders — the URL itself is privileged information.
  *   3. Founders (Clerk IDs in `CONTENTRX_ADMIN_CLERK_IDS`) get the
  *      page content.
- *
- * The single-user-by-design principle means this layout doesn't try
- * to model multi-tenant permissions. There's one role: founder.
- * Everyone else gets a 404.
  */
 
 import { auth } from "@clerk/nextjs/server";
@@ -28,6 +26,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { isContentRXAdmin } from "@/lib/graduation";
+import { loadSidebarCounts } from "@/lib/admin/sidebar-counts";
 
 export default async function AdminLayout({
   children,
@@ -36,52 +35,66 @@ export default async function AdminLayout({
 }) {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    // Preserve the requested URL so post-sign-in we land back on
-    // the admin surface rather than the customer dashboard.
     const requestedPath = await currentAdminPath();
     redirect(`/sign-in?redirect_url=${encodeURIComponent(requestedPath)}`);
   }
   if (!isContentRXAdmin(clerkId)) {
-    // 404 rather than 403 — non-founders shouldn't even know /admin exists.
     notFound();
+  }
+
+  // Best-effort. If the count load throws (e.g. transient DB issue),
+  // we'd rather render the rail with no badges than 500 the whole
+  // admin surface.
+  let counts = { todayQueue: 0, overrideInbox: 0, customerFlags: 0 };
+  try {
+    counts = await loadSidebarCounts();
+  } catch {
+    // Swallow — the rail still renders, just without badges.
   }
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      <header className="border-b border-neutral-200 bg-white px-6 py-4 dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="mx-auto max-w-6xl space-y-3">
+      <div className="mx-auto flex max-w-7xl">
+        <aside className="hidden w-60 shrink-0 border-r border-neutral-200 bg-white px-4 py-6 md:block dark:border-neutral-800 dark:bg-neutral-900">
           <Link
             href="/admin"
-            className="text-sm font-semibold text-neutral-900 dark:text-neutral-100"
+            className="block px-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100"
           >
             ContentRX · Admin
           </Link>
-          <nav
-            aria-label="Admin sections"
-            className="flex flex-wrap gap-x-6 gap-y-2 text-sm"
-          >
-            <NavGroup label="Pilots">
-              <NavLink href="/admin">Tracker</NavLink>
-              <NavLink href="/admin/overrides">Override inbox</NavLink>
-              <NavLink href="/admin/costs">Costs</NavLink>
-            </NavGroup>
-            <NavGroup label="Rules">
+
+          <nav aria-label="Admin sections" className="mt-6 space-y-6 text-sm">
+            <NavGroup label="Model">
+              <NavLink href="/admin" badge={counts.todayQueue}>
+                Today&rsquo;s queue
+              </NavLink>
+              <NavLink href="/admin/overrides" badge={counts.overrideInbox}>
+                Override inbox
+              </NavLink>
+              <NavLinkPlaceholder>Customer flags</NavLinkPlaceholder>
+              <NavLink href="/admin/queue">Queue (full)</NavLink>
               <NavLink href="/admin/model">Library</NavLink>
-              <NavLink href="/admin/rule-review">Override rates</NavLink>
               <NavLink href="/admin/suggestions">Suggestions</NavLink>
               <NavLink href="/admin/refinement-log">Refinement</NavLink>
-              <NavLink href="/admin/queue">Review queue</NavLink>
-            </NavGroup>
-            <NavGroup label="Reports">
+              <NavLink href="/admin/rule-review">Override rates</NavLink>
               <NavLink href="/admin/calibration">Calibration</NavLink>
+            </NavGroup>
+
+            <NavGroup label="Pilots">
+              <NavLink href="/admin/pilots">Tracker</NavLink>
+              <NavLink href="/admin/costs">Costs</NavLink>
+            </NavGroup>
+
+            <NavGroup label="Reports">
               <NavLink href="/admin/reports">Reports</NavLink>
-              <NavLink href="/admin/essay-drafts">Essay drafts</NavLink>
               <NavLink href="/admin/case-studies">Case studies</NavLink>
+              <NavLink href="/admin/essay-drafts">Essay drafts</NavLink>
             </NavGroup>
           </nav>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-6 py-8">{children}</main>
+        </aside>
+
+        <main className="min-w-0 flex-1 px-6 py-8">{children}</main>
+      </div>
     </div>
   );
 }
@@ -94,11 +107,11 @@ function NavGroup({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+    <div>
+      <p className="px-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
         {label}
-      </span>
-      {children}
+      </p>
+      <ul className="mt-2 space-y-0.5">{children}</ul>
     </div>
   );
 }
@@ -106,17 +119,48 @@ function NavGroup({
 function NavLink({
   href,
   children,
+  badge,
 }: {
   href: string;
   children: React.ReactNode;
+  badge?: number;
 }) {
   return (
-    <Link
-      href={href}
-      className="text-neutral-700 hover:underline dark:text-neutral-300"
-    >
-      {children}
-    </Link>
+    <li>
+      <Link
+        href={href}
+        className="flex items-center justify-between rounded-md px-2 py-1 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+      >
+        <span>{children}</span>
+        {badge && badge > 0 ? (
+          <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200">
+            {badge}
+          </span>
+        ) : null}
+      </Link>
+    </li>
+  );
+}
+
+/**
+ * Sidebar entry for a surface that's planned but not built yet
+ * (Customer flags). Renders muted, with an aria-disabled marker, and
+ * doesn't link anywhere. Communicates IA intent without sending the
+ * founder to a 404.
+ */
+function NavLinkPlaceholder({ children }: { children: React.ReactNode }) {
+  return (
+    <li>
+      <span
+        aria-disabled="true"
+        className="flex items-center justify-between rounded-md px-2 py-1 text-neutral-400 dark:text-neutral-600"
+      >
+        <span>{children}</span>
+        <span className="text-[10px] uppercase tracking-wide text-neutral-400 dark:text-neutral-600">
+          Soon
+        </span>
+      </span>
+    </li>
   );
 }
 
