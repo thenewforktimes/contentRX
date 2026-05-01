@@ -423,6 +423,11 @@ class PipelineMeta:
     validated_rejected: int = 0
     moment_weights_applied: int = 0
     moment_suppressed: int = 0
+    # v4.7.4 — count of LLM-source suggestions replaced by the
+    # audience-aware fallback (suggestion_quality.sanitize_violations).
+    # Surfaced in the substrate envelope so /admin can monitor how often
+    # the slop screen fires; not surfaced to customers.
+    suggestions_replaced: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -434,6 +439,7 @@ class PipelineMeta:
             "validated_rejected": self.validated_rejected,
             "moment_weights_applied": self.moment_weights_applied,
             "moment_suppressed": self.moment_suppressed,
+            "suggestions_replaced": self.suggestions_replaced,
         }
 
 

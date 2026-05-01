@@ -59,6 +59,7 @@ from content_checker.moments import (
 )
 from content_checker.preprocess import run_preprocess
 from content_checker.standards.loader import load_standards
+from content_checker.suggestion_quality import sanitize_violations
 from content_checker.validate import validate_candidates
 
 MAX_CONTENT_LENGTH = 100_000
@@ -698,6 +699,16 @@ def check(
     )
 
     final_violations = active_preprocess + active_confirmed
+
+    # Slop screen (v4.7.4): catch the egregious suggestion-quality
+    # failures (em dashes, AI-assistant tone, runaway length) and
+    # replace with the audience-aware fallback. Conservative — only
+    # the unambiguous cases trip a replacement. Preprocessor
+    # suggestions are skipped (they're hand-tuned and trustworthy).
+    suggestions_replaced = sanitize_violations(
+        final_violations, text, audience,
+    )
+
     flagged_ids = {v.standard_id for v in final_violations}
     final_passes = [p for p in llm_passes if p.standard_id not in flagged_ids]
 
@@ -759,6 +770,7 @@ def check(
             validated_rejected=len(rejected),
             moment_weights_applied=len(moment_weights),
             moment_suppressed=moment_suppressed_count,
+            suggestions_replaced=suggestions_replaced,
         ),
         rationale_chain=chain,
     )
