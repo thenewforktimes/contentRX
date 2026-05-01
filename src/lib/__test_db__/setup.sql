@@ -58,11 +58,22 @@ CREATE TABLE usage_events (
   cache_read_input_tokens int NOT NULL DEFAULT 0,
   cache_creation_input_tokens int NOT NULL DEFAULT 0,
   model_id text,
-  estimated_cost_usd numeric(10, 6)
+  estimated_cost_usd numeric(10, 6),
+  team_id text REFERENCES users(id) ON DELETE SET NULL,
+  source text,
+  content_type text,
+  moment text,
+  verdict text,
+  review_reason text,
+  violation_count int NOT NULL DEFAULT 0,
+  text_hash text,
+  text_preview text
 );
 
 CREATE INDEX usage_events_user_created_idx
   ON usage_events (user_id, created_at);
+CREATE INDEX usage_events_team_created_idx
+  ON usage_events (team_id, created_at);
 
 -- subscriptions ---------------------------------------------------------
 CREATE TABLE subscriptions (

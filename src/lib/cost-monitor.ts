@@ -30,6 +30,15 @@ import { getDb, schema } from "@/db";
 import type { CheckTier } from "./metering";
 import { estimateCostUsd } from "./pricing/model-rates";
 
+export type CheckSource =
+  | "dashboard"
+  | "plugin"
+  | "cli"
+  | "action"
+  | "ditto"
+  | "lsp"
+  | "mcp";
+
 export interface RecordUsageEventArgs {
   userId: string;
   segmentType: CheckTier;
@@ -41,6 +50,18 @@ export interface RecordUsageEventArgs {
   /** Anthropic model id when the engine reports it; null for short-
    * circuited paths (custom-example matches that bypass the LLM). */
   modelId?: string | null;
+  // Check-history fields. Surfaced in /dashboard/checks. Population
+  // is best-effort — a missing field falls back to null and the
+  // history page handles it gracefully.
+  teamId?: string | null;
+  source?: CheckSource | null;
+  contentType?: string | null;
+  moment?: string | null;
+  verdict?: string | null;
+  reviewReason?: string | null;
+  violationCount?: number;
+  textHash?: string | null;
+  textPreview?: string | null;
 }
 
 export interface ThresholdResult {
@@ -85,6 +106,15 @@ export async function recordUsageEvent(
     cacheCreationInputTokens: args.cacheCreationInputTokens,
     modelId: args.modelId ?? null,
     estimatedCostUsd: cost.toFixed(6),
+    teamId: args.teamId ?? null,
+    source: args.source ?? null,
+    contentType: args.contentType ?? null,
+    moment: args.moment ?? null,
+    verdict: args.verdict ?? null,
+    reviewReason: args.reviewReason ?? null,
+    violationCount: args.violationCount ?? 0,
+    textHash: args.textHash ?? null,
+    textPreview: args.textPreview ?? null,
   });
   return { estimatedCostUsd: cost };
 }

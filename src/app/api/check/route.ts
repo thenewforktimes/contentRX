@@ -435,17 +435,33 @@ export async function POST(req: Request) {
       runId: run_id ?? null,
     }),
     recordTokenUsage(auth.user.id, tokens),
-    // Phase 4 cost-monitor: per-call event row (daily granularity for
-    // /admin/costs and the threshold-evaluation logic). The engine
-    // doesn't surface its model id today, so we pass null and let the
-    // cost helper apply a conservative Sonnet-class fallback rate —
-    // the cost monitor is for anomaly detection, not invoice accuracy.
+    // Phase 4 cost-monitor + check-history: one event row per /api/check
+    // completion. The cost columns drive /admin/costs + the threshold-
+    // evaluation pause logic. The check-history columns drive
+    // /dashboard/checks — the customer-facing list of "what did I run?".
+    // text_preview stores the first 80 chars of the input so customers
+    // can recognise their own checks. Customer-not-product (ADR
+    // 2026-04-28): the customer's own data, shown back to the customer,
+    // is not aggregation. A future TTL will null text_preview after 90
+    // days.
     recordUsageEvent({
       userId: auth.user.id,
       segmentType: meterDecision.tier,
       unitsConsumed: meterDecision.unitsConsumed,
       ...tokens,
       modelId: null,
+      teamId: teamIdForLog,
+      source,
+      contentType: result.content_type ?? content_type ?? null,
+      moment:
+        (result.moment as string | undefined) ?? moment ?? null,
+      verdict:
+        (result as { verdict?: string | null }).verdict ?? null,
+      reviewReason:
+        (result as { review_reason?: string | null }).review_reason ?? null,
+      violationCount: result.violations.length,
+      textHash: hashText(text),
+      textPreview: text.slice(0, 80),
     }),
   ]);
   if (logResult.status === "rejected") {

@@ -46,6 +46,7 @@ import {
   loadFindingAggregates,
   type FindingPattern,
 } from "@/lib/insight-patterns";
+import { isContentRXAdmin } from "@/lib/graduation";
 import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { MotionList } from "@/components/motion-list";
@@ -85,6 +86,7 @@ export default async function DashboardPage() {
   }
 
   const plan = user.plan as Plan;
+  const isAdmin = isContentRXAdmin(clerkId);
   const [seats, used, activeSub, sourceStats, insights, teamRuleCounts] =
     await Promise.all([
       loadSeats(user.id, plan, user.teamOwnerUserId),
@@ -146,6 +148,44 @@ export default async function DashboardPage() {
           surfaces={SURFACES}
           initialActivity={surfaceActivity}
         />
+
+        <nav
+          aria-label="Dashboard sections"
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
+        >
+          <Link
+            href="/dashboard/checks"
+            className="text-stone-700 hover:underline dark:text-stone-300"
+          >
+            Check history
+          </Link>
+          <Link
+            href="/dashboard/runs"
+            className="text-stone-700 hover:underline dark:text-stone-300"
+          >
+            CI runs
+          </Link>
+          <Link
+            href="/dashboard/overrides"
+            className="text-stone-700 hover:underline dark:text-stone-300"
+          >
+            Override report
+          </Link>
+          <Link
+            href="/dashboard/rules"
+            className="text-stone-700 hover:underline dark:text-stone-300"
+          >
+            Team rules
+          </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="ml-auto rounded-md border border-stone-300 px-2 py-0.5 text-xs font-medium text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+            >
+              Founder admin →
+            </Link>
+          )}
+        </nav>
 
         {/*
           Divider between work surfaces (above) and account configuration

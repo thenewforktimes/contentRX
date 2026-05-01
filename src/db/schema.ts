@@ -177,12 +177,38 @@ export const usageEvents = pgTable(
       precision: 10,
       scale: 6,
     }),
+    // Customer-facing check-history fields. Populated on every
+    // successful /api/check completion so /dashboard/checks can show
+    // the user their own activity. Privacy: text_preview is a
+    // truncated copy of the input (first 80 chars) so the customer
+    // can recognise what they checked. Customer-not-product principle
+    // (ADR 2026-04-28) — the customer's own data, shown back to the
+    // customer, is not aggregation or profiling. Future TTL job will
+    // null text_preview after 90 days.
+    teamId: text("team_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    source: text("source", {
+      enum: ["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"],
+    }),
+    contentType: text("content_type"),
+    moment: text("moment"),
+    verdict: text("verdict"),
+    reviewReason: text("review_reason"),
+    violationCount: integer("violation_count").notNull().default(0),
+    textHash: text("text_hash"),
+    textPreview: text("text_preview"),
   },
   (t) => [
     // Primary access pattern: sum estimated_cost_usd for one user across
     // a time window (today, this month). The composite (userId, createdAt)
     // covers both per-user and per-user-per-day rollups efficiently.
     index("usage_events_user_created_idx").on(t.userId, t.createdAt),
+    // Check-history hot path: list a team's recent checks ordered by
+    // recency. Team-scoped because a Team-plan teammate sees the
+    // owner's history alongside their own (intentional — see /dashboard
+    // section in CLAUDE.md).
+    index("usage_events_team_created_idx").on(t.teamId, t.createdAt),
   ],
 ).enableRLS();
 
