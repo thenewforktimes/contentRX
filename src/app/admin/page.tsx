@@ -43,17 +43,7 @@ const STATUS_TONE: Record<ActivityStatus, string> = {
 };
 
 export default async function AdminIndexPage() {
-  // DIAGNOSTIC — server-side try/catch surfaces the real error.
-  // Next.js production strips error messages before they reach
-  // /admin/error.tsx (client boundary), so we catch here where the
-  // server-component throws are still intact. Remove this wrapper
-  // once the underlying bug is fixed.
-  let rows: Awaited<ReturnType<typeof loadPilotTracker>>;
-  try {
-    rows = await loadPilotTracker();
-  } catch (err) {
-    return <ServerErrorPanel err={err} />;
-  }
+  const rows = await loadPilotTracker();
   const triggers = conversationTriggers(rows);
 
   const summary = summarize(rows);
@@ -251,76 +241,6 @@ function SummaryCard({
           </span>
         )}
       </p>
-    </div>
-  );
-}
-
-function ServerErrorPanel({ err }: { err: unknown }) {
-  // Server-component diagnostic. Next.js prod strips the message
-  // before it crosses to the client error boundary; catching here
-  // preserves it. Founder-only by way of the parent layout's auth
-  // gate, so dumping the stack on-page is safe.
-  const e = err as { message?: string; stack?: string; cause?: unknown };
-  const message =
-    typeof e?.message === "string" && e.message.length > 0
-      ? e.message
-      : String(err);
-  const stack =
-    typeof e?.stack === "string" && e.stack.length > 0 ? e.stack : null;
-  const cause =
-    e?.cause === undefined || e.cause === null
-      ? null
-      : (() => {
-          try {
-            return JSON.stringify(
-              e.cause,
-              Object.getOwnPropertyNames(e.cause as object),
-              2,
-            );
-          } catch {
-            return String(e.cause);
-          }
-        })();
-
-  return (
-    <div className="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950">
-      <h1 className="text-lg font-semibold text-red-900 dark:text-red-200">
-        /admin server-side failure
-      </h1>
-      <p className="mt-2 text-sm text-red-800 dark:text-red-300">
-        Caught in page.tsx before Next.js stripped the message. Diagnostic
-        only — remove the try/catch wrapper once the bug is fixed.
-      </p>
-      <dl className="mt-4 space-y-3 text-sm">
-        <div>
-          <dt className="font-mono text-xs uppercase tracking-wide text-red-700 dark:text-red-400">
-            message
-          </dt>
-          <dd className="mt-1 whitespace-pre-wrap break-words rounded bg-white/60 p-2 font-mono text-xs text-red-900 dark:bg-black/30 dark:text-red-200">
-            {message}
-          </dd>
-        </div>
-        {stack && (
-          <div>
-            <dt className="font-mono text-xs uppercase tracking-wide text-red-700 dark:text-red-400">
-              stack
-            </dt>
-            <dd className="mt-1 max-h-80 overflow-auto whitespace-pre-wrap break-words rounded bg-white/60 p-2 font-mono text-[11px] text-red-900 dark:bg-black/30 dark:text-red-200">
-              {stack}
-            </dd>
-          </div>
-        )}
-        {cause && (
-          <div>
-            <dt className="font-mono text-xs uppercase tracking-wide text-red-700 dark:text-red-400">
-              cause
-            </dt>
-            <dd className="mt-1 max-h-80 overflow-auto whitespace-pre-wrap break-words rounded bg-white/60 p-2 font-mono text-[11px] text-red-900 dark:bg-black/30 dark:text-red-200">
-              {cause}
-            </dd>
-          </div>
-        )}
-      </dl>
     </div>
   );
 }

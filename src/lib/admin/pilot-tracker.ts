@@ -68,7 +68,12 @@ export async function loadPilotTracker(opts: {
   now?: Date;
 } = {}): Promise<PilotRow[]> {
   const now = opts.now ?? new Date();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * DAY_MS);
+  // postgres.js text-binds template params and chokes on raw Date
+  // instances inside drizzle's sql`` (the timestamptz serializer
+  // doesn't get reached). Pass an ISO string — Postgres parses it
+  // into timestamptz natively, and the `>=` comparison against a
+  // timestamptz column works as expected.
+  const sevenDaysAgoIso = new Date(now.getTime() - 7 * DAY_MS).toISOString();
   const db = getDb();
 
   // Per-user check counts from usage_events.
@@ -77,7 +82,7 @@ export async function loadPilotTracker(opts: {
       userId: schema.usageEvents.userId,
       lastCheckAt: sql<Date>`max(${schema.usageEvents.createdAt})`,
       checksTotal: sql<number>`count(*)::int`,
-      checks7d: sql<number>`count(*) filter (where ${schema.usageEvents.createdAt} >= ${sevenDaysAgo})::int`,
+      checks7d: sql<number>`count(*) filter (where ${schema.usageEvents.createdAt} >= ${sevenDaysAgoIso})::int`,
     })
     .from(schema.usageEvents)
     .groupBy(schema.usageEvents.userId);
