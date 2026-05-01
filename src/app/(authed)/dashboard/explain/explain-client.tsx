@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FindingAdjustModal } from "@/components/finding-adjust-modal";
 import { FindingMakeRuleModal } from "@/components/finding-make-rule-modal";
+import { FlagForReview } from "@/components/flag-for-review";
 import { Pill } from "@/components/ui/pill";
 import type { PublicCheckEnvelope, PublicViolation } from "@/lib/api-envelope";
 import {
@@ -326,9 +327,22 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
               ))}
             </ul>
           )}
-          <p className="text-xs text-stone-500 dark:text-stone-300">
-            Evaluated in {response.latency_ms} ms.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <p className="text-xs text-stone-500 dark:text-stone-300">
+              Evaluated in {response.latency_ms} ms.
+            </p>
+            <FlagForReview
+              text={response.submittedText}
+              verdict={
+                response.verdict === "pass" ||
+                response.verdict === "violation" ||
+                response.verdict === "review_recommended"
+                  ? response.verdict
+                  : null
+              }
+              source="dashboard"
+            />
+          </div>
         </section>
       )}
     </div>

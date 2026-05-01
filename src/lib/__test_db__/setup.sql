@@ -163,3 +163,34 @@ CREATE TABLE violations (
   run_id text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- customer_flagged_reviews ----------------------------------------------
+CREATE TABLE customer_flagged_reviews (
+  id text PRIMARY KEY,
+  team_id text REFERENCES users(id) ON DELETE SET NULL,
+  user_id text REFERENCES users(id) ON DELETE SET NULL,
+  violation_id text,
+  text text NOT NULL,
+  text_hash text NOT NULL,
+  content_type text,
+  moment text,
+  verdict text,
+  flag_reason text NOT NULL,
+  customer_note text,
+  source text NOT NULL,
+  consent_recorded_at timestamptz NOT NULL DEFAULT now(),
+  status text NOT NULL DEFAULT 'open',
+  triaged_by text REFERENCES users(id) ON DELETE SET NULL,
+  triaged_at timestamptz,
+  triage_notes text,
+  exported_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX customer_flagged_reviews_open_created_idx
+  ON customer_flagged_reviews (created_at)
+  WHERE status = 'open';
+CREATE INDEX customer_flagged_reviews_user_created_idx
+  ON customer_flagged_reviews (user_id, created_at);
+CREATE INDEX customer_flagged_reviews_text_hash_idx
+  ON customer_flagged_reviews (text_hash);

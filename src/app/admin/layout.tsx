@@ -71,7 +71,9 @@ export default async function AdminLayout({
               <NavLink href="/admin/overrides" badge={counts.overrideInbox}>
                 Override inbox
               </NavLink>
-              <NavLinkPlaceholder>Customer flags</NavLinkPlaceholder>
+              <NavLink href="/admin/customer-flags" badge={counts.customerFlags}>
+                Customer flags
+              </NavLink>
               <NavLink href="/admin/queue">Queue (full)</NavLink>
               <NavLink href="/admin/model">Library</NavLink>
               <NavLink href="/admin/suggestions">Suggestions</NavLink>
@@ -138,28 +140,6 @@ function NavLink({
           </span>
         ) : null}
       </Link>
-    </li>
-  );
-}
-
-/**
- * Sidebar entry for a surface that's planned but not built yet
- * (Customer flags). Renders muted, with an aria-disabled marker, and
- * doesn't link anywhere. Communicates IA intent without sending the
- * founder to a 404.
- */
-function NavLinkPlaceholder({ children }: { children: React.ReactNode }) {
-  return (
-    <li>
-      <span
-        aria-disabled="true"
-        className="flex items-center justify-between rounded-md px-2 py-1 text-neutral-400 dark:text-neutral-600"
-      >
-        <span>{children}</span>
-        <span className="text-[10px] uppercase tracking-wide text-neutral-400 dark:text-neutral-600">
-          Soon
-        </span>
-      </span>
     </li>
   );
 }

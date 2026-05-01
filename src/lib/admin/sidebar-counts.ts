@@ -61,9 +61,14 @@ export async function loadSidebarCounts(): Promise<SidebarCounts> {
     .from(schema.violationOverrides)
     .where(eq(schema.violationOverrides.overrideStatus, "open"));
 
+  const [flagRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(schema.customerFlaggedReviews)
+    .where(eq(schema.customerFlaggedReviews.status, "open"));
+
   return {
     todayQueue: Number(queueRow?.count ?? 0),
     overrideInbox: Number(overrideRow?.count ?? 0),
-    customerFlags: 0,
+    customerFlags: Number(flagRow?.count ?? 0),
   };
 }
