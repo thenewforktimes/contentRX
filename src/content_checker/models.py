@@ -77,7 +77,16 @@ from content_checker.config import is_public_taxonomy_enabled
 #         New: `severity` field on Violation, derived from `confidence`
 #         (>=0.85 → "high", >=0.65 → "medium", else "low"). Override
 #         points: team-rules per-standard severity (TS-side).
-SCHEMA_VERSION = "2.0.0"
+# 2.1.0 — Pre-pilot metering rebuild (TS-side only). Added top-level
+#         `metering` block to /api/check responses. Engine envelope
+#         shape unchanged.
+# 2.2.0 — Customer-grounding fields. Adds `content_type` and `moment`
+#         (both nullable) to the public envelope. Already exposed on
+#         /dashboard/checks for the customer's own history; this
+#         propagates them to live check responses so surfaces can
+#         display the same context inline. Additive — old clients
+#         ignoring unknown fields continue to work.
+SCHEMA_VERSION = "2.2.0"
 
 
 # Ambiguity-flag vocabulary (human-eval build plan Session 1).
@@ -608,30 +617,40 @@ class CheckResult:
         return self.to_substrate_dict()
 
     def to_public_envelope(self, *, warnings: list[str] | None = None) -> dict:
-        """Public-facing schema 2.0.0 envelope.
+        """Public-facing envelope.
 
-        Top-level shape per ADR 2026-04-25:
+        Top-level shape (schema 2.2.0):
 
             {
-                "schema_version": "2.0.0",
+                "schema_version": "2.2.0",
                 "violations": [...public violations...],
                 "verdict": "...",
                 "review_reason": "..." | None,
-                "warnings": [...]
+                "warnings": [...],
+                "content_type": "..." | None,
+                "moment": "..." | None,
             }
 
-        Substrate-only fields are stripped. The customer web dashboard,
-        MCP, CLI, Figma plugin, GitHub Action, LSP, and editor
-        extensions all consume this shape directly. The TS layer at
-        `/api/check` may add API-usage siblings (`latency_ms`, `tokens`,
-        `usage`) at the top level — those are about request metadata,
-        not taxonomy, so they live alongside this envelope rather than
-        inside it.
+        The customer web dashboard, MCP, CLI, Figma plugin, GitHub
+        Action, LSP, and editor extensions all consume this shape
+        directly. The TS layer at `/api/check` may add API-usage
+        siblings (`latency_ms`, `tokens`, `usage`) at the top level —
+        those are about request metadata, not taxonomy, so they live
+        alongside this envelope rather than inside it.
 
-        Note that `passes`, `pipeline`, `rationale_chain`, `moment`,
-        `audience`, `content_type`, `summary`, and the legacy
-        `overall_verdict` are all OMITTED. Engine-internal consumers
-        that need them call `to_substrate_dict()` instead.
+        Schema 2.2.0 additions: `content_type` and `moment` describe
+        the engine's classification of the customer's own input back
+        to them. They ground recommendations in the customer's
+        specific situation ("Detected as a button label · destructive
+        confirmation"). Both nullable when classification was
+        inconclusive. They're not substrate-only — the customer was
+        always going to see them on /dashboard/checks; this surfaces
+        them on the live response too.
+
+        `passes`, `pipeline`, `rationale_chain`, `audience`,
+        `summary`, and the legacy `overall_verdict` are still OMITTED.
+        Engine-internal consumers that need them call
+        `to_substrate_dict()` instead.
         """
         return {
             "schema_version": SCHEMA_VERSION,
@@ -639,6 +658,8 @@ class CheckResult:
             "verdict": self.verdict,
             "review_reason": self.review_reason,
             "warnings": list(warnings) if warnings else [],
+            "content_type": self.content_type or None,
+            "moment": self.moment or None,
         }
 
 

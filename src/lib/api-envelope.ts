@@ -75,7 +75,19 @@
 //         read `metering` continue to work unchanged. The /api/check
 //         request schema gains an optional `segment_type` parameter
 //         (defaults to `"standard"`).
-export const SCHEMA_VERSION = "2.1.0" as const;
+// 2.2.0 — Customer-grounding fields. Adds `content_type` and `moment`
+//         to the public envelope (both nullable). These ground each
+//         check in the customer's specific situation — "Detected as a
+//         button label · destructive confirmation" — so the
+//         recommendations feel applied to their copy, not generic.
+//         Already exposed on /dashboard/checks for the customer's
+//         own history; this propagates them to live check responses
+//         so surfaces can display the same context inline. Additive
+//         — old clients ignoring unknown fields continue to work.
+//         (No engine bump required — `to_substrate_dict()` already
+//         carries the fields; this PR only changes which fields the
+//         TS-side public projection forwards.)
+export const SCHEMA_VERSION = "2.2.0" as const;
 
 /**
  * Adds `schema_version` and `warnings` to a response payload. Existing
@@ -138,6 +150,13 @@ export type PublicCheckEnvelope = {
   verdict: string;
   review_reason: string | null;
   warnings: string[];
+  // 2.2.0 — customer-grounding fields. The detected content type and
+  // moment, in the engine's snake_case substrate enums (e.g.
+  // "button" / "destructive_confirmation"). Render via
+  // humanizeContentType + humanizeMoment at the boundary. Both
+  // nullable because some inputs don't classify confidently.
+  content_type: string | null;
+  moment: string | null;
 };
 
 /**
@@ -151,6 +170,8 @@ type SubstrateCheckResult = {
   overall_verdict?: string;
   review_reason?: string | null;
   violations?: SubstrateViolation[];
+  content_type?: string | null;
+  moment?: string | null;
   // ...other substrate fields ignored by the public projection.
   [key: string]: unknown;
 };
@@ -214,12 +235,19 @@ export function publicViolation(v: SubstrateViolation): PublicViolation {
 }
 
 /**
- * Build the schema 2.0.0 public envelope from a substrate CheckResult
- * (the shape returned by the Python engine's /api/evaluate). Strips
- * `passes`, `pipeline`, `rationale_chain`, `moment`, `audience`,
- * `content_type`, `summary`, and `overall_verdict` from the public
- * surface — those fields stay inside the substrate response for
- * founder-only `/admin` API consumption.
+ * Build the public envelope from a substrate CheckResult (the shape
+ * returned by the Python engine's /api/evaluate). Strips `passes`,
+ * `pipeline`, `rationale_chain`, `audience`, `summary`, and
+ * `overall_verdict` from the public surface — those fields stay
+ * inside the substrate response for founder-only `/admin` API
+ * consumption.
+ *
+ * Schema 2.2.0 forwards `content_type` and `moment`. They're not
+ * substrate-only; they describe the customer's own input back to
+ * them so surfaces can ground recommendations in the specific
+ * situation ("Detected as a button label · destructive
+ * confirmation"). Both nullable when the engine didn't classify
+ * confidently.
  */
 export function publicCheckEnvelope(
   result: SubstrateCheckResult,
@@ -228,6 +256,14 @@ export function publicCheckEnvelope(
   const violations = Array.isArray(result.violations)
     ? result.violations.map(publicViolation)
     : [];
+  const content_type =
+    typeof result.content_type === "string" && result.content_type.length > 0
+      ? result.content_type
+      : null;
+  const moment =
+    typeof result.moment === "string" && result.moment.length > 0
+      ? result.moment
+      : null;
   return {
     schema_version: SCHEMA_VERSION,
     violations,
@@ -235,5 +271,7 @@ export function publicCheckEnvelope(
     review_reason:
       typeof result.review_reason === "string" ? result.review_reason : null,
     warnings: opts.warnings ?? [],
+    content_type,
+    moment,
   };
 }

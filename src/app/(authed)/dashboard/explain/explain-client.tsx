@@ -33,6 +33,8 @@ import {
 } from "@/lib/metering";
 import type { Plan } from "@/lib/quotas";
 import {
+  humanizeContentType,
+  humanizeMoment,
   humanizeReviewReason,
   humanizeSeverity,
   humanizeVerdict,
@@ -314,6 +316,8 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
             verdict={response.verdict}
             reviewReason={response.review_reason}
             findingCount={response.violations.length}
+            contentType={response.content_type}
+            moment={response.moment}
           />
           {response.violations.length > 0 && (
             <ul className="space-y-2">
@@ -353,10 +357,14 @@ function VerdictHeader({
   verdict,
   reviewReason,
   findingCount,
+  contentType,
+  moment,
 }: {
   verdict: string;
   reviewReason: string | null;
   findingCount: number;
+  contentType: string | null;
+  moment: string | null;
 }) {
   // Per ADR 2026-04-29 §9a — customer surface speaks "Findings" /
   // "All clear" / "Worth a look" / "N findings to adjust", not raw
@@ -365,13 +373,43 @@ function VerdictHeader({
   // surface (web, MCP, CLI, GitHub Action, LSP, Figma plugin) so the
   // language is identical wherever findings render.
   const { label, tone } = humanizeVerdict(verdict, findingCount);
+  // Schema 2.2.0 — surface the engine's classification of the
+  // customer's input so recommendations feel grounded in the
+  // specific situation. "Detected as a button label · destructive
+  // confirmation" is more useful than a verdict pill alone because
+  // it tells the customer WHICH lens the engine read their copy
+  // through. Both fields are nullable from the engine; we render
+  // only what's present.
+  const contentTypeLabel = humanizeContentType(contentType);
+  const momentLabel = humanizeMoment(moment);
+  const showContext =
+    contentTypeLabel.length > 0 || momentLabel.length > 0;
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Pill tone={tone}>{label}</Pill>
-      {reviewReason && (
-        <span className="text-sm text-stone-600 dark:text-stone-300">
-          {humanizeReviewReason(reviewReason)}
-        </span>
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <Pill tone={tone}>{label}</Pill>
+        {reviewReason && (
+          <span className="text-sm text-stone-600 dark:text-stone-300">
+            {humanizeReviewReason(reviewReason)}
+          </span>
+        )}
+      </div>
+      {showContext && (
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Detected as{" "}
+          {contentTypeLabel && (
+            <span className="font-medium text-stone-700 dark:text-stone-300">
+              {contentTypeLabel.toLowerCase()}
+            </span>
+          )}
+          {contentTypeLabel && momentLabel && " · "}
+          {momentLabel && (
+            <span className="font-medium text-stone-700 dark:text-stone-300">
+              {momentLabel.toLowerCase()}
+            </span>
+          )}
+          .
+        </p>
       )}
     </div>
   );

@@ -44,13 +44,16 @@ SUBSTRATE_ONLY_VIOLATION_FIELDS = frozenset({
 })
 
 PUBLIC_ENVELOPE_TOP_LEVEL_FIELDS = frozenset({
-    "schema_version", "violations", "verdict", "review_reason", "warnings",
+    "schema_version", "violations", "verdict", "review_reason",
+    "warnings", "content_type", "moment",
 })
 
 SUBSTRATE_TOP_LEVEL_FIELDS = frozenset({
     # CheckResult substrate-only top-level fields that MUST NOT appear
-    # in the public envelope.
-    "content_type", "audience", "moment", "summary", "overall_verdict",
+    # in the public envelope. content_type + moment moved off this
+    # list in 2.2.0 — they describe the customer's own classified
+    # input back to them and aren't substrate-only.
+    "audience", "summary", "overall_verdict",
     "passes", "pipeline", "rationale_chain",
 })
 
@@ -200,7 +203,7 @@ class TestViolationPublicDict:
 
 
 class TestCheckResultPublicEnvelope:
-    def test_top_level_shape_is_schema_2_0_0(
+    def test_top_level_shape_is_current_schema(
         self, public_taxonomy_off: None,
     ) -> None:
         result = make_check_result(make_violation())
@@ -208,7 +211,12 @@ class TestCheckResultPublicEnvelope:
 
         assert set(envelope.keys()) == PUBLIC_ENVELOPE_TOP_LEVEL_FIELDS
         assert envelope["schema_version"] == SCHEMA_VERSION
-        assert envelope["schema_version"] == "2.0.0"
+        # 2.2.0 added content_type + moment as customer-grounding
+        # fields. Both are nullable in the contract, present here
+        # because make_check_result populates them.
+        assert envelope["schema_version"] == "2.2.0"
+        assert envelope["content_type"] == "error"
+        assert envelope["moment"] == "destructive_action"
 
     def test_no_substrate_top_level_fields(
         self, public_taxonomy_off: None,

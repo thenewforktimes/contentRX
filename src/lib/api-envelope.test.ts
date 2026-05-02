@@ -31,11 +31,12 @@ describe("api-envelope", () => {
     expect(SCHEMA_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it("SCHEMA_VERSION is 2.1.0 (pre-pilot metering rebuild)", () => {
-    // Locks the metering-rebuild minor. Additive `metering` block on
-    // /api/check responses; bumping requires updating every surface
-    // that reads the wire format.
-    expect(SCHEMA_VERSION).toBe("2.1.0");
+  it("SCHEMA_VERSION is 2.2.0 (customer-grounding fields)", () => {
+    // Locks the additive minor that surfaces content_type + moment
+    // on the public envelope. Old clients ignoring unknown fields
+    // continue to work; new clients can ground recommendations in
+    // the customer's specific situation.
+    expect(SCHEMA_VERSION).toBe("2.2.0");
   });
 });
 
@@ -56,10 +57,11 @@ const PUBLIC_VIOLATION_FIELDS = [
   "confidence",
 ] as const;
 
+// Fields that MUST stay off the public envelope. content_type +
+// moment moved off this list in 2.2.0 — they describe the customer's
+// own classified input back to them and aren't substrate-only.
 const SUBSTRATE_TOP_LEVEL_FIELDS = [
-  "content_type",
   "audience",
-  "moment",
   "summary",
   "overall_verdict",
   "passes",
@@ -159,17 +161,38 @@ describe("publicCheckEnvelope", () => {
     process.env = original;
   });
 
-  it("emits schema 2.0.0 top-level shape", () => {
+  it("emits schema 2.2.0 top-level shape", () => {
     delete process.env.PUBLIC_TAXONOMY;
     const env = publicCheckEnvelope(makeSubstrateResult());
     expect(Object.keys(env).sort()).toEqual([
+      "content_type",
+      "moment",
       "review_reason",
       "schema_version",
       "verdict",
       "violations",
       "warnings",
     ]);
-    expect(env.schema_version).toBe("2.1.0");
+    expect(env.schema_version).toBe("2.2.0");
+  });
+
+  it("forwards content_type and moment from the substrate result", () => {
+    delete process.env.PUBLIC_TAXONOMY;
+    const env = publicCheckEnvelope(makeSubstrateResult());
+    expect(env.content_type).toBe("error");
+    expect(env.moment).toBe("destructive_action");
+  });
+
+  it("nullifies content_type and moment when missing or empty", () => {
+    delete process.env.PUBLIC_TAXONOMY;
+    const env = publicCheckEnvelope({
+      verdict: "pass",
+      violations: [],
+      content_type: "",
+      moment: null,
+    });
+    expect(env.content_type).toBeNull();
+    expect(env.moment).toBeNull();
   });
 
   it("strips substrate top-level fields", () => {
@@ -251,7 +274,7 @@ describe("publicCheckEnvelope", () => {
     // surprises across runs.
     expect(JSON.stringify(env, null, 2)).toMatchInlineSnapshot(`
       "{
-        "schema_version": "2.1.0",
+        "schema_version": "2.2.0",
         "violations": [
           {
             "issue": "This destructive confirmation does not name what gets deleted.",
@@ -262,7 +285,9 @@ describe("publicCheckEnvelope", () => {
         ],
         "verdict": "violation",
         "review_reason": null,
-        "warnings": []
+        "warnings": [],
+        "content_type": "error",
+        "moment": "destructive_action"
       }"
     `);
   });

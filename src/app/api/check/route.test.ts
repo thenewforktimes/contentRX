@@ -422,7 +422,7 @@ describe("/api/check — happy path", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    expect(body.schema_version).toBe("2.1.0");
+    expect(body.schema_version).toBe("2.2.0");
     expect(body.verdict).toBe("violation");
     expect(Array.isArray(body.violations)).toBe(true);
     expect(body.violations).toHaveLength(1);

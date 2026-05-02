@@ -32,11 +32,14 @@ from content_checker.models import (
 
 
 class TestSchemaVersionBump:
-    def test_schema_version_is_2_0_0(self):
-        # ADR 2026-04-25 (private-taxonomy pivot): public Violation
-        # envelope reduced to {issue, suggestion, severity, confidence};
-        # docs_url removed entirely. Major bump from 1.x is breaking.
-        assert SCHEMA_VERSION == "2.0.0"
+    def test_schema_version_is_current(self):
+        # 2.0.0 — ADR 2026-04-25 (private-taxonomy pivot): public
+        # Violation envelope reduced to {issue, suggestion, severity,
+        # confidence}; docs_url removed entirely.
+        # 2.1.0 — additive metering block (TS-side only).
+        # 2.2.0 — additive content_type + moment on the public
+        # envelope (customer-grounding fields).
+        assert SCHEMA_VERSION == "2.2.0"
 
 
 class TestVerdictConstants:

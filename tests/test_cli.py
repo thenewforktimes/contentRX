@@ -326,13 +326,14 @@ class TestMainDispatch:
         main()
         out = capsys.readouterr().out
         parsed = json.loads(out)
-        # Schema 2.0.0 (ADR 2026-04-25): CLI --json emits the public
-        # envelope, which uses `verdict` (not the legacy `overall_verdict`),
-        # carries `schema_version`, and has no substrate fields at any
-        # depth. The substrate-bearing `to_dict()` shape is reserved for
-        # internal callers.
+        # ADR 2026-04-25: CLI --json emits the public envelope, which
+        # uses `verdict` (not the legacy `overall_verdict`), carries
+        # `schema_version`, and has no substrate fields at any depth.
+        # 2.2.0 added content_type + moment as customer-grounding
+        # fields — those are NOT substrate, they describe the
+        # customer's own input back to them.
         assert parsed["verdict"] == "pass"
-        assert parsed["schema_version"] == "2.0.0"
+        assert parsed["schema_version"] == "2.2.0"
         assert "overall_verdict" not in parsed
         assert "rationale_chain" not in parsed
         assert "passes" not in parsed
