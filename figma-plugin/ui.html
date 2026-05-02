@@ -295,6 +295,19 @@
     margin-left: 4px;
   }
 
+  /* Per the cross-surface copy audit. Rendered for review_recommended
+   * verdicts to explain WHY the engine flagged this for review. The
+   * substrate enum (low_confidence, ensemble_disagreement, …) is
+   * humanized at the render boundary; this style is for the resulting
+   * one-line plain-language explanation. */
+  .review-reason {
+    margin: 0 0 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--figma-color-text-secondary, #666);
+    font-style: italic;
+  }
+
   /* Human-eval build plan Session 30 PR B — "Team custom example"
    * display-only tag. Shown when a short-circuit fires. No CTA;
    * this is reference-only — the team already decided.
@@ -3773,6 +3786,19 @@ function renderNodeCard(result) {
   // Full text preview
   html += `<div class="checked-text">"${escapeHtml(result.text)}"</div>`;
 
+  // Per the cross-surface copy audit: when the verdict is
+  // review_recommended, surface the reason in plain language so the
+  // customer knows WHY this is "Worth a look" rather than just
+  // "something looks off." The substrate review_reason enum stays on
+  // the result object for filter/analytics; we render the humanized
+  // form only.
+  if (isReview && result.reviewReason) {
+    const reasonText = humanizeReviewReason(result.reviewReason);
+    if (reasonText) {
+      html += `<p class="review-reason">${escapeHtml(reasonText)}</p>`;
+    }
+  }
+
   // Content type badge
   html += `<span class="content-type-badge">${escapeHtml(result.contentType)}</span>`;
 
@@ -3913,6 +3939,37 @@ function humanizeSeverity(severity, isShipBlocker) {
 function renderSeverityBadge(severity) {
   const { label, tone } = humanizeSeverity(severity);
   return `<span class="severity-badge ${tone}">${label}</span>`;
+}
+
+
+// Customer-facing labels for review_reason subtypes.
+//
+// Mirror of `REVIEW_REASON_LABELS` in `src/lib/humanize.ts` and the
+// four Python humanize.py copies. Keep in sync. Per the cross-surface
+// copy audit, the substrate enums leak engine-pipeline vocabulary
+// (low_confidence → "Confidence below the review threshold",
+// ensemble_disagreement → "First-pass and validation disagreed");
+// customer surfaces should never render those raw.
+//
+// The plugin runs in a Figma iframe sandbox and can't import from
+// src/, so this is a maintained copy. Drift risk is low — there are
+// only eight subtypes and they update rarely.
+const REVIEW_REASON_LABELS = {
+  low_confidence: "We weren't fully sure about this one",
+  standards_conflict: "Two rules pointed different directions",
+  ensemble_disagreement: "Worth a closer look. We're not certain",
+  situation_ambiguity: "Hard to tell what kind of copy this is",
+  out_of_distribution: "Unfamiliar shape. Your eyes will help",
+  novel_pattern: "This rule is shifting. Double-check",
+  low_confidence_mixed_signals: "Mixed signals. Worth a second pass",
+  high_confidence_mixed_signals: "Confident, but signals are mixed",
+};
+
+function humanizeReviewReason(value) {
+  if (!value) return "";
+  if (REVIEW_REASON_LABELS[value]) return REVIEW_REASON_LABELS[value];
+  const spaced = String(value).replace(/_/g, " ").trim();
+  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : "";
 }
 
 
