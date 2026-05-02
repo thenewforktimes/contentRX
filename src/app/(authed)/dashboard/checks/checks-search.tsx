@@ -1,18 +1,23 @@
 "use client";
 
 /**
- * Client-side search + verdict filter for /dashboard/checks.
+ * URL-driven search island for /dashboard/checks.
  *
- * The list of recent checks is server-rendered (page.tsx). This island
- * renders the rows + a search input + a verdict-filter pill row, all
- * filtering on the in-memory list. No backend search call — the
- * 100-row page limit means client-side filter is more than fast enough,
- * and it keeps the privacy story tight (text never leaves your device
- * after the initial render).
+ * The page is server-rendered; this component owns the controls
+ * (text input + verdict filter pills + pagination) and updates the
+ * URL via router.push. Every change triggers a server re-render with
+ * the new ?q / ?verdict / ?page values, so search hits the entire
+ * history (not just the most-recent-100 client-side window the page
+ * used to use).
+ *
+ * Text input is debounced at 280ms — slow enough to avoid a fetch
+ * per keystroke, fast enough that the customer sees results land
+ * before they decide whether to refine.
  */
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pill } from "@/components/ui/pill";
 
 type SegmentType = "standard" | "document" | "surface";
@@ -31,47 +36,110 @@ interface CheckHistoryRow {
   textPreview: string | null;
 }
 
-type VerdictFilter = "all" | "violation" | "review_recommended" | "pass";
+type VerdictFilter = "" | "violation" | "review_recommended" | "pass";
 
-const VERDICT_LABEL: Record<VerdictFilter, string> = {
-  all: "All",
+const VERDICT_LABEL: Record<string, string> = {
+  "": "All",
   violation: "Findings",
   review_recommended: "Worth a look",
   pass: "All clear",
 };
 
-export function ChecksSearch({ rows }: { rows: CheckHistoryRow[] }) {
-  const [query, setQuery] = useState("");
-  const [verdict, setVerdict] = useState<VerdictFilter>("all");
+const VERDICT_KEYS: VerdictFilter[] = [
+  "",
+  "violation",
+  "review_recommended",
+  "pass",
+];
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (verdict !== "all" && r.verdict !== verdict) return false;
-      if (q.length === 0) return true;
-      return (
-        (r.textPreview ?? "").toLowerCase().includes(q) ||
-        (r.contentType ?? "").toLowerCase().includes(q) ||
-        (r.moment ?? "").toLowerCase().includes(q) ||
-        (r.source ?? "").toLowerCase().includes(q)
-      );
-    });
-  }, [rows, query, verdict]);
+interface ChecksSearchProps {
+  rows: CheckHistoryRow[];
+  query: string;
+  verdict: string;
+  page: number;
+  hasMore: boolean;
+  counts: Record<string, number>;
+}
 
-  const counts = useMemo(() => {
-    const out: Record<VerdictFilter, number> = {
-      all: rows.length,
-      violation: 0,
-      review_recommended: 0,
-      pass: 0,
-    };
-    for (const r of rows) {
-      if (r.verdict === "violation") out.violation++;
-      else if (r.verdict === "review_recommended") out.review_recommended++;
-      else out.pass++;
+const DEBOUNCE_MS = 280;
+
+export function ChecksSearch({
+  rows,
+  query,
+  verdict,
+  page,
+  hasMore,
+  counts,
+}: ChecksSearchProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // Local input state so typing feels instant while the actual query
+  // debounces to a router.push.
+  const [localQuery, setLocalQuery] = useState(query);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Resync local state when the URL changes externally (e.g. clicking
+  // a verdict pill should preserve the search input value, but the
+  // back button should restore the prior query).
+  useEffect(() => {
+    setLocalQuery(query);
+  }, [query]);
+
+  const buildUrl = useCallback(
+    (overrides: { q?: string; verdict?: string; page?: number }) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (overrides.q !== undefined) {
+        if (overrides.q.length === 0) next.delete("q");
+        else next.set("q", overrides.q);
+      }
+      if (overrides.verdict !== undefined) {
+        if (overrides.verdict.length === 0) next.delete("verdict");
+        else next.set("verdict", overrides.verdict);
+      }
+      // Any control change resets pagination unless explicitly set.
+      if (overrides.page !== undefined) {
+        if (overrides.page <= 1) next.delete("page");
+        else next.set("page", String(overrides.page));
+      } else {
+        next.delete("page");
+      }
+      const qs = next.toString();
+      return qs.length > 0 ? `${pathname}?${qs}` : pathname;
+    },
+    [pathname, searchParams],
+  );
+
+  const onQueryChange = useCallback(
+    (value: string) => {
+      setLocalQuery(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        router.push(buildUrl({ q: value }));
+      }, DEBOUNCE_MS);
+    },
+    [router, buildUrl],
+  );
+
+  const onVerdictChange = useCallback(
+    (next: VerdictFilter) => {
+      router.push(buildUrl({ verdict: next }));
+    },
+    [router, buildUrl],
+  );
+
+  const summary = useMemo(() => {
+    if (query.length > 0 && verdict.length > 0) {
+      return `${rows.length} match${rows.length === 1 ? "" : "es"} for "${query}" with the ${VERDICT_LABEL[verdict]} filter on.`;
     }
-    return out;
-  }, [rows]);
+    if (query.length > 0) {
+      return `${rows.length} match${rows.length === 1 ? "" : "es"} for "${query}".`;
+    }
+    if (verdict.length > 0) {
+      return `${rows.length} ${VERDICT_LABEL[verdict].toLowerCase()} on this page.`;
+    }
+    return `${rows.length} most recent.`;
+  }, [rows.length, query, verdict]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,54 +148,59 @@ export function ChecksSearch({ rows }: { rows: CheckHistoryRow[] }) {
           htmlFor="checks-search"
           className="text-xs font-medium text-stone-700 dark:text-stone-300"
         >
-          Search
+          Search across every check
         </label>
         <input
           id="checks-search"
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Find a check by text, content type, moment, or source"
-          className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+          value={localQuery}
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder="Try a phrase you remember writing"
+          className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500"
+          autoComplete="off"
         />
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Substring match against the text you checked, plus the content
+          type, moment, and source. Even a few words will find it.
+        </p>
         <div
           role="radiogroup"
           aria-label="Verdict filter"
-          className="flex flex-wrap gap-2 text-xs"
+          className="mt-1 flex flex-wrap gap-2 text-xs"
         >
-          {(Object.keys(VERDICT_LABEL) as VerdictFilter[]).map((v) => {
+          {VERDICT_KEYS.map((v) => {
             const active = verdict === v;
             return (
               <button
-                key={v}
+                key={v || "all"}
                 type="button"
                 role="radio"
                 aria-checked={active}
-                onClick={() => setVerdict(v)}
+                onClick={() => onVerdictChange(v)}
                 className={`rounded-full px-3 py-1 font-medium transition ${
                   active
                     ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
                     : "bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
                 }`}
               >
-                {VERDICT_LABEL[v]} · {counts[v]}
+                {VERDICT_LABEL[v]} · {counts[v || "all"] ?? 0}
               </button>
             );
           })}
         </div>
       </section>
 
-      <p className="text-xs text-stone-500 dark:text-stone-400">
-        Showing {filtered.length} of {rows.length} checks.
-      </p>
+      <p className="text-xs text-stone-500 dark:text-stone-400">{summary}</p>
 
-      {filtered.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="rounded-lg border border-dashed border-stone-200 p-4 text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">
-          No checks match the current filter.
+          {query.length > 0
+            ? `No checks match "${query}". Try fewer words, or clear the filter pill above.`
+            : "No checks match the current filter."}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {filtered.map((row) => (
+          {rows.map((row) => (
             <li
               key={row.id}
               className="rounded-md border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-950"
@@ -173,19 +246,58 @@ export function ChecksSearch({ rows }: { rows: CheckHistoryRow[] }) {
         </ul>
       )}
 
-      <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
-        Showing the most recent {rows.length} checks. For runs from the
-        GitHub Action,{" "}
-        <Link
-          href="/dashboard/runs"
-          className="underline underline-offset-2"
+      {(page > 1 || hasMore) && (
+        <nav
+          aria-label="Pagination"
+          className="flex items-center justify-between gap-3 pt-2 text-sm"
         >
+          {page > 1 ? (
+            <Link
+              href={buildPaginationHref(searchParams, pathname, page - 1)}
+              className="text-stone-700 underline underline-offset-2 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100"
+            >
+              ← Newer
+            </Link>
+          ) : (
+            <span aria-hidden="true" />
+          )}
+          <span className="text-xs text-stone-500 dark:text-stone-400">
+            Page {page}
+          </span>
+          {hasMore ? (
+            <Link
+              href={buildPaginationHref(searchParams, pathname, page + 1)}
+              className="text-stone-700 underline underline-offset-2 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100"
+            >
+              Older →
+            </Link>
+          ) : (
+            <span aria-hidden="true" />
+          )}
+        </nav>
+      )}
+
+      <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
+        For runs from the GitHub Action,{" "}
+        <Link href="/dashboard/runs" className="underline underline-offset-2">
           run history
         </Link>{" "}
         groups checks by CI run.
       </p>
     </div>
   );
+}
+
+function buildPaginationHref(
+  searchParams: ReturnType<typeof useSearchParams>,
+  pathname: string,
+  nextPage: number,
+): string {
+  const next = new URLSearchParams(searchParams.toString());
+  if (nextPage <= 1) next.delete("page");
+  else next.set("page", String(nextPage));
+  const qs = next.toString();
+  return qs.length > 0 ? `${pathname}?${qs}` : pathname;
 }
 
 function toneFor(
