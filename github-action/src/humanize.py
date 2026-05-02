@@ -45,3 +45,31 @@ def humanize_severity(
         return ("Quick polish", "stone")
     spaced = severity.replace("_", " ").strip()
     return (spaced[:1].upper() + spaced[1:] if spaced else severity, "stone")
+
+
+# Mirror of REVIEW_REASON_LABELS in src/lib/humanize.ts. Keep in sync.
+_REVIEW_REASON_LABELS: dict[str, str] = {
+    "low_confidence": "We weren't fully sure about this one",
+    "standards_conflict": "Two rules pointed different directions",
+    "ensemble_disagreement": "Worth a closer look. We're not certain",
+    "situation_ambiguity": "Hard to tell what kind of copy this is",
+    "out_of_distribution": "Unfamiliar shape. Your eyes will help",
+    "novel_pattern": "This rule is shifting. Double-check",
+    "low_confidence_mixed_signals": "Mixed signals. Worth a second pass",
+    "high_confidence_mixed_signals": "Confident, but signals are mixed",
+}
+
+
+def humanize_review_reason(value: str | None) -> str:
+    """Return a customer-facing label for a substrate review_reason
+    enum, or empty string for falsy input.
+
+    Defensive fallback for unknown values returns the raw string
+    sentence-cased so the gap is visible without crashing.
+    """
+    if not value:
+        return ""
+    if value in _REVIEW_REASON_LABELS:
+        return _REVIEW_REASON_LABELS[value]
+    spaced = value.replace("_", " ").strip()
+    return spaced[:1].upper() + spaced[1:] if spaced else value

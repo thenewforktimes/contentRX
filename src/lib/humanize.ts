@@ -47,15 +47,25 @@ const CONTENT_TYPE_LABELS: Record<string, string> = {
   section_header: "Section header",
 };
 
+// Customer-facing review-reason copy. Each label answers the question
+// the customer is asking — "what should I do with this?" — instead of
+// describing which engine subroutine produced the verdict. The earlier
+// vocabulary ("First-pass and validation disagreed", "Confidence below
+// the review threshold") leaked pipeline-stage names; this version
+// names the next action in plain language.
+//
+// Brand voice (per the suggestion-quality rules): no em dashes, no
+// hedging filler, no AI-assistant tone. Periods and short clauses do
+// the work em dashes used to.
 const REVIEW_REASON_LABELS: Record<string, string> = {
-  low_confidence: "Confidence below the review threshold",
-  standards_conflict: "Two rules disagreed on this string",
-  ensemble_disagreement: "First-pass and validation disagreed",
-  situation_ambiguity: "Couldn't pin down the moment",
-  out_of_distribution: "New kind of input",
-  novel_pattern: "Override rate climbing on this rule",
-  low_confidence_mixed_signals: "Mixed signals — low confidence",
-  high_confidence_mixed_signals: "Mixed signals despite high confidence",
+  low_confidence: "We weren't fully sure about this one",
+  standards_conflict: "Two rules pointed different directions",
+  ensemble_disagreement: "Worth a closer look. We're not certain",
+  situation_ambiguity: "Hard to tell what kind of copy this is",
+  out_of_distribution: "Unfamiliar shape. Your eyes will help",
+  novel_pattern: "This rule is shifting. Double-check",
+  low_confidence_mixed_signals: "Mixed signals. Worth a second pass",
+  high_confidence_mixed_signals: "Confident, but signals are mixed",
 };
 
 const OVERRIDE_STANCE_LABELS: Record<string, string> = {

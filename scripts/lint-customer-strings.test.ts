@@ -284,7 +284,14 @@ describe("live codebase is clean of error-severity findings", () => {
       .filter(
         (f) =>
           (f.endsWith(".ts") || f.endsWith(".tsx")) &&
+          // Founder-only surfaces. /admin pages are gated by Clerk role
+          // at the layout level; components/admin/ is the conventional
+          // home for admin-only components (e.g. CommandPalette) that
+          // are mounted exclusively in those layouts. Customer copy
+          // rules (no em dashes, no raw standard IDs) don't apply to
+          // founder-facing UI by design.
           !f.startsWith("src/app/admin/") &&
+          !f.startsWith("src/components/admin/") &&
           !f.includes(".test.") &&
           !f.includes(".spec.") &&
           !f.includes("__tests__/") &&

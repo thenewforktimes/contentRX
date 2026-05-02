@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { humanizeSeverity, humanizeVerdict } from "./humanize";
+import {
+  humanizeReviewReason,
+  humanizeSeverity,
+  humanizeVerdict,
+} from "./humanize";
 
 /**
  * Tests pin the customer-facing vocabulary locked by ADR 2026-04-29.
@@ -133,5 +137,76 @@ describe("severity → tone color discipline", () => {
     expect(humanizeVerdict("violation", 100).tone).not.toBe("red");
     // Only ship-blocker promotes to red.
     expect(humanizeVerdict("violation", 1, true).tone).toBe("red");
+  });
+});
+
+describe("humanizeReviewReason", () => {
+  it("returns empty string for null / undefined", () => {
+    expect(humanizeReviewReason(null)).toBe("");
+    expect(humanizeReviewReason(undefined)).toBe("");
+    expect(humanizeReviewReason("")).toBe("");
+  });
+
+  it("renders each known subtype as customer-action-shaped copy", () => {
+    // The previous vocabulary leaked engine-stage names ("first-pass",
+    // "validation", "review threshold"). The new copy answers "what
+    // should the customer do?" — these tests pin the rewrite.
+    expect(humanizeReviewReason("low_confidence")).toBe(
+      "We weren't fully sure about this one",
+    );
+    expect(humanizeReviewReason("standards_conflict")).toBe(
+      "Two rules pointed different directions",
+    );
+    expect(humanizeReviewReason("ensemble_disagreement")).toBe(
+      "Worth a closer look. We're not certain",
+    );
+    expect(humanizeReviewReason("situation_ambiguity")).toBe(
+      "Hard to tell what kind of copy this is",
+    );
+    expect(humanizeReviewReason("out_of_distribution")).toBe(
+      "Unfamiliar shape. Your eyes will help",
+    );
+    expect(humanizeReviewReason("novel_pattern")).toBe(
+      "This rule is shifting. Double-check",
+    );
+    expect(humanizeReviewReason("low_confidence_mixed_signals")).toBe(
+      "Mixed signals. Worth a second pass",
+    );
+    expect(humanizeReviewReason("high_confidence_mixed_signals")).toBe(
+      "Confident, but signals are mixed",
+    );
+  });
+
+  it("never emits engine-pipeline jargon", () => {
+    // Regression guard. The earlier vocabulary said "first-pass and
+    // validation disagreed", "confidence below the review threshold",
+    // "override rate climbing". Those are pipeline / metric terms;
+    // customer copy should never include them.
+    const samples = [
+      humanizeReviewReason("low_confidence"),
+      humanizeReviewReason("standards_conflict"),
+      humanizeReviewReason("ensemble_disagreement"),
+      humanizeReviewReason("situation_ambiguity"),
+      humanizeReviewReason("out_of_distribution"),
+      humanizeReviewReason("novel_pattern"),
+      humanizeReviewReason("low_confidence_mixed_signals"),
+      humanizeReviewReason("high_confidence_mixed_signals"),
+    ];
+    for (const sample of samples) {
+      expect(sample.toLowerCase()).not.toMatch(/first-?pass/);
+      expect(sample.toLowerCase()).not.toMatch(/validation/);
+      expect(sample.toLowerCase()).not.toMatch(/preprocessor/);
+      expect(sample.toLowerCase()).not.toMatch(/review threshold/);
+      expect(sample.toLowerCase()).not.toMatch(/override rate/);
+      expect(sample.toLowerCase()).not.toMatch(/ensemble/);
+      // No em dashes (suggestion-quality brand voice rule)
+      expect(sample).not.toMatch(/—/);
+    }
+  });
+
+  it("falls back gracefully on unknown subtype", () => {
+    // Defensive: a new subtype we haven't mapped yet shouldn't crash.
+    // Sentence-cases the raw string so the gap is visible.
+    expect(humanizeReviewReason("some_new_subtype")).toBe("Some new subtype");
   });
 });
