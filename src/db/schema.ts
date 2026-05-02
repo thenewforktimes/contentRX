@@ -1245,17 +1245,25 @@ export const customerFlaggedReviews = pgTable(
     verdict: text("verdict", {
       enum: ["pass", "violation", "review_recommended"],
     }),
-    // What the customer is asking us to look at. Drives triage routing
-    // — wrong_verdict and should_have_flagged route to taxonomy review;
-    // wrong_suggestion routes to suggestion-corpus review; the rest
-    // route to general triage.
+    // What the customer is asking us to look at. Three customer-shaped
+    // axes (per the dashboard audit + Robo's spec):
+    //
+    //   - doesnt_match_experience    — the situation detector picked
+    //                                  the wrong context for the copy
+    //   - lacks_context              — the engine couldn't see something
+    //                                  it needed to make a sensible call
+    //   - not_clear_helpful_concise  — the suggestion text itself isn't
+    //                                  good
+    //
+    // The DB column is plain `text` (drizzle enums are TS-only), so
+    // historical rows from the pre-audit flag vocabulary still read
+    // back fine — the admin inbox falls back gracefully on unknown
+    // values via humanizeFlagReason().
     flagReason: text("flag_reason", {
       enum: [
-        "wrong_verdict",
-        "wrong_suggestion",
-        "should_have_flagged",
-        "standard_unclear",
-        "other",
+        "doesnt_match_experience",
+        "lacks_context",
+        "not_clear_helpful_concise",
       ],
     }).notNull(),
     customerNote: text("customer_note"),

@@ -632,6 +632,13 @@ function FindingCard({
           >
             Adjust
           </button>
+          <FlagForReview
+            text={submittedText}
+            verdict="violation"
+            variant="card-action"
+            source="dashboard"
+            contextLine={`Flagging finding: "${truncateForContext(finding.issue)}"`}
+          />
           <MakeRuleButton plan={plan} onOpen={() => setMakeRuleOpen(true)} />
         </div>
       </div>
@@ -840,4 +847,14 @@ function CopySuggestionButton({
       {label}
     </button>
   );
+}
+
+/** Truncate a finding's issue text for display in the FlagForReview
+ * modal's context line. The full issue can be a paragraph; the modal
+ * just needs enough to identify which finding the customer is
+ * flagging. */
+function truncateForContext(text: string, max = 120): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= max) return trimmed;
+  return trimmed.slice(0, max) + "...";
 }

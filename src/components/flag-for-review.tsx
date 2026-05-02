@@ -23,18 +23,14 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 export type FlagReason =
-  | "wrong_verdict"
-  | "wrong_suggestion"
-  | "should_have_flagged"
-  | "standard_unclear"
-  | "other";
+  | "doesnt_match_experience"
+  | "lacks_context"
+  | "not_clear_helpful_concise";
 
 const REASON_LABEL: Record<FlagReason, string> = {
-  wrong_verdict: "The verdict's wrong",
-  wrong_suggestion: "The suggestion's wrong",
-  should_have_flagged: "Something's wrong but nothing fired",
-  standard_unclear: "The standard isn't clear",
-  other: "Something else",
+  doesnt_match_experience: "Content doesn't match the experience",
+  lacks_context: "Content lacks context",
+  not_clear_helpful_concise: "Content isn't clear, helpful, or concise",
 };
 
 export interface FlagForReviewProps {
@@ -42,6 +38,17 @@ export interface FlagForReviewProps {
   contentType?: string | null;
   moment?: string | null;
   verdict?: "pass" | "violation" | "review_recommended" | null;
+  /** When the flag is for a specific finding (per-finding "Flag"
+   * button on a FindingCard), the violation's id. The admin inbox
+   * uses this to cross-reference with the original violation row. */
+  violationId?: string | null;
+  /** Optional preface in the modal — used to specify the finding the
+   * flag is about. Shown above the form so the customer sees what
+   * they're flagging. */
+  contextLine?: string | null;
+  /** Variant: a small text button (default) or a per-finding button
+   * styled like the surrounding finding-card actions. */
+  variant?: "link" | "card-action";
   /** Source surface — defaults to "dashboard" when omitted. */
   source?: "dashboard" | "plugin" | "cli" | "action" | "lsp" | "mcp";
 }
@@ -53,10 +60,13 @@ export function FlagForReview({
   contentType,
   moment,
   verdict,
+  violationId,
+  contextLine,
+  variant = "link",
   source = "dashboard",
 }: FlagForReviewProps) {
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState<FlagReason>("wrong_verdict");
+  const [reason, setReason] = useState<FlagReason>("doesnt_match_experience");
   const [note, setNote] = useState("");
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
@@ -87,14 +97,26 @@ export function FlagForReview({
     );
   }
 
+  const triggerClassName =
+    variant === "card-action"
+      ? "shrink-0 rounded-md border border-stone-300 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
+      : "text-xs text-stone-600 underline underline-offset-2 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100";
+  const triggerLabel =
+    variant === "card-action" ? "Flag" : "Flag for review";
+
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-xs text-stone-600 underline underline-offset-2 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
+        aria-label={
+          variant === "card-action"
+            ? "Flag this finding for review"
+            : "Flag for review"
+        }
+        className={triggerClassName}
       >
-        Flag for review
+        {triggerLabel}
       </button>
 
       {open && (
@@ -120,11 +142,16 @@ export function FlagForReview({
                 Flag for review
               </h2>
               <p className="text-sm text-stone-600 dark:text-stone-300">
-                You&rsquo;re sending this check to Robert to review.
-                He&rsquo;ll see the original text, the verdict, and your
-                note. With your consent, the check can be used to
-                refine the rulesets and improve the model.
+                You&rsquo;re sending this {violationId ? "finding" : "check"}{" "}
+                to Robert to review. He&rsquo;ll see the original text, the
+                verdict, and your note. With your consent, it can be used
+                to refine the rulesets and improve the model.
               </p>
+              {contextLine && (
+                <p className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-700 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-300">
+                  {contextLine}
+                </p>
+              )}
             </header>
 
             <form
@@ -143,6 +170,7 @@ export function FlagForReview({
                       content_type: contentType ?? undefined,
                       moment: moment ?? undefined,
                       verdict: verdict ?? undefined,
+                      violation_id: violationId ?? undefined,
                       flag_reason: reason,
                       customer_note: note.trim() || undefined,
                       source,

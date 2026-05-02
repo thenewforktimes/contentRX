@@ -143,11 +143,9 @@ export async function searchAdmin(rawQuery: string): Promise<SearchResults> {
             eq(
               schema.customerFlaggedReviews.flagReason,
               query.toLowerCase() as
-                | "wrong_verdict"
-                | "wrong_suggestion"
-                | "should_have_flagged"
-                | "standard_unclear"
-                | "other",
+                | "doesnt_match_experience"
+                | "lacks_context"
+                | "not_clear_helpful_concise",
             ),
           ),
     )

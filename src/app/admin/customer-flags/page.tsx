@@ -49,12 +49,27 @@ const STATUS_LABEL: Record<FlagStatus, string> = {
 };
 
 const REASON_LABEL: Record<FlagReason, string> = {
-  wrong_verdict: "Wrong verdict",
-  wrong_suggestion: "Wrong suggestion",
-  should_have_flagged: "Should have flagged",
-  standard_unclear: "Standard unclear",
-  other: "Other",
+  doesnt_match_experience: "Doesn't match the experience",
+  lacks_context: "Lacks context",
+  not_clear_helpful_concise: "Not clear, helpful, or concise",
 };
+
+/**
+ * Defensive label lookup. Pre-audit rows in the DB carry the legacy
+ * flag_reason enum values (wrong_verdict, etc.); after the audit,
+ * TS narrows to the three new values but the text column could still
+ * contain anything historical. Falls back to a sentence-cased rewrite
+ * for unknowns so legacy rows render without crashing.
+ */
+function reasonLabel(value: string): string {
+  if (value in REASON_LABEL) {
+    return REASON_LABEL[value as FlagReason];
+  }
+  const spaced = value.replace(/_/g, " ").trim();
+  return spaced.length > 0
+    ? spaced.charAt(0).toUpperCase() + spaced.slice(1)
+    : value;
+}
 
 const STATUS_TONE: Record<FlagStatus, string> = {
   open: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
@@ -181,7 +196,7 @@ export default async function AdminCustomerFlagsPage({
                     {STATUS_LABEL[row.status]}
                   </span>
                   <span className="rounded-full bg-neutral-200 px-2 py-0.5 font-medium text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200">
-                    {REASON_LABEL[row.flagReason]}
+                    {reasonLabel(row.flagReason)}
                   </span>
                   {row.verdict && (
                     <span className="text-neutral-600 dark:text-neutral-400">

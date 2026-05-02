@@ -59,16 +59,17 @@ const RequestSchema = z.object({
   // from a check that contained one. Null when the flag was on a pass
   // verdict (the customer thinks a finding SHOULD have fired).
   violation_id: z.string().min(1).max(64).optional(),
-  // What the customer is asking us to look at. Drives admin-side
-  // triage routing — wrong_verdict / should_have_flagged go to
-  // taxonomy review; wrong_suggestion goes to suggestion-corpus
-  // review; the others go to general triage.
+  // What the customer is asking us to look at. Three customer-shaped
+  // axes per the dashboard audit:
+  //   - doesnt_match_experience    — wrong context for this copy
+  //   - lacks_context              — engine missed something
+  //   - not_clear_helpful_concise  — the suggestion text is bad
+  // Triage routing on the admin side reads this as a hint, not a
+  // hard route — the founder still picks the resolution per row.
   flag_reason: z.enum([
-    "wrong_verdict",
-    "wrong_suggestion",
-    "should_have_flagged",
-    "standard_unclear",
-    "other",
+    "doesnt_match_experience",
+    "lacks_context",
+    "not_clear_helpful_concise",
   ]),
   customer_note: z.string().min(1).max(2000).optional(),
   source: z

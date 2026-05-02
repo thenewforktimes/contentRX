@@ -31,11 +31,9 @@ export type FlagStatus =
   | "not_actionable";
 
 export type FlagReason =
-  | "wrong_verdict"
-  | "wrong_suggestion"
-  | "should_have_flagged"
-  | "standard_unclear"
-  | "other";
+  | "doesnt_match_experience"
+  | "lacks_context"
+  | "not_clear_helpful_concise";
 
 export interface FlagInboxRow {
   id: string;

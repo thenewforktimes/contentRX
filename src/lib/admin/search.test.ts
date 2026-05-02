@@ -57,7 +57,7 @@ describe("searchAdmin", () => {
       teamId: user,
       text: "Click here to learn more",
       textHash: "a3f2deadbeef",
-      flagReason: "wrong_suggestion",
+      flagReason: "not_clear_helpful_concise",
       source: "dashboard",
     });
 
@@ -105,7 +105,7 @@ describe("searchAdmin", () => {
       teamId: user,
       text: "save your changes",
       textHash: "h2",
-      flagReason: "wrong_verdict",
+      flagReason: "doesnt_match_experience",
       source: "dashboard",
     });
 
@@ -123,7 +123,7 @@ describe("searchAdmin", () => {
       teamId: user,
       text: "should not be substring-matched",
       textHash: "deadbeef1234",
-      flagReason: "other",
+      flagReason: "lacks_context",
       source: "dashboard",
     });
     await harness.db.insert(schema.customerFlaggedReviews).values({
@@ -132,7 +132,7 @@ describe("searchAdmin", () => {
       teamId: user,
       text: "deadbeef in the body shouldn't match a hash query",
       textHash: "1234567890ab",
-      flagReason: "other",
+      flagReason: "lacks_context",
       source: "dashboard",
     });
 
@@ -165,7 +165,7 @@ describe("searchAdmin", () => {
       teamId: user,
       text: "save more recent",
       textHash: "h2",
-      flagReason: "wrong_verdict",
+      flagReason: "doesnt_match_experience",
       source: "dashboard",
       createdAt: recent,
     });
