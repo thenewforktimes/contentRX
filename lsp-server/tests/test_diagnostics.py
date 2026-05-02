@@ -160,8 +160,31 @@ def test_review_recommended_emit_info_severity():
     assert len(diagnostics) == 1
     d = diagnostics[0]
     assert d.severity == 3  # info
-    assert d.code == "REVIEW"
-    assert "out of distribution" in d.message
+    # Per the cross-surface copy audit: code + message render the
+    # customer-shaped vocabulary, not the substrate enum.
+    assert d.code == "Worth a look"
+    assert "out_of_distribution" not in d.message
+    assert "out of distribution" not in d.message
+    assert "Unfamiliar shape" in d.message
+    # Substrate enum is preserved on the diagnostic data blob (used by
+    # client-side analytics + code-action routing) but doesn't render.
+    assert d.data and d.data.get("review_reason") == "out_of_distribution"
+
+
+def test_review_recommended_falls_back_when_reason_missing():
+    diagnostics = violations_to_diagnostics(
+        "Click here",
+        _extracted(),
+        violations=[],
+        verdict="review_recommended",
+        review_reason=None,
+    )
+    assert len(diagnostics) == 1
+    d = diagnostics[0]
+    # Falls back to a plain "flagged for review" message when the
+    # engine didn't supply a typed subtype.
+    assert "flagged this for review" in d.message
+    assert d.data and d.data.get("review_reason") is None
 
 
 def test_pass_verdict_emits_no_diagnostics():

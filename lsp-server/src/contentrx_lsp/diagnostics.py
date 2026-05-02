@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .humanize import humanize_severity
+from .humanize import humanize_review_reason, humanize_severity
 from .parser import ExtractedString
 
 
@@ -202,19 +202,27 @@ def violations_to_diagnostics(
                 )
             )
     elif verdict == "review_recommended":
-        reason = review_reason or "review_recommended"
-        pretty = reason.replace("_", " ")
+        # Per the cross-surface copy audit: customer surfaces should
+        # never render the substrate review_reason enum directly. Pass
+        # through the rendering boundary to get the plain-language
+        # label. The earlier `reason.replace("_", " ")` produced
+        # technical-sounding output ("low confidence", "ensemble
+        # disagreement") that read as developer vocabulary.
+        reason = review_reason or ""
+        humanized = humanize_review_reason(reason)
         out.append(
             LspDiagnostic(
                 range=lsp_range,
                 severity=3,
-                code="REVIEW",
+                code="Worth a look",
                 source="ContentRX",
                 message=(
-                    f"ContentRX flagged this for review ({pretty})."
+                    f"Worth a look. {humanized}."
+                    if humanized
+                    else "ContentRX flagged this for review."
                 ),
                 data={
-                    "review_reason": reason,
+                    "review_reason": reason or None,
                     "extracted_text": extracted.text,
                 },
             )
