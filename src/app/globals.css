@@ -220,14 +220,14 @@
   --color-accent-info-text:       var(--accent-info-text);
   --color-accent-info-border:     var(--accent-info-border);
 
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --font-sans: var(--font-sans-base);
+  --font-mono: var(--font-mono-base);
 }
 
 body {
   background: var(--surface-canvas);
   color: var(--text-default);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans-base), ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 /* HowItWorksDiagram — three-dot "thinking" animation in the
