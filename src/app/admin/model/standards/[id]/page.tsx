@@ -17,6 +17,10 @@ import {
   getMomentsTouchingStandard,
   getStandardById,
 } from "@/lib/admin-substrate.server";
+import {
+  attentionReasons,
+  getStandardActivity,
+} from "@/lib/admin/standard-activity";
 
 export const metadata = {
   title: "Standard · ContentRX admin",
@@ -33,6 +37,8 @@ export default async function AdminStandardDetailPage({
   if (!standard) notFound();
 
   const momentContexts = getMomentsTouchingStandard(id);
+  const activity = await getStandardActivity(id);
+  const reasons = attentionReasons(activity);
 
   return (
     <div className="space-y-8">
@@ -60,6 +66,8 @@ export default async function AdminStandardDetailPage({
           {standard.rule}
         </p>
       </header>
+
+      <ActivityPanel standardId={id} activity={activity} reasons={reasons} />
 
       <section className="grid gap-3 sm:grid-cols-2">
         <ExampleBlock label="Pass" tone="pass" text={standard.correct} />
@@ -254,5 +262,101 @@ function ExampleBlock({
         {text}
       </p>
     </div>
+  );
+}
+
+/**
+ * Activity panel — the cross-surface counts that turn this page from
+ * "rule reference card" into "rule mission control." Each count is a
+ * Link directly into the operational surface scoped to this standard,
+ * so a founder reading the rule can jump straight to its open work.
+ *
+ * Shows a "Steady state" line when no signals are above threshold, so
+ * the panel isn't visually empty for low-traffic rules — the silence
+ * itself is the signal in that case.
+ */
+function ActivityPanel({
+  standardId,
+  activity,
+  reasons,
+}: {
+  standardId: string;
+  activity: import("@/lib/admin/standard-activity").StandardActivity;
+  reasons: import("@/lib/admin/standard-activity").AttentionReason[];
+}) {
+  const isHot = reasons.length > 0;
+  return (
+    <section
+      aria-labelledby="activity-heading"
+      className={`rounded-lg border p-4 ${
+        isHot
+          ? "border-accent-caution-border bg-accent-caution-soft"
+          : "border-line bg-raised"
+      }`}
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2
+          id="activity-heading"
+          className={`text-sm font-semibold uppercase tracking-wide ${
+            isHot ? "text-accent-caution-text" : "text-quiet"
+          }`}
+        >
+          Activity
+        </h2>
+        {isHot && (
+          <p className="text-xs text-accent-caution-text">
+            {reasons.map((r) => r.label).join(" · ")}
+          </p>
+        )}
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <ActivityLink
+          label="Overrides last 7d"
+          count={activity.overridesLast7d}
+          href={`/admin/queue?standard=${encodeURIComponent(standardId)}`}
+        />
+        <ActivityLink
+          label="Customer flags open"
+          count={activity.customerFlagsOpen}
+          href={`/admin/customer-flags`}
+        />
+        <ActivityLink
+          label="Suggestion candidates"
+          count={activity.suggestionCandidates}
+          href={`/admin/suggestions`}
+        />
+      </div>
+      {!isHot && (
+        <p className="mt-3 text-xs text-quiet">
+          Steady state. No signals above threshold for this rule right now.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function ActivityLink({
+  label,
+  count,
+  href,
+}: {
+  label: string;
+  count: number;
+  href: string;
+}) {
+  const isZero = count === 0;
+  return (
+    <Link
+      href={href}
+      className={`flex items-baseline justify-between gap-2 rounded-md border border-line bg-raised px-3 py-2 transition hover:border-line-strong hover:bg-hover ${
+        isZero ? "opacity-60" : ""
+      }`}
+      aria-label={`${count} ${label}, jump to surface`}
+    >
+      <span className="text-xs text-quiet">{label}</span>
+      <span className="font-mono text-base font-semibold text-strong tabular-nums">
+        {count}
+      </span>
+    </Link>
   );
 }

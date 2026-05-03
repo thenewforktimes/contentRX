@@ -23,6 +23,13 @@ import {
   getMomentsTaxonomy,
   getStandardsLibrary,
 } from "@/lib/admin-substrate.server";
+import {
+  attentionReasons,
+  getAllStandardsActivity,
+  needsAttention,
+  totalSignal,
+  type StandardActivity,
+} from "@/lib/admin/standard-activity";
 
 export const metadata = {
   title: "Model · ContentRX admin",
@@ -30,9 +37,31 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AdminModelPage() {
+export default async function AdminModelPage() {
   const { moments } = getMomentsTaxonomy();
   const { categories, version, total_standards } = getStandardsLibrary();
+  const activityByStandard = await getAllStandardsActivity();
+
+  // Mission-control hero: rules with at least one attention signal,
+  // sorted by total signal strength (most-active first). The detail
+  // is in attentionReasons() so each card can list specifically why.
+  const standardById = new Map<
+    string,
+    { id: string; rule: string; categoryName: string }
+  >();
+  for (const cat of categories) {
+    for (const s of cat.standards) {
+      standardById.set(s.id, {
+        id: s.id,
+        rule: s.rule,
+        categoryName: cat.name,
+      });
+    }
+  }
+  const attentionList = Array.from(activityByStandard.values())
+    .filter(needsAttention)
+    .sort((a, b) => totalSignal(b) - totalSignal(a))
+    .slice(0, 7);
 
   return (
     <div className="space-y-10">
@@ -50,6 +79,42 @@ export default function AdminModelPage() {
           library v{version}
         </Pill>
       </header>
+
+      {attentionList.length > 0 && (
+        <section
+          aria-labelledby="attention-heading"
+          className="rounded-lg border border-accent-caution-border bg-accent-caution-soft p-4"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2
+              id="attention-heading"
+              className="text-sm font-semibold uppercase tracking-wide text-accent-caution-text"
+            >
+              Rules needing attention
+            </h2>
+            <p className="text-xs text-accent-caution-text">
+              {attentionList.length} rule
+              {attentionList.length === 1 ? "" : "s"} with active signals.
+              Click a rule to drill in.
+            </p>
+          </div>
+          <ul className="mt-3 space-y-2">
+            {attentionList.map((a) => {
+              const meta = standardById.get(a.standardId);
+              return (
+                <li key={a.standardId}>
+                  <AttentionCard
+                    standardId={a.standardId}
+                    rule={meta?.rule ?? ""}
+                    categoryName={meta?.categoryName ?? ""}
+                    activity={a}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <section aria-labelledby="moments-heading" className="space-y-3">
         <h2
@@ -115,24 +180,43 @@ export default function AdminModelPage() {
               </span>
             </header>
             <ul className="mt-3 divide-y divide-stone-100 dark:divide-stone-800">
-              {cat.standards.map((s) => (
-                <li key={s.id}>
-                  <Link
-                    href={`/admin/model/standards/${s.id}`}
-                    className="flex items-baseline gap-3 py-2 text-sm hover:bg-hover"
-                  >
-                    <span className="w-16 shrink-0 font-mono text-xs text-quiet">
-                      {s.id}
-                    </span>
-                    <span className="flex-1 text-default">
-                      {s.rule}
-                    </span>
-                    <span className="hidden font-mono text-[10px] text-quiet sm:inline">
-                      v{s.version}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+              {cat.standards.map((s) => {
+                const a = activityByStandard.get(s.id);
+                const hot = a ? needsAttention(a) : false;
+                return (
+                  <li key={s.id}>
+                    <Link
+                      href={`/admin/model/standards/${s.id}`}
+                      className="flex items-baseline gap-3 py-2 text-sm hover:bg-hover"
+                    >
+                      <span
+                        aria-hidden
+                        className={`mt-1 h-1.5 w-1.5 shrink-0 self-center rounded-full ${
+                          hot ? "bg-accent-caution" : "bg-transparent"
+                        }`}
+                        title={hot ? "Has active signals" : undefined}
+                      />
+                      <span className="w-16 shrink-0 font-mono text-xs text-quiet">
+                        {s.id}
+                      </span>
+                      <span className="flex-1 text-default">
+                        {s.rule}
+                      </span>
+                      {a && totalSignal(a) > 0 && (
+                        <span
+                          className="font-mono text-[10px] text-quiet tabular-nums"
+                          title="Total active signals (overrides + flags + suggestions)"
+                        >
+                          {totalSignal(a)} active
+                        </span>
+                      )}
+                      <span className="hidden font-mono text-[10px] text-quiet sm:inline">
+                        v{s.version}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </article>
         ))}
@@ -150,5 +234,52 @@ function WeightCount({ label, count }: { label: string; count: number }) {
       </span>{" "}
       {label}
     </span>
+  );
+}
+
+/**
+ * AttentionCard — a single rule needing attention, rendered as a Link
+ * to the per-standard detail page where the founder can drill into the
+ * specific operational surface (queue / customer-flags / suggestions).
+ *
+ * Surfaces the WHY (reason labels) at the same prominence as the rule
+ * text — the count alone isn't useful, the WHY is. ("3 open customer
+ * flags" tells you where to go; "3 open" doesn't.)
+ */
+function AttentionCard({
+  standardId,
+  rule,
+  categoryName,
+  activity,
+}: {
+  standardId: string;
+  rule: string;
+  categoryName: string;
+  activity: StandardActivity;
+}) {
+  const reasons = attentionReasons(activity);
+  return (
+    <Link
+      href={`/admin/model/standards/${standardId}`}
+      className="block rounded-md border border-line bg-raised p-3 transition hover:border-line-strong"
+    >
+      <div className="flex flex-wrap items-baseline gap-3">
+        <span className="font-mono text-sm font-semibold text-strong">
+          {standardId}
+        </span>
+        <span className="text-xs text-quiet">{categoryName}</span>
+        <span className="ml-auto text-xs text-accent-caution-text">
+          View →
+        </span>
+      </div>
+      {rule && (
+        <p className="mt-1 text-sm text-default">
+          {rule}
+        </p>
+      )}
+      <p className="mt-2 text-xs text-quiet">
+        {reasons.map((r) => r.label).join(" · ")}
+      </p>
+    </Link>
   );
 }
