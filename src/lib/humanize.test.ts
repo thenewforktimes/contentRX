@@ -64,19 +64,19 @@ describe("humanizeVerdict", () => {
 });
 
 describe("humanizeSeverity", () => {
-  it("collapses high to 'Worth adjusting' in amber", () => {
+  it("renders high as 'Consider' in amber", () => {
     const out = humanizeSeverity("high");
-    expect(out).toEqual({ label: "Worth adjusting", tone: "amber" });
+    expect(out).toEqual({ label: "Consider", tone: "amber" });
   });
 
-  it("collapses medium to 'Worth adjusting' in amber (same label as high)", () => {
+  it("renders medium as 'Consider' in amber (same label as high)", () => {
     const out = humanizeSeverity("medium");
-    expect(out).toEqual({ label: "Worth adjusting", tone: "amber" });
+    expect(out).toEqual({ label: "Consider", tone: "amber" });
   });
 
-  it("renders low as 'Quick polish' in stone", () => {
+  it("renders low as 'Consider' in stone (same label, lower visual weight)", () => {
     const out = humanizeSeverity("low");
-    expect(out).toEqual({ label: "Quick polish", tone: "stone" });
+    expect(out).toEqual({ label: "Consider", tone: "stone" });
   });
 
   it("renders ship-blocker high as 'Don't ship' in red", () => {
@@ -89,11 +89,11 @@ describe("humanizeSeverity", () => {
     // stay on their default paths even with the flag, so a misuse of
     // the flag at a call site doesn't escalate a low-severity finding.
     expect(humanizeSeverity("medium", true)).toEqual({
-      label: "Worth adjusting",
+      label: "Consider",
       tone: "amber",
     });
     expect(humanizeSeverity("low", true)).toEqual({
-      label: "Quick polish",
+      label: "Consider",
       tone: "stone",
     });
   });

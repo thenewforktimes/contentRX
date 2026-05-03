@@ -157,17 +157,19 @@ export function humanizeVerdict(
 /**
  * Humanize a substrate severity into a customer-facing label + tone.
  *
- * Three substrate tiers (`high` / `medium` / `low`) collapse to two
- * visible tiers in the default case: high+medium → "Worth adjusting"
- * (amber), low → "Quick polish" (stone). The collapse is intentional —
- * most users don't need to distinguish the high/medium boundary; the
- * confidence-derived split is substrate granularity.
+ * The product is collaborative, not authoritarian — every finding is
+ * an invitation to think about the copy differently, not a verdict
+ * on whether the team can ship. So every default-path finding leads
+ * with "Consider": uniform label, severity carried by the visual tone
+ * (amber for higher signal, stone for polish-tier). Same word, two
+ * weights, no false hierarchy of who should care more.
  *
- * The "Don't ship" + red-tone path is reserved for genuine ship-
- * blockers (profanity, trademark, security). It requires a hard-rule
+ * The "Don't ship" + red-tone path is the one exception. It's reserved
+ * for genuine ship-blockers (profanity, trademark, security) where
+ * urgency is the right register, not invitation. Requires a hard-rule
  * signal that today's schema 2.0 envelope doesn't carry — pass
  * `isShipBlocker: true` to surface it once the envelope grows that
- * field. For now the default amber/stone paths cover every finding.
+ * field.
  */
 export function humanizeSeverity(
   severity: string,
@@ -177,10 +179,10 @@ export function humanizeSeverity(
     return { label: "Don't ship", tone: "red" };
   }
   if (severity === "high" || severity === "medium") {
-    return { label: "Worth adjusting", tone: "amber" };
+    return { label: "Consider", tone: "amber" };
   }
   if (severity === "low") {
-    return { label: "Quick polish", tone: "stone" };
+    return { label: "Consider", tone: "stone" };
   }
   // Defensive fallback for unknown severity keyword.
   return { label: fallback(severity), tone: "stone" };

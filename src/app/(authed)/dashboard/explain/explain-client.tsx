@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { FindingAdjustModal } from "@/components/finding-adjust-modal";
 import { FindingMakeRuleModal } from "@/components/finding-make-rule-modal";
 import { FlagForReview } from "@/components/flag-for-review";
+import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 import type { PublicCheckEnvelope, PublicViolation } from "@/lib/api-envelope";
 import {
@@ -35,7 +36,6 @@ import type { Plan } from "@/lib/quotas";
 import {
   humanizeContentType,
   humanizeMoment,
-  humanizeReviewReason,
   humanizeSeverity,
   humanizeVerdict,
 } from "@/lib/humanize";
@@ -294,18 +294,12 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
             </span>
           )}
         </div>
-        <button
-          type="button"
+        <Button
           onClick={onCheck}
-          disabled={
-            loading ||
-            text.trim().length === 0 ||
-            overLimit
-          }
-          className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
+          disabled={loading || text.trim().length === 0 || overLimit}
         >
           {loading ? "Checking…" : "Check"}
-        </button>
+        </Button>
       </section>
 
       {error && <ErrorBlock error={error} />}
@@ -314,7 +308,6 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
         <section className="space-y-4">
           <VerdictHeader
             verdict={response.verdict}
-            reviewReason={response.review_reason}
             findingCount={response.violations.length}
             contentType={response.content_type}
             moment={response.moment}
@@ -355,13 +348,11 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
 
 function VerdictHeader({
   verdict,
-  reviewReason,
   findingCount,
   contentType,
   moment,
 }: {
   verdict: string;
-  reviewReason: string | null;
   findingCount: number;
   contentType: string | null;
   moment: string | null;
@@ -372,6 +363,13 @@ function VerdictHeader({
   // at the boundary; the same helper is shared by every customer
   // surface (web, MCP, CLI, GitHub Action, LSP, Figma plugin) so the
   // language is identical wherever findings render.
+  //
+  // The review_reason was historically rendered next to the pill but
+  // its labels (e.g. "Worth a closer look. We're not certain") echoed
+  // and contradicted the pill ("Worth a look") — two restatements of
+  // the same hedge with no new information. Dropped from this header
+  // entirely; if a customer wants the why, they can flag the finding
+  // for review and see the rationale on the admin side.
   const { label, tone } = humanizeVerdict(verdict, findingCount);
   // Schema 2.2.0 — surface the engine's classification of the
   // customer's input so recommendations feel grounded in the
@@ -388,11 +386,6 @@ function VerdictHeader({
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-3">
         <Pill tone={tone}>{label}</Pill>
-        {reviewReason && (
-          <span className="text-sm text-stone-600 dark:text-stone-300">
-            {humanizeReviewReason(reviewReason)}
-          </span>
-        )}
       </div>
       {showContext && (
         <p className="text-xs text-stone-500 dark:text-stone-400">
