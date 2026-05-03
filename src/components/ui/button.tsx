@@ -32,7 +32,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   warning:
     "border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300",
   danger:
-    "border border-red-300 bg-red-50 text-red-800 hover:bg-red-100 dark:border-red-800 dark:bg-red-950 dark:text-red-300",
+    "border border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

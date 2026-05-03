@@ -110,7 +110,7 @@ function RuleCard({ standard }: { standard: PublicStandard }) {
           Correct
         </dt>
         <dd>{standard.correct}</dd>
-        <dt className="font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
+        <dt className="font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-400">
           Avoid
         </dt>
         <dd>{standard.incorrect}</dd>

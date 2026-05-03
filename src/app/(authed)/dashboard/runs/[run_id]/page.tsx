@@ -239,7 +239,7 @@ function Stat({
 }) {
   const valueClasses =
     tone === "high"
-      ? "text-red-700 dark:text-red-400"
+      ? "text-rose-700 dark:text-rose-400"
       : tone === "muted"
         ? "text-stone-700 dark:text-stone-300"
         : "text-stone-900 dark:text-stone-100";
@@ -304,7 +304,7 @@ function FileBlock({
 function SeverityDot({ severity }: { severity: string }) {
   const tone =
     severity === "high"
-      ? "bg-red-500"
+      ? "bg-rose-500"
       : severity === "medium"
         ? "bg-amber-500"
         : "bg-stone-400";

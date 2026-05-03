@@ -91,7 +91,7 @@ function CheckRow({ label, check }: { label: string; check: CheckResult }) {
           className={
             check.ok
               ? "inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"
-              : "inline-block h-2.5 w-2.5 rounded-full bg-red-500"
+              : "inline-block h-2.5 w-2.5 rounded-full bg-rose-500"
           }
         />
         <span className="text-sm font-medium">{label}</span>
@@ -104,7 +104,7 @@ function CheckRow({ label, check }: { label: string; check: CheckResult }) {
           className={
             check.ok
               ? "text-sm text-emerald-700 dark:text-emerald-400"
-              : "text-sm text-red-700 dark:text-red-400"
+              : "text-sm text-rose-700 dark:text-rose-400"
           }
         >
           {check.ok ? "Operational" : "Degraded"}

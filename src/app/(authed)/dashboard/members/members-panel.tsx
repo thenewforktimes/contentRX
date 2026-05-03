@@ -112,7 +112,7 @@ export function MembersPanel({
         {error && (
           <p
             role="alert"
-            className="mt-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+            className="mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300"
           >
             {error}
           </p>

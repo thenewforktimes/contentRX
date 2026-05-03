@@ -165,7 +165,7 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
   return (
     <div className="flex flex-col gap-8">
       {error && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+        <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">
           {error}
         </div>
       )}
@@ -387,7 +387,7 @@ function CustomRuleRow({
             type="button"
             disabled={busy}
             onClick={() => setConfirming(true)}
-            className="rounded-md border border-red-300 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
+            className="rounded-md border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950"
           >
             Remove
           </button>

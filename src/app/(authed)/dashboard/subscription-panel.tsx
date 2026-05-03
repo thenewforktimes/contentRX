@@ -160,7 +160,7 @@ function UpgradeCard() {
       </div>
 
       {error && (
-        <div className="mb-3 rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+        <div className="mb-3 rounded-md border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">
           {error}
         </div>
       )}
@@ -251,7 +251,7 @@ function PaidCard({
         </p>
       )}
       {error && (
-        <div className="mb-3 rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+        <div className="mb-3 rounded-md border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">
           {error}
         </div>
       )}

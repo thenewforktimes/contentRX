@@ -144,7 +144,7 @@ function PrivacyPanel({ email }: { email: string }) {
         </a>
         <a
           href={`mailto:privacy@contentrx.io?subject=${deleteSubject}`}
-          className="inline-flex items-center rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
+          className="inline-flex items-center rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950"
         >
           Delete my account
         </a>

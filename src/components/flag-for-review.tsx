@@ -264,7 +264,7 @@ export function FlagForReview({
               </label>
 
               {errorMessage && (
-                <p className="text-sm text-red-700 dark:text-red-400">
+                <p className="text-sm text-rose-700 dark:text-rose-400">
                   {errorMessage}
                 </p>
               )}

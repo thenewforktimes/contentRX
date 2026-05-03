@@ -95,7 +95,7 @@ export function UsagePanelLive({
   const barClasses: Record<UsageTone, string> = {
     ok: "bg-black dark:bg-white",
     warn: "bg-amber-500",
-    exhausted: "bg-red-500",
+    exhausted: "bg-rose-500",
   };
 
   return (

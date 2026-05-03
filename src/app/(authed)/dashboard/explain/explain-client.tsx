@@ -254,7 +254,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           placeholder="Try pasting a button label, an error message, or a paragraph from your latest PR"
           className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-sm text-stone-900 focus:outline-none focus:ring-1 dark:bg-stone-950 dark:text-stone-100 ${
             overLimit
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+              ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"
               : "border-stone-300 focus:border-stone-500 focus:ring-neutral-500 dark:border-stone-700"
           }`}
         />
@@ -262,7 +262,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           <span
             className={`tabular-nums ${
               overLimit
-                ? "text-red-600 dark:text-red-400"
+                ? "text-rose-600 dark:text-rose-400"
                 : text.length > MAX_INPUT_CHARS * 0.9
                   ? "text-amber-600 dark:text-amber-400"
                   : "text-stone-500 dark:text-stone-300"
@@ -281,7 +281,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
             )}
           </span>
           {overLimit ? (
-            <span className="text-right text-red-600 dark:text-red-400">
+            <span className="text-right text-rose-600 dark:text-rose-400">
               Too long. Split into pieces ≤{" "}
               {MAX_INPUT_CHARS.toLocaleString()} chars, or use{" "}
               <Link href="/install" className="underline underline-offset-2">
@@ -530,12 +530,12 @@ function ErrorBlock({ error }: { error: CheckError }) {
     return (
       <div
         role="alert"
-        className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+        className="flex flex-col gap-2 rounded-md border border-rose-300 bg-rose-50 p-4 text-sm dark:border-rose-800 dark:bg-rose-950"
       >
-        <h3 className="font-semibold text-red-900 dark:text-red-200">
+        <h3 className="font-semibold text-rose-900 dark:text-rose-200">
           Session expired
         </h3>
-        <p className="text-red-900 dark:text-red-300">
+        <p className="text-rose-900 dark:text-rose-300">
           You were signed out. Refresh the page to sign back in.
         </p>
       </div>
@@ -562,12 +562,12 @@ function ErrorBlock({ error }: { error: CheckError }) {
     return (
       <div
         role="alert"
-        className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+        className="flex flex-col gap-2 rounded-md border border-rose-300 bg-rose-50 p-4 text-sm dark:border-rose-800 dark:bg-rose-950"
       >
-        <h3 className="font-semibold text-red-900 dark:text-red-200">
+        <h3 className="font-semibold text-rose-900 dark:text-rose-200">
           Something broke on our end
         </h3>
-        <p className="text-red-900 dark:text-red-300">
+        <p className="text-rose-900 dark:text-rose-300">
           The check service hit an error. Try again. If it keeps happening,
           it&apos;s on us.
         </p>
@@ -578,12 +578,12 @@ function ErrorBlock({ error }: { error: CheckError }) {
     return (
       <div
         role="alert"
-        className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+        className="flex flex-col gap-2 rounded-md border border-rose-300 bg-rose-50 p-4 text-sm dark:border-rose-800 dark:bg-rose-950"
       >
-        <h3 className="font-semibold text-red-900 dark:text-red-200">
+        <h3 className="font-semibold text-rose-900 dark:text-rose-200">
           Couldn&apos;t reach the check service
         </h3>
-        <p className="text-red-900 dark:text-red-300">
+        <p className="text-rose-900 dark:text-rose-300">
           Check your connection and try again.
         </p>
       </div>
@@ -593,12 +593,12 @@ function ErrorBlock({ error }: { error: CheckError }) {
   return (
     <div
       role="alert"
-      className="flex flex-col gap-2 rounded-md border border-red-300 bg-red-50 p-4 text-sm dark:border-red-800 dark:bg-red-950"
+      className="flex flex-col gap-2 rounded-md border border-rose-300 bg-rose-50 p-4 text-sm dark:border-rose-800 dark:bg-rose-950"
     >
-      <h3 className="font-semibold text-red-900 dark:text-red-200">
+      <h3 className="font-semibold text-rose-900 dark:text-rose-200">
         Couldn&apos;t complete the check
       </h3>
-      <p className="text-red-900 dark:text-red-300">{error.message}</p>
+      <p className="text-rose-900 dark:text-rose-300">{error.message}</p>
     </div>
   );
 }

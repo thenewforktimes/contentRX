@@ -143,7 +143,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       )}
 
       {state.kind === "error" && (
-        <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+        <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">
           {state.message}
         </div>
       )}
@@ -173,7 +173,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
               type="button"
               disabled={isLoading}
               onClick={() => setConfirmingRevoke(true)}
-              className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950"
+              className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950"
             >
               {isLoading && state.action === "revoke" ? "Revoking…" : "Revoke"}
             </button>

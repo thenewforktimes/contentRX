@@ -44,7 +44,7 @@ export function DeleteExampleButton({ id }: { id: string }) {
         <button
           type="button"
           onClick={doDelete}
-          className="rounded border border-red-500 bg-red-50 px-2 py-1 text-[11px] text-red-700 hover:bg-red-100 dark:border-red-700 dark:bg-red-950 dark:text-red-300"
+          className="rounded border border-rose-500 bg-rose-50 px-2 py-1 text-[11px] text-rose-700 hover:bg-rose-100 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300"
         >
           Confirm
         </button>
@@ -69,12 +69,12 @@ export function DeleteExampleButton({ id }: { id: string }) {
         <button
           type="button"
           onClick={doDelete}
-          className="rounded border border-red-400 bg-red-50 px-2 py-1 text-[11px] text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-300"
+          className="rounded border border-rose-400 bg-rose-50 px-2 py-1 text-[11px] text-rose-700 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300"
         >
           Retry
         </button>
         {errorMessage && (
-          <span className="text-[10px] text-red-700 dark:text-red-400">
+          <span className="text-[10px] text-rose-700 dark:text-rose-400">
             {errorMessage}
           </span>
         )}
