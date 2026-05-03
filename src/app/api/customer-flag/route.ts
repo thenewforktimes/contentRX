@@ -154,8 +154,22 @@ export async function POST(req: Request) {
     return json({ id: row?.id, ok: true }, { status: 201 });
   } catch (err) {
     logSafeError("[customer-flag] insert failed", err);
+    // Surface the underlying error code/message in dev + Preview so
+    // founder-driven testing can diagnose without trawling Vercel logs.
+    // Production (NODE_ENV === "production" AND no preview indicator)
+    // still gets the customer-shaped generic message — we don't leak
+    // raw db errors to end users. Aligned with the auto-memory pattern
+    // "When errors are opaque, ship a 1-line diagnostic hotfix first."
+    const isProd =
+      process.env.NODE_ENV === "production" &&
+      !process.env.VERCEL_ENV?.startsWith("preview");
+    const detail = err instanceof Error ? `${err.name}: ${err.message}` : null;
+    const generic = "Could not record the flag. Try again in a moment.";
     return json(
-      { error: "Could not record the flag. Try again in a moment." },
+      {
+        error:
+          isProd || !detail ? generic : `${generic} (debug: ${detail})`,
+      },
       { status: 500 },
     );
   }
