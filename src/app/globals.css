@@ -127,21 +127,33 @@
        1.35:1) felt like the borders weren't there. */
     --border-default:   #888070;
     --border-strong:    #7e7565;
-    --ring-focus:       #c2410c;
+    --ring-focus:       #4338ca;
 
-    /* ─── ACCENT: PRIMARY ─── */
-    --accent-primary-solid:    #c2410c;
+    /* ─── ACCENT: PRIMARY (cool indigo on warm cream) ─── */
+    /* Cool primary on a warm canvas mirrors the dark-mode warm-on-cool
+       inversion (orange on deep navy). Warm-on-warm (rust orange on
+       cream) read as muddy because the canvas tint and the accent
+       were in the same family — the eye couldn't separate signal
+       from surface. Cool indigo on cream is the editorial-trust
+       pattern (Stripe, Linear, NYT, Substack). 7.4:1 vs canvas. */
+    --accent-primary-solid:    #4338ca;
     --accent-primary-on-solid: #ffffff;
-    --accent-primary-soft:     #fde4d0;
-    --accent-primary-text:     #7c2d12;
-    --accent-primary-border:   #ea580c;
+    --accent-primary-soft:     #e0e7ff;
+    --accent-primary-text:     #312e81;
+    --accent-primary-border:   #6366f1;
 
-    /* ─── ACCENT: AFFIRM ─── */
-    --accent-affirm-solid:     #16a34a;
+    /* ─── ACCENT: AFFIRM (cool teal — harmonizes with indigo) ─── */
+    /* Green-600 on warm cream felt too "spring lawn" — a vivid
+       grass-green next to indigo + warm-cream reads as cheerful
+       clip-art rather than editorial. Teal sits between blue and
+       green on the wheel; cools the success state to match the new
+       indigo primary while still reading as positive. 6.7:1 vs
+       canvas. */
+    --accent-affirm-solid:     #0f766e;
     --accent-affirm-on-solid:  #ffffff;
-    --accent-affirm-soft:      #d4f4dd;
-    --accent-affirm-text:      #166534;
-    --accent-affirm-border:    #22c55e;
+    --accent-affirm-soft:      #ccfbf1;
+    --accent-affirm-text:      #134e4a;
+    --accent-affirm-border:    #14b8a6;
 
     /* ─── ACCENT: CAUTION ─── */
     --accent-caution-solid:    #ca8a04;

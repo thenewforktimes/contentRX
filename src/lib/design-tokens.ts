@@ -43,18 +43,18 @@ export const tokens = {
     },
     accent: {
       primary: {
-        solid: "#c2410c",
+        solid: "#4338ca",
         onSolid: "#ffffff",
-        soft: "#fde4d0",
-        text: "#7c2d12",
-        border: "#ea580c",
+        soft: "#e0e7ff",
+        text: "#312e81",
+        border: "#6366f1",
       },
       affirm: {
-        solid: "#16a34a",
+        solid: "#0f766e",
         onSolid: "#ffffff",
-        soft: "#d4f4dd",
-        text: "#166534",
-        border: "#22c55e",
+        soft: "#ccfbf1",
+        text: "#134e4a",
+        border: "#14b8a6",
       },
       caution: {
         solid: "#ca8a04",
