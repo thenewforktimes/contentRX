@@ -38,8 +38,8 @@ export const tokens = {
       quiet: "#574e3f",
     },
     border: {
-      default: "#d9cfb6",
-      strong: "#b8ad94",
+      default: "#888070",
+      strong: "#7e7565",
     },
     accent: {
       primary: {
@@ -90,18 +90,18 @@ export const tokens = {
   dark: {
     surface: {
       canvas: "#14142b",
-      raised: "#1d1d3e",
+      raised: "#22224a",
       sunken: "#0d0d1f",
       overlay: "#2a2b50",
     },
     text: {
-      strong: "#f3efe5",
-      default: "#c5c0b5",
-      quiet: "#aaa494",
+      strong: "#eef0f5",
+      default: "#c4c8d0",
+      quiet: "#a0a4b0",
     },
     border: {
-      default: "#2c2c52",
-      strong: "#45456e",
+      default: "#646494",
+      strong: "#7070b4",
     },
     accent: {
       primary: {
