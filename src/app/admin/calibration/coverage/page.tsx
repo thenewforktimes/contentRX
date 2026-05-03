@@ -407,7 +407,7 @@ function Stat({
       : tone === "amber"
         ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
         : tone === "red"
-          ? "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+          ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
           : "border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300";
   return (
     <span
@@ -438,7 +438,7 @@ function RejectRateCell({
 }) {
   if (rate === null) {
     return (
-      <span className="text-stone-400 dark:text-stone-600" title="No reviewed candidates yet">
+      <span className="text-stone-400 dark:text-stone-500" title="No reviewed candidates yet">
         —
       </span>
     );
@@ -446,7 +446,7 @@ function RejectRateCell({
   const pct = Math.round(rate * 100);
   const toneClass =
     rate >= 0.5
-      ? "text-red-700 dark:text-red-300"
+      ? "text-rose-700 dark:text-rose-300"
       : rate >= 0.25
         ? "text-amber-700 dark:text-amber-300"
         : "text-stone-700 dark:text-stone-300";

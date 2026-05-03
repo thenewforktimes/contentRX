@@ -86,10 +86,10 @@ export default async function AdminCostsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+        <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
           Costs
         </h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
           Per-user, per-day model spend over the last{" "}
           {ROLLUP_WINDOW_DAYS} days. Estimates use Anthropic list-price
           × logged tokens; cross-reference Anthropic billing for
@@ -107,13 +107,13 @@ export default async function AdminCostsPage() {
             {pausedUsers.map((user) => (
               <li
                 key={user.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-white px-3 py-2 dark:bg-neutral-900"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-white px-3 py-2 dark:bg-stone-900"
               >
                 <div>
-                  <p className="font-medium text-neutral-900 dark:text-neutral-100">
+                  <p className="font-medium text-stone-900 dark:text-stone-100">
                     {user.email}
                   </p>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  <p className="text-xs text-stone-600 dark:text-stone-400">
                     Daily ${user.dailyThresholdUsd} · Monthly $
                     {user.monthlyThresholdUsd} · id {user.id}
                   </p>
@@ -134,19 +134,19 @@ export default async function AdminCostsPage() {
       )}
 
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-600 dark:text-stone-400">
           Spend by user
         </h2>
         {usersWithActivity.length === 0 ? (
-          <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-3 text-sm text-stone-500 dark:text-stone-400">
             No checks logged in the last {ROLLUP_WINDOW_DAYS} days. The
             usage_events table is fresh post-launch; rows accumulate as
             pilots run.
           </p>
         ) : (
-          <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
-            <table className="min-w-full divide-y divide-neutral-200 text-sm dark:divide-neutral-800">
-              <thead className="bg-neutral-50 text-left text-xs font-medium uppercase tracking-wide text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400">
+          <div className="mt-3 overflow-x-auto rounded-lg border border-stone-200 dark:border-stone-800">
+            <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
+              <thead className="bg-stone-50 text-left text-xs font-medium uppercase tracking-wide text-stone-600 dark:bg-stone-900 dark:text-stone-400">
                 <tr>
                   <th className="px-4 py-2">User</th>
                   <th className="px-4 py-2 text-right">30d total</th>
@@ -155,7 +155,7 @@ export default async function AdminCostsPage() {
                   <th className="px-4 py-2 text-right">Monthly threshold</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-900">
+              <tbody className="divide-y divide-stone-100 dark:divide-stone-900">
                 {usersWithActivity.map((user) => {
                   const rows = rowsByUser.get(user.id) ?? [];
                   const total = totalForUser(rows);
@@ -166,10 +166,10 @@ export default async function AdminCostsPage() {
                   return (
                     <tr key={user.id}>
                       <td className="px-4 py-2">
-                        <p className="font-medium text-neutral-900 dark:text-neutral-100">
+                        <p className="font-medium text-stone-900 dark:text-stone-100">
                           {user.email}
                         </p>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        <p className="text-xs text-stone-500 dark:text-stone-400">
                           {user.id}
                         </p>
                       </td>
@@ -179,10 +179,10 @@ export default async function AdminCostsPage() {
                       <td className="px-4 py-2 text-right tabular-nums">
                         {events.toLocaleString()}
                       </td>
-                      <td className="px-4 py-2 text-right tabular-nums text-neutral-600 dark:text-neutral-400">
+                      <td className="px-4 py-2 text-right tabular-nums text-stone-600 dark:text-stone-400">
                         ${user.dailyThresholdUsd}
                       </td>
-                      <td className="px-4 py-2 text-right tabular-nums text-neutral-600 dark:text-neutral-400">
+                      <td className="px-4 py-2 text-right tabular-nums text-stone-600 dark:text-stone-400">
                         ${user.monthlyThresholdUsd}
                       </td>
                     </tr>
@@ -195,17 +195,17 @@ export default async function AdminCostsPage() {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-600 dark:text-stone-400">
           Daily breakdown
         </h2>
         {rollup.length === 0 ? (
-          <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="mt-3 text-sm text-stone-500 dark:text-stone-400">
             No daily rollup yet.
           </p>
         ) : (
-          <div className="mt-3 overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
-            <table className="min-w-full divide-y divide-neutral-200 text-sm dark:divide-neutral-800">
-              <thead className="bg-neutral-50 text-left text-xs font-medium uppercase tracking-wide text-neutral-600 dark:bg-neutral-900 dark:text-neutral-400">
+          <div className="mt-3 overflow-x-auto rounded-lg border border-stone-200 dark:border-stone-800">
+            <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
+              <thead className="bg-stone-50 text-left text-xs font-medium uppercase tracking-wide text-stone-600 dark:bg-stone-900 dark:text-stone-400">
                 <tr>
                   <th className="px-4 py-2">Day</th>
                   <th className="px-4 py-2">User</th>
@@ -213,7 +213,7 @@ export default async function AdminCostsPage() {
                   <th className="px-4 py-2 text-right">Events</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-900">
+              <tbody className="divide-y divide-stone-100 dark:divide-stone-900">
                 {rollup.map((row, i) => {
                   const user = userById.get(row.userId);
                   return (

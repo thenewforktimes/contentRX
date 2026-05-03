@@ -35,23 +35,23 @@ export default async function AdminEssayDraftPreviewPage({
         <p className="text-xs">
           <Link
             href="/admin/essay-drafts"
-            className="text-neutral-600 hover:underline dark:text-neutral-400"
+            className="text-stone-600 hover:underline dark:text-stone-400"
           >
             ← Back to essay drafts
           </Link>
         </p>
-        <h1 className="mt-2 font-mono text-xl text-neutral-900 dark:text-neutral-100">
+        <h1 className="mt-2 font-mono text-xl text-stone-900 dark:text-stone-100">
           {draft.filename}
         </h1>
-        <dl className="mt-3 flex flex-wrap gap-4 text-xs text-neutral-600 dark:text-neutral-400">
+        <dl className="mt-3 flex flex-wrap gap-4 text-xs text-stone-600 dark:text-stone-400">
           <div>
-            <dt className="font-semibold uppercase tracking-wide text-neutral-500">
+            <dt className="font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Path
             </dt>
             <dd className="font-mono">essays/drafts/{draft.filename}</dd>
           </div>
           <div>
-            <dt className="font-semibold uppercase tracking-wide text-neutral-500">
+            <dt className="font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Modified
             </dt>
             <dd className="font-mono">
@@ -59,7 +59,7 @@ export default async function AdminEssayDraftPreviewPage({
             </dd>
           </div>
           <div>
-            <dt className="font-semibold uppercase tracking-wide text-neutral-500">
+            <dt className="font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Size
             </dt>
             <dd className="font-mono">
@@ -69,20 +69,20 @@ export default async function AdminEssayDraftPreviewPage({
         </dl>
       </header>
 
-      <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="border-b border-neutral-200 px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
+      <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+        <div className="border-b border-stone-200 px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400 dark:border-stone-800">
           Raw contents
         </div>
-        <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-sans text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
+        <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-sans text-sm leading-relaxed text-stone-800 dark:text-stone-200">
 {draft.contents}
         </pre>
       </div>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-stone-500 dark:text-stone-400">
         Edits live on the primary{" "}
         <Link
           href="/admin/essay-drafts"
-          className="text-neutral-700 underline hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
+          className="text-stone-700 underline hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100"
         >
           /admin/essay-drafts
         </Link>{" "}

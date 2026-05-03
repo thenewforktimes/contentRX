@@ -39,7 +39,7 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md border border-neutral-300 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        className="rounded-md border border-stone-300 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
       >
         Log refinement
       </button>
@@ -49,9 +49,9 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
   return (
     <form
       action={addRefinement}
-      className="mt-3 space-y-3 rounded-md border border-neutral-300 bg-neutral-50 p-3 text-xs dark:border-neutral-700 dark:bg-neutral-900"
+      className="mt-3 space-y-3 rounded-md border border-stone-300 bg-stone-50 p-3 text-xs dark:border-stone-700 dark:bg-stone-900"
     >
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
         New open refinement
       </p>
 
@@ -99,10 +99,10 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
       />
 
       <details>
-        <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wide text-neutral-500">
+        <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wide text-stone-500 dark:text-stone-400">
           Triggering case (auto-generated, hidden)
         </summary>
-        <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words rounded bg-white p-2 font-sans text-[11px] text-neutral-700 dark:bg-neutral-950 dark:text-neutral-300">
+        <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words rounded bg-white p-2 font-sans text-[11px] text-stone-700 dark:bg-stone-950 dark:text-stone-300">
 {defaults.triggering_case}
         </pre>
       </details>
@@ -110,18 +110,18 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="submit"
-          className="rounded-md border border-neutral-900 bg-neutral-900 px-3 py-1 text-xs font-medium text-white hover:bg-neutral-800 dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+          className="rounded-md border border-stone-900 bg-stone-900 px-3 py-1 text-xs font-medium text-white hover:bg-stone-800 dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
         >
           Log refinement
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-md border border-neutral-300 px-3 py-1 text-xs text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          className="rounded-md border border-stone-300 px-3 py-1 text-xs text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
         >
           Cancel
         </button>
-        <span className="ml-auto text-[10px] text-neutral-500">
+        <span className="ml-auto text-[10px] text-stone-500 dark:text-stone-400">
           Vercel runtime is read-only — saves only land in local checkouts.
         </span>
       </div>
@@ -144,7 +144,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
         {required && <span className="ml-0.5 text-rose-500">*</span>}
       </span>
@@ -154,7 +154,7 @@ function Field({
         required={required}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        className="rounded border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-900 focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+        className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-900 focus:border-stone-500 focus:outline-none dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
       />
     </label>
   );
@@ -175,7 +175,7 @@ function FieldTextarea({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
         {required && <span className="ml-0.5 text-rose-500">*</span>}
       </span>
@@ -185,7 +185,7 @@ function FieldTextarea({
         placeholder={placeholder}
         defaultValue={defaultValue}
         rows={3}
-        className="rounded border border-neutral-300 bg-white px-2 py-1 font-sans text-xs leading-relaxed text-neutral-900 focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+        className="rounded border border-stone-300 bg-white px-2 py-1 font-sans text-xs leading-relaxed text-stone-900 focus:border-stone-500 focus:outline-none dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
       />
     </label>
   );

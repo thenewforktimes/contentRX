@@ -167,10 +167,10 @@ export default async function AdminQueuePage({
     <div className="space-y-6">
       <header className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
             Review queue
           </h1>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
             Cases the engine flagged for review in the last {windowDays} days.
             Filter by subtype to focus the daily 15-minute review rhythm.
             Click <strong>Agree</strong> to confirm the engine&apos;s
@@ -179,7 +179,7 @@ export default async function AdminQueuePage({
             Decisions persist into the override stream for calibration.
           </p>
         </div>
-        <div className="text-sm text-neutral-700 dark:text-neutral-300">
+        <div className="text-sm text-stone-700 dark:text-stone-300">
           <span className="font-mono text-lg font-semibold">{totalQueue}</span>{" "}
           pending
         </div>
@@ -187,7 +187,7 @@ export default async function AdminQueuePage({
 
       <nav
         aria-label="Subtype filters"
-        className="flex flex-wrap gap-2 border-b border-neutral-200 pb-3 dark:border-neutral-800"
+        className="flex flex-wrap gap-2 border-b border-stone-200 pb-3 dark:border-stone-800"
       >
         <FilterTab
           href={`/admin/queue?window=${windowDays}`}
@@ -207,13 +207,13 @@ export default async function AdminQueuePage({
       </nav>
 
       {activeSubtype && (
-        <p className="text-xs text-neutral-600 dark:text-neutral-400">
+        <p className="text-xs text-stone-600 dark:text-stone-400">
           {SUBTYPE_DESCRIPTION[activeSubtype]}
         </p>
       )}
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 bg-white p-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+        <p className="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-500 dark:text-stone-400 dark:border-stone-700 dark:bg-stone-900">
           No pending cases in this window.
         </p>
       ) : (
@@ -228,7 +228,7 @@ export default async function AdminQueuePage({
         </ul>
       )}
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-stone-500 dark:text-stone-400">
         Showing up to {MAX_ROWS_PER_SUBTYPE} most recent cases. Older cases
         require widening the window (`?window=180`) or clustering rollups
         (Phase B5 — calibration).
@@ -249,8 +249,8 @@ function FilterTab({
   count: number;
 }) {
   const cls = active
-    ? "rounded-md bg-neutral-900 text-white dark:bg-white dark:text-black"
-    : "rounded-md bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700";
+    ? "rounded-md bg-stone-900 text-white dark:bg-white dark:text-black"
+    : "rounded-md bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700";
   return (
     <Link href={href} className={`${cls} px-3 py-1.5 text-xs font-medium`}>
       {label}
@@ -285,8 +285,8 @@ function QueueRow({
     <li
       className={`rounded-lg border p-3 text-sm ${
         isDecided
-          ? "border-neutral-200 bg-neutral-50 opacity-60 dark:border-neutral-800 dark:bg-neutral-950"
-          : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+          ? "border-stone-200 bg-stone-50 opacity-60 dark:border-stone-800 dark:bg-stone-950"
+          : "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"
       }`}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -294,28 +294,28 @@ function QueueRow({
           {row.standardId ? (
             <Link
               href={`/admin/model/standards/${row.standardId}`}
-              className="font-mono text-xs text-neutral-700 hover:underline dark:text-neutral-300"
+              className="font-mono text-xs text-stone-700 hover:underline dark:text-stone-300"
             >
               {row.standardId}
             </Link>
           ) : (
-            <span className="font-mono text-xs text-neutral-500">—</span>
+            <span className="font-mono text-xs text-stone-500 dark:text-stone-400">—</span>
           )}
           {row.severity && (
             <span
               className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                 row.severity === "high"
-                  ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                  ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
                   : row.severity === "medium"
                     ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                    : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                    : "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300"
               }`}
             >
               {row.severity}
             </span>
           )}
           {row.reviewReasonSubtype && (
-            <span className="rounded bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+            <span className="rounded bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
               {humanizeReviewReason(row.reviewReasonSubtype)}
             </span>
           )}
@@ -324,21 +324,21 @@ function QueueRow({
               className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                 decidedStance === "agree"
                   ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                  : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                  : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
               }`}
             >
               {decidedStance === "agree" ? "✓ Agreed" : "✗ Disagreed"}
             </span>
           )}
         </div>
-        <span className="font-mono text-[10px] text-neutral-500">
+        <span className="font-mono text-[10px] text-stone-500 dark:text-stone-400">
           {row.createdAt.toISOString().slice(0, 16).replace("T", " ")}
         </span>
       </div>
-      <dl className="mt-2 grid grid-cols-3 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+      <dl className="mt-2 grid grid-cols-3 gap-2 text-xs text-stone-600 dark:text-stone-400">
         {row.contentType && (
           <div>
-            <dt className="font-medium uppercase tracking-wide text-neutral-500">
+            <dt className="font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Content type
             </dt>
             <dd>{humanizeContentType(row.contentType)}</dd>
@@ -346,7 +346,7 @@ function QueueRow({
         )}
         {row.moment && (
           <div>
-            <dt className="font-medium uppercase tracking-wide text-neutral-500">
+            <dt className="font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Moment
             </dt>
             <dd>{humanizeMoment(row.moment)}</dd>
@@ -354,14 +354,14 @@ function QueueRow({
         )}
         {row.source && (
           <div>
-            <dt className="font-medium uppercase tracking-wide text-neutral-500">
+            <dt className="font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Source
             </dt>
             <dd className="font-mono">{row.source}</dd>
           </div>
         )}
       </dl>
-      <p className="mt-2 truncate font-mono text-[10px] text-neutral-500">
+      <p className="mt-2 truncate font-mono text-[10px] text-stone-500 dark:text-stone-400">
         text_hash · {row.textHash.slice(0, 16)}…
       </p>
       {!isDecided && (
@@ -396,8 +396,8 @@ function DecisionForm({
     stance === "agree"
       ? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900"
       : stance === "disagree"
-        ? "border-red-300 bg-red-50 text-red-900 hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
-        : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800";
+        ? "border-rose-300 bg-rose-50 text-rose-900 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900"
+        : "border-stone-300 bg-white text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800";
 
   async function handle() {
     "use server";

@@ -19,6 +19,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Pill } from "@/components/ui/pill";
 
 interface CandidatePayload {
   id: string;
@@ -140,9 +141,9 @@ export function TriageCluster({
           <p className="font-mono text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
             {momentLabel} · {contentTypeLabel} · {standardId ?? "—"}
           </p>
-          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-200">
+          <Pill tone="neutral" size="xs">
             {candidateCount} candidate{candidateCount === 1 ? "" : "s"}
-          </span>
+          </Pill>
         </div>
         <div className="flex items-center gap-2">
           <button

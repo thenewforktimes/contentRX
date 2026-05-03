@@ -14,6 +14,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pill, type PillTone } from "@/components/ui/pill";
 import {
   loadCaseStudyDetail,
   type EngineResultRow,
@@ -82,20 +83,20 @@ export default async function AdminCaseStudyDetailPage({
         <p className="text-xs">
           <Link
             href="/admin/case-studies"
-            className="text-neutral-600 hover:underline dark:text-neutral-400"
+            className="text-stone-600 hover:underline dark:text-stone-400"
           >
             ← Back to case studies
           </Link>
         </p>
-        <h1 className="mt-2 font-mono text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+        <h1 className="mt-2 font-mono text-2xl font-semibold text-stone-900 dark:text-stone-100">
           {detail.slug}
         </h1>
         {detail.description && (
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
             {detail.description}
           </p>
         )}
-        <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-neutral-600 dark:text-neutral-400">
+        <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-stone-600 dark:text-stone-400">
           {detail.repo && (
             <Meta label="Repo" value={detail.repo} mono />
           )}
@@ -110,8 +111,8 @@ export default async function AdminCaseStudyDetailPage({
         </dl>
       </header>
 
-      <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+      <section className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
           Verdict distribution
         </h2>
         <div className="mt-3 flex flex-wrap gap-3 text-xs">
@@ -140,19 +141,21 @@ export default async function AdminCaseStudyDetailPage({
         </div>
         {Object.keys(detail.review_reason_counts).length > 0 && (
           <div className="mt-4">
-            <h3 className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+            <h3 className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Review reasons
             </h3>
-            <div className="mt-2 flex flex-wrap gap-2 font-mono text-[10px]">
+            <div className="mt-2 flex flex-wrap gap-2">
               {Object.entries(detail.review_reason_counts)
                 .sort((a, b) => b[1] - a[1])
                 .map(([reason, n]) => (
-                  <span
+                  <Pill
                     key={reason}
-                    className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                    tone="neutral"
+                    size="xs"
+                    className="font-mono"
                   >
                     {reason} · {n}
-                  </span>
+                  </Pill>
                 ))}
             </div>
           </div>
@@ -195,12 +198,12 @@ export default async function AdminCaseStudyDetailPage({
       })}
 
       {detail.summary_md && (
-        <section className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <section className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
           <details>
-            <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-neutral-500">
+            <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Auto-rolled summary
             </summary>
-            <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-neutral-700 dark:text-neutral-300">
+            <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-words font-sans text-xs leading-relaxed text-stone-700 dark:text-stone-300">
 {detail.summary_md}
             </pre>
           </details>
@@ -225,18 +228,18 @@ function ResultsSection({
       <header>
         <h2
           id={`section-${verdict}`}
-          className="text-base font-semibold text-neutral-900 dark:text-neutral-100"
+          className="text-base font-semibold text-stone-900 dark:text-stone-100"
         >
           {VERDICT_LABEL[verdict]}{" "}
-          <span className="font-mono text-sm text-neutral-500">
+          <span className="font-mono text-sm text-stone-500 dark:text-stone-400">
             ({rows.length})
           </span>
         </h2>
-        <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
           {VERDICT_DESCRIPTION[verdict]}
         </p>
       </header>
-      <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+      <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
         {rows.map((row, i) => (
           <ResultRow key={`${row.input.source_file}:${row.input.line}:${i}`} row={row} />
         ))}
@@ -264,20 +267,20 @@ function ResultRow({ row }: { row: EngineResultRow }) {
     <li className="flex flex-col gap-2 px-4 py-3">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <div className="flex flex-1 flex-wrap items-baseline gap-3">
-          <p className="font-sans text-sm text-neutral-900 dark:text-neutral-100">
+          <p className="font-sans text-sm text-stone-900 dark:text-stone-100">
             {row.input.text}
           </p>
           {review_reason && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 font-mono text-[10px] text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            <Pill tone="amber" size="xs" className="font-mono">
               {review_reason}
-            </span>
+            </Pill>
           )}
         </div>
         {showLogButton && (
           <LogRefinementButton defaults={buildDefaults(row, verdict)} />
         )}
       </div>
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[10px] text-neutral-500">
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 font-mono text-[10px] text-stone-500 dark:text-stone-400">
         <span>{row.input.kind}</span>
         <span>{row.input.source_file}:{row.input.line}</span>
         {row.elapsed_ms !== undefined && <span>{row.elapsed_ms}ms</span>}
@@ -288,20 +291,20 @@ function ResultRow({ row }: { row: EngineResultRow }) {
         </p>
       )}
       {violations.length > 0 && (
-        <ul className="mt-1 space-y-2 border-l-2 border-neutral-200 pl-3 dark:border-neutral-800">
+        <ul className="mt-1 space-y-2 border-l-2 border-stone-200 pl-3 dark:border-stone-800">
           {violations.map((v, j) => (
             <li key={j} className="space-y-1">
               <div className="flex flex-wrap items-baseline gap-2 text-xs">
                 <SeverityBadge severity={v.severity} />
-                <span className="text-neutral-900 dark:text-neutral-100">
+                <span className="text-stone-900 dark:text-stone-100">
                   {v.issue}
                 </span>
-                <span className="font-mono text-[10px] text-neutral-500">
+                <span className="font-mono text-[10px] text-stone-500 dark:text-stone-400">
                   conf {(v.confidence ?? 0).toFixed(2)}
                 </span>
               </div>
               {v.suggestion && (
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                <p className="text-xs text-stone-600 dark:text-stone-400">
                   → {v.suggestion}
                 </p>
               )}
@@ -392,18 +395,16 @@ function SeverityBadge({
 }: {
   severity: "high" | "medium" | "low";
 }) {
-  const cls =
+  const tone: PillTone =
     severity === "high"
-      ? "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200"
+      ? "red"
       : severity === "medium"
-      ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-      : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
+        ? "amber"
+        : "neutral";
   return (
-    <span
-      className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide ${cls}`}
-    >
+    <Pill tone={tone} size="xs" className="font-mono uppercase tracking-wide">
       {severity}
-    </span>
+    </Pill>
   );
 }
 
@@ -416,18 +417,18 @@ function VerdictPill({
   n: number;
   tone: "emerald" | "amber" | "rose" | "muted";
 }) {
-  const cls =
+  const pillTone: PillTone =
     tone === "emerald"
-      ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
+      ? "emerald"
       : tone === "amber"
-      ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-      : tone === "rose"
-      ? "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200"
-      : "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-500";
+        ? "amber"
+        : tone === "rose"
+          ? "red"
+          : "stone";
   return (
-    <span className={`rounded-full px-3 py-1 font-mono text-xs ${cls}`}>
+    <Pill tone={pillTone} className="font-mono">
       {n} {label}
-    </span>
+    </Pill>
   );
 }
 
@@ -442,10 +443,10 @@ function Meta({
 }) {
   return (
     <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+      <dt className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
       </dt>
-      <dd className={`mt-0.5 ${mono ? "font-mono" : ""} text-neutral-800 dark:text-neutral-200`}>
+      <dd className={`mt-0.5 ${mono ? "font-mono" : ""} text-stone-800 dark:text-stone-200`}>
         {value}
       </dd>
     </div>

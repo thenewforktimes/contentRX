@@ -15,6 +15,7 @@
  */
 
 import Link from "next/link";
+import { Pill } from "@/components/ui/pill";
 import {
   loadReports,
   STALE_THRESHOLD_DAYS,
@@ -66,10 +67,10 @@ export default function AdminReportsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+        <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
           Reports
         </h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
           Preview-before-publish gate for the public credibility surface.
           Generated reports surface here before the docs site picks them up.
           Stale entries (older than the cadence threshold) are flagged so
@@ -90,25 +91,25 @@ export default function AdminReportsPage() {
               <div>
                 <h2
                   id={`section-${type}`}
-                  className="text-base font-semibold text-neutral-900 dark:text-neutral-100"
+                  className="text-base font-semibold text-stone-900 dark:text-stone-100"
                 >
                   {info.title}
                 </h2>
-                <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
                   {info.description}
                 </p>
               </div>
-              <span className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-medium uppercase tracking-wide text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+              <Pill tone="neutral" size="xs" className="uppercase tracking-wide">
                 {info.cadence} · stale &gt; {STALE_THRESHOLD_DAYS[type]}d
-              </span>
+              </Pill>
             </header>
 
             {entries.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-neutral-300 bg-white px-4 py-3 text-xs text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+              <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-3 text-xs text-stone-500 dark:text-stone-400 dark:border-stone-700 dark:bg-stone-900">
                 {info.emptyHint}
               </p>
             ) : (
-              <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+              <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
                 {entries.map((entry) => (
                   <ReportRow key={entry.filename} entry={entry} />
                 ))}
@@ -127,26 +128,26 @@ function ReportRow({ entry }: { entry: ReportEntry }) {
       <div className="flex items-baseline gap-3">
         <Link
           href={`/admin/reports/${entry.type}/${encodeURIComponent(entry.filename)}`}
-          className="font-mono text-sm text-neutral-900 hover:underline dark:text-neutral-100"
+          className="font-mono text-sm text-stone-900 hover:underline dark:text-stone-100"
         >
           {entry.filename}
         </Link>
         {entry.reviewed ? (
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+          <Pill tone="emerald" size="xs" className="uppercase tracking-wide">
             reviewed
-          </span>
+          </Pill>
         ) : (
-          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+          <Pill tone="neutral" size="xs" className="uppercase tracking-wide">
             pending review
-          </span>
+          </Pill>
         )}
         {entry.is_stale && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          <Pill tone="amber" size="xs" className="uppercase tracking-wide">
             stale
-          </span>
+          </Pill>
         )}
       </div>
-      <div className="flex items-baseline gap-4 font-mono text-[10px] text-neutral-500">
+      <div className="flex items-baseline gap-4 font-mono text-[10px] text-stone-500 dark:text-stone-400">
         <span>{entry.size_bytes.toLocaleString()} bytes</span>
         <span>{formatDate(entry.modified_at)}</span>
         <ToggleReviewForm entry={entry} />
@@ -169,7 +170,7 @@ function ToggleReviewForm({ entry }: { entry: ReportEntry }) {
       <button
         type="submit"
         title={tooltip}
-        className="rounded-md border border-neutral-300 px-2 py-0.5 text-[10px] font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        className="rounded-md border border-stone-300 px-2 py-0.5 text-[10px] font-medium text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
       >
         {label}
       </button>

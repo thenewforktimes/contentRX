@@ -20,6 +20,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
+import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
   inboxCounts,
@@ -108,10 +109,10 @@ export default async function AdminOverridesPage({
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+        <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
           Override inbox
         </h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
           Triage every dismissal into the corpus, the patch queue, or
           mark not-actionable. Last 30 days, sorted most-recent-first.
         </p>
@@ -149,7 +150,7 @@ export default async function AdminOverridesPage({
       </section>
 
       {(params.user || params.standard) && (
-        <section className="text-xs text-neutral-600 dark:text-neutral-400">
+        <section className="text-xs text-stone-600 dark:text-stone-400">
           {params.user && <span>User: {params.user} · </span>}
           {params.standard && (
             <span>Standard: {params.standard} · </span>
@@ -164,7 +165,7 @@ export default async function AdminOverridesPage({
       )}
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-neutral-200 bg-white p-6 text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+        <p className="rounded-lg border border-stone-200 bg-white p-6 text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400">
           No overrides match. Inbox zero — or the filter is too tight.
         </p>
       ) : (
@@ -172,11 +173,11 @@ export default async function AdminOverridesPage({
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+              className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                  <p className="font-medium text-neutral-900 dark:text-neutral-100">
+                <div className="text-xs text-stone-600 dark:text-stone-400">
+                  <p className="font-medium text-stone-900 dark:text-stone-100">
                     {row.userEmail ?? row.userId ?? "(deleted user)"}
                   </p>
                   <p>
@@ -187,18 +188,18 @@ export default async function AdminOverridesPage({
                   </p>
                 </div>
                 <div className="text-right text-xs">
-                  <p className="font-mono text-neutral-700 dark:text-neutral-300">
+                  <p className="font-mono text-stone-700 dark:text-stone-300">
                     {row.standardId}
                   </p>
                   {row.moment && (
-                    <p className="text-neutral-500 dark:text-neutral-400">
+                    <p className="text-stone-500 dark:text-stone-400">
                       {row.moment}
                     </p>
                   )}
                 </div>
               </div>
               {(row.overrideReasonCode || row.overrideReason) && (
-                <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+                <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">
                   {row.overrideReasonCode && (
                     <span className="font-medium">
                       {row.overrideReasonCode.replace(/_/g, " ")}.{" "}
@@ -219,27 +220,27 @@ export default async function AdminOverridesPage({
                   </p>
                 </div>
               ) : (
-                <p className="mt-3 rounded-md border border-neutral-200 bg-neutral-50 p-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+                <p className="mt-3 rounded-md border border-stone-200 bg-stone-50 p-2 text-xs text-stone-500 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400">
                   Text not retained &mdash; pilot did not opt in to share.
                   Triage to corpus is unavailable for this row.
                 </p>
               )}
-              <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
                 <span>
                   Status:{" "}
-                  <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                  <span className="font-medium text-stone-700 dark:text-stone-300">
                     {STATUS_LABEL[row.status]}
                   </span>
                 </span>
                 {row.status === "addressed_corpus" && row.exportedAt && (
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  <Pill tone="emerald">
                     Exported {row.exportedAt.toISOString().slice(0, 10)}
-                  </span>
+                  </Pill>
                 )}
                 {row.status === "addressed_corpus" && !row.exportedAt && (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  <Pill tone="amber">
                     Pending export &mdash; run npm run export-corpus
-                  </span>
+                  </Pill>
                 )}
               </p>
               {row.status === "open" && (
@@ -273,7 +274,7 @@ function TriageForm({
         type="text"
         name="notes"
         placeholder="Optional one-line note"
-        className="flex-1 min-w-[180px] rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-900 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+        className="flex-1 min-w-[180px] rounded-md border border-stone-300 bg-white px-2 py-1 text-xs text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
       />
       <button
         type="submit"
@@ -301,7 +302,7 @@ function TriageForm({
         type="submit"
         name="newStatus"
         value="not_actionable"
-        className="rounded-md bg-neutral-200 px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-300 dark:bg-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-600"
+        className="rounded-md bg-stone-200 px-3 py-1 text-xs font-medium text-stone-800 hover:bg-stone-300 dark:bg-stone-700 dark:text-stone-100 dark:hover:bg-stone-600"
       >
         Not actionable
       </button>
@@ -319,8 +320,8 @@ function FilterPill({
   active: boolean;
 }) {
   const tone = active
-    ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-    : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700";
+    ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
+    : "bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700";
   return (
     <a
       href={href}

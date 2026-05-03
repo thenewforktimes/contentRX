@@ -25,6 +25,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
+import { Pill, type PillTone } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
   flagInboxCounts,
@@ -71,16 +72,15 @@ function reasonLabel(value: string): string {
     : value;
 }
 
-const STATUS_TONE: Record<FlagStatus, string> = {
-  open: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  addressed_corpus:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-  addressed_taxonomy:
-    "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
-  addressed_patch:
-    "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-  not_actionable:
-    "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
+// Six-tone Pill primitive doesn't include purple; addressed_taxonomy
+// (rule promoted into the taxonomy) shares "info" semantics with
+// addressed_patch — distinguished by the label text, not the tone.
+const STATUS_PILL_TONE: Record<FlagStatus, PillTone> = {
+  open: "amber",
+  addressed_corpus: "emerald",
+  addressed_taxonomy: "blue",
+  addressed_patch: "blue",
+  not_actionable: "neutral",
 };
 
 interface PageProps {
@@ -137,20 +137,20 @@ export default async function AdminCustomerFlagsPage({
     <div className="space-y-6">
       <header className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
             Customer flags
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 max-w-2xl text-sm text-stone-600 dark:text-stone-400">
             Cases customers consented to share for review. Plaintext is
             visible because every row carries explicit per-flag consent.
             Triage into corpus, taxonomy, patch, or not-actionable.
           </p>
         </div>
         <div className="text-right">
-          <p className="font-mono text-2xl font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
+          <p className="font-mono text-2xl font-semibold tabular-nums text-stone-900 dark:text-stone-100">
             {counts.open}
           </p>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="text-xs text-stone-500 dark:text-stone-400">
             open of {counts.total} total
           </p>
         </div>
@@ -158,7 +158,7 @@ export default async function AdminCustomerFlagsPage({
 
       <nav
         aria-label="Status filter"
-        className="flex flex-wrap gap-2 border-b border-neutral-200 pb-3 dark:border-neutral-800"
+        className="flex flex-wrap gap-2 border-b border-stone-200 pb-3 dark:border-stone-800"
       >
         {(["open", "all"] as const).map((s) => (
           <a
@@ -166,8 +166,8 @@ export default async function AdminCustomerFlagsPage({
             href={s === "open" ? "/admin/customer-flags" : `/admin/customer-flags?status=${s}`}
             className={`rounded-full px-3 py-1 text-xs font-medium transition ${
               statusFilter === s
-                ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                : "border border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
+                : "border border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
             }`}
           >
             {s === "open" ? `Open (${counts.open})` : `All (${counts.total})`}
@@ -176,7 +176,7 @@ export default async function AdminCustomerFlagsPage({
       </nav>
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 bg-white p-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
+        <p className="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400">
           {statusFilter === "open"
             ? "No open flags. Customers haven't sent anything for review yet."
             : "No flags in the window."}
@@ -186,44 +186,40 @@ export default async function AdminCustomerFlagsPage({
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+              className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span
-                    className={`rounded-full px-2 py-0.5 font-medium ${STATUS_TONE[row.status]}`}
-                  >
+                  <Pill tone={STATUS_PILL_TONE[row.status]}>
                     {STATUS_LABEL[row.status]}
-                  </span>
-                  <span className="rounded-full bg-neutral-200 px-2 py-0.5 font-medium text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200">
-                    {reasonLabel(row.flagReason)}
-                  </span>
+                  </Pill>
+                  <Pill tone="neutral">{reasonLabel(row.flagReason)}</Pill>
                   {row.verdict && (
-                    <span className="text-neutral-600 dark:text-neutral-400">
+                    <span className="text-stone-600 dark:text-stone-400">
                       verdict: {row.verdict}
                     </span>
                   )}
                   {row.contentType && (
-                    <span className="text-neutral-500 dark:text-neutral-500">
+                    <span className="text-stone-500 dark:text-stone-500">
                       · {humanizeContentType(row.contentType)}
                     </span>
                   )}
                   {row.moment && (
-                    <span className="text-neutral-500 dark:text-neutral-500">
+                    <span className="text-stone-500 dark:text-stone-500">
                       · {humanizeMoment(row.moment)}
                     </span>
                   )}
-                  <span className="text-neutral-500 dark:text-neutral-500">
+                  <span className="text-stone-500 dark:text-stone-500">
                     · {row.source}
                   </span>
                 </div>
-                <div className="text-right text-xs text-neutral-500 dark:text-neutral-400">
+                <div className="text-right text-xs text-stone-500 dark:text-stone-400">
                   <p>{row.userEmail ?? "(deleted user)"}</p>
                   <p>{formatRelative(row.createdAt)}</p>
                 </div>
               </div>
 
-              <p className="mt-3 whitespace-pre-wrap rounded-md border border-neutral-200 bg-neutral-50 p-3 font-mono text-sm text-neutral-800 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200">
+              <p className="mt-3 whitespace-pre-wrap rounded-md border border-stone-200 bg-stone-50 p-3 font-mono text-sm text-stone-800 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200">
                 {row.text}
               </p>
 
@@ -237,16 +233,16 @@ export default async function AdminCustomerFlagsPage({
               {row.status === "open" && (
                 <form
                   action={triageAction}
-                  className="mt-3 flex flex-wrap items-end gap-2 border-t border-neutral-100 pt-3 dark:border-neutral-800"
+                  className="mt-3 flex flex-wrap items-end gap-2 border-t border-stone-100 pt-3 dark:border-stone-800"
                 >
                   <input type="hidden" name="flagId" value={row.id} />
                   <label className="flex flex-col gap-1 text-xs">
-                    <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                    <span className="font-medium text-stone-700 dark:text-stone-300">
                       Resolution
                     </span>
                     <select
                       name="newStatus"
-                      className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                      className="rounded-md border border-stone-300 bg-white px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
                       required
                       defaultValue=""
                     >
@@ -266,7 +262,7 @@ export default async function AdminCustomerFlagsPage({
                     </select>
                   </label>
                   <label className="flex-1 flex-col gap-1 text-xs">
-                    <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                    <span className="font-medium text-stone-700 dark:text-stone-300">
                       Notes (optional)
                     </span>
                     <input
@@ -274,12 +270,12 @@ export default async function AdminCustomerFlagsPage({
                       name="notes"
                       maxLength={500}
                       placeholder="Triage notes for the audit log"
-                      className="w-full rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                      className="w-full rounded-md border border-stone-300 bg-white px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
                     />
                   </label>
                   <button
                     type="submit"
-                    className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+                    className="rounded-md bg-stone-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
                   >
                     Triage
                   </button>

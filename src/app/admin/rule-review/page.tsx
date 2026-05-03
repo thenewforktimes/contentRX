@@ -135,13 +135,13 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10 text-sm">
       <header className="mb-8">
-        <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
           Admin · rule-review queue
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
           Standards teams override most
         </h1>
-        <p className="mt-2 max-w-prose text-neutral-600 dark:text-neutral-400">
+        <p className="mt-2 max-w-prose text-stone-600 dark:text-stone-400">
           Rules with ≥{Math.round(minRate * 100)}% override rate on ≥
           {minTeams} distinct teams over the last {windowDays} days.
           Use this to justify content-model updates with data. The
@@ -166,7 +166,7 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
 
       <section className="mt-8">
         {rows.length === 0 ? (
-          <p className="rounded-md border border-dashed border-neutral-300 p-6 text-sm text-neutral-500 dark:border-neutral-700">
+          <p className="rounded-md border border-dashed border-stone-300 p-6 text-sm text-stone-500 dark:text-stone-400 dark:border-stone-700">
             No standards meet the thresholds in this window. Either
             the team population is too small or no standard is widely
             contested.
@@ -174,7 +174,7 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
         ) : (
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-neutral-200 text-left text-xs uppercase tracking-wider text-neutral-500 dark:border-neutral-800">
+              <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 dark:border-stone-800">
                 <th className="py-2">Standard</th>
                 <th className="py-2 text-right">Teams qualifying</th>
                 <th className="py-2 text-right">Teams with data</th>
@@ -187,7 +187,7 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
               {rows.map((r) => (
                 <tr
                   key={r.standardId}
-                  className="border-b border-neutral-100 dark:border-neutral-900"
+                  className="border-b border-stone-100 dark:border-stone-900"
                 >
                   <td className="py-2 font-mono text-xs">
                     <Link
@@ -201,7 +201,7 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
                   <td className="py-2 text-right font-mono text-xs">
                     {r.teamsQualifying}
                   </td>
-                  <td className="py-2 text-right font-mono text-xs text-neutral-500">
+                  <td className="py-2 text-right font-mono text-xs text-stone-500 dark:text-stone-400">
                     {r.teamsWithData}
                   </td>
                   <td className="py-2 text-right font-mono text-xs">
@@ -238,7 +238,7 @@ function ThresholdForm({
     <form
       method="get"
       action="/admin/rule-review"
-      className="flex flex-wrap items-end gap-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800"
+      className="flex flex-wrap items-end gap-4 rounded-lg border border-stone-200 p-4 dark:border-stone-800"
     >
       <NumberInput label="Window (days)" name="window" defaultValue={windowDays} min={7} max={180} />
       <NumberInput label="Min teams" name="min_teams" defaultValue={minTeams} min={1} max={500} />
@@ -283,7 +283,7 @@ function NumberInput({
   step?: number;
 }) {
   return (
-    <label className="flex flex-col text-xs text-neutral-600 dark:text-neutral-400">
+    <label className="flex flex-col text-xs text-stone-600 dark:text-stone-400">
       {label}
       <input
         type="number"
@@ -292,7 +292,7 @@ function NumberInput({
         min={min}
         max={max}
         step={step ?? 1}
-        className="mt-1 w-28 rounded-md border border-neutral-300 bg-transparent px-2 py-1 font-mono text-xs dark:border-neutral-700"
+        className="mt-1 w-28 rounded-md border border-stone-300 bg-transparent px-2 py-1 font-mono text-xs dark:border-stone-700"
       />
     </label>
   );
@@ -300,8 +300,8 @@ function NumberInput({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-      <p className="text-xs uppercase tracking-wider text-neutral-500">{label}</p>
+    <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+      <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   );

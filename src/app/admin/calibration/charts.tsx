@@ -54,7 +54,7 @@ export function SystemKappaTrendChart({
 
   if (points.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-neutral-300 bg-white p-6 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+      <div className="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-500 dark:text-stone-400 dark:border-stone-700 dark:bg-stone-900">
         No weekly κ measurements available yet. The chart populates as
         per-standard κ accumulates across multiple weeks.
       </div>
@@ -80,7 +80,7 @@ export function SystemKappaTrendChart({
   const autonomousY = yFor(autonomousThreshold);
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="none"
@@ -101,7 +101,7 @@ export function SystemKappaTrendChart({
                 y1={y}
                 y2={y}
                 stroke="currentColor"
-                className="text-neutral-200 dark:text-neutral-800"
+                className="text-stone-200 dark:text-stone-800"
                 strokeDasharray="3 3"
               />
               <text
@@ -109,7 +109,7 @@ export function SystemKappaTrendChart({
                 y={y}
                 textAnchor="end"
                 dominantBaseline="middle"
-                className="fill-neutral-500 text-[11px]"
+                className="fill-stone-500 text-[11px]"
               >
                 {tick.toFixed(2)}
               </text>
@@ -127,7 +127,7 @@ export function SystemKappaTrendChart({
               x={x}
               y={VIEW_H - PAD.bottom + 16}
               textAnchor="middle"
-              className="fill-neutral-500 text-[11px]"
+              className="fill-stone-500 text-[11px]"
             >
               {label}
             </text>
@@ -141,7 +141,7 @@ export function SystemKappaTrendChart({
           xEnd={PAD.left + PLOT_W}
           label="design target"
           stroke="currentColor"
-          className="text-neutral-400"
+          className="text-stone-400"
           dash="4 4"
         />
         <ReferenceLine
@@ -158,7 +158,7 @@ export function SystemKappaTrendChart({
           points={polyline}
           fill="none"
           stroke="currentColor"
-          className="text-neutral-800 dark:text-neutral-100"
+          className="text-stone-800 dark:text-stone-100"
           strokeWidth={2}
         />
         {points.map((p, i) => {
@@ -186,7 +186,7 @@ export function SystemKappaTrendChart({
                 cy={cy}
                 r={isHovered ? 5 : 3}
                 fill="currentColor"
-                className="text-neutral-800 dark:text-neutral-100"
+                className="text-stone-800 dark:text-stone-100"
               />
             </g>
           );
@@ -282,19 +282,19 @@ function Tooltip({
         rx={4}
         fill="white"
         stroke="rgba(0,0,0,0.1)"
-        className="dark:fill-neutral-800"
+        className="dark:fill-stone-800"
       />
       <text
         x={tx + 8}
         y={ty + 14}
-        className="fill-neutral-900 text-[11px] font-medium dark:fill-neutral-100"
+        className="fill-stone-900 text-[11px] font-medium dark:fill-stone-100"
       >
         {label} · κ {point.kappa.toFixed(2)}
       </text>
       <text
         x={tx + 8}
         y={ty + 28}
-        className="fill-neutral-500 text-[10px]"
+        className="fill-stone-500 text-[10px]"
       >
         n = {point.sample_size}
       </text>

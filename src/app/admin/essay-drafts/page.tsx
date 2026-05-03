@@ -19,6 +19,7 @@
 
 import Link from "next/link";
 import { sql } from "drizzle-orm";
+import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import { buildAccuracySnapshot } from "@/lib/accuracy-data";
 import {
@@ -84,10 +85,10 @@ export default async function AdminEssayDraftsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+        <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
           Essay drafts
         </h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
           Cold-start scaffold drawn from the latest accuracy snapshot, the
           most recent calibration log entry, and open refinement-log
           candidates. The scaffold is the floor; you write the essay.
@@ -96,11 +97,11 @@ export default async function AdminEssayDraftsPage() {
 
       <section
         aria-labelledby="inputs-heading"
-        className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+        className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
       >
         <h2
           id="inputs-heading"
-          className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+          className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400"
         >
           Inputs
         </h2>
@@ -150,10 +151,10 @@ export default async function AdminEssayDraftsPage() {
       <section className="space-y-3">
         <header className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Draft
             </h2>
-            <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
               Saving writes to{" "}
               <code className="font-mono">
                 essays/drafts/{draftFilename}
@@ -165,13 +166,13 @@ export default async function AdminEssayDraftsPage() {
             </p>
           </div>
           {existingDraft ? (
-            <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+            <Pill tone="emerald" size="xs" className="uppercase tracking-wide">
               draft on disk
-            </span>
+            </Pill>
           ) : (
-            <span className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+            <Pill tone="neutral" size="xs" className="uppercase tracking-wide">
               unsaved
-            </span>
+            </Pill>
           )}
         </header>
         <form action={saveDraftAction} className="space-y-3">
@@ -181,16 +182,16 @@ export default async function AdminEssayDraftsPage() {
             defaultValue={initialBody}
             spellCheck
             rows={22}
-            className="w-full rounded-lg border border-neutral-300 bg-white p-4 font-mono text-xs leading-relaxed text-neutral-800 focus:border-neutral-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+            className="w-full rounded-lg border border-stone-300 bg-white p-4 font-mono text-xs leading-relaxed text-stone-800 focus:border-stone-500 focus:outline-none dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200"
           />
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
-              className="rounded-md border border-neutral-900 bg-neutral-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+              className="rounded-md border border-stone-900 bg-stone-900 px-4 py-1.5 text-xs font-medium text-white hover:bg-stone-800 dark:border-stone-100 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
             >
               Save draft
             </button>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-stone-500 dark:text-stone-400">
               Vercel is read-only — saves only land in local checkouts. Commit
               the file alongside the calibration log entry it anchors to.
             </p>
@@ -205,11 +206,11 @@ export default async function AdminEssayDraftsPage() {
         <header>
           <h2
             id="drafts-heading"
-            className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+            className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400"
           >
             All drafts
           </h2>
-          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
             Files under{" "}
             <code className="font-mono">essays/drafts/</code>. Move a draft
             into <code className="font-mono">contentrx-docs/essays/</code> to
@@ -217,11 +218,11 @@ export default async function AdminEssayDraftsPage() {
           </p>
         </header>
         {allDrafts.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-neutral-300 bg-white px-4 py-3 text-xs text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+          <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-3 text-xs text-stone-500 dark:text-stone-400 dark:border-stone-700 dark:bg-stone-900">
             No drafts yet. The first save creates one.
           </p>
         ) : (
-          <ul className="divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+          <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
             {allDrafts.map((entry) => (
               <DraftRow
                 key={entry.filename}
@@ -233,7 +234,7 @@ export default async function AdminEssayDraftsPage() {
         )}
       </section>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-stone-500 dark:text-stone-400">
         Voice prompt: open with a specific decision the κ moved this week,
         not the metric itself. The metric is evidence; the decision is the
         story.
@@ -254,17 +255,17 @@ function DraftRow({
       <div className="flex items-baseline gap-3">
         <Link
           href={`/admin/essay-drafts/${encodeURIComponent(entry.filename)}`}
-          className="font-mono text-sm text-neutral-900 hover:underline dark:text-neutral-100"
+          className="font-mono text-sm text-stone-900 hover:underline dark:text-stone-100"
         >
           {entry.filename}
         </Link>
         {isCurrent && (
-          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-900 dark:bg-blue-950 dark:text-blue-200">
+          <Pill tone="blue" size="xs" className="uppercase tracking-wide">
             this week
-          </span>
+          </Pill>
         )}
       </div>
-      <div className="flex items-baseline gap-4 font-mono text-[10px] text-neutral-500">
+      <div className="flex items-baseline gap-4 font-mono text-[10px] text-stone-500 dark:text-stone-400">
         <span>{entry.size_bytes.toLocaleString()} bytes</span>
         <span>{formatDate(entry.modified_at)}</span>
       </div>
@@ -283,13 +284,13 @@ function Input({
 }) {
   return (
     <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+      <dt className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
       </dt>
       <dd
         className={`mt-1 ${
           mono ? "font-mono text-xs" : "text-sm"
-        } text-neutral-800 dark:text-neutral-200`}
+        } text-stone-800 dark:text-stone-200`}
       >
         {value}
       </dd>

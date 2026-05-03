@@ -41,6 +41,7 @@ import {
   type TodayQueueRow,
 } from "@/lib/admin/today-queue";
 import { humanizeContentType, humanizeMoment } from "@/lib/humanize";
+import { Pill, type PillTone } from "@/components/ui/pill";
 
 export const metadata = {
   title: "Today’s queue · ContentRX admin",
@@ -76,23 +77,23 @@ export default async function AdminTodayPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <header className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             {today}
           </p>
-          <h1 className="mt-1 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h1 className="mt-1 text-2xl font-semibold text-stone-900 dark:text-stone-100">
             Today&rsquo;s queue
           </h1>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
             The cases worth your nuance — recent flagged checks where the
             resolution improves the model. Routine subtypes are off by
             default.
           </p>
         </div>
         <div className="text-right">
-          <p className="font-mono text-2xl font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
+          <p className="font-mono text-2xl font-semibold tabular-nums text-stone-900 dark:text-stone-100">
             {queue.rows.length}
           </p>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+          <p className="text-xs text-stone-500 dark:text-stone-400">
             in view
           </p>
         </div>
@@ -104,7 +105,7 @@ export default async function AdminTodayPage({ searchParams }: PageProps) {
       />
 
       {queue.selectedSubtypes.length > 0 && (
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="text-xs text-stone-500 dark:text-stone-400">
           {queue.selectedSubtypes
             .map((s) => SUBTYPE_LABEL[s])
             .join(" · ")}
@@ -116,12 +117,12 @@ export default async function AdminTodayPage({ searchParams }: PageProps) {
         <RightRail pilotSummary={pilotSummary} triggers={triggers} />
       </div>
 
-      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+      <p className="text-xs text-stone-500 dark:text-stone-400">
         Looking for the exhaustive view across every subtype and a
         180-day window?{" "}
         <Link
           href="/admin/queue"
-          className="underline underline-offset-2 hover:text-neutral-900 dark:hover:text-neutral-100"
+          className="underline underline-offset-2 hover:text-stone-900 dark:text-stone-100 dark:hover:text-stone-100"
         >
           Open the full queue
         </Link>
@@ -143,7 +144,7 @@ function SubtypeFilterPills({
   return (
     <nav
       aria-label="Subtype filter"
-      className="flex flex-wrap gap-2 border-b border-neutral-200 pb-3 dark:border-neutral-800"
+      className="flex flex-wrap gap-2 border-b border-stone-200 pb-3 dark:border-stone-800"
     >
       <PresetPill
         label="Nuanced (default)"
@@ -161,7 +162,7 @@ function SubtypeFilterPills({
         }
         href={`/admin?subtypes=${ALL_SUBTYPES.join(",")}`}
       />
-      <span className="mx-1 self-center text-xs text-neutral-400 dark:text-neutral-600">
+      <span className="mx-1 self-center text-xs text-stone-400 dark:text-stone-600">
         |
       </span>
       {ALL_SUBTYPES.map((s) => {
@@ -200,8 +201,8 @@ function PresetPill({
       href={href}
       className={`rounded-full px-3 py-1 text-xs font-medium transition ${
         active
-          ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-          : "border border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+          ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
+          : "border border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
       }`}
     >
       {label}
@@ -228,8 +229,8 @@ function SubtypePill({
       title={tooltip}
       className={`rounded-full px-3 py-1 text-xs font-medium transition ${
         active
-          ? "bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-neutral-100"
-          : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+          ? "bg-stone-200 text-stone-900 dark:bg-stone-700 dark:text-stone-100"
+          : "text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-800"
       }`}
     >
       {label}{" "}
@@ -241,8 +242,8 @@ function SubtypePill({
 function QueueList({ rows }: { rows: TodayQueueRow[] }) {
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
-        <p className="font-medium text-neutral-700 dark:text-neutral-300">
+      <div className="rounded-lg border border-dashed border-stone-300 bg-white p-8 text-center text-sm text-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400">
+        <p className="font-medium text-stone-700 dark:text-stone-300">
           Nothing in this view.
         </p>
         <p className="mt-1">
@@ -262,51 +263,49 @@ function QueueList({ rows }: { rows: TodayQueueRow[] }) {
 }
 
 function QueueRow({ row }: { row: TodayQueueRow }) {
-  const tone = subtypeTone(row.subtype);
+  const tone = subtypePillTone(row.subtype);
   return (
-    <li className="rounded-md border border-neutral-200 bg-white p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <li className="rounded-md border border-stone-200 bg-white p-3 text-sm dark:border-stone-800 dark:bg-stone-900">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className={`rounded-full px-2 py-0.5 font-medium ${tone}`}>
-            {SUBTYPE_LABEL[row.subtype]}
-          </span>
+          <Pill tone={tone}>{SUBTYPE_LABEL[row.subtype]}</Pill>
           {row.contentType && (
-            <span className="text-neutral-600 dark:text-neutral-400">
+            <span className="text-stone-600 dark:text-stone-400">
               {humanizeContentType(row.contentType)}
             </span>
           )}
           {row.moment && (
-            <span className="text-neutral-500 dark:text-neutral-500">
+            <span className="text-stone-500 dark:text-stone-500">
               · {humanizeMoment(row.moment)}
             </span>
           )}
           {row.source && (
-            <span className="text-neutral-500 dark:text-neutral-500">
+            <span className="text-stone-500 dark:text-stone-500">
               · {row.source}
             </span>
           )}
         </div>
-        <div className="text-right text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="text-right text-xs text-stone-500 dark:text-stone-400">
           {formatRelative(row.createdAt)}
         </div>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
-        <span className="font-mono text-neutral-700 dark:text-neutral-300">
+        <span className="font-mono text-stone-700 dark:text-stone-300">
           {row.standardId}
         </span>
         {row.severity && (
-          <span className="text-neutral-500 dark:text-neutral-500">
+          <span className="text-stone-500 dark:text-stone-500">
             severity: {row.severity}
           </span>
         )}
         {row.textHash && (
-          <span className="font-mono text-neutral-400 dark:text-neutral-600">
+          <span className="font-mono text-stone-400 dark:text-stone-600">
             #{row.textHash.slice(0, 12)}
           </span>
         )}
         <Link
           href={`/admin/queue?subtype=${row.subtype}`}
-          className="ml-auto text-neutral-700 underline underline-offset-2 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
+          className="ml-auto text-stone-700 underline underline-offset-2 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100"
         >
           Triage in queue →
         </Link>
@@ -325,7 +324,7 @@ function RightRail({
   return (
     <aside className="space-y-6">
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-600 dark:text-stone-400">
           Pilots snapshot
         </h2>
         <ul className="mt-2 space-y-1 text-xs">
@@ -340,21 +339,21 @@ function RightRail({
         </ul>
         <Link
           href="/admin/pilots"
-          className="mt-2 block text-xs text-neutral-700 underline underline-offset-2 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-neutral-100"
+          className="mt-2 block text-xs text-stone-700 underline underline-offset-2 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100"
         >
           Open pilot tracker →
         </Link>
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-400">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-600 dark:text-stone-400">
           Conversation triggers
         </h2>
-        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
           What to talk to which pilot about, today.
         </p>
         {triggers.length === 0 ? (
-          <p className="mt-2 rounded-lg border border-dashed border-neutral-200 p-3 text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+          <p className="mt-2 rounded-lg border border-dashed border-stone-200 p-3 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
             No triggers fired. Everyone is steady-state.
           </p>
         ) : (
@@ -362,24 +361,24 @@ function RightRail({
             {triggers.map((trigger, i) => (
               <li
                 key={`${trigger.kind}-${trigger.userId}-${i}`}
-                className="rounded-lg border border-neutral-200 bg-white p-3 text-xs dark:border-neutral-800 dark:bg-neutral-900"
+                className="rounded-lg border border-stone-200 bg-white p-3 text-xs dark:border-stone-800 dark:bg-stone-900"
               >
                 {trigger.kind === "debrief_50_checks" ? (
                   <>
-                    <p className="font-medium text-neutral-900 dark:text-neutral-100">
+                    <p className="font-medium text-stone-900 dark:text-stone-100">
                       Schedule a debrief
                     </p>
-                    <p className="mt-1 text-neutral-600 dark:text-neutral-400">
+                    <p className="mt-1 text-stone-600 dark:text-stone-400">
                       {trigger.email} ran {trigger.checks7d} checks in
                       the last 7 days.
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="font-medium text-neutral-900 dark:text-neutral-100">
+                    <p className="font-medium text-stone-900 dark:text-stone-100">
                       At-risk pilot
                     </p>
-                    <p className="mt-1 text-neutral-600 dark:text-neutral-400">
+                    <p className="mt-1 text-stone-600 dark:text-stone-400">
                       {trigger.email} ({trigger.plan}) hasn&rsquo;t run a
                       check in {trigger.daysIdle} days.
                     </p>
@@ -409,10 +408,10 @@ function RailRow({
       : tone === "amber"
         ? "bg-amber-500"
         : tone === "red"
-          ? "bg-red-500"
-          : "bg-neutral-400";
+          ? "bg-rose-500"
+          : "bg-stone-400";
   return (
-    <li className="flex items-center justify-between text-neutral-700 dark:text-neutral-300">
+    <li className="flex items-center justify-between text-stone-700 dark:text-stone-300">
       <span className="flex items-center gap-2">
         <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />
         {label}
@@ -445,19 +444,21 @@ function summarizePilots(
   return { active, amber, red, paused };
 }
 
-function subtypeTone(s: Subtype): string {
+// Pill primitive doesn't include purple; novel_pattern shares "info"
+// semantics with the blue tone — distinguished by the label text.
+function subtypePillTone(s: Subtype): PillTone {
   switch (s) {
     case "standards_conflict":
-      return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300";
+      return "red";
     case "ensemble_disagreement":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
+      return "amber";
     case "novel_pattern":
-      return "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300";
+      return "blue";
     case "low_confidence":
     case "situation_ambiguity":
     case "out_of_distribution":
     default:
-      return "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300";
+      return "neutral";
   }
 }
 

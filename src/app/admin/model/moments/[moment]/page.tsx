@@ -10,6 +10,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pill } from "@/components/ui/pill";
 import {
   getMomentById,
   getStandardById,
@@ -26,7 +27,7 @@ const MODIFIER_TONE: Record<Modifier, string> = {
   relax:
     "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200",
   suppress:
-    "border-neutral-200 bg-neutral-50 text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300",
+    "border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300",
 };
 
 export const metadata = {
@@ -51,22 +52,22 @@ export default async function AdminMomentDetailPage({
         <p className="text-xs">
           <Link
             href="/admin/model"
-            className="text-neutral-600 hover:underline dark:text-neutral-400"
+            className="text-stone-600 hover:underline dark:text-stone-400"
           >
             ← Back to model
           </Link>
         </p>
-        <h1 className="mt-2 font-mono text-xl text-neutral-900 dark:text-neutral-100">
+        <h1 className="mt-2 font-mono text-xl text-stone-900 dark:text-stone-100">
           {moment.id}
         </h1>
-        <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+        <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">
           {moment.description}
         </p>
         {moment.situation_property && (
-          <p className="mt-3 text-xs">
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-medium uppercase tracking-wide text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+          <p className="mt-3">
+            <Pill tone="neutral" className="uppercase tracking-wide">
               {moment.situation_property}
-            </span>
+            </Pill>
           </p>
         )}
       </header>
@@ -76,7 +77,7 @@ export default async function AdminMomentDetailPage({
         if (!entries || entries.length === 0) return null;
         return (
           <section key={modifier} className="space-y-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               {modifier} ({entries.length})
             </h2>
             <ul className="space-y-2">

@@ -77,10 +77,10 @@ export default function AdminRefinementLogPage() {
     <div className="space-y-8">
       <header className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
             Refinement log
           </h1>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
             Granularity gaps in the content type taxonomy, surfaced through
             real-world triage. The decision criterion lives at the top of
             <code className="mx-1 font-mono text-xs">taxonomy_refinement_log.md</code>
@@ -88,7 +88,7 @@ export default function AdminRefinementLogPage() {
             standards fire, how they&apos;re weighted, or whether a violation flags.
           </p>
         </div>
-        <dl className="flex flex-wrap gap-3 text-xs text-neutral-700 dark:text-neutral-300">
+        <dl className="flex flex-wrap gap-3 text-xs text-stone-700 dark:text-stone-300">
           <Stat label="Open" value={totals.open} />
           <Stat label="Auto-detected" value={totals.auto_detected} />
           <Stat label="Approved" value={totals.approved} />
@@ -96,11 +96,11 @@ export default function AdminRefinementLogPage() {
         </dl>
       </header>
 
-      <details className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-        <summary className="cursor-pointer text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+      <details className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+        <summary className="cursor-pointer text-sm font-semibold text-stone-900 dark:text-stone-100">
           Add a refinement candidate
         </summary>
-        <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+        <p className="mt-2 text-xs text-stone-600 dark:text-stone-400">
           Adds a structured entry to the <code className="font-mono">## Open refinements</code>{" "}
           section of the markdown log. The next REF-NNN id is assigned automatically.
           The action writes the file in place — works in local dev, fails in the
@@ -118,16 +118,16 @@ export default function AdminRefinementLogPage() {
           <header>
             <h2
               id={`section-${section.status}`}
-              className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+              className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400"
             >
               {section.title} ({log.byStatus[section.status].length})
             </h2>
-            <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+            <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
               {section.description}
             </p>
           </header>
           {log.byStatus[section.status].length === 0 ? (
-            <p className="rounded-lg border border-dashed border-neutral-300 bg-white px-4 py-3 text-xs text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+            <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-3 text-xs text-stone-500 dark:text-stone-400 dark:border-stone-700 dark:bg-stone-900">
               {section.empty}
             </p>
           ) : (
@@ -145,18 +145,18 @@ export default function AdminRefinementLogPage() {
 
 function RefinementCard({ entry }: { entry: RefinementEntry }) {
   return (
-    <li className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <li className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
       <header className="flex flex-wrap items-baseline gap-2">
-        <span className="font-mono text-xs text-neutral-700 dark:text-neutral-300">
+        <span className="font-mono text-xs text-stone-700 dark:text-stone-300">
           {entry.id}
         </span>
         {entry.title && (
-          <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          <span className="text-sm font-semibold text-stone-900 dark:text-stone-100">
             {entry.title}
           </span>
         )}
         {entry.date_logged && (
-          <span className="ml-auto font-mono text-[10px] text-neutral-500">
+          <span className="ml-auto font-mono text-[10px] text-stone-500 dark:text-stone-400">
             {entry.date_logged}
           </span>
         )}
@@ -193,7 +193,7 @@ function Field({
   if (!value) return null;
   return (
     <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+      <dt className="text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
       </dt>
       <dd
@@ -202,7 +202,7 @@ function Field({
         } ${
           highlight
             ? "rounded bg-amber-50 px-2 py-1 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-            : "text-neutral-700 dark:text-neutral-300"
+            : "text-stone-700 dark:text-stone-300"
         }`}
       >
         {value}
@@ -255,7 +255,7 @@ function RefinementForm() {
       />
       <button
         type="submit"
-        className="rounded-md bg-neutral-900 px-4 py-2 text-xs font-medium text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-100"
+        className="rounded-md bg-stone-900 px-4 py-2 text-xs font-medium text-white hover:bg-stone-800 dark:bg-white dark:text-black dark:hover:bg-stone-100"
       >
         Add candidate
       </button>
@@ -281,12 +281,12 @@ function FormField({
   defaultValue?: string;
 }) {
   const inputClass =
-    "mt-1 block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100";
+    "mt-1 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100";
   return (
     <label className="block text-xs">
-      <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+      <span className="font-semibold text-stone-700 dark:text-stone-300">
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ml-1 text-rose-500">*</span>}
       </span>
       {textarea ? (
         <textarea
@@ -317,11 +317,11 @@ function todayIso(): string {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900">
-      <dt className="text-[10px] uppercase tracking-wide text-neutral-500">
+    <div className="rounded-lg border border-stone-200 bg-white px-3 py-2 dark:border-stone-800 dark:bg-stone-900">
+      <dt className="text-[10px] uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
       </dt>
-      <dd className="font-mono text-base font-semibold text-neutral-900 dark:text-neutral-100">
+      <dd className="font-mono text-base font-semibold text-stone-900 dark:text-stone-100">
         {value}
       </dd>
     </div>

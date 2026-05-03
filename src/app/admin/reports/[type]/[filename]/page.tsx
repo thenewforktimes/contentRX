@@ -17,6 +17,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pill } from "@/components/ui/pill";
 import {
   isReportType,
   loadReportFile,
@@ -55,48 +56,52 @@ export default async function AdminReportPreviewPage({
         <p className="text-xs">
           <Link
             href="/admin/reports"
-            className="text-neutral-600 hover:underline dark:text-neutral-400"
+            className="text-stone-600 hover:underline dark:text-stone-400"
           >
             ← Back to reports
           </Link>
         </p>
-        <h1 className="mt-2 font-mono text-xl text-neutral-900 dark:text-neutral-100">
+        <h1 className="mt-2 font-mono text-xl text-stone-900 dark:text-stone-100">
           {filename}
         </h1>
-        <dl className="mt-3 flex flex-wrap gap-4 text-xs text-neutral-600 dark:text-neutral-400">
+        <dl className="mt-3 flex flex-wrap gap-4 text-xs text-stone-600 dark:text-stone-400">
           <div>
-            <dt className="font-semibold uppercase tracking-wide text-neutral-500">
+            <dt className="font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Type
             </dt>
             <dd className="font-mono">{typeRaw}</dd>
           </div>
           <div>
-            <dt className="font-semibold uppercase tracking-wide text-neutral-500">
+            <dt className="font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Modified
             </dt>
             <dd className="font-mono">{report.modified_at.replace("T", " ").slice(0, 16)}</dd>
           </div>
           <div>
-            <dt className="font-semibold uppercase tracking-wide text-neutral-500">
+            <dt className="font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
               Size
             </dt>
             <dd className="font-mono">{report.size_bytes.toLocaleString()} bytes</dd>
           </div>
           {isStale && (
-            <span className="self-start rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            <Pill
+              tone="amber"
+              size="xs"
+              className="self-start uppercase tracking-wide"
+            >
               stale ({ageDays.toFixed(1)}d &gt; {STALE_THRESHOLD_DAYS[typeRaw as ReportType]}d)
-            </span>
+            </Pill>
           )}
         </dl>
         <div className="mt-4 flex items-center gap-3">
           {report.reviewed ? (
-            <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+            <Pill tone="emerald" size="xs" className="uppercase tracking-wide">
               reviewed
-            </span>
+            </Pill>
           ) : (
-            <span className="rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+            <Pill tone="neutral" size="xs" className="uppercase tracking-wide">
               pending review
-            </span>
+            </Pill>
           )}
           <form action={toggleReviewedAction}>
             <input type="hidden" name="type" value={typeRaw} />
@@ -113,7 +118,7 @@ export default async function AdminReportPreviewPage({
                   ? "Clear the publication-ready sentinel and re-open this report for edits."
                   : "Mark this report ready to publish. Writes a sentinel — commit it alongside the report."
               }
-              className="rounded-md border border-neutral-300 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+              className="rounded-md border border-stone-300 px-3 py-1 text-xs font-medium text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
             >
               {report.reviewed ? "Reopen for review" : "Mark ready to publish"}
             </button>
@@ -121,16 +126,16 @@ export default async function AdminReportPreviewPage({
         </div>
       </header>
 
-      <div className="rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="border-b border-neutral-200 px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
+      <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+        <div className="border-b border-stone-200 px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400 dark:border-stone-800">
           Raw contents
         </div>
-        <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-neutral-800 dark:text-neutral-200">
+        <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-stone-800 dark:text-stone-200">
 {formatted}
         </pre>
       </div>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-stone-500 dark:text-stone-400">
         Marking reviewed writes a sentinel at{" "}
         <code className="font-mono">
           reports/{typeRaw}/.{filename}.reviewed

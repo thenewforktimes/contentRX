@@ -54,12 +54,12 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
       <div className="mx-auto flex max-w-7xl">
-        <aside className="hidden w-60 shrink-0 border-r border-neutral-200 bg-white px-4 py-6 md:block dark:border-neutral-800 dark:bg-neutral-900">
+        <aside className="hidden w-60 shrink-0 border-r border-stone-200 bg-white px-4 py-6 md:block dark:border-stone-800 dark:bg-stone-900">
           <Link
             href="/admin"
-            className="block px-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100"
+            className="block px-2 text-sm font-semibold text-stone-900 dark:text-stone-100"
           >
             ContentRX · Admin
           </Link>
@@ -115,7 +115,7 @@ function NavGroup({
 }) {
   return (
     <div>
-      <p className="px-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <p className="px-2 text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
       </p>
       <ul className="mt-2 space-y-0.5">{children}</ul>
@@ -136,11 +136,11 @@ function NavLink({
     <li>
       <Link
         href={href}
-        className="flex items-center justify-between rounded-md px-2 py-1 text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+        className="flex items-center justify-between rounded-md px-2 py-1 text-stone-700 hover:bg-stone-100 hover:text-stone-900 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-stone-100"
       >
         <span>{children}</span>
         {badge && badge > 0 ? (
-          <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200">
+          <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs font-medium text-stone-700 dark:bg-stone-700 dark:text-stone-200">
             {badge}
           </span>
         ) : null}

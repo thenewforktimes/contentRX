@@ -12,6 +12,7 @@
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pill } from "@/components/ui/pill";
 import {
   getMomentsTouchingStandard,
   getStandardById,
@@ -39,23 +40,23 @@ export default async function AdminStandardDetailPage({
         <p className="text-xs">
           <Link
             href="/admin/model"
-            className="text-neutral-600 hover:underline dark:text-neutral-400"
+            className="text-stone-600 hover:underline dark:text-stone-400"
           >
             ← Back to model
           </Link>
         </p>
         <div className="mt-2 flex flex-wrap items-baseline gap-3">
-          <h1 className="font-mono text-xl text-neutral-900 dark:text-neutral-100">
+          <h1 className="font-mono text-xl text-stone-900 dark:text-stone-100">
             {standard.id}
           </h1>
-          <span className="font-mono text-xs text-neutral-500">
+          <span className="font-mono text-xs text-stone-500 dark:text-stone-400">
             v{standard.version} · {standard.category_name} ({standard.category_id})
           </span>
-          <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+          <Pill tone="neutral" size="xs" className="uppercase tracking-wide">
             {standard.rule_type}
-          </span>
+          </Pill>
         </div>
-        <p className="mt-3 text-sm text-neutral-800 dark:text-neutral-200">
+        <p className="mt-3 text-sm text-stone-800 dark:text-stone-200">
           {standard.rule}
         </p>
       </header>
@@ -67,16 +68,13 @@ export default async function AdminStandardDetailPage({
 
       {standard.relevant_content_types.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Relevant content types
           </h2>
           <ul className="flex flex-wrap gap-2">
             {standard.relevant_content_types.map((ct) => (
-              <li
-                key={ct}
-                className="rounded-full bg-neutral-100 px-3 py-1 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-              >
-                {ct}
+              <li key={ct}>
+                <Pill tone="neutral">{ct}</Pill>
               </li>
             ))}
           </ul>
@@ -85,17 +83,17 @@ export default async function AdminStandardDetailPage({
 
       {Object.keys(standard.content_type_notes).length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Content-type notes
           </h2>
           <dl className="space-y-3">
             {Object.entries(standard.content_type_notes).map(([ct, note]) => (
               <div
                 key={ct}
-                className="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900"
+                className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
               >
-                <dt className="font-mono text-xs text-neutral-500">{ct}</dt>
-                <dd className="mt-1 whitespace-pre-line text-sm text-neutral-700 dark:text-neutral-300">
+                <dt className="font-mono text-xs text-stone-500 dark:text-stone-400">{ct}</dt>
+                <dd className="mt-1 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">
                   {note}
                 </dd>
               </div>
@@ -106,35 +104,37 @@ export default async function AdminStandardDetailPage({
 
       {momentContexts.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Moment context ({momentContexts.length})
           </h2>
           <ul className="space-y-2">
             {momentContexts.map(({ moment, weight }) => (
               <li
                 key={moment.id}
-                className="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900"
+                className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
               >
                 <div className="flex flex-wrap items-baseline gap-2">
                   <Link
                     href={`/admin/model/moments/${moment.id}`}
-                    className="font-mono text-xs text-neutral-700 hover:underline dark:text-neutral-300"
+                    className="font-mono text-xs text-stone-700 hover:underline dark:text-stone-300"
                   >
                     {moment.id}
                   </Link>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
+                  <Pill
+                    tone={
                       weight.modifier === "emphasize"
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                        ? "emerald"
                         : weight.modifier === "relax"
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                          : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                    }`}
+                          ? "amber"
+                          : "neutral"
+                    }
+                    size="xs"
+                    className="uppercase tracking-wide"
                   >
                     {weight.modifier}
-                  </span>
+                  </Pill>
                 </div>
-                <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+                <p className="mt-1 text-sm text-stone-700 dark:text-stone-300">
                   {weight.rationale}
                 </p>
               </li>
@@ -145,25 +145,25 @@ export default async function AdminStandardDetailPage({
 
       {standard.influences.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Influences
           </h2>
           <ul className="space-y-2">
             {standard.influences.map((inf, i) => (
               <li
                 key={`${inf.source}-${i}`}
-                className="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900"
+                className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
               >
                 <div className="flex items-baseline gap-2">
-                  <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                  <span className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                     {inf.source}
                   </span>
-                  <span className="font-mono text-[10px] uppercase tracking-wide text-neutral-500">
+                  <span className="font-mono text-[10px] uppercase tracking-wide text-stone-500 dark:text-stone-400">
                     {inf.direction}
                   </span>
                 </div>
                 {inf.note && (
-                  <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+                  <p className="mt-1 text-sm text-stone-700 dark:text-stone-300">
                     {inf.note}
                   </p>
                 )}
@@ -175,10 +175,10 @@ export default async function AdminStandardDetailPage({
 
       {standard.sources.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Sources
           </h2>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-neutral-700 dark:text-neutral-300">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-stone-700 dark:text-stone-300">
             {standard.sources.map((src, i) => (
               <li key={`${src}-${i}`}>{src}</li>
             ))}
@@ -188,32 +188,32 @@ export default async function AdminStandardDetailPage({
 
       {standard.version_history.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Version history
           </h2>
           <ol className="space-y-2">
             {standard.version_history.map((entry, i) => (
               <li
                 key={`${entry.version}-${i}`}
-                className="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900"
+                className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
               >
                 <div className="flex items-baseline gap-2">
-                  <span className="font-mono text-xs text-neutral-700 dark:text-neutral-300">
+                  <span className="font-mono text-xs text-stone-700 dark:text-stone-300">
                     v{entry.version}
                   </span>
                   {entry.date && (
-                    <span className="font-mono text-[10px] text-neutral-500">
+                    <span className="font-mono text-[10px] text-stone-500 dark:text-stone-400">
                       {entry.date}
                     </span>
                   )}
                 </div>
                 {entry.change && (
-                  <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+                  <p className="mt-1 text-sm text-stone-700 dark:text-stone-300">
                     {entry.change}
                   </p>
                 )}
                 {entry.notes && (
-                  <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
+                  <p className="mt-1 text-xs text-stone-500 dark:text-stone-500">
                     {entry.notes}
                   </p>
                 )}
@@ -238,11 +238,11 @@ function ExampleBlock({
   const classes =
     tone === "pass"
       ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950"
-      : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950";
+      : "border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950";
   const labelTone =
     tone === "pass"
       ? "text-emerald-800 dark:text-emerald-300"
-      : "text-red-800 dark:text-red-300";
+      : "text-rose-800 dark:text-rose-300";
   return (
     <div className={`rounded-lg border p-3 ${classes}`}>
       <p
@@ -250,7 +250,7 @@ function ExampleBlock({
       >
         {label}
       </p>
-      <p className="mt-1 whitespace-pre-line text-sm text-neutral-900 dark:text-neutral-100">
+      <p className="mt-1 whitespace-pre-line text-sm text-stone-900 dark:text-stone-100">
         {text}
       </p>
     </div>

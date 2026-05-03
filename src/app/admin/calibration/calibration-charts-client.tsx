@@ -15,7 +15,7 @@ const SystemKappaTrendChart = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-64 w-full animate-pulse rounded-lg border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900" />
+      <div className="h-64 w-full animate-pulse rounded-lg border border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900" />
     ),
   },
 );
