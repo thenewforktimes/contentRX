@@ -138,9 +138,15 @@ export function HowItWorksDiagram() {
               className="flex flex-1 items-stretch gap-2 sm:flex-col sm:items-stretch"
             >
               <StageCard stage={stage} index={i} state={state} />
-              {i < STAGES.length - 1 && (
-                <Connector active={state === "complete"} />
-              )}
+              {/* Always render the chevron slot so every li reserves the
+                  same vertical (or horizontal on mobile) space. Without
+                  this placeholder on the last stage, items-stretch lets
+                  card 5 grow into the slot the others reserve for the
+                  chevron, making it visibly taller. */}
+              <Connector
+                active={state === "complete"}
+                hidden={i === STAGES.length - 1}
+              />
             </li>
           );
         })}
@@ -200,11 +206,22 @@ function StageCard({
   );
 }
 
-function Connector({ active }: { active: boolean }) {
+function Connector({
+  active,
+  hidden = false,
+}: {
+  active: boolean;
+  /** Reserve the layout space but render nothing — used on the last
+      stage so the row stays uniform without a trailing chevron. */
+  hidden?: boolean;
+}) {
   return (
     <div
       data-active={active ? "true" : "false"}
-      className="flex shrink-0 items-center justify-center self-center text-line transition-colors duration-500 data-[active=true]:text-accent-affirm sm:self-auto sm:py-1"
+      className={[
+        "flex shrink-0 items-center justify-center self-center text-line transition-colors duration-500 data-[active=true]:text-accent-affirm sm:self-auto sm:py-1",
+        hidden ? "invisible" : "",
+      ].join(" ")}
       aria-hidden
     >
       <svg
