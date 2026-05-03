@@ -10,14 +10,14 @@ import "./globals.css";
 // Geist Sans (the previous default) is geometric + slightly condensed
 // — beautiful for display but fights you at body sizes.
 const inter = Inter({
-  variable: "--font-sans",
+  variable: "--font-sans-base",
   subsets: ["latin"],
 });
 
 // Geist Mono stays — it's actually great at code, IDs, hashes, and
 // timestamps. The font-mono token in @theme inline points here.
 const geistMono = Geist_Mono({
-  variable: "--font-mono",
+  variable: "--font-mono-base",
   subsets: ["latin"],
 });
 
