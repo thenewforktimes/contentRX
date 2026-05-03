@@ -12,6 +12,7 @@
  */
 
 import Link from "next/link";
+import { Pill } from "@/components/ui/pill";
 
 interface PublicStandard {
   rule: string;
@@ -99,9 +100,9 @@ function RuleCard({ standard }: { standard: PublicStandard }) {
           {standard.rule}
         </p>
         {standard.disabled && (
-          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-stone-600 dark:bg-stone-800 dark:text-stone-400">
+          <Pill tone="neutral" size="xs" className="uppercase tracking-wide">
             Disabled by team
-          </span>
+          </Pill>
         )}
       </div>
       <dl className="mt-2 grid grid-cols-1 gap-1 text-xs text-stone-600 dark:text-stone-400 sm:grid-cols-[80px_1fr]">

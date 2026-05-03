@@ -36,6 +36,8 @@ export type PillTone =
   | "stone"
   | "blue";
 
+export type PillSize = "sm" | "xs";
+
 const toneClasses: Record<PillTone, string> = {
   neutral:
     "border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-800 dark:bg-stone-900/50 dark:text-stone-300",
@@ -51,21 +53,38 @@ const toneClasses: Record<PillTone, string> = {
     "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300",
 };
 
-const baseClasses =
-  "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium";
+// Two sizes — sm is the default (text-xs); xs is for the dense-diagram
+// case where the surrounding type is text-[10px]. Adding more sizes
+// invites drift; if a third size starts to feel necessary, it's
+// usually a sign that the surrounding layout wants attention instead.
+const sizeClasses: Record<PillSize, string> = {
+  sm: "px-2.5 py-1 text-xs",
+  xs: "px-2 py-0.5 text-[10px]",
+};
 
-export function pillStyles(tone: PillTone = "neutral", className = ""): string {
-  return [baseClasses, toneClasses[tone], className].filter(Boolean).join(" ");
+const baseClasses =
+  "inline-flex items-center gap-1.5 rounded-md border font-medium";
+
+export function pillStyles(
+  tone: PillTone = "neutral",
+  className = "",
+  size: PillSize = "sm",
+): string {
+  return [baseClasses, sizeClasses[size], toneClasses[tone], className]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function Pill({
   tone = "neutral",
+  size = "sm",
   className,
   children,
 }: {
   tone?: PillTone;
+  size?: PillSize;
   className?: string;
   children: ReactNode;
 }) {
-  return <span className={pillStyles(tone, className)}>{children}</span>;
+  return <span className={pillStyles(tone, className, size)}>{children}</span>;
 }

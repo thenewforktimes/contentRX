@@ -33,6 +33,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Pill } from "@/components/ui/pill";
 
 interface Stage {
   /** Short stage label. */
@@ -255,12 +256,8 @@ function VerdictCard() {
         </span>
       </p>
       <div className="flex gap-1">
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
-          high
-        </span>
-        <span className="rounded-full bg-stone-100 px-2 py-0.5 font-mono text-[10px] text-stone-700 dark:bg-stone-800 dark:text-stone-200">
-          0.96
-        </span>
+        <Pill tone="amber" size="xs">high</Pill>
+        <Pill tone="neutral" size="xs" className="font-mono">0.96</Pill>
       </div>
     </motion.div>
   );

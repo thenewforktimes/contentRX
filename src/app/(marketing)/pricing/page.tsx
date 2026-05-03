@@ -22,6 +22,7 @@ import Link from "next/link";
 import { buttonStyles } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { Pill } from "@/components/ui/pill";
 
 export const metadata: Metadata = {
   title: "Pricing. ContentRX",
@@ -256,16 +257,8 @@ function PlanCard({
       <div>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{name}</h2>
-          {mostPopular && (
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-              Most popular
-            </span>
-          )}
-          {unavailable && (
-            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
-              In progress
-            </span>
-          )}
+          {mostPopular && <Pill tone="emerald">Most popular</Pill>}
+          {unavailable && <Pill tone="neutral">In progress</Pill>}
         </div>
         <p className="mt-1 text-2xl font-semibold">{price}</p>
         {priceSubnote && (
