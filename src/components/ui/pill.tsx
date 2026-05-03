@@ -54,13 +54,19 @@ const toneClasses: Record<PillTone, string> = {
     "border-accent-info-border bg-accent-info-soft text-accent-info-text",
 };
 
+// Pill geometry: explicit height + horizontal padding gives reliable
+// vertical centering even with descenders (the "g" in "disagreement"
+// previously read off-center because text sat in a taller line-box than
+// the visible glyph). leading-none collapses the line-box to the glyph
+// height so the text geometrically centers; flex h-full handles the
+// rest. Horizontal padding gives the text room to breathe.
 const sizeClasses: Record<PillSize, string> = {
-  sm: "px-2.5 py-1 text-xs",
-  xs: "px-2 py-0.5 text-[10px]",
+  sm: "h-6 px-3 text-xs",
+  xs: "h-5 px-2.5 text-[10px]",
 };
 
 const baseClasses =
-  "inline-flex items-center gap-1.5 rounded-md border font-medium";
+  "inline-flex items-center justify-center gap-1.5 rounded-md border font-medium leading-none";
 
 export function pillStyles(
   tone: PillTone = "neutral",
