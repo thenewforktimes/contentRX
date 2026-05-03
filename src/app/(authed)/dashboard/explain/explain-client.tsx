@@ -311,6 +311,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
             findingCount={response.violations.length}
             contentType={response.content_type}
             moment={response.moment}
+            submittedText={response.submittedText}
           />
           {response.violations.length > 0 && (
             <ul className="space-y-2">
@@ -324,22 +325,9 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
               ))}
             </ul>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <p className="text-xs text-default">
-              Evaluated in {response.latency_ms} ms.
-            </p>
-            <FlagForReview
-              text={response.submittedText}
-              verdict={
-                response.verdict === "pass" ||
-                response.verdict === "violation" ||
-                response.verdict === "review_recommended"
-                  ? response.verdict
-                  : null
-              }
-              source="dashboard"
-            />
-          </div>
+          <p className="pt-2 text-xs text-quiet">
+            Evaluated in {response.latency_ms} ms.
+          </p>
         </section>
       )}
     </div>
@@ -351,11 +339,13 @@ function VerdictHeader({
   findingCount,
   contentType,
   moment,
+  submittedText,
 }: {
   verdict: string;
   findingCount: number;
   contentType: string | null;
   moment: string | null;
+  submittedText: string;
 }) {
   // Per ADR 2026-04-29 §9a — customer surface speaks "Findings" /
   // "All clear" / "Worth a look" / "N findings to adjust", not raw
@@ -382,10 +372,28 @@ function VerdictHeader({
   const momentLabel = humanizeMoment(moment);
   const showContext =
     contentTypeLabel.length > 0 || momentLabel.length > 0;
+  // Verdict-level flag is most useful when there are zero findings —
+  // "you said all clear but I think you missed something." When there
+  // ARE findings, each FindingCard has its own per-finding Flag button
+  // (more specific). Putting the flag link in the same visual block as
+  // the verdict pill puts the disagree action one glance away from the
+  // thing you'd disagree with — the previous footer-row placement
+  // forced a scan to the bottom of the response.
+  const flagVerdict =
+    verdict === "pass" ||
+    verdict === "violation" ||
+    verdict === "review_recommended"
+      ? verdict
+      : null;
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-3">
         <Pill tone={tone}>{label}</Pill>
+        <FlagForReview
+          text={submittedText}
+          verdict={flagVerdict}
+          source="dashboard"
+        />
       </div>
       {showContext && (
         <p className="text-xs text-quiet">

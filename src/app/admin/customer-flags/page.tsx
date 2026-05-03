@@ -25,7 +25,8 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Input, Select } from "@/components/ui/input";
 import { Pill, type PillTone } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
@@ -46,7 +47,9 @@ const STATUS_LABEL: Record<FlagStatus, string> = {
   open: "Open",
   addressed_corpus: "Added to corpus",
   addressed_taxonomy: "Routed to taxonomy",
-  addressed_patch: "Routed to patch",
+  // DB enum is `addressed_patch` for compatibility, but the customer-
+  // facing label is "Fixed in engine" — no engineer-speak in the UI.
+  addressed_patch: "Fixed in engine",
   not_actionable: "Not actionable",
 };
 
@@ -144,7 +147,7 @@ export default async function AdminCustomerFlagsPage({
           <p className="mt-1 max-w-2xl text-sm text-quiet">
             Cases customers consented to share for review. Plaintext is
             visible because every row carries explicit per-flag consent.
-            Triage into corpus, taxonomy, patch, or not-actionable.
+            Triage into corpus, taxonomy, engine fix, or not-actionable.
           </p>
         </div>
         <div className="text-right">
@@ -165,11 +168,12 @@ export default async function AdminCustomerFlagsPage({
           <a
             key={s}
             href={s === "open" ? "/admin/customer-flags" : `/admin/customer-flags?status=${s}`}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+            className={[
+              "inline-flex h-7 items-center rounded-full border px-3 text-xs font-medium transition",
               statusFilter === s
-                ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-                : "border border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
-            }`}
+                ? "border-strong bg-strong text-canvas"
+                : "border-line text-quiet hover:border-line-strong hover:text-strong",
+            ].join(" ")}
           >
             {s === "open" ? `Open (${counts.open})` : `All (${counts.total})`}
           </a>
@@ -177,7 +181,7 @@ export default async function AdminCustomerFlagsPage({
       </nav>
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-line-strong bg-white p-6 text-center text-sm text-quiet dark:bg-stone-900">
+        <p className="rounded-lg border border-dashed border-line-strong bg-raised p-6 text-center text-sm text-quiet">
           {statusFilter === "open"
             ? "No open flags. Customers haven't sent anything for review yet."
             : "No flags in the window."}
@@ -187,7 +191,7 @@ export default async function AdminCustomerFlagsPage({
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900"
+              className="rounded-lg border border-line bg-raised p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -197,7 +201,7 @@ export default async function AdminCustomerFlagsPage({
                   <Pill tone="neutral">{reasonLabel(row.flagReason)}</Pill>
                   {row.verdict && (
                     <span className="text-quiet">
-                      verdict: {row.verdict}
+                      Verdict: {row.verdict}
                     </span>
                   )}
                   {row.contentType && (
@@ -210,9 +214,7 @@ export default async function AdminCustomerFlagsPage({
                       · {humanizeMoment(row.moment)}
                     </span>
                   )}
-                  <span className="text-quiet">
-                    · {row.source}
-                  </span>
+                  <span className="text-quiet">· {row.source}</span>
                 </div>
                 <div className="text-right text-xs text-quiet">
                   <p>{row.userEmail ?? "(deleted user)"}</p>
@@ -220,12 +222,12 @@ export default async function AdminCustomerFlagsPage({
                 </div>
               </div>
 
-              <p className="mt-3 whitespace-pre-wrap rounded-md border border-line bg-stone-50 p-3 font-mono text-sm text-default dark:bg-stone-950">
+              <p className="mt-3 whitespace-pre-wrap rounded-md border border-line bg-sunken p-3 font-mono text-sm text-default">
                 {row.text}
               </p>
 
               {row.customerNote && (
-                <p className="mt-2 rounded-md border border-line bg-stone-50 p-3 text-sm text-default dark:bg-stone-950">
+                <p className="mt-2 rounded-md border border-line bg-sunken p-3 text-sm text-default">
                   <span className="font-semibold">Note:</span>{" "}
                   {row.customerNote}
                 </p>
@@ -234,19 +236,14 @@ export default async function AdminCustomerFlagsPage({
               {row.status === "open" && (
                 <form
                   action={triageAction}
-                  className="mt-3 flex flex-wrap items-end gap-2 border-t border-stone-100 pt-3 dark:border-stone-800"
+                  className="mt-3 flex flex-wrap items-end gap-2 border-t border-line pt-3"
                 >
                   <input type="hidden" name="flagId" value={row.id} />
                   <label className="flex flex-col gap-1 text-xs">
                     <span className="font-medium text-default">
                       Resolution
                     </span>
-                    <select
-                      name="newStatus"
-                      className="rounded-md border border-line-strong bg-raised px-2 py-1 text-sm dark:text-stone-100"
-                      required
-                      defaultValue=""
-                    >
+                    <Select name="newStatus" required defaultValue="">
                       <option value="" disabled>
                         Pick one…
                       </option>
@@ -257,12 +254,12 @@ export default async function AdminCustomerFlagsPage({
                         Refine taxonomy (rule needs work)
                       </option>
                       <option value="addressed_patch">
-                        Patch landed elsewhere
+                        Fixed in engine (no rule change)
                       </option>
                       <option value="not_actionable">Not actionable</option>
-                    </select>
+                    </Select>
                   </label>
-                  <label className="flex-1 flex-col gap-1 text-xs">
+                  <label className="flex flex-1 flex-col gap-1 text-xs">
                     <span className="font-medium text-default">
                       Notes (optional)
                     </span>
@@ -271,15 +268,11 @@ export default async function AdminCustomerFlagsPage({
                       name="notes"
                       maxLength={500}
                       placeholder="Triage notes for the audit log"
-                      className="py-1"
                     />
                   </label>
-                  <button
-                    type="submit"
-                    className="rounded-md bg-stone-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
-                  >
+                  <Button type="submit" size="sm">
                     Triage
-                  </button>
+                  </Button>
                 </form>
               )}
             </li>
