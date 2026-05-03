@@ -44,7 +44,7 @@ export function ReadOnlyRulesView({
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="rounded-lg border border-stone-200 bg-stone-50 p-4 text-sm dark:border-stone-800 dark:bg-stone-900">
+      <section className="rounded-lg border border-line bg-overlay p-4 text-sm">
         <p className="font-medium text-strong">
           {totalActive} active patterns reviewing your content
         </p>

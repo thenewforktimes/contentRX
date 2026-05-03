@@ -97,7 +97,7 @@ export default async function AdminEssayDraftsPage() {
 
       <section
         aria-labelledby="inputs-heading"
-        className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+        className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900"
       >
         <h2
           id="inputs-heading"
@@ -182,7 +182,7 @@ export default async function AdminEssayDraftsPage() {
             defaultValue={initialBody}
             spellCheck
             rows={22}
-            className="w-full rounded-lg border border-stone-300 bg-white p-4 font-mono text-xs leading-relaxed text-stone-800 focus:border-stone-500 focus:outline-none dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200"
+            className="w-full rounded-lg border border-line-strong bg-white p-4 font-mono text-xs leading-relaxed text-default focus:border-stone-500 focus:outline-none dark:bg-stone-900"
           />
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -218,11 +218,11 @@ export default async function AdminEssayDraftsPage() {
           </p>
         </header>
         {allDrafts.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-3 text-xs text-quiet dark:border-stone-700 dark:bg-stone-900">
+          <p className="rounded-lg border border-dashed border-line-strong bg-white px-4 py-3 text-xs text-quiet dark:bg-stone-900">
             No drafts yet. The first save creates one.
           </p>
         ) : (
-          <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
+          <ul className="divide-y divide-stone-100 rounded-lg border border-line bg-white dark:divide-stone-800 dark:bg-stone-900">
             {allDrafts.map((entry) => (
               <DraftRow
                 key={entry.filename}
@@ -255,7 +255,7 @@ function DraftRow({
       <div className="flex items-baseline gap-3">
         <Link
           href={`/admin/essay-drafts/${encodeURIComponent(entry.filename)}`}
-          className="font-mono text-sm text-stone-900 hover:underline dark:text-stone-100"
+          className="font-mono text-sm text-strong hover:underline"
         >
           {entry.filename}
         </Link>

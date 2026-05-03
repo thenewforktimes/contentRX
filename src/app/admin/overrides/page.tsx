@@ -21,6 +21,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
@@ -166,7 +167,7 @@ export default async function AdminOverridesPage({
       )}
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-stone-200 bg-white p-6 text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400">
+        <p className="rounded-lg border border-line bg-white p-6 text-sm text-quiet dark:bg-stone-900">
           No overrides match. Inbox zero — or the filter is too tight.
         </p>
       ) : (
@@ -174,7 +175,7 @@ export default async function AdminOverridesPage({
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+              className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="text-xs text-quiet">
@@ -221,7 +222,7 @@ export default async function AdminOverridesPage({
                   </p>
                 </div>
               ) : (
-                <p className="mt-3 rounded-md border border-stone-200 bg-stone-50 p-2 text-xs text-stone-500 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400">
+                <p className="mt-3 rounded-md border border-line bg-overlay p-2 text-xs text-quiet">
                   Text not retained &mdash; pilot did not opt in to share.
                   Triage to corpus is unavailable for this row.
                 </p>
@@ -271,11 +272,11 @@ function TriageForm({
   return (
     <form action={action} className="mt-3 flex flex-wrap items-center gap-2">
       <input type="hidden" name="overrideId" value={overrideId} />
-      <input
+      <Input
         type="text"
         name="notes"
         placeholder="Optional one-line note"
-        className="flex-1 min-w-[180px] rounded-md border border-stone-300 bg-white px-2 py-1 text-xs text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+        className="flex-1 min-w-[180px] py-1 text-xs"
       />
       <Button
         type="submit"
@@ -303,7 +304,7 @@ function TriageForm({
         type="submit"
         name="newStatus"
         value="not_actionable"
-        className="rounded-md bg-stone-200 px-3 py-1 text-xs font-medium text-stone-800 hover:bg-stone-300 dark:bg-stone-700 dark:text-stone-100 dark:hover:bg-stone-600"
+        className="rounded-md bg-stone-200 px-3 py-1 text-xs font-medium text-strong hover:bg-stone-300 dark:bg-stone-700 dark:hover:bg-stone-600"
       >
         Not actionable
       </button>

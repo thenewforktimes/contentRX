@@ -142,7 +142,7 @@ export default async function AdminCostsPage() {
         ) : (
           <div className="mt-3 overflow-x-auto rounded-lg border border-line">
             <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
-              <thead className="bg-stone-50 text-left text-xs font-medium uppercase tracking-wide text-stone-600 dark:bg-stone-900 dark:text-stone-400">
+              <thead className="bg-overlay text-left text-xs font-medium uppercase tracking-wide text-quiet">
                 <tr>
                   <th className="px-4 py-2">User</th>
                   <th className="px-4 py-2 text-right">30d total</th>
@@ -201,7 +201,7 @@ export default async function AdminCostsPage() {
         ) : (
           <div className="mt-3 overflow-x-auto rounded-lg border border-line">
             <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
-              <thead className="bg-stone-50 text-left text-xs font-medium uppercase tracking-wide text-stone-600 dark:bg-stone-900 dark:text-stone-400">
+              <thead className="bg-overlay text-left text-xs font-medium uppercase tracking-wide text-quiet">
                 <tr>
                   <th className="px-4 py-2">Day</th>
                   <th className="px-4 py-2">User</th>

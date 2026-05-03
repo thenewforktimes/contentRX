@@ -16,6 +16,7 @@
 
 import { and, gte, isNotNull, sql } from "drizzle-orm";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
 import { getDb, schema } from "@/db";
 import {
   aggregateRuleReview,
@@ -166,7 +167,7 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
 
       <section className="mt-8">
         {rows.length === 0 ? (
-          <p className="rounded-md border border-dashed border-stone-300 p-6 text-sm text-quiet dark:border-stone-700">
+          <p className="rounded-md border border-dashed border-line-strong p-6 text-sm text-quiet">
             No standards meet the thresholds in this window. Either
             the team population is too small or no standard is widely
             contested.
@@ -174,7 +175,7 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
         ) : (
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-quiet dark:border-stone-800">
+              <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-quiet">
                 <th className="py-2">Standard</th>
                 <th className="py-2 text-right">Teams qualifying</th>
                 <th className="py-2 text-right">Teams with data</th>
@@ -238,7 +239,7 @@ function ThresholdForm({
     <form
       method="get"
       action="/admin/rule-review"
-      className="flex flex-wrap items-end gap-4 rounded-lg border border-stone-200 p-4 dark:border-stone-800"
+      className="flex flex-wrap items-end gap-4 rounded-lg border border-line p-4"
     >
       <NumberInput label="Window (days)" name="window" defaultValue={windowDays} min={7} max={180} />
       <NumberInput label="Min teams" name="min_teams" defaultValue={minTeams} min={1} max={500} />
@@ -285,14 +286,14 @@ function NumberInput({
   return (
     <label className="flex flex-col text-xs text-quiet">
       {label}
-      <input
+      <Input
         type="number"
         name={name}
         defaultValue={defaultValue}
         min={min}
         max={max}
         step={step ?? 1}
-        className="mt-1 w-28 rounded-md border border-stone-300 bg-transparent px-2 py-1 font-mono text-xs dark:border-stone-700"
+        className="mt-1 w-28 bg-transparent py-1 font-mono text-xs"
       />
     </label>
   );
@@ -300,7 +301,7 @@ function NumberInput({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+    <div className="rounded-lg border border-line p-4">
       <p className="text-xs uppercase tracking-wider text-quiet">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>

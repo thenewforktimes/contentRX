@@ -46,7 +46,7 @@ const companyLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950">
+    <footer className="border-t border-line bg-stone-50 dark:bg-stone-950">
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <div>
@@ -59,7 +59,7 @@ export function SiteFooter() {
           <FooterColumn title="Trust" links={trustLinks} />
           <FooterColumn title="Company" links={companyLinks} />
         </div>
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-stone-200 pt-6 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6 text-xs text-quiet">
           <p>
             © 2026 Robert Ballard. ContentRX™ is a trademark of Robert Ballard.
           </p>
@@ -67,7 +67,7 @@ export function SiteFooter() {
             Source available under{" "}
             <a
               href="https://github.com/thenewforktimes/contentRX/blob/main/LICENSE"
-              className="underline underline-offset-2 hover:text-stone-700 dark:hover:text-stone-200"
+              className="underline underline-offset-2 hover:text-default"
             >
               FSL-1.1-MIT
             </a>

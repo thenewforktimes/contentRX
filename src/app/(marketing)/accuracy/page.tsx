@@ -112,7 +112,7 @@ export default function AccuracyPage() {
         </p>
       </section>
 
-      <section className="mt-10 rounded-lg border border-stone-300 bg-stone-50 p-6 dark:border-stone-700 dark:bg-stone-900">
+      <section className="mt-10 rounded-lg border border-line-strong bg-overlay p-6">
         <h2 className="text-lg font-semibold">How these numbers come to be</h2>
         <p className="mt-2 text-sm text-quiet">
           Each weekday the engine evaluates strings against the standards
@@ -193,7 +193,7 @@ function MetricBlock({
                 Design assumption · stated separately from measurements
               </p>
             ) : (
-              <p className="mt-1 text-xs text-stone-500 tabular-nums dark:text-stone-400">
+              <p className="mt-1 text-xs text-quiet tabular-nums">
                 95% CI [{kappa.ci_low.toFixed(3)},{" "}
                 {kappa.ci_high.toFixed(3)}] · n = {kappa.sample_size}
               </p>
@@ -220,7 +220,7 @@ function LadderCell({
   count: number;
 }) {
   return (
-    <div className="rounded-md border border-stone-200 bg-white px-4 py-3 dark:border-stone-800 dark:bg-stone-950">
+    <div className="rounded-md border border-line bg-raised px-4 py-3">
       <dt className="text-xs uppercase tracking-wide text-quiet">
         <code className="font-mono">{label}</code>
       </dt>

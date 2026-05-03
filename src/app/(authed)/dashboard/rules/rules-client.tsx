@@ -173,7 +173,7 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
       )}
 
       {!isAdmin && (
-        <div className="rounded-md border border-stone-200 bg-stone-50 p-3 text-sm dark:border-stone-800 dark:bg-stone-900">
+        <div className="rounded-md border border-line bg-overlay p-3 text-sm">
           Read-only. Only the team owner can edit rules.
         </div>
       )}
@@ -312,7 +312,7 @@ function StandardRow({
   onDisable: () => void;
 }) {
   return (
-    <li className="flex items-start gap-3 rounded-md border border-stone-200 p-3 dark:border-stone-800">
+    <li className="flex items-start gap-3 rounded-md border border-line p-3">
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs dark:bg-stone-900">
@@ -336,7 +336,7 @@ function StandardRow({
             type="button"
             disabled={busy}
             onClick={isDisabled ? onEnable : onDisable}
-            className="rounded-md border border-stone-300 px-2 py-1 text-xs font-medium hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-900"
+            className="rounded-md border border-line-strong px-2 py-1 text-xs font-medium hover:bg-hover disabled:opacity-50"
           >
             {isDisabled ? "Enable" : "Disable"}
           </button>
@@ -477,7 +477,7 @@ function AddCustomRuleCard({
   }
 
   return (
-    <section className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-4">
       <h2 className="mb-3 text-sm font-semibold">New custom rule</h2>
       <div className="flex flex-col gap-3">
         <label className="text-xs">
@@ -532,7 +532,7 @@ function AddCustomRuleCard({
               onChange={(e) =>
                 setSeverity(e.target.value as "low" | "medium" | "high")
               }
-              className="rounded-md border border-stone-300 bg-white px-2 py-1 text-xs dark:border-stone-700 dark:bg-stone-900"
+              className="rounded-md border border-line-strong bg-white px-2 py-1 text-xs dark:bg-stone-900"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -551,7 +551,7 @@ function AddCustomRuleCard({
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
+            className="rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium hover:bg-hover"
           >
             Cancel
           </button>

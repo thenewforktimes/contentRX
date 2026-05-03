@@ -112,7 +112,7 @@ function SurfaceCard({
 }) {
   const connected = count > 0 && lastAt !== null;
   return (
-    <div className="rounded-md border border-stone-200 p-4 text-sm dark:border-stone-800">
+    <div className="rounded-md border border-line p-4 text-sm">
       <p className="font-medium">{label}</p>
       <div className="mt-2 flex items-center gap-1.5">
         <span
@@ -134,7 +134,7 @@ function SurfaceCard({
       ) : (
         <Link
           href={installHref}
-          className="mt-1 inline-block text-xs text-stone-900 underline dark:text-stone-100"
+          className="mt-1 inline-block text-xs text-strong underline"
         >
           {installLabel} →
         </Link>

@@ -21,7 +21,7 @@ import { buttonStyles } from "@/components/ui/button";
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+    <header className="border-b border-line bg-raised">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-4">
         <Link
           href="/"

@@ -224,7 +224,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
             <div
               role="radiogroup"
               aria-label="Check tier"
-              className="inline-flex rounded-md border border-stone-300 bg-white p-0.5 dark:border-stone-700 dark:bg-stone-950"
+              className="inline-flex rounded-md border border-line-strong bg-raised p-0.5"
             >
               {CHECK_TIERS.map((t) => (
                 <button
@@ -613,7 +613,7 @@ function FindingCard({
   const [ruleSaved, setRuleSaved] = useState(false);
 
   return (
-    <li className="rounded-md border border-stone-200 bg-white p-3 text-sm dark:border-stone-800 dark:bg-stone-900">
+    <li className="rounded-md border border-line bg-white p-3 text-sm dark:bg-stone-900">
       <div className="flex items-start justify-between gap-3">
         <SeverityBadge severity={finding.severity} />
         <div className="flex shrink-0 items-center gap-2">
@@ -630,7 +630,7 @@ function FindingCard({
             type="button"
             onClick={() => setAdjustOpen(true)}
             aria-label="Adjust this finding"
-            className="shrink-0 rounded-md border border-stone-300 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
+            className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-hover dark:text-stone-200"
           >
             Adjust
           </button>
@@ -727,7 +727,7 @@ function MakeRuleButton({ plan, onOpen }: { plan: Plan; onOpen: () => void }) {
         type="button"
         onClick={onOpen}
         aria-label="Make a rule for your team"
-        className="shrink-0 rounded-md border border-stone-300 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
+        className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-hover dark:text-stone-200"
       >
         Make a rule
       </button>
@@ -737,7 +737,7 @@ function MakeRuleButton({ plan, onOpen }: { plan: Plan; onOpen: () => void }) {
     <Link
       href="/pricing#team"
       aria-label="Make a rule (Team plan)"
-      className="shrink-0 rounded-md border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-500 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-200"
+      className="shrink-0 rounded-md border border-line bg-overlay px-2.5 py-1 text-xs font-medium text-quiet transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-200"
     >
       Make a rule (Team)
     </Link>

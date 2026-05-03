@@ -132,7 +132,7 @@ export default function PricingPage() {
         />
       </section>
 
-      <section className="mt-16 border-t border-stone-200 pt-10 dark:border-stone-800">
+      <section className="mt-16 border-t border-line pt-10">
         <h2 className="text-lg font-semibold">FAQ</h2>
         <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-6 text-sm sm:grid-cols-2">
           <Faq

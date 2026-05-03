@@ -73,7 +73,7 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -192,7 +192,7 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
       <header>
         <Link
           href="/dashboard"
-          className="text-xs text-quiet hover:text-stone-900 dark:hover:text-stone-100"
+          className="text-xs text-quiet hover:text-strong"
         >
           ← Back to dashboard
         </Link>
@@ -205,7 +205,7 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
       </header>
 
       {counts.all === 0 ? (
-        <section className="rounded-lg border border-stone-200 p-6 text-sm text-stone-600 dark:border-stone-800 dark:text-stone-300">
+        <section className="rounded-lg border border-line p-6 text-sm text-default">
           No checks yet. Run one from the dashboard&apos;s{" "}
           <Link href="/dashboard" className="underline underline-offset-2">
             Try a check

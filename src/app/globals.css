@@ -40,6 +40,14 @@
   --surface-sunken:   #11100e;
   --surface-overlay:  #2d2926;
 
+  /* ─── INTERACTIVE STATES ─── */
+  /* Surface colour used for hover / focus background lift on
+     interactive surfaces (secondary buttons, list-row hovers, link
+     buttons). One token, two interpretations: light mode wants
+     slightly darker than canvas (pressed feedback), dark mode wants
+     slightly lighter (raised feedback). */
+  --state-hover-bg:   #2d2926;
+
   /* ─── TEXT ─── */
   --text-strong:      #fafaf7;
   --text-default:     #e6e1da;
@@ -94,6 +102,9 @@
     --surface-raised:   #ffffff;
     --surface-sunken:   #f0ece6;
     --surface-overlay:  #ffffff;
+
+    /* ─── INTERACTIVE STATES ─── */
+    --state-hover-bg:   #f0ece6;
 
     /* ─── TEXT ─── */
     --text-strong:      #1a1715;
@@ -166,6 +177,7 @@
   --color-line:           var(--border-default);
   --color-line-strong:    var(--border-strong);
   --color-ring:           var(--ring-focus);
+  --color-hover:          var(--state-hover-bg);
 
   --color-accent-primary:         var(--accent-primary-solid);
   --color-accent-primary-on:      var(--accent-primary-on-solid);

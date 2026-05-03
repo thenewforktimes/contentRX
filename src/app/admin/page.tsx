@@ -144,7 +144,7 @@ function SubtypeFilterPills({
   return (
     <nav
       aria-label="Subtype filter"
-      className="flex flex-wrap gap-2 border-b border-stone-200 pb-3 dark:border-stone-800"
+      className="flex flex-wrap gap-2 border-b border-line pb-3"
     >
       <PresetPill
         label="Nuanced (default)"
@@ -242,7 +242,7 @@ function SubtypePill({
 function QueueList({ rows }: { rows: TodayQueueRow[] }) {
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-stone-300 bg-white p-8 text-center text-sm text-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400">
+      <div className="rounded-lg border border-dashed border-line-strong bg-white p-8 text-center text-sm text-quiet dark:bg-stone-900">
         <p className="font-medium text-default">
           Nothing in this view.
         </p>
@@ -265,7 +265,7 @@ function QueueList({ rows }: { rows: TodayQueueRow[] }) {
 function QueueRow({ row }: { row: TodayQueueRow }) {
   const tone = subtypePillTone(row.subtype);
   return (
-    <li className="rounded-md border border-stone-200 bg-white p-3 text-sm dark:border-stone-800 dark:bg-stone-900">
+    <li className="rounded-md border border-line bg-white p-3 text-sm dark:bg-stone-900">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <Pill tone={tone}>{SUBTYPE_LABEL[row.subtype]}</Pill>
@@ -353,7 +353,7 @@ function RightRail({
           What to talk to which pilot about, today.
         </p>
         {triggers.length === 0 ? (
-          <p className="mt-2 rounded-lg border border-dashed border-stone-200 p-3 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
+          <p className="mt-2 rounded-lg border border-dashed border-line p-3 text-xs text-quiet">
             No triggers fired. Everyone is steady-state.
           </p>
         ) : (
@@ -361,7 +361,7 @@ function RightRail({
             {triggers.map((trigger, i) => (
               <li
                 key={`${trigger.kind}-${trigger.userId}-${i}`}
-                className="rounded-lg border border-stone-200 bg-white p-3 text-xs dark:border-stone-800 dark:bg-stone-900"
+                className="rounded-lg border border-line bg-white p-3 text-xs dark:bg-stone-900"
               >
                 {trigger.kind === "debrief_50_checks" ? (
                   <>

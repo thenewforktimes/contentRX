@@ -44,7 +44,7 @@ export default async function CustomExamplesPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -52,7 +52,7 @@ export default async function CustomExamplesPage() {
 
   if (user.plan !== "team") {
     return (
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-stone-200 p-6 dark:border-stone-800">
+      <section className="flex flex-col items-start gap-3 rounded-lg border border-line p-6">
         <h1 className="text-lg font-semibold">Custom examples</h1>
         <p className="text-sm text-default">
           Available on the Team plan. Mark specific strings as correct
@@ -104,16 +104,16 @@ export default async function CustomExamplesPage() {
       </header>
 
       {entries.length === 0 ? (
-        <section className="rounded-md border border-dashed border-stone-300 bg-stone-50 p-6 text-sm dark:border-stone-700 dark:bg-stone-900">
+        <section className="rounded-md border border-dashed border-line-strong bg-overlay p-6 text-sm">
           <p className="text-default">
             Nothing here yet. Your team hasn&apos;t added a custom example.
             From the terminal:{" "}
-            <code className="rounded bg-white px-1 py-0.5 dark:bg-stone-950">
+            <code className="rounded bg-raised px-1 py-0.5">
               contentrx example add &quot;Let&apos;s go.&quot; --verdict pass
               --moment confirmation
             </code>
             . Or add one from Claude Code / Cursor with the{" "}
-            <code className="rounded bg-white px-1 py-0.5 dark:bg-stone-950">
+            <code className="rounded bg-raised px-1 py-0.5">
               custom_example_add
             </code>{" "}
             MCP tool.
@@ -123,7 +123,7 @@ export default async function CustomExamplesPage() {
         <section className="overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500 dark:border-stone-800 dark:text-stone-400">
+              <tr className="border-b border-line text-xs uppercase tracking-wide text-quiet">
                 <th className="py-2 pr-4">Text</th>
                 <th className="py-2 pr-4">Verdict</th>
                 <th className="py-2 pr-4">Moment</th>
@@ -179,7 +179,7 @@ export default async function CustomExamplesPage() {
                       <Pill tone="stone">Private</Pill>
                     )}
                   </td>
-                  <td className="py-2 pr-4 text-xs text-stone-500 tabular-nums dark:text-stone-400">
+                  <td className="py-2 pr-4 text-xs text-quiet tabular-nums">
                     {formatDate(e.createdAt)}
                   </td>
                   <td className="py-2 pr-4 text-right">

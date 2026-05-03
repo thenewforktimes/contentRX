@@ -54,7 +54,7 @@ export function SystemKappaTrendChart({
 
   if (points.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-quiet dark:border-stone-700 dark:bg-stone-900">
+      <div className="rounded-lg border border-dashed border-line-strong bg-white p-6 text-center text-sm text-quiet dark:bg-stone-900">
         No weekly κ measurements available yet. The chart populates as
         per-standard κ accumulates across multiple weeks.
       </div>
@@ -80,7 +80,7 @@ export function SystemKappaTrendChart({
   const autonomousY = yFor(autonomousThreshold);
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+    <div className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="none"

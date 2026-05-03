@@ -171,7 +171,7 @@ export default async function AdminSuggestionsPage() {
       </header>
 
       {clusters.length === 0 ? (
-        <section className="rounded-md border border-stone-200 bg-stone-50 p-6 text-sm text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300">
+        <section className="rounded-md border border-line bg-overlay p-6 text-sm text-default">
           No pending candidates. The queue fills as customers tick
           &ldquo;Help calibrate the ContentRX model&rdquo; on the
           dashboard&apos;s Adjust modal.
@@ -212,7 +212,7 @@ export default async function AdminSuggestionsPage() {
             {recentPrecedents.map((p) => (
               <li
                 key={p.id}
-                className="rounded-md border border-stone-200 bg-white px-3 py-2 dark:border-stone-800 dark:bg-stone-950"
+                className="rounded-md border border-line bg-raised px-3 py-2"
               >
                 <p className="font-mono text-xs text-quiet">
                   {p.moment} · {p.contentType} · {p.standardId} · ×

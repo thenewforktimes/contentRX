@@ -37,7 +37,7 @@ export default async function DashboardRulesPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -74,7 +74,7 @@ export default async function DashboardRulesPage() {
       <header>
         <Link
           href="/dashboard"
-          className="text-xs text-quiet hover:text-stone-900 dark:hover:text-stone-100"
+          className="text-xs text-quiet hover:text-strong"
         >
           ← Back to dashboard
         </Link>

@@ -187,7 +187,7 @@ export default async function AdminQueuePage({
 
       <nav
         aria-label="Subtype filters"
-        className="flex flex-wrap gap-2 border-b border-stone-200 pb-3 dark:border-stone-800"
+        className="flex flex-wrap gap-2 border-b border-line pb-3"
       >
         <FilterTab
           href={`/admin/queue?window=${windowDays}`}
@@ -213,7 +213,7 @@ export default async function AdminQueuePage({
       )}
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-quiet dark:border-stone-700 dark:bg-stone-900">
+        <p className="rounded-lg border border-dashed border-line-strong bg-white p-6 text-center text-sm text-quiet dark:bg-stone-900">
           No pending cases in this window.
         </p>
       ) : (
@@ -294,7 +294,7 @@ function QueueRow({
           {row.standardId ? (
             <Link
               href={`/admin/model/standards/${row.standardId}`}
-              className="font-mono text-xs text-stone-700 hover:underline dark:text-stone-300"
+              className="font-mono text-xs text-default hover:underline"
             >
               {row.standardId}
             </Link>
@@ -315,7 +315,7 @@ function QueueRow({
             </span>
           )}
           {row.reviewReasonSubtype && (
-            <span className="rounded bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
+            <span className="rounded bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-default dark:bg-stone-800">
               {humanizeReviewReason(row.reviewReasonSubtype)}
             </span>
           )}

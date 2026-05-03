@@ -120,7 +120,7 @@ export default function SourcesPage() {
         </ul>
       </section>
 
-      <section className="mt-12 rounded-md border border-stone-200 bg-white p-4 text-sm dark:border-stone-800 dark:bg-stone-950">
+      <section className="mt-12 rounded-md border border-line bg-raised p-4 text-sm">
         <p className="text-default">
           The other half of ContentRX&apos;s accountability surface is{" "}
           <Link href="/accuracy" className="underline underline-offset-2">
@@ -131,7 +131,7 @@ export default function SourcesPage() {
         </p>
       </section>
 
-      <section className="mt-6 rounded-lg border border-stone-300 bg-stone-50 p-6 text-sm dark:border-stone-700 dark:bg-stone-900">
+      <section className="mt-6 rounded-lg border border-line-strong bg-overlay p-6 text-sm">
         <h2 className="text-base font-semibold">How to opt out</h2>
         <p className="mt-2 text-default">
           If you maintain one of the sources above and don&apos;t want
@@ -143,7 +143,7 @@ export default function SourcesPage() {
             hello@contentrx.io
           </a>{" "}
           with subject line{" "}
-          <code className="rounded bg-white px-1 py-0.5 font-mono text-xs dark:bg-stone-950">
+          <code className="rounded bg-raised px-1 py-0.5 font-mono text-xs">
             [OPTOUT] &lt;source name&gt;
           </code>
           . Each card above has a prefilled opt-out link. See{" "}
@@ -173,7 +173,7 @@ export default function SourcesPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-stone-200 bg-stone-50 px-4 py-3 dark:border-stone-800 dark:bg-stone-900">
+    <div className="rounded-md border border-line bg-overlay px-4 py-3">
       <dt className="text-xs uppercase tracking-wide text-quiet">
         {label}
       </dt>
@@ -184,7 +184,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function StyleGuideCard({ source }: { source: StyleGuideSource }) {
   return (
-    <li className="rounded-md border border-stone-200 p-5 dark:border-stone-800">
+    <li className="rounded-md border border-line p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h3 className="text-base font-semibold">
           <a
@@ -195,7 +195,7 @@ function StyleGuideCard({ source }: { source: StyleGuideSource }) {
             {source.name}
           </a>
         </h3>
-        <span className="rounded bg-stone-100 px-2 py-0.5 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">
+        <span className="rounded bg-stone-100 px-2 py-0.5 font-mono text-xs text-default dark:bg-stone-900">
           {source.license}
         </span>
       </div>
@@ -245,7 +245,7 @@ function OSSRepoCard({ repo }: { repo: OSSRepoSource }) {
   if (repo.quality_signals.content_design_blog) signals.push("content-design blog");
 
   return (
-    <li className="rounded-md border border-stone-200 p-5 dark:border-stone-800">
+    <li className="rounded-md border border-line p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h3 className="text-base font-semibold">
           <a
@@ -256,7 +256,7 @@ function OSSRepoCard({ repo }: { repo: OSSRepoSource }) {
             {repo.owner}/{repo.name}
           </a>
         </h3>
-        <span className="rounded bg-stone-100 px-2 py-0.5 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">
+        <span className="rounded bg-stone-100 px-2 py-0.5 font-mono text-xs text-default dark:bg-stone-900">
           {repo.license}
         </span>
       </div>

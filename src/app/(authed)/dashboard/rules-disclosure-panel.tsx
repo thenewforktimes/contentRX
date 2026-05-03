@@ -37,7 +37,7 @@ export function RulesDisclosurePanel({
   const activeCount = Math.max(0, totalStandards - disabledCount);
 
   return (
-    <details className="group rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <details className="group rounded-lg border border-line p-5">
       <summary className="flex cursor-pointer items-center justify-between gap-3 list-none">
         <div>
           <h2 className="text-sm font-semibold">
@@ -53,7 +53,7 @@ export function RulesDisclosurePanel({
         </div>
         <span
           aria-hidden
-          className="text-xs text-stone-500 group-open:rotate-180 transition dark:text-stone-400"
+          className="text-xs text-quiet group-open:rotate-180 transition"
         >
           ▾
         </span>
@@ -62,7 +62,7 @@ export function RulesDisclosurePanel({
         {CATEGORIES.map((category) => (
           <div
             key={category.name}
-            className="rounded-md border border-stone-200 p-3 dark:border-stone-800"
+            className="rounded-md border border-line p-3"
           >
             <p className="font-semibold text-strong">
               {category.name}
@@ -77,7 +77,7 @@ export function RulesDisclosurePanel({
       <div className="mt-4 text-xs">
         <Link
           href="/dashboard/rules"
-          className="underline underline-offset-2 hover:text-stone-700 dark:hover:text-stone-200"
+          className="underline underline-offset-2 hover:text-default"
         >
           See every rule with examples
         </Link>

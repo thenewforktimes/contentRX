@@ -79,7 +79,7 @@ export default async function DashboardPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -155,32 +155,32 @@ export default async function DashboardPage() {
         >
           <Link
             href="/dashboard/checks"
-            className="text-stone-700 hover:underline dark:text-stone-300"
+            className="text-default hover:underline"
           >
             Check history
           </Link>
           <Link
             href="/dashboard/runs"
-            className="text-stone-700 hover:underline dark:text-stone-300"
+            className="text-default hover:underline"
           >
             CI runs
           </Link>
           <Link
             href="/dashboard/overrides"
-            className="text-stone-700 hover:underline dark:text-stone-300"
+            className="text-default hover:underline"
           >
             Override report
           </Link>
           <Link
             href="/dashboard/rules"
-            className="text-stone-700 hover:underline dark:text-stone-300"
+            className="text-default hover:underline"
           >
             Team rules
           </Link>
           {isAdmin && (
             <Link
               href="/admin"
-              className="ml-auto rounded-md border border-stone-300 px-2 py-0.5 text-xs font-medium text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+              className="ml-auto rounded-md border border-line-strong px-2 py-0.5 text-xs font-medium text-default hover:bg-hover"
             >
               Founder admin →
             </Link>
@@ -230,7 +230,7 @@ export default async function DashboardPage() {
 
 function TryACheckPanel({ plan }: { plan: Plan }) {
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Try a check</h2>
         <span className="text-xs text-default">
@@ -244,7 +244,7 @@ function TryACheckPanel({ plan }: { plan: Plan }) {
         paste.{" "}
         <Link
           href="/privacy"
-          className="underline underline-offset-2 hover:text-stone-700 dark:hover:text-stone-200"
+          className="underline underline-offset-2 hover:text-default"
         >
           How we handle your text
         </Link>
@@ -314,7 +314,7 @@ function InsightsPanel({
 }) {
   const hasActivity = insights.violations > 0 || insights.overrides > 0;
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">This week</h2>
         <span className="text-xs text-default">Last 7 days</span>
@@ -433,7 +433,7 @@ function PatternLine({ pattern }: { pattern: FindingPattern }) {
 
 function MembersLink() {
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Members</h2>
       </header>
@@ -453,7 +453,7 @@ function MembersLink() {
 
 function OverridesLink() {
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Override report</h2>
         <span className="text-xs text-default">Last 30 days</span>
@@ -474,7 +474,7 @@ function OverridesLink() {
 
 function TeamRulesLink() {
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Team rules</h2>
       </header>

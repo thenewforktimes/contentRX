@@ -56,7 +56,7 @@ export default async function AdminReportPreviewPage({
         <p className="text-xs">
           <Link
             href="/admin/reports"
-            className="text-stone-600 hover:underline dark:text-stone-400"
+            className="text-quiet hover:underline"
           >
             ← Back to reports
           </Link>
@@ -118,7 +118,7 @@ export default async function AdminReportPreviewPage({
                   ? "Clear the publication-ready sentinel and re-open this report for edits."
                   : "Mark this report ready to publish. Writes a sentinel — commit it alongside the report."
               }
-              className="rounded-md border border-stone-300 px-3 py-1 text-xs font-medium text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
+              className="rounded-md border border-line-strong px-3 py-1 text-xs font-medium text-stone-700 hover:bg-hover dark:text-stone-200"
             >
               {report.reviewed ? "Reopen for review" : "Mark ready to publish"}
             </button>
@@ -126,8 +126,8 @@ export default async function AdminReportPreviewPage({
         </div>
       </header>
 
-      <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
-        <div className="border-b border-stone-200 px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-quiet dark:border-stone-800">
+      <div className="rounded-lg border border-line bg-white dark:bg-stone-900">
+        <div className="border-b border-line px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-quiet">
           Raw contents
         </div>
         <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-mono text-xs leading-relaxed text-default">

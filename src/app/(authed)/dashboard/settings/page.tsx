@@ -46,7 +46,7 @@ export default async function SettingsPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -97,7 +97,7 @@ export default async function SettingsPage() {
 
 function AccountPanel({ email }: { email: string }) {
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Account</h2>
         <span className="text-xs text-quiet">
@@ -111,7 +111,7 @@ function AccountPanel({ email }: { email: string }) {
       </p>
       <Link
         href="/sign-in/account"
-        className="inline-flex items-center rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
+        className="inline-flex items-center rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium hover:bg-hover"
       >
         Manage account
       </Link>
@@ -123,7 +123,7 @@ function PrivacyPanel({ email }: { email: string }) {
   const exportSubject = encodeURIComponent("[EXPORT] " + email);
   const deleteSubject = encodeURIComponent("[DELETE] " + email);
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Privacy</h2>
         <span className="text-xs text-quiet">
@@ -138,7 +138,7 @@ function PrivacyPanel({ email }: { email: string }) {
       <div className="flex flex-wrap gap-2">
         <a
           href={`mailto:privacy@contentrx.io?subject=${exportSubject}`}
-          className="inline-flex items-center rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
+          className="inline-flex items-center rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium hover:bg-hover"
         >
           Export my data
         </a>

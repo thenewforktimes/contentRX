@@ -25,6 +25,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
+import { Input } from "@/components/ui/input";
 import { Pill, type PillTone } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
@@ -158,7 +159,7 @@ export default async function AdminCustomerFlagsPage({
 
       <nav
         aria-label="Status filter"
-        className="flex flex-wrap gap-2 border-b border-stone-200 pb-3 dark:border-stone-800"
+        className="flex flex-wrap gap-2 border-b border-line pb-3"
       >
         {(["open", "all"] as const).map((s) => (
           <a
@@ -176,7 +177,7 @@ export default async function AdminCustomerFlagsPage({
       </nav>
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400">
+        <p className="rounded-lg border border-dashed border-line-strong bg-white p-6 text-center text-sm text-quiet dark:bg-stone-900">
           {statusFilter === "open"
             ? "No open flags. Customers haven't sent anything for review yet."
             : "No flags in the window."}
@@ -186,7 +187,7 @@ export default async function AdminCustomerFlagsPage({
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+              className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -219,12 +220,12 @@ export default async function AdminCustomerFlagsPage({
                 </div>
               </div>
 
-              <p className="mt-3 whitespace-pre-wrap rounded-md border border-stone-200 bg-stone-50 p-3 font-mono text-sm text-stone-800 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200">
+              <p className="mt-3 whitespace-pre-wrap rounded-md border border-line bg-stone-50 p-3 font-mono text-sm text-default dark:bg-stone-950">
                 {row.text}
               </p>
 
               {row.customerNote && (
-                <p className="mt-2 rounded-md border border-stone-200 bg-stone-50 p-3 text-sm text-stone-800 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200">
+                <p className="mt-2 rounded-md border border-line bg-stone-50 p-3 text-sm text-default dark:bg-stone-950">
                   <span className="font-semibold">Note:</span>{" "}
                   {row.customerNote}
                 </p>
@@ -242,7 +243,7 @@ export default async function AdminCustomerFlagsPage({
                     </span>
                     <select
                       name="newStatus"
-                      className="rounded-md border border-stone-300 bg-white px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+                      className="rounded-md border border-line-strong bg-raised px-2 py-1 text-sm dark:text-stone-100"
                       required
                       defaultValue=""
                     >
@@ -265,12 +266,12 @@ export default async function AdminCustomerFlagsPage({
                     <span className="font-medium text-default">
                       Notes (optional)
                     </span>
-                    <input
+                    <Input
                       type="text"
                       name="notes"
                       maxLength={500}
                       placeholder="Triage notes for the audit log"
-                      className="w-full rounded-md border border-stone-300 bg-white px-2 py-1 text-sm dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+                      className="py-1"
                     />
                   </label>
                   <button

@@ -35,7 +35,7 @@ export default async function AdminEssayDraftPreviewPage({
         <p className="text-xs">
           <Link
             href="/admin/essay-drafts"
-            className="text-stone-600 hover:underline dark:text-stone-400"
+            className="text-quiet hover:underline"
           >
             ← Back to essay drafts
           </Link>
@@ -69,8 +69,8 @@ export default async function AdminEssayDraftPreviewPage({
         </dl>
       </header>
 
-      <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
-        <div className="border-b border-stone-200 px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-quiet dark:border-stone-800">
+      <div className="rounded-lg border border-line bg-white dark:bg-stone-900">
+        <div className="border-b border-line px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-quiet">
           Raw contents
         </div>
         <pre className="overflow-x-auto whitespace-pre-wrap break-words p-4 font-sans text-sm leading-relaxed text-default">

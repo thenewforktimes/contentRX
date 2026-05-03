@@ -56,7 +56,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
       <div className="mx-auto flex max-w-7xl">
-        <aside className="hidden w-60 shrink-0 border-r border-stone-200 bg-white px-4 py-6 md:block dark:border-stone-800 dark:bg-stone-900">
+        <aside className="hidden w-60 shrink-0 border-r border-line bg-white px-4 py-6 md:block dark:bg-stone-900">
           <Link
             href="/admin"
             className="block px-2 text-sm font-semibold text-strong"
@@ -136,7 +136,7 @@ function NavLink({
     <li>
       <Link
         href={href}
-        className="flex items-center justify-between rounded-md px-2 py-1 text-stone-700 hover:bg-stone-100 hover:text-default dark:hover:bg-stone-800 dark:hover:text-stone-100"
+        className="flex items-center justify-between rounded-md px-2 py-1 text-stone-700 hover:bg-hover hover:text-default dark:hover:text-stone-100"
       >
         <span>{children}</span>
         {badge && badge > 0 ? (

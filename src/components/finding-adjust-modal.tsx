@@ -170,8 +170,8 @@ export function FindingAdjustModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-lg rounded-lg border border-stone-200 bg-white shadow-xl dark:border-stone-800 dark:bg-stone-950">
-        <header className="border-b border-stone-200 px-5 py-4 dark:border-stone-800">
+      <div className="w-full max-w-lg rounded-lg border border-line bg-raised shadow-xl">
+        <header className="border-b border-line px-5 py-4">
           <h2 className="text-base font-semibold text-strong">
             Adjust this finding
           </h2>
@@ -189,7 +189,7 @@ export function FindingAdjustModal({
                 type="checkbox"
                 checked={verdictChecked}
                 onChange={(e) => setVerdictChecked(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500 dark:border-stone-700"
+                className="mt-0.5 h-4 w-4 rounded border-line-strong text-emerald-600 focus:ring-emerald-500"
               />
               <span className="flex-1">
                 <span className="font-medium text-strong">
@@ -212,7 +212,7 @@ export function FindingAdjustModal({
                     onChange={(e) =>
                       setReasonCode(e.target.value as OverrideReasonCode)
                     }
-                    className="mt-1 block w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
+                    className="mt-1 block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
                   >
                     {VERDICT_REASON_CODES.map((code) => (
                       <option key={code} value={code}>
@@ -233,7 +233,7 @@ export function FindingAdjustModal({
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
                     maxLength={500}
-                    className="mt-1 block w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
+                    className="mt-1 block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
                     placeholder="Anything else that would help us calibrate?"
                   />
                 </div>
@@ -249,7 +249,7 @@ export function FindingAdjustModal({
                 type="checkbox"
                 checked={suggestionChecked}
                 onChange={(e) => setSuggestionChecked(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500 dark:border-stone-700"
+                className="mt-0.5 h-4 w-4 rounded border-line-strong text-emerald-600 focus:ring-emerald-500"
               />
               <span className="flex-1">
                 <span className="font-medium text-strong">
@@ -268,7 +268,7 @@ export function FindingAdjustModal({
                   onChange={(e) => setRewrite(e.target.value)}
                   rows={3}
                   maxLength={100_000}
-                  className="block w-full rounded-md border border-stone-300 bg-white px-2 py-1.5 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
+                  className="block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
                   placeholder="Your version"
                 />
               </div>
@@ -277,14 +277,14 @@ export function FindingAdjustModal({
 
           {/* ──────────────── Upstream-share opt-in ──────────────── */}
           {(verdictChecked || suggestionChecked) && (
-            <section className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2.5 dark:border-stone-800 dark:bg-stone-900/50">
+            <section className="rounded-md border border-line bg-overlay px-3 py-2.5 /50">
               <label className="flex items-start gap-3 text-sm">
                 <input
                   id={upstreamBoxId}
                   type="checkbox"
                   checked={shareUpstream}
                   onChange={(e) => setShareUpstream(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500 dark:border-stone-700"
+                  className="mt-0.5 h-4 w-4 rounded border-line-strong text-emerald-600 focus:ring-emerald-500"
                 />
                 <span className="flex-1">
                   <span className="font-medium text-strong">
@@ -310,7 +310,7 @@ export function FindingAdjustModal({
           )}
         </div>
 
-        <footer className="flex items-center justify-end gap-2 border-t border-stone-200 px-5 py-3 dark:border-stone-800">
+        <footer className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
           <button
             type="button"
             onClick={onClose}

@@ -40,7 +40,7 @@ export default async function AdminStandardDetailPage({
         <p className="text-xs">
           <Link
             href="/admin/model"
-            className="text-stone-600 hover:underline dark:text-stone-400"
+            className="text-quiet hover:underline"
           >
             ← Back to model
           </Link>
@@ -90,7 +90,7 @@ export default async function AdminStandardDetailPage({
             {Object.entries(standard.content_type_notes).map(([ct, note]) => (
               <div
                 key={ct}
-                className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
+                className="rounded-lg border border-line bg-white p-3 dark:bg-stone-900"
               >
                 <dt className="font-mono text-xs text-quiet">{ct}</dt>
                 <dd className="mt-1 whitespace-pre-line text-sm text-default">
@@ -111,12 +111,12 @@ export default async function AdminStandardDetailPage({
             {momentContexts.map(({ moment, weight }) => (
               <li
                 key={moment.id}
-                className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
+                className="rounded-lg border border-line bg-white p-3 dark:bg-stone-900"
               >
                 <div className="flex flex-wrap items-baseline gap-2">
                   <Link
                     href={`/admin/model/moments/${moment.id}`}
-                    className="font-mono text-xs text-stone-700 hover:underline dark:text-stone-300"
+                    className="font-mono text-xs text-default hover:underline"
                   >
                     {moment.id}
                   </Link>
@@ -152,7 +152,7 @@ export default async function AdminStandardDetailPage({
             {standard.influences.map((inf, i) => (
               <li
                 key={`${inf.source}-${i}`}
-                className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
+                className="rounded-lg border border-line bg-white p-3 dark:bg-stone-900"
               >
                 <div className="flex items-baseline gap-2">
                   <span className="text-sm font-semibold text-strong">
@@ -195,7 +195,7 @@ export default async function AdminStandardDetailPage({
             {standard.version_history.map((entry, i) => (
               <li
                 key={`${entry.version}-${i}`}
-                className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900"
+                className="rounded-lg border border-line bg-white p-3 dark:bg-stone-900"
               >
                 <div className="flex items-baseline gap-2">
                   <span className="font-mono text-xs text-default">

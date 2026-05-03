@@ -99,7 +99,7 @@ export function UsagePanelLive({
   };
 
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Usage this month</h2>
         <span className="text-xs text-default">

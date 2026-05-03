@@ -283,7 +283,7 @@ function SurfaceChip({
   return (
     <a
       href={href}
-      className="flex items-baseline gap-2 rounded-md border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
+      className="flex items-baseline gap-2 rounded-md border border-line-strong px-3 py-1.5 text-xs hover:bg-hover"
     >
       <span className="font-mono font-semibold">{label}</span>
       <span className="text-quiet">{tagline}</span>
@@ -293,7 +293,7 @@ function SurfaceChip({
 
 function Code({ children }: { children: string }) {
   return (
-    <pre className="mt-3 overflow-x-auto rounded-md border border-stone-200 bg-stone-50 p-3 text-xs dark:border-stone-800 dark:bg-stone-950">
+    <pre className="mt-3 overflow-x-auto rounded-md border border-line bg-stone-50 p-3 text-xs dark:bg-stone-950">
       <code className="font-mono text-default">
         {children}
       </code>

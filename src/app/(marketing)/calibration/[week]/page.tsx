@@ -38,7 +38,7 @@ export default async function CalibrationWeekPage({
       <p className="text-xs">
         <Link
           href="/calibration"
-          className="text-stone-600 hover:underline dark:text-stone-400"
+          className="text-quiet hover:underline"
         >
           ← Back to calibration log
         </Link>
@@ -56,7 +56,7 @@ export default async function CalibrationWeekPage({
         </p>
       </header>
 
-      <article className="rounded-lg border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
+      <article className="rounded-lg border border-line bg-white p-6 dark:bg-stone-900">
         <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-default">
 {entry.contents}
         </pre>

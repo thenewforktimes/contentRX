@@ -61,7 +61,7 @@ export default async function StatusPage() {
         <CheckRow label="Rate limit / cache" check={report.checks.redis} />
       </ul>
 
-      <section className="mt-10 rounded-lg border border-stone-200 p-5 text-sm dark:border-stone-800">
+      <section className="mt-10 rounded-lg border border-line p-5 text-sm">
         <h2 className="text-sm font-semibold">What this page covers</h2>
         <p className="mt-2 text-quiet">
           Database and Redis are the two pieces a slow page would point

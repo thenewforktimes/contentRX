@@ -105,11 +105,11 @@ export default function AdminReportsPage() {
             </header>
 
             {entries.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-3 text-xs text-quiet dark:border-stone-700 dark:bg-stone-900">
+              <p className="rounded-lg border border-dashed border-line-strong bg-white px-4 py-3 text-xs text-quiet dark:bg-stone-900">
                 {info.emptyHint}
               </p>
             ) : (
-              <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
+              <ul className="divide-y divide-stone-100 rounded-lg border border-line bg-white dark:divide-stone-800 dark:bg-stone-900">
                 {entries.map((entry) => (
                   <ReportRow key={entry.filename} entry={entry} />
                 ))}
@@ -128,7 +128,7 @@ function ReportRow({ entry }: { entry: ReportEntry }) {
       <div className="flex items-baseline gap-3">
         <Link
           href={`/admin/reports/${entry.type}/${encodeURIComponent(entry.filename)}`}
-          className="font-mono text-sm text-stone-900 hover:underline dark:text-stone-100"
+          className="font-mono text-sm text-strong hover:underline"
         >
           {entry.filename}
         </Link>
@@ -170,7 +170,7 @@ function ToggleReviewForm({ entry }: { entry: ReportEntry }) {
       <button
         type="submit"
         title={tooltip}
-        className="rounded-md border border-stone-300 px-2 py-0.5 text-[10px] font-medium text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
+        className="rounded-md border border-line-strong px-2 py-0.5 text-[10px] font-medium text-stone-700 hover:bg-hover dark:text-stone-200"
       >
         {label}
       </button>
