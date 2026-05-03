@@ -82,7 +82,7 @@ export function MembersPanel({
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+      <section className="rounded-lg border border-line p-5">
         <h2 className="text-sm font-semibold">Invite a teammate</h2>
         <p className="mt-1 text-xs text-default">
           They&apos;ll get an email with a link that&apos;s good for 7 days.
@@ -133,7 +133,7 @@ export function MembersPanel({
             {pendingInvitations.map((p) => (
               <li
                 key={p.id}
-                className="flex items-center justify-between gap-4 rounded-md border border-stone-200 p-3 text-sm dark:border-stone-800"
+                className="flex items-center justify-between gap-4 rounded-md border border-line p-3 text-sm"
               >
                 <div>
                   <p className="font-medium">{p.email}</p>
@@ -146,7 +146,7 @@ export function MembersPanel({
                   type="button"
                   onClick={() => onRevoke(p.id)}
                   disabled={revokingId === p.id}
-                  className="shrink-0 rounded-md border border-stone-300 px-2 py-1 text-xs hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-900"
+                  className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-hover disabled:opacity-50"
                 >
                   {revokingId === p.id ? "Revoking…" : "Revoke"}
                 </button>
@@ -162,7 +162,7 @@ export function MembersPanel({
           {members.map((m) => (
             <li
               key={m.userId}
-              className="flex items-center justify-between gap-4 rounded-md border border-stone-200 p-3 text-sm dark:border-stone-800"
+              className="flex items-center justify-between gap-4 rounded-md border border-line p-3 text-sm"
             >
               <div>
                 <p className="font-medium">

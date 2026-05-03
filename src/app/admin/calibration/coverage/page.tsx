@@ -250,7 +250,7 @@ export default async function CalibrationCoveragePage() {
           />
           <Link
             href="/admin/suggestions"
-            className="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
+            className="rounded-md border border-line-strong bg-raised px-3 py-1.5 text-xs font-medium text-stone-700 hover:bg-hover dark:text-stone-200"
           >
             Open triage queue →
           </Link>
@@ -262,7 +262,7 @@ export default async function CalibrationCoveragePage() {
           Active buckets
         </h2>
         {activeBuckets.length === 0 ? (
-          <p className="mt-3 rounded-md border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300">
+          <p className="mt-3 rounded-md border border-line bg-overlay p-4 text-sm text-default">
             No buckets have precedents or pending candidates yet. The
             queue fills as customers tick &ldquo;Help calibrate the
             ContentRX model&rdquo; on the dashboard&apos;s Adjust modal.
@@ -361,7 +361,7 @@ export default async function CalibrationCoveragePage() {
                 {uncoveredMoments.map((m) => (
                   <li
                     key={m}
-                    className="rounded-md border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300"
+                    className="rounded-md border border-line bg-overlay px-2.5 py-1 text-xs text-default"
                   >
                     {humanizeMoment(m)}
                   </li>
@@ -378,7 +378,7 @@ export default async function CalibrationCoveragePage() {
                 {uncoveredContentTypes.map((ct) => (
                   <li
                     key={ct}
-                    className="rounded-md border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300"
+                    className="rounded-md border border-line bg-overlay px-2.5 py-1 text-xs text-default"
                   >
                     {humanizeContentType(ct)}
                   </li>

@@ -160,7 +160,7 @@ function ErrorCard({
 }) {
   return (
     <main className="mx-auto max-w-md px-6 py-20">
-      <section className="rounded-lg border border-stone-200 p-6 dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6">
         <h1 className="text-lg font-semibold">{title}</h1>
         <p className="mt-3 text-sm text-quiet">
           {body}
@@ -168,7 +168,7 @@ function ErrorCard({
         {cta && (
           <Link
             href={cta.href}
-            className="mt-4 inline-block rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
+            className="mt-4 inline-block rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium hover:bg-hover"
           >
             {cta.label}
           </Link>

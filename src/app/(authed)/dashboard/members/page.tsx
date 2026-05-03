@@ -34,7 +34,7 @@ export default async function MembersPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -42,7 +42,7 @@ export default async function MembersPage() {
 
   if (user.plan !== "team") {
     return (
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-stone-200 p-6 dark:border-stone-800">
+      <section className="flex flex-col items-start gap-3 rounded-lg border border-line p-6">
         <h1 className="text-lg font-semibold">Members</h1>
         <p className="text-sm text-default">
           Available on the Team plan. Invite teammates to share your

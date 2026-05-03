@@ -37,7 +37,7 @@ export default async function OverridesPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -45,7 +45,7 @@ export default async function OverridesPage() {
 
   if (user.plan !== "team") {
     return (
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-stone-200 p-6 dark:border-stone-800">
+      <section className="flex flex-col items-start gap-3 rounded-lg border border-line p-6">
         <h1 className="text-lg font-semibold">Override report</h1>
         <p className="text-sm text-default">
           Available on the Team plan. Surfaces the rules your team
@@ -220,7 +220,7 @@ export default async function OverridesPage() {
       </section>
 
       {overrides_count === 0 ? (
-        <section className="rounded-lg border border-dashed border-stone-300 p-6 text-sm text-stone-500 dark:border-stone-700 dark:text-stone-400">
+        <section className="rounded-lg border border-dashed border-line-strong p-6 text-sm text-quiet">
           Nothing to show yet. Your team hasn&apos;t dismissed any
           findings. Dismissals from the Figma plugin or{" "}
           <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-xs dark:bg-stone-900">
@@ -272,7 +272,7 @@ export default async function OverridesPage() {
             </h2>
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500 dark:border-stone-800 dark:text-stone-400">
+                <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-quiet">
                   <th className="py-2">Standard</th>
                   <th className="py-2">Moment</th>
                   <th className="py-2 text-right">Overrides</th>
@@ -303,7 +303,7 @@ export default async function OverridesPage() {
               {byType.map((t) => (
                 <li
                   key={t.override_type}
-                  className="flex items-center justify-between rounded-md border border-stone-200 p-3 text-sm dark:border-stone-800"
+                  className="flex items-center justify-between rounded-md border border-line p-3 text-sm"
                 >
                   <span className="font-mono text-xs">{t.override_type}</span>
                   <span className="font-medium">
@@ -329,7 +329,7 @@ export default async function OverridesPage() {
                 <li
                   key={q}
                   title={QUADRANT_TOOLTIPS[q]}
-                  className="flex items-center justify-between rounded-md border border-stone-200 p-3 text-sm dark:border-stone-800"
+                  className="flex items-center justify-between rounded-md border border-line p-3 text-sm"
                 >
                   <span className="text-xs">{QUADRANT_LABELS[q]}</span>
                   <span className="font-medium">
@@ -388,7 +388,7 @@ function Stat({
       ? "text-amber-700 dark:text-amber-300"
       : "text-strong";
   return (
-    <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+    <div className="rounded-lg border border-line p-4">
       <p className="text-xs uppercase tracking-wider text-quiet">
         {label}
       </p>

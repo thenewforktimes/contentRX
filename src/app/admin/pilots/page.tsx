@@ -97,7 +97,7 @@ export default async function AdminPilotsPage() {
 function PilotTable({ rows }: { rows: PilotRow[] }) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-lg border border-stone-200 bg-white p-6 text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400">
+      <p className="rounded-lg border border-line bg-white p-6 text-sm text-quiet dark:bg-stone-900">
         No users yet. The tracker populates as Clerk sign-ups hit the DB.
       </p>
     );
@@ -105,7 +105,7 @@ function PilotTable({ rows }: { rows: PilotRow[] }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-line">
       <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
-        <thead className="bg-stone-50 text-left text-xs font-medium uppercase tracking-wide text-stone-600 dark:bg-stone-900 dark:text-stone-400">
+        <thead className="bg-overlay text-left text-xs font-medium uppercase tracking-wide text-quiet">
           <tr>
             <th className="px-4 py-2">Status</th>
             <th className="px-4 py-2">User</th>
@@ -176,7 +176,7 @@ function TriggerSidebar({
         </p>
       </header>
       {triggers.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-stone-200 p-4 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
+        <p className="rounded-lg border border-dashed border-line p-4 text-xs text-quiet">
           No triggers fired. Everyone is steady-state.
         </p>
       ) : (
@@ -184,7 +184,7 @@ function TriggerSidebar({
           {triggers.map((trigger, i) => (
             <li
               key={`${trigger.kind}-${trigger.userId}-${i}`}
-              className="rounded-lg border border-stone-200 bg-white p-3 text-xs dark:border-stone-800 dark:bg-stone-900"
+              className="rounded-lg border border-line bg-white p-3 text-xs dark:bg-stone-900"
             >
               {trigger.kind === "debrief_50_checks" ? (
                 <>
@@ -228,7 +228,7 @@ function SummaryCard({
     ? STATUS_PILL_TONE[tone as ActivityStatus]
     : "neutral";
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900">
+    <div className="rounded-lg border border-line bg-white p-3 dark:bg-stone-900">
       <p className="text-xs uppercase tracking-wide text-quiet">
         {label}
       </p>

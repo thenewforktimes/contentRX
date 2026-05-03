@@ -27,9 +27,14 @@ import type { ReactNode } from "react";
 
 export type HeadingLevel = 1 | 2 | 3 | 4;
 
+// Sizes calibrated to the patterns the codebase actually used pre-
+// primitive (audited 2026-05-03). The previous draft jumped to
+// text-3xl for level 1, which would have made every dashboard panel
+// header bigger than the existing convention. Marketing hero
+// headings that genuinely want text-3xl can pass className to override.
 const levelClasses: Record<HeadingLevel, string> = {
-  1: "text-3xl font-semibold tracking-tight text-strong",
-  2: "text-2xl font-semibold tracking-tight text-strong",
+  1: "text-2xl font-semibold tracking-tight text-strong",
+  2: "text-xl font-semibold text-strong",
   3: "text-lg font-semibold text-strong",
   4: "text-sm font-semibold uppercase tracking-wide text-quiet",
 };

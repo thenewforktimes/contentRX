@@ -16,6 +16,7 @@
  */
 
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { addRefinement } from "@/app/admin/refinement-log/actions";
 
 interface Defaults {
@@ -39,7 +40,7 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md border border-stone-300 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+        className="rounded-md border border-line-strong px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-default hover:bg-hover"
       >
         Log refinement
       </button>
@@ -49,7 +50,7 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
   return (
     <form
       action={addRefinement}
-      className="mt-3 space-y-3 rounded-md border border-stone-300 bg-stone-50 p-3 text-xs dark:border-stone-700 dark:bg-stone-900"
+      className="mt-3 space-y-3 rounded-md border border-line-strong bg-overlay p-3 text-xs"
     >
       <p className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
         New open refinement
@@ -102,7 +103,7 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
         <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wide text-quiet">
           Triggering case (auto-generated, hidden)
         </summary>
-        <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words rounded bg-white p-2 font-sans text-[11px] text-stone-700 dark:bg-stone-950 dark:text-stone-300">
+        <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words rounded bg-raised p-2 font-sans text-[11px] text-default">
 {defaults.triggering_case}
         </pre>
       </details>
@@ -117,7 +118,7 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-md border border-stone-300 px-3 py-1 text-xs text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
+          className="rounded-md border border-line-strong px-3 py-1 text-xs text-stone-700 hover:bg-hover dark:text-stone-200"
         >
           Cancel
         </button>
@@ -148,13 +149,13 @@ function Field({
         {label}
         {required && <span className="ml-0.5 text-rose-500">*</span>}
       </span>
-      <input
+      <Input
         type="text"
         name={name}
         required={required}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-900 focus:border-stone-500 focus:outline-none dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+        className="py-1 text-xs"
       />
     </label>
   );
@@ -185,7 +186,7 @@ function FieldTextarea({
         placeholder={placeholder}
         defaultValue={defaultValue}
         rows={3}
-        className="rounded border border-stone-300 bg-white px-2 py-1 font-sans text-xs leading-relaxed text-stone-900 focus:border-stone-500 focus:outline-none dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+        className="rounded border border-line-strong bg-raised px-2 py-1 font-sans text-xs leading-relaxed text-strong focus:border-stone-500 focus:outline-none"
       />
     </label>
   );

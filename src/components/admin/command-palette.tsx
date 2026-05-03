@@ -174,10 +174,10 @@ export function CommandPalette() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open search palette"
-        className="flex w-full items-center justify-between gap-2 rounded-md border border-stone-300 bg-white px-3 py-1.5 text-left text-xs text-stone-500 hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-stone-600"
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-line-strong bg-white px-3 py-1.5 text-left text-xs text-quiet hover:border-line-strong dark:bg-stone-900"
       >
         <span>Find a case…</span>
-        <kbd className="rounded border border-stone-300 bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400">
+        <kbd className="rounded border border-line-strong bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] text-quiet dark:bg-stone-800">
           ⌘K
         </kbd>
       </button>
@@ -195,7 +195,7 @@ export function CommandPalette() {
           <div
             ref={dialogRef}
             onKeyDown={onKeyDown}
-            className="w-full max-w-2xl overflow-hidden rounded-lg border border-stone-200 bg-white shadow-2xl dark:border-stone-800 dark:bg-stone-900"
+            className="w-full max-w-2xl overflow-hidden rounded-lg border border-line bg-white shadow-2xl dark:bg-stone-900"
           >
             <div className="border-b border-line">
               <input
@@ -205,7 +205,7 @@ export function CommandPalette() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Find a case across overrides, queue, and customer flags…"
-                className="w-full bg-transparent px-4 py-3 text-base text-stone-900 placeholder:text-stone-400 focus:outline-none dark:text-stone-100 dark:placeholder:text-stone-600"
+                className="w-full bg-transparent px-4 py-3 text-base text-strong placeholder:text-stone-400 focus:outline-none dark:placeholder:text-stone-600"
               />
             </div>
 
@@ -258,7 +258,7 @@ export function CommandPalette() {
               )}
             </div>
 
-            <footer className="flex items-center justify-between border-t border-stone-200 px-4 py-2 text-[11px] text-stone-500 dark:border-stone-800 dark:text-stone-400">
+            <footer className="flex items-center justify-between border-t border-line px-4 py-2 text-[11px] text-quiet">
               <span>
                 {results.length > 0 ? (
                   <>

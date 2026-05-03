@@ -31,7 +31,7 @@ export default async function ImpactPage() {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -153,7 +153,7 @@ export default async function ImpactPage() {
       )}
 
       {totalSignals === 0 && (
-        <section className="rounded-lg border border-stone-200 bg-stone-50 p-5 dark:border-stone-800 dark:bg-stone-900">
+        <section className="rounded-lg border border-line bg-overlay p-5">
           <p className="text-sm text-default">
             No signals yet. Run a check on the dashboard to get
             started. Your contributions will show up here.
@@ -183,7 +183,7 @@ function ImpactStat({
   caption: string;
 }) {
   return (
-    <article className="rounded-lg border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-950">
+    <article className="rounded-lg border border-line bg-raised p-5">
       <p className="text-xs font-medium uppercase tracking-wide text-quiet">
         {label}
       </p>

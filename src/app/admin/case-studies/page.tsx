@@ -43,7 +43,7 @@ export default function AdminCaseStudiesPage() {
 
       {studies.length === 0 ? <EmptyState /> : <StudiesList studies={studies} />}
 
-      <section className="rounded-md border border-stone-200 bg-white p-5 text-xs dark:border-stone-800 dark:bg-stone-900">
+      <section className="rounded-md border border-line bg-white p-5 text-xs dark:bg-stone-900">
         <h2 className="text-sm font-semibold text-strong">
           Workflow
         </h2>
@@ -86,7 +86,7 @@ export default function AdminCaseStudiesPage() {
 
 function StudiesList({ studies }: { studies: CaseStudySummary[] }) {
   return (
-    <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
+    <ul className="divide-y divide-stone-100 rounded-lg border border-line bg-white dark:divide-stone-800 dark:bg-stone-900">
       {studies.map((s) => (
         <StudyRow key={s.slug} study={s} />
       ))}
@@ -108,7 +108,7 @@ function StudyRow({ study }: { study: CaseStudySummary }) {
       <div className="flex flex-1 flex-col gap-1 min-w-[260px]">
         <Link
           href={`/admin/case-studies/${encodeURIComponent(study.slug)}`}
-          className="font-mono text-sm font-semibold text-stone-900 hover:underline dark:text-stone-100"
+          className="font-mono text-sm font-semibold text-strong hover:underline"
         >
           {study.slug}
         </Link>
@@ -196,7 +196,7 @@ function Counter({
 
 function EmptyState() {
   return (
-    <div className="rounded-lg border border-dashed border-stone-300 bg-white px-6 py-10 text-center dark:border-stone-700 dark:bg-stone-900">
+    <div className="rounded-lg border border-dashed border-line-strong bg-white px-6 py-10 text-center dark:bg-stone-900">
       <p className="text-sm font-semibold text-strong">
         No case studies yet.
       </p>

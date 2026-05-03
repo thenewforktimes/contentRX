@@ -125,14 +125,14 @@ export default async function AdminCalibrationPage() {
           Per-standard kappa
         </h2>
         {snapshot.standards.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-stone-300 bg-white p-6 text-center text-sm text-quiet dark:border-stone-700 dark:bg-stone-900">
+          <p className="rounded-lg border border-dashed border-line-strong bg-white p-6 text-center text-sm text-quiet dark:bg-stone-900">
             No per-standard kappa available yet. Run{" "}
             <code className="font-mono text-xs">tools/graduation_metrics.py</code>{" "}
             and commit{" "}
             <code className="font-mono text-xs">evals/graduation/readiness.json</code>.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
+          <div className="overflow-x-auto rounded-lg border border-line bg-white dark:bg-stone-900">
             <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
               <thead className="text-xs uppercase tracking-wide text-quiet">
                 <tr>
@@ -171,7 +171,7 @@ function KappaCard({
   kappa: Kappa;
 }) {
   return (
-    <article className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+    <article className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
         {label}
       </p>
@@ -205,7 +205,7 @@ function KappaCard({
 
 function DesignTargetCard({ target }: { target: number }) {
   return (
-    <article className="rounded-lg border-2 border-dashed border-stone-300 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-950">
+    <article className="rounded-lg border-2 border-dashed border-line-strong bg-stone-50 p-4 dark:bg-stone-950">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
         Design target
       </p>
@@ -233,7 +233,7 @@ function ThresholdCard({
   note?: string;
 }) {
   return (
-    <article className="rounded-lg border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900">
+    <article className="rounded-lg border border-line bg-white p-3 dark:bg-stone-900">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
           {label}
@@ -265,11 +265,11 @@ function StandardRow({
 }) {
   const k = standard.kappa;
   return (
-    <tr className="hover:bg-stone-50 dark:hover:bg-stone-800/50">
+    <tr className="hover:bg-hover /50">
       <td className="px-3 py-2">
         <Link
           href={`/admin/model/standards/${standard.standard_id}`}
-          className="font-mono text-xs text-stone-700 hover:underline dark:text-stone-300"
+          className="font-mono text-xs text-default hover:underline"
         >
           {standard.standard_id}
         </Link>

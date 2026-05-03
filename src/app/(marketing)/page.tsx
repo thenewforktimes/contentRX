@@ -163,7 +163,7 @@ export default function Home() {
 
       <Section eyebrow="Why it works" title="What ContentRX is great at.">
         <ul className="mt-2 grid gap-4 sm:grid-cols-3 sm:gap-3">
-          <li className="rounded-lg border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-950">
+          <li className="rounded-lg border border-line bg-raised p-5">
             <p className="text-sm font-semibold text-strong">
               Calibrated judgment.
             </p>
@@ -180,7 +180,7 @@ export default function Home() {
               .
             </p>
           </li>
-          <li className="rounded-lg border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-950">
+          <li className="rounded-lg border border-line bg-raised p-5">
             <p className="text-sm font-semibold text-strong">
               Style guides we maintain.
             </p>
@@ -190,7 +190,7 @@ export default function Home() {
               them where you&apos;re shipping copy.
             </p>
           </li>
-          <li className="rounded-lg border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-950">
+          <li className="rounded-lg border border-line bg-raised p-5">
             <p className="text-sm font-semibold text-strong">
               Custom rules in the moment.
             </p>

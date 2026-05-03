@@ -21,6 +21,7 @@ import {
   type RefinementEntry,
   type RefinementStatus,
 } from "@/lib/admin-refinement-log.server";
+import { Input, Textarea } from "@/components/ui/input";
 import { addRefinement } from "./actions";
 
 const SECTION_ORDER: Array<{
@@ -96,7 +97,7 @@ export default function AdminRefinementLogPage() {
         </dl>
       </header>
 
-      <details className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+      <details className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
         <summary className="cursor-pointer text-sm font-semibold text-strong">
           Add a refinement candidate
         </summary>
@@ -127,7 +128,7 @@ export default function AdminRefinementLogPage() {
             </p>
           </header>
           {log.byStatus[section.status].length === 0 ? (
-            <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-3 text-xs text-quiet dark:border-stone-700 dark:bg-stone-900">
+            <p className="rounded-lg border border-dashed border-line-strong bg-white px-4 py-3 text-xs text-quiet dark:bg-stone-900">
               {section.empty}
             </p>
           ) : (
@@ -145,7 +146,7 @@ export default function AdminRefinementLogPage() {
 
 function RefinementCard({ entry }: { entry: RefinementEntry }) {
   return (
-    <li className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+    <li className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
       <header className="flex flex-wrap items-baseline gap-2">
         <span className="font-mono text-xs text-default">
           {entry.id}
@@ -280,8 +281,6 @@ function FormField({
   placeholder?: string;
   defaultValue?: string;
 }) {
-  const inputClass =
-    "mt-1 block w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100";
   return (
     <label className="block text-xs">
       <span className="font-semibold text-default">
@@ -289,22 +288,22 @@ function FormField({
         {required && <span className="ml-1 text-rose-500">*</span>}
       </span>
       {textarea ? (
-        <textarea
+        <Textarea
           name={name}
           required={required}
           placeholder={placeholder}
           defaultValue={defaultValue}
           rows={2}
-          className={inputClass}
+          className="mt-1"
         />
       ) : (
-        <input
+        <Input
           type={type}
           name={name}
           required={required}
           placeholder={placeholder}
           defaultValue={defaultValue}
-          className={inputClass}
+          className="mt-1"
         />
       )}
     </label>
@@ -317,7 +316,7 @@ function todayIso(): string {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-stone-200 bg-white px-3 py-2 dark:border-stone-800 dark:bg-stone-900">
+    <div className="rounded-lg border border-line bg-white px-3 py-2 dark:bg-stone-900">
       <dt className="text-[10px] uppercase tracking-wide text-quiet">
         {label}
       </dt>

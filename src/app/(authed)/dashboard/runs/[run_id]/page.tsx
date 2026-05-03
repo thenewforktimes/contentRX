@@ -74,7 +74,7 @@ export default async function RunPage({ params }: RunParams) {
   const user = await getOrProvisionUser(clerkId);
   if (!user) {
     return (
-      <section className="rounded-lg border border-stone-200 p-6 text-sm dark:border-stone-800">
+      <section className="rounded-lg border border-line p-6 text-sm">
         <p>We&apos;re finishing setting up your account. Refresh in a moment.</p>
       </section>
     );
@@ -134,7 +134,7 @@ export default async function RunPage({ params }: RunParams) {
       <div className="flex flex-col gap-4">
         <Eyebrow>Run</Eyebrow>
         <h1 className="text-2xl font-semibold">{run_id}</h1>
-        <section className="rounded-lg border border-stone-200 p-6 dark:border-stone-800">
+        <section className="rounded-lg border border-line p-6">
           <p className="text-sm text-default">
             This run has no findings on your account, or it expired.
             ContentRX retains run history for 90 days.
@@ -220,7 +220,7 @@ export default async function RunPage({ params }: RunParams) {
 
       <Link
         href="/dashboard"
-        className="text-sm text-stone-600 underline hover:no-underline dark:text-stone-300"
+        className="text-sm text-default underline hover:no-underline"
       >
         ← Back to dashboard
       </Link>
@@ -244,7 +244,7 @@ function Stat({
         ? "text-default"
         : "text-strong";
   return (
-    <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+    <div className="rounded-lg border border-line p-4">
       <div className="text-xs uppercase tracking-wide text-quiet">
         {label}
       </div>
@@ -263,7 +263,7 @@ function FileBlock({
   items: ViolationRow[];
 }) {
   return (
-    <section className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-4">
       <header className="mb-3 flex items-center justify-between">
         <code className="text-sm font-medium">{file}</code>
         <span className="text-xs text-quiet">
@@ -274,7 +274,7 @@ function FileBlock({
         {items.map((it) => (
           <li
             key={it.id}
-            className="flex items-start gap-3 rounded-md bg-stone-50 p-3 text-sm dark:bg-stone-900"
+            className="flex items-start gap-3 rounded-md bg-overlay p-3 text-sm"
           >
             <SeverityDot severity={it.severity} />
             <div className="flex-1">

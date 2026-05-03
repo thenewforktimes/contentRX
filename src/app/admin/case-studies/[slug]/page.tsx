@@ -83,7 +83,7 @@ export default async function AdminCaseStudyDetailPage({
         <p className="text-xs">
           <Link
             href="/admin/case-studies"
-            className="text-stone-600 hover:underline dark:text-stone-400"
+            className="text-quiet hover:underline"
           >
             ← Back to case studies
           </Link>
@@ -111,7 +111,7 @@ export default async function AdminCaseStudyDetailPage({
         </dl>
       </header>
 
-      <section className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+      <section className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-quiet">
           Verdict distribution
         </h2>
@@ -198,7 +198,7 @@ export default async function AdminCaseStudyDetailPage({
       })}
 
       {detail.summary_md && (
-        <section className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+        <section className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
           <details>
             <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-quiet">
               Auto-rolled summary
@@ -239,7 +239,7 @@ function ResultsSection({
           {VERDICT_DESCRIPTION[verdict]}
         </p>
       </header>
-      <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200 bg-white dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
+      <ul className="divide-y divide-stone-100 rounded-lg border border-line bg-white dark:divide-stone-800 dark:bg-stone-900">
         {rows.map((row, i) => (
           <ResultRow key={`${row.input.source_file}:${row.input.line}:${i}`} row={row} />
         ))}
@@ -291,7 +291,7 @@ function ResultRow({ row }: { row: EngineResultRow }) {
         </p>
       )}
       {violations.length > 0 && (
-        <ul className="mt-1 space-y-2 border-l-2 border-stone-200 pl-3 dark:border-stone-800">
+        <ul className="mt-1 space-y-2 border-l-2 border-line pl-3">
           {violations.map((v, j) => (
             <li key={j} className="space-y-1">
               <div className="flex flex-wrap items-baseline gap-2 text-xs">

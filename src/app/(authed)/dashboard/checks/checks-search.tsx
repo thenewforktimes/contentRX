@@ -194,7 +194,7 @@ export function ChecksSearch({
       <p className="text-xs text-quiet">{summary}</p>
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-stone-200 p-4 text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">
+        <p className="rounded-lg border border-dashed border-line p-4 text-sm text-quiet">
           {query.length > 0
             ? `No checks match "${query}". Try fewer words, or clear the filter pill above.`
             : "No checks match the current filter."}
@@ -204,7 +204,7 @@ export function ChecksSearch({
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-md border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-950"
+              className="rounded-md border border-line bg-raised p-3"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-quiet">

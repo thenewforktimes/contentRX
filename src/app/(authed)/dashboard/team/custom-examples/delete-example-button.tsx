@@ -51,7 +51,7 @@ export function DeleteExampleButton({ id }: { id: string }) {
         <button
           type="button"
           onClick={() => setState("idle")}
-          className="text-[11px] text-stone-500 underline dark:text-stone-400"
+          className="text-[11px] text-quiet underline"
         >
           Cancel
         </button>
@@ -86,7 +86,7 @@ export function DeleteExampleButton({ id }: { id: string }) {
     <button
       type="button"
       onClick={() => setState("confirming")}
-      className="rounded border border-stone-300 bg-white px-2 py-1 text-[11px] text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-300 dark:hover:bg-stone-900"
+      className="rounded border border-line-strong bg-raised px-2 py-1 text-[11px] text-default hover:bg-hover"
     >
       Delete
     </button>

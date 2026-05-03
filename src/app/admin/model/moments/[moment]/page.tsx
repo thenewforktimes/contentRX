@@ -52,7 +52,7 @@ export default async function AdminMomentDetailPage({
         <p className="text-xs">
           <Link
             href="/admin/model"
-            className="text-stone-600 hover:underline dark:text-stone-400"
+            className="text-quiet hover:underline"
           >
             ← Back to model
           </Link>

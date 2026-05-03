@@ -276,7 +276,7 @@ export default function EthicsPage() {
         </p>
       </Section>
 
-      <section className="mt-12 rounded-lg border border-stone-300 bg-stone-50 p-6 text-sm dark:border-stone-700 dark:bg-stone-900">
+      <section className="mt-12 rounded-lg border border-line-strong bg-overlay p-6 text-sm">
         <h2 className="text-base font-semibold">How to opt out</h2>
         <p className="mt-2 text-default">
           If you maintain a project and don&apos;t want ContentRX to
@@ -328,7 +328,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-8 border-t border-stone-200 pt-8 first:border-t-0 first:pt-0 dark:border-stone-800">
+    <section className="mt-8 border-t border-line pt-8 first:border-t-0 first:pt-0">
       <p className="text-xs font-mono uppercase tracking-widest text-quiet">
         Commitment {number}
       </p>

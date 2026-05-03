@@ -148,7 +148,7 @@ export function FlagForReview({
                 to refine the rulesets and improve the model.
               </p>
               {contextLine && (
-                <p className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-700 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-300">
+                <p className="rounded-md border border-line bg-stone-50 px-3 py-2 text-xs text-default dark:bg-stone-950">
                   {contextLine}
                 </p>
               )}
@@ -212,7 +212,7 @@ export function FlagForReview({
                   {(Object.keys(REASON_LABEL) as FlagReason[]).map((r) => (
                     <label
                       key={r}
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-stone-800 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm text-default hover:bg-hover"
                     >
                       <input
                         type="radio"
@@ -242,13 +242,13 @@ export function FlagForReview({
                   rows={3}
                   maxLength={2000}
                   placeholder="Anything else worth knowing?"
-                  className="mt-1 w-full resize-y rounded-md border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-400 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+                  className="mt-1 w-full resize-y rounded-md border border-line-strong bg-raised px-3 py-2 text-sm text-strong focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-400"
                 />
               </div>
 
               <label
                 htmlFor={consentId}
-                className="flex items-start gap-2 rounded border border-stone-200 bg-stone-50 p-3 text-sm text-stone-800 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200"
+                className="flex items-start gap-2 rounded border border-stone-200 bg-stone-50 p-3 text-sm text-default dark:border-stone-700 dark:bg-stone-950"
               >
                 <input
                   id={consentId}
@@ -273,7 +273,7 @@ export function FlagForReview({
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800"
+                  className="rounded-md px-3 py-1.5 text-sm text-default hover:bg-hover"
                 >
                   Cancel
                 </button>

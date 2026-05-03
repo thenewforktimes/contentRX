@@ -113,7 +113,7 @@ function UpgradeCard() {
   }
 
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Upgrade</h2>
         <span className="text-xs text-quiet">
@@ -227,7 +227,7 @@ function PaidCard({
       : null;
 
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Subscription</h2>
         <span className="text-xs text-quiet">
@@ -309,7 +309,7 @@ function IntervalToggle({
     <div
       role="radiogroup"
       aria-label="Billing interval"
-      className="inline-flex rounded-md border border-stone-200 p-0.5 dark:border-stone-800"
+      className="inline-flex rounded-md border border-line p-0.5"
     >
       {(["monthly", "annual"] as Interval[]).map((opt) => (
         <button

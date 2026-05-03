@@ -107,7 +107,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
   const hasKey = prefix !== null;
 
   return (
-    <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
+    <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">API key</h2>
         <span className="text-xs text-quiet">
@@ -149,7 +149,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       {hasKey ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <code className="rounded bg-stone-100 px-2 py-1 font-mono text-xs text-stone-700 dark:bg-stone-900 dark:text-stone-300">
+            <code className="rounded bg-stone-100 px-2 py-1 font-mono text-xs text-default dark:bg-stone-900">
               {prefix}…
             </code>
             {createdAt && (
