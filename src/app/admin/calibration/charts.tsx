@@ -101,7 +101,7 @@ export function SystemKappaTrendChart({
                 y1={y}
                 y2={y}
                 stroke="currentColor"
-                className="text-faint"
+                className="text-quiet"
                 strokeDasharray="3 3"
               />
               <text

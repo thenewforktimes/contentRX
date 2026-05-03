@@ -317,7 +317,7 @@ function Sparkline({ values }: { values: Array<number | null> }) {
       {values.map((v, i) => {
         if (v === null) {
           return (
-            <span key={i} className="text-faint">
+            <span key={i} className="text-quiet">
               ·
             </span>
           );

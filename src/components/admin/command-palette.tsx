@@ -322,7 +322,7 @@ function ResultRow({
               {result.contextLine}
             </p>
           </div>
-          <span className="shrink-0 self-center text-[11px] text-faint">
+          <span className="shrink-0 self-center text-[11px] text-quiet">
             {formatRelative(new Date(result.createdAt))}
           </span>
         </div>

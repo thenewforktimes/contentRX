@@ -34,7 +34,6 @@ export const tokens = {
       strong: "#1a1715",
       default: "#44403c",
       quiet: "#5c5650",
-      faint: "#a8a29e",
     },
     border: {
       default: "#e7e5e4",
@@ -95,7 +94,6 @@ export const tokens = {
       strong: "#fafaf7",
       default: "#e6e1da",
       quiet: "#b3aca2",
-      faint: "#75695e",
     },
     border: {
       default: "#3a342f",

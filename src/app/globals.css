@@ -18,11 +18,17 @@
  *
  * Every text-on-bg pairing has been verified against WCAG 2.1:
  *   - text-strong / default / quiet  ≥ 7:1   (AAA Normal)
- *   - text-faint                     ≥ 3:1   (decorative / disabled only)
  *   - accent-text on canvas + soft   ≥ 7:1   (AAA Normal)
  *   - accent-on-solid on solid bg    ≥ 4.5:1 (AAA Large — buttons are
  *                                              ≥14px semibold)
  *   - accent-solid as status dot     ≥ 3:1   (WCAG 1.4.11 non-text)
+ *
+ * Removed: text-faint. The 4th tier was misused for content (case
+ * IDs, gutter markers, separator dots) where the 3:1 contrast made
+ * it unreadable; light-mode value was actually 2.4:1 — failing even
+ * non-text contrast. All callers migrated to text-quiet (7+:1),
+ * which still reads as visually subordinate next to text-strong /
+ * text-default but is actually legible.
  *
  * Vibe: warm charcoal + burnished bronze. Editorial, distinctive, calm.
  * Accent hue family is tuned for harmony — primary leans amber-gold,
@@ -52,7 +58,6 @@
   --text-strong:      #fafaf7;
   --text-default:     #e6e1da;
   --text-quiet:       #b3aca2;
-  --text-faint:       #75695e;
 
   /* ─── BORDERS + RINGS ─── */
   --border-default:   #3a342f;
@@ -110,7 +115,6 @@
     --text-strong:      #1a1715;
     --text-default:     #44403c;
     --text-quiet:       #5c5650;
-    --text-faint:       #a8a29e;
 
     /* ─── BORDERS + RINGS ─── */
     --border-default:   #e7e5e4;
@@ -172,7 +176,6 @@
   --color-strong:   var(--text-strong);
   --color-default:  var(--text-default);
   --color-quiet:    var(--text-quiet);
-  --color-faint:    var(--text-faint);
 
   --color-line:           var(--border-default);
   --color-line-strong:    var(--border-strong);

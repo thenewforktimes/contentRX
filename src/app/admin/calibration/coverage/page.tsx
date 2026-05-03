@@ -317,7 +317,7 @@ export default async function CalibrationCoveragePage() {
                         {b.precedentCount}
                       </span>
                     ) : (
-                      <span className="text-faint">
+                      <span className="text-quiet">
                         —
                       </span>
                     )}
@@ -328,7 +328,7 @@ export default async function CalibrationCoveragePage() {
                         {b.pendingCount}
                       </span>
                     ) : (
-                      <span className="text-faint">
+                      <span className="text-quiet">
                         —
                       </span>
                     )}
@@ -438,7 +438,7 @@ function RejectRateCell({
 }) {
   if (rate === null) {
     return (
-      <span className="text-faint" title="No reviewed candidates yet">
+      <span className="text-quiet" title="No reviewed candidates yet">
         —
       </span>
     );

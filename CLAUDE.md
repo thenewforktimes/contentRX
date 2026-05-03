@@ -251,7 +251,7 @@ WCAG 2.1 AAA verified. See ADR-tier history in PRs #308, #309, #310,
 
 ```
 Surfaces:  bg-canvas / bg-raised / bg-sunken / bg-overlay
-Text:      text-strong / text-default / text-quiet / text-faint
+Text:      text-strong / text-default / text-quiet
 Borders:   border-line / border-line-strong
 Focus:     focus-visible:ring-ring
 Accents:   {bg|text|border}-accent-{primary|affirm|caution|concern|info}-{solid|on|soft|text|border}

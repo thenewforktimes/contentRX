@@ -162,7 +162,7 @@ function SubtypeFilterPills({
         }
         href={`/admin?subtypes=${ALL_SUBTYPES.join(",")}`}
       />
-      <span className="mx-1 self-center text-xs text-faint">
+      <span className="mx-1 self-center text-xs text-quiet">
         |
       </span>
       {ALL_SUBTYPES.map((s) => {
@@ -309,13 +309,13 @@ function QueueRow({ row }: { row: TodayQueueRow }) {
           </span>
         )}
         {row.textHash && (
-          <span className="font-mono text-faint">
+          <span className="font-mono text-quiet">
             #{row.textHash.slice(0, 12)}
           </span>
         )}
         <Link
           href={`/admin/queue?subtype=${row.subtype}`}
-          className="ml-auto text-stone-700 underline underline-offset-2 hover:text-default dark:hover:text-stone-100"
+          className="ml-auto text-quiet underline underline-offset-2 hover:text-strong"
         >
           Triage in queue →
         </Link>

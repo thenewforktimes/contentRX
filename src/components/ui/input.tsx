@@ -23,7 +23,7 @@ import type {
 } from "react";
 
 const inputBase =
-  "w-full rounded-md border border-line bg-raised px-3 py-2 text-sm text-strong placeholder:text-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full rounded-md border border-line bg-raised px-3 py-2 text-sm text-strong placeholder:text-quiet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50";
 
 export function Input({
   className = "",

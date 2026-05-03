@@ -425,7 +425,7 @@ function DiffBlock({ before, after }: { before: string; after: string }) {
       <div className="flex items-start gap-2">
         <span
           aria-hidden="true"
-          className="select-none text-faint"
+          className="select-none text-quiet"
         >
           −
         </span>
@@ -440,7 +440,7 @@ function DiffBlock({ before, after }: { before: string; after: string }) {
       <div className="flex items-start gap-2">
         <span
           aria-hidden="true"
-          className="select-none text-faint"
+          className="select-none text-quiet"
         >
           +
         </span>
