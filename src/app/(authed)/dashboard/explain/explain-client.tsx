@@ -36,6 +36,7 @@ import type { Plan } from "@/lib/quotas";
 import {
   humanizeContentType,
   humanizeMoment,
+  humanizeReviewReason,
   humanizeSeverity,
   humanizeVerdict,
 } from "@/lib/humanize";
@@ -313,7 +314,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
             moment={response.moment}
             submittedText={response.submittedText}
           />
-          {response.violations.length > 0 && (
+          {response.violations.length > 0 ? (
             <ul className="space-y-2">
               {response.violations.map((v, i) => (
                 <FindingCard
@@ -324,7 +325,9 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
                 />
               ))}
             </ul>
-          )}
+          ) : response.verdict === "review_recommended" ? (
+            <ReviewReasonFallback reviewReason={response.review_reason} />
+          ) : null}
           <p className="pt-2 text-xs text-quiet">
             Evaluated in {response.latency_ms} ms.
           </p>
@@ -412,6 +415,27 @@ function VerdictHeader({
           .
         </p>
       )}
+    </div>
+  );
+}
+
+function ReviewReasonFallback({
+  reviewReason,
+}: {
+  reviewReason: string | null;
+}) {
+  const label = humanizeReviewReason(reviewReason);
+  const explanation =
+    label.length > 0
+      ? label
+      : "We elevated this for review but didn't land on a specific suggestion";
+  return (
+    <div className="rounded-md border border-line bg-raised p-4 text-sm text-default">
+      <p>{explanation}.</p>
+      <p className="mt-2 text-quiet">
+        No concrete edit this time. Your judgment matters here. Flag it
+        above if you want a second look.
+      </p>
     </div>
   );
 }
