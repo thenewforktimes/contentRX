@@ -21,7 +21,9 @@ import {
   type RefinementEntry,
   type RefinementStatus,
 } from "@/lib/admin-refinement-log.server";
+import { LinkifyStandards } from "@/components/admin/linkify-standards";
 import { Input, Textarea } from "@/components/ui/input";
+import { getStandardsLibrary } from "@/lib/admin-substrate.server";
 import { addRefinement } from "./actions";
 
 const SECTION_ORDER: Array<{
@@ -73,6 +75,18 @@ export default function AdminRefinementLogPage() {
     approved: log.byStatus.approved.length,
     declined: log.byStatus.declined.length,
   };
+  // Pre-compute the set of valid standard IDs once so each Field can
+  // linkify its content without re-parsing the substrate per render.
+  // Refinement entries routinely name rules in the triggering-case /
+  // architectural-consequence text; these become clickable jumps to
+  // the per-standard mission-control panel at /admin/model/standards/[id].
+  const { categories } = getStandardsLibrary();
+  const validStandardIds = new Set<string>();
+  for (const cat of categories) {
+    for (const s of cat.standards) {
+      validStandardIds.add(s.id);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -134,7 +148,11 @@ export default function AdminRefinementLogPage() {
           ) : (
             <ul className="space-y-3">
               {log.byStatus[section.status].map((entry) => (
-                <RefinementCard key={`${entry.status}-${entry.id}`} entry={entry} />
+                <RefinementCard
+                  key={`${entry.status}-${entry.id}`}
+                  entry={entry}
+                  validStandardIds={validStandardIds}
+                />
               ))}
             </ul>
           )}
@@ -144,7 +162,13 @@ export default function AdminRefinementLogPage() {
   );
 }
 
-function RefinementCard({ entry }: { entry: RefinementEntry }) {
+function RefinementCard({
+  entry,
+  validStandardIds,
+}: {
+  entry: RefinementEntry;
+  validStandardIds: ReadonlySet<string>;
+}) {
   return (
     <li className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
       <header className="flex flex-wrap items-baseline gap-2">
@@ -153,7 +177,10 @@ function RefinementCard({ entry }: { entry: RefinementEntry }) {
         </span>
         {entry.title && (
           <span className="text-sm font-semibold text-strong">
-            {entry.title}
+            <LinkifyStandards
+              text={entry.title}
+              validIds={validStandardIds}
+            />
           </span>
         )}
         {entry.date_logged && (
@@ -163,18 +190,35 @@ function RefinementCard({ entry }: { entry: RefinementEntry }) {
         )}
       </header>
       <dl className="mt-3 space-y-3 text-sm">
+        {/* current_category is a category id, not a standard id —
+            keep it raw mono so it doesn't get spuriously linkified. */}
         <Field label="Current category" value={entry.current_category} mono />
-        <Field label="Proposed split" value={entry.proposed_split} />
+        <Field
+          label="Proposed split"
+          value={entry.proposed_split}
+          linkify={validStandardIds}
+        />
         <Field
           label="Triggering case"
           value={entry.triggering_case}
+          linkify={validStandardIds}
         />
         <Field
           label="Architectural consequence"
           value={entry.architectural_consequence}
+          linkify={validStandardIds}
         />
-        <Field label="Note" value={entry.note} />
-        <Field label="Verdict" value={entry.verdict} highlight />
+        <Field
+          label="Note"
+          value={entry.note}
+          linkify={validStandardIds}
+        />
+        <Field
+          label="Verdict"
+          value={entry.verdict}
+          highlight
+          linkify={validStandardIds}
+        />
       </dl>
     </li>
   );
@@ -185,11 +229,20 @@ function Field({
   value,
   mono,
   highlight,
+  linkify,
 }: {
   label: string;
   value: string | undefined;
   mono?: boolean;
   highlight?: boolean;
+  /**
+   * When provided, standard-id mentions in `value` (CLR-01, VT-04,
+   * etc.) that exist in this set are rendered as links to the
+   * per-standard mission-control page. Spurious matches that look
+   * like an ID but aren't valid render as plain text — never as a
+   * dead link.
+   */
+  linkify?: ReadonlySet<string>;
 }) {
   if (!value) return null;
   return (
@@ -206,7 +259,11 @@ function Field({
             : "text-default"
         }`}
       >
-        {value}
+        {linkify ? (
+          <LinkifyStandards text={value} validIds={linkify} />
+        ) : (
+          value
+        )}
       </dd>
     </div>
   );
