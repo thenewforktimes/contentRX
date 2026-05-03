@@ -2,9 +2,13 @@
  * Card — codifies the two card treatments the codebase already uses
  * implicitly:
  *
- *   - default: white bg + neutral-200 border. Most cards.
- *   - emphasis: neutral-50 bg + neutral-300 border. Callout / opt-out
+ *   - default:  raised surface + default border. Most cards.
+ *   - emphasis: overlay surface + strong border. Callout / opt-out
  *     boxes that should sit visually one level above default cards.
+ *
+ * Backed by the design tokens in `src/app/globals.css` so cards
+ * automatically follow the canonical dark-mode treatment without
+ * each caller re-deriving stone-{50, 200, 800, 950} pairs.
  *
  * Use `padding="md"` (default) or `padding="lg"` to match the
  * existing `p-5` vs `p-6` patterns. Pass `className` for one-off
@@ -17,10 +21,8 @@ export type CardVariant = "default" | "emphasis";
 export type CardPadding = "sm" | "md" | "lg";
 
 const variantClasses: Record<CardVariant, string> = {
-  default:
-    "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950",
-  emphasis:
-    "border-stone-300 bg-stone-50 dark:border-stone-700 dark:bg-stone-900",
+  default: "border-line bg-raised",
+  emphasis: "border-line-strong bg-overlay",
 };
 
 const paddingClasses: Record<CardPadding, string> = {

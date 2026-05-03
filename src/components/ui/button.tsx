@@ -2,9 +2,13 @@
  * Button + buttonStyles — five variants, two sizes, with proper
  * focus-visible rings.
  *
- * Pre-extraction the codebase had ~5 distinct button styles inlined
- * across pages with no central definition (per the design critique).
- * This file is the single source.
+ * Backed by the design tokens defined in `src/app/globals.css`. Filled
+ * variants use the inverse pattern (dark text on bright accent bg) in
+ * dark mode and the standard pattern (white text on darker accent bg)
+ * in light mode — both verified against WCAG 2.1 AAA Large (≥4.5:1)
+ * for ≥14px semibold text. Outlined variants (secondary, warning,
+ * danger) use accent-soft backgrounds with accent-text foregrounds
+ * (≥7:1 AAA Normal).
  *
  * Use `<Button>` for actual `<button>` elements. For Next.js `<Link>`
  * styled like a button, pass `buttonStyles({...})` to `className` —
@@ -24,15 +28,15 @@ export type ButtonSize = "sm" | "md";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300",
+    "bg-accent-primary text-accent-primary-on hover:opacity-90",
   secondary:
-    "border border-stone-300 hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900",
+    "border border-line bg-raised text-default hover:bg-overlay",
   ghost:
-    "text-stone-600 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-50",
+    "text-quiet hover:text-strong",
   warning:
-    "border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    "border border-accent-caution-border bg-accent-caution-soft text-accent-caution-text hover:opacity-90",
   danger:
-    "border border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300",
+    "border border-accent-concern-border bg-accent-concern-soft text-accent-concern-text hover:opacity-90",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -41,7 +45,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 };
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-stone-950 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50";
 
 export function buttonStyles(
   opts: {
