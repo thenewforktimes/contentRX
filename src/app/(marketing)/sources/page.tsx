@@ -52,7 +52,7 @@ export default function SourcesPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header className="mb-12">
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Attribution surface
         </p>
         <h1 className="mt-3 text-3xl font-semibold">Sources</h1>

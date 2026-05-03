@@ -402,7 +402,7 @@ function SeverityBadge({
         ? "amber"
         : "neutral";
   return (
-    <Pill tone={tone} size="xs" className="font-mono uppercase tracking-wide">
+    <Pill tone={tone} size="xs" className="font-semibold uppercase tracking-wide">
       {severity}
     </Pill>
   );

@@ -37,7 +37,7 @@ export default function AccuracyPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Accountability surface
         </p>
         <h1 className="mt-2 text-3xl font-semibold">
@@ -176,7 +176,7 @@ function MetricBlock({
           : "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950"
       }`}
     >
-      <p className="text-xs font-mono uppercase tracking-wider text-quiet">
+      <p className="text-xs font-semibold uppercase tracking-wider text-quiet">
         {label}
       </p>
       <p className="mt-1 text-xs text-quiet">

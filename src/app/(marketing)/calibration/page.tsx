@@ -27,7 +27,7 @@ export default function CalibrationIndexPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Calibration log
         </p>
         <h1 className="mt-2 text-3xl font-semibold">Weekly calibration log</h1>

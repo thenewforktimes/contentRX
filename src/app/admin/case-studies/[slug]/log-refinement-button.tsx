@@ -40,7 +40,7 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md border border-line-strong px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-default hover:bg-hover"
+        className="rounded-md border border-line-strong px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-default hover:bg-hover"
       >
         Log refinement
       </button>
@@ -100,7 +100,7 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
       />
 
       <details>
-        <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-wide text-quiet">
+        <summary className="cursor-pointer text-[10px] font-semibold uppercase tracking-wide text-quiet">
           Triggering case (auto-generated, hidden)
         </summary>
         <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words rounded bg-raised p-2 font-sans text-[11px] text-default">

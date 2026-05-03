@@ -138,7 +138,7 @@ export function TriageCluster({
     <article className="rounded-md border border-line bg-white p-4 text-sm dark:bg-stone-900">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="flex flex-wrap items-baseline gap-2">
-          <p className="font-mono text-xs uppercase tracking-wide text-quiet">
+          <p className="text-xs font-semibold uppercase tracking-wide text-quiet">
             {momentLabel} · {contentTypeLabel} · {standardId ?? "—"}
           </p>
           <Pill tone="neutral" size="xs">

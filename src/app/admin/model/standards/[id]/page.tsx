@@ -158,7 +158,7 @@ export default async function AdminStandardDetailPage({
                   <span className="text-sm font-semibold text-strong">
                     {inf.source}
                   </span>
-                  <span className="font-mono text-[10px] uppercase tracking-wide text-quiet">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
                     {inf.direction}
                   </span>
                 </div>

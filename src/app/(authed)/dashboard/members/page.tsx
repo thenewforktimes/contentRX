@@ -65,7 +65,7 @@ export default async function MembersPage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Team
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Members</h1>

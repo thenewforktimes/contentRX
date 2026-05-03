@@ -178,7 +178,7 @@ function StageCard({
         "data-[state=complete]:border-emerald-200 data-[state=complete]:bg-emerald-50/50 data-[state=complete]:dark:border-emerald-900 data-[state=complete]:dark:bg-emerald-950/20",
       ].join(" ")}
     >
-      <p className="text-[10px] font-mono uppercase tracking-widest text-quiet">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-quiet">
         Stage {index + 1}
       </p>
       <p className="mt-1 text-sm font-semibold text-strong">

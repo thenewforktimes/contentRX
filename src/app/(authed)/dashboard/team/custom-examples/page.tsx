@@ -77,7 +77,7 @@ export default async function CustomExamplesPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <header className="mb-6 flex flex-col gap-2">
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Team plan · audit view
         </p>
         <h1 className="text-2xl font-semibold">Custom examples</h1>

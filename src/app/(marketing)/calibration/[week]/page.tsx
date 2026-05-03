@@ -44,7 +44,7 @@ export default async function CalibrationWeekPage({
         </Link>
       </p>
       <header className="mt-4 mb-6">
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Calibration log
         </p>
         <h1 className="mt-2 text-2xl font-semibold">

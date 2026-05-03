@@ -136,7 +136,7 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-5xl px-6 py-10 text-sm">
       <header className="mb-8">
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Admin · rule-review queue
         </p>
         <h1 className="mt-2 text-2xl font-semibold">

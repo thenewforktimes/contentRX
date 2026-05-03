@@ -29,7 +29,7 @@ export default async function ExplainPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <header className="mb-8">
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Live demo
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Explain a verdict</h1>

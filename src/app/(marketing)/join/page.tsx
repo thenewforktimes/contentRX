@@ -122,7 +122,7 @@ export default async function JoinPage({ searchParams }: PageProps) {
   return (
     <main className="mx-auto max-w-md px-6 py-20">
       <header className="mb-6">
-        <p className="text-xs font-mono uppercase tracking-widest text-quiet">
+        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           You&apos;re invited
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
