@@ -47,7 +47,12 @@ export default async function AdminLayout({
   // Best-effort. If the count load throws (e.g. transient DB issue),
   // we'd rather render the rail with no badges than 500 the whole
   // admin surface.
-  let counts = { todayQueue: 0, overrideInbox: 0, customerFlags: 0 };
+  let counts = {
+    todayQueue: 0,
+    overrideInbox: 0,
+    customerFlags: 0,
+    library: 0,
+  };
   try {
     counts = await loadSidebarCounts();
   } catch {
@@ -87,7 +92,9 @@ export default async function AdminLayout({
                 Customer flags
               </NavLink>
               <NavLink href="/admin/queue">Queue (full)</NavLink>
-              <NavLink href="/admin/model">Library</NavLink>
+              <NavLink href="/admin/model" badge={counts.library}>
+                Library
+              </NavLink>
               <NavLink href="/admin/suggestions">Suggestions</NavLink>
               <NavLink href="/admin/refinement-log">Refinement</NavLink>
               <NavLink href="/admin/rule-review">Override rates</NavLink>
