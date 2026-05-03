@@ -96,11 +96,18 @@ let cachedStandards: {
 
 function loadStandards() {
   if (cachedStandards) return cachedStandards;
+  // Substrate lives in the gitignored private/ subdir per ADR 2026-04-25.
+  // Local dev populates it from the private substrate repo; Vercel
+  // builds populate it via scripts/fetch-substrate.sh in pre-build.
+  // (loadMoments below has had the right path since the substrate move;
+  // this one was missed in the migration — caused /admin/model to throw
+  // ENOENT and render blank.)
   const p = path.join(
     process.cwd(),
     "src",
     "content_checker",
     "standards",
+    "private",
     "standards_library.json",
   );
   const raw = JSON.parse(fs.readFileSync(p, "utf-8")) as RawStandardsLibrary;
