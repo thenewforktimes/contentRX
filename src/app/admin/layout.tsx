@@ -26,6 +26,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CommandPalette } from "@/components/admin/command-palette";
+import { Pill } from "@/components/ui/pill";
 import { isContentRXAdmin } from "@/lib/graduation";
 import { loadSidebarCounts } from "@/lib/admin/sidebar-counts";
 
@@ -54,9 +55,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-stone-950">
+    <div className="min-h-screen bg-canvas">
       <div className="mx-auto flex max-w-7xl">
-        <aside className="hidden w-60 shrink-0 border-r border-line bg-white px-4 py-6 md:block dark:bg-stone-900">
+        <aside className="hidden w-60 shrink-0 border-r border-line bg-raised px-4 py-6 md:block">
           <Link
             href="/admin"
             className="block px-2 text-sm font-semibold text-strong"
@@ -136,13 +137,13 @@ function NavLink({
     <li>
       <Link
         href={href}
-        className="flex items-center justify-between rounded-md px-2 py-1 text-stone-700 hover:bg-hover hover:text-default dark:hover:text-stone-100"
+        className="flex items-center justify-between rounded-md px-2 py-1 text-default hover:bg-hover hover:text-strong"
       >
         <span>{children}</span>
         {badge && badge > 0 ? (
-          <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs font-medium text-stone-700 dark:bg-stone-700 dark:text-stone-200">
+          <Pill tone="neutral" size="xs">
             {badge}
-          </span>
+          </Pill>
         ) : null}
       </Link>
     </li>

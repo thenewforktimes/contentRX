@@ -54,19 +54,25 @@ const toneClasses: Record<PillTone, string> = {
     "border-accent-info-border bg-accent-info-soft text-accent-info-text",
 };
 
-// Pill geometry: explicit height + horizontal padding gives reliable
-// vertical centering even with descenders (the "g" in "disagreement"
-// previously read off-center because text sat in a taller line-box than
-// the visible glyph). leading-none collapses the line-box to the glyph
-// height so the text geometrically centers; flex h-full handles the
-// rest. Horizontal padding gives the text room to breathe.
+// Pill geometry: padding-driven height + natural line-height. The
+// previous draft used h-N + leading-none to "geometrically center"
+// the glyph, but that collapsed the line-box to the em height — most
+// fonts position the visible glyph in the upper ~75% of the em-box
+// (above the baseline), so centering an em-tall line-box still made
+// the visible text read "high" with descenders ("g" in "disagreement")
+// crowding the bottom border.
+//
+// Letting line-height stay at the Tailwind default (~1.5×) gives the
+// glyph natural breathing room, and padding-driven height adapts to
+// whatever the line-box actually renders at — no clipping, no perceived
+// asymmetry.
 const sizeClasses: Record<PillSize, string> = {
-  sm: "h-6 px-3 text-xs",
-  xs: "h-5 px-2.5 text-[10px]",
+  sm: "px-3 py-1 text-xs",
+  xs: "px-2.5 py-0.5 text-[10px]",
 };
 
 const baseClasses =
-  "inline-flex items-center justify-center gap-1.5 rounded-md border font-medium leading-none";
+  "inline-flex items-center justify-center gap-1.5 rounded-md border font-medium";
 
 export function pillStyles(
   tone: PillTone = "neutral",
