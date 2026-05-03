@@ -167,9 +167,11 @@ function StageCard({
     <div
       data-state={state}
       className={[
-        // Fixed height keeps every card identical so the row never
-        // grows when content reveals on the active card.
-        "flex h-32 flex-1 flex-col rounded-lg border px-4 py-3",
+        // Cards stretch to the tallest peer via flex `items-stretch`
+        // on the parent, so they stay row-aligned without a fixed
+        // pixel height. Top-down content flow with uniform spacing
+        // — empty space (if any) sits naturally at the bottom.
+        "flex flex-1 flex-col rounded-lg border px-4 py-3",
         "transition-colors duration-500 ease-out",
         "border-line bg-raised",
         "data-[state=active]:border-accent-affirm-border data-[state=active]:bg-accent-affirm-soft",
@@ -179,14 +181,15 @@ function StageCard({
       <p className="text-[10px] font-semibold uppercase tracking-widest text-quiet">
         Stage {index + 1}
       </p>
-      <p className="mt-1 text-sm font-semibold text-strong">
+      <p className="mt-1 text-sm font-semibold leading-snug text-strong">
         {stage.label}
       </p>
       <div
         className={[
-          // Fixed-height output slot. Every stage's visual fits in
-          // a single ~28px line so cards never grow on activation.
-          "mt-auto flex h-7 items-center transition-opacity duration-500",
+          // Uniform 12px gap from the label (no mt-auto — that
+          // produced variable empty space when label length varied
+          // between 1 and 2 lines).
+          "mt-3 flex items-center transition-opacity duration-500",
           state === "pending" ? "opacity-0" : "opacity-100",
         ].join(" ")}
         aria-hidden={state === "pending"}
@@ -239,9 +242,10 @@ function SurfaceChip() {
 }
 
 /**
- * Stage 4 — the engine's suggestion. Single inline pill so the card
- * stays uniform with stage 1's surface chip. Pops in with a small
- * spring when the stage activates.
+ * Stage 4 — the engine's suggestion. Plain pill (no mono, no quotes)
+ * to match Stage 1's surface chip in width and weight; the amber
+ * tone alone signals "engine output, worth a look." Pops in with a
+ * small spring when the stage activates.
  */
 function SuggestionChip() {
   return (
@@ -251,8 +255,8 @@ function SuggestionChip() {
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       className="inline-flex"
     >
-      <Pill tone="amber" size="xs" className="font-mono">
-        &ldquo;View pricing&rdquo;
+      <Pill tone="amber" size="xs">
+        View pricing
       </Pill>
     </motion.span>
   );
