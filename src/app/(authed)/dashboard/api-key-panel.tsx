@@ -109,7 +109,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
     <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">API key</h2>
-        <span className="text-xs text-stone-500">
+        <span className="text-xs text-stone-500 dark:text-stone-400">
           Used by the Figma plugin, CLI, and GitHub Action
         </span>
       </header>
@@ -155,7 +155,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
               {prefix}…
             </code>
             {createdAt && (
-              <p className="mt-1 text-xs text-stone-500">
+              <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                 Created {formatDate(createdAt)}
               </p>
             )}

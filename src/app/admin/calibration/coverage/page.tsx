@@ -317,7 +317,7 @@ export default async function CalibrationCoveragePage() {
                         {b.precedentCount}
                       </span>
                     ) : (
-                      <span className="text-stone-400 dark:text-stone-600">
+                      <span className="text-stone-400 dark:text-stone-500">
                         —
                       </span>
                     )}
@@ -328,7 +328,7 @@ export default async function CalibrationCoveragePage() {
                         {b.pendingCount}
                       </span>
                     ) : (
-                      <span className="text-stone-400 dark:text-stone-600">
+                      <span className="text-stone-400 dark:text-stone-500">
                         —
                       </span>
                     )}

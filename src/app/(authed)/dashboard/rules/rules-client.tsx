@@ -321,7 +321,7 @@ function StandardRow({
         <p
           className={`mt-1 text-xs ${
             isDisabled
-              ? "text-stone-500 line-through dark:text-stone-600"
+              ? "text-stone-500 line-through dark:text-stone-400"
               : "text-stone-600 dark:text-stone-300"
           }`}
         >
@@ -377,7 +377,7 @@ function CustomRuleRow({
         <p className="mt-1 text-xs text-stone-700 dark:text-stone-300">
           {fields.rule}
         </p>
-        <p className="mt-1 font-mono text-[11px] text-stone-500">
+        <p className="mt-1 font-mono text-[11px] text-stone-500 dark:text-stone-400">
           pattern: <code>{fields.pattern}</code>
         </p>
       </div>

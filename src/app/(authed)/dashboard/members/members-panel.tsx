@@ -135,7 +135,7 @@ export function MembersPanel({
               >
                 <div>
                   <p className="font-medium">{p.email}</p>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
                     Sent {formatDate(p.createdAt)} · expires{" "}
                     {formatDate(p.expiresAt)}
                   </p>
@@ -172,7 +172,7 @@ export function MembersPanel({
                   )}
                 </p>
                 {!m.isOwner && (
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
                     Joined {formatDate(m.joinedAt)}
                   </p>
                 )}

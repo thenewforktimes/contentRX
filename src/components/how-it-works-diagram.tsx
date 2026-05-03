@@ -205,7 +205,7 @@ function Connector({ active }: { active: boolean }) {
   return (
     <div
       data-active={active ? "true" : "false"}
-      className="flex shrink-0 items-center justify-center self-center text-stone-300 transition-colors duration-500 data-[active=true]:text-emerald-500 dark:text-stone-700 data-[active=true]:dark:text-emerald-400 sm:self-auto sm:py-1"
+      className="flex shrink-0 items-center justify-center self-center text-stone-300 transition-colors duration-500 data-[active=true]:text-emerald-500 dark:text-stone-500 data-[active=true]:dark:text-emerald-400 sm:self-auto sm:py-1"
       aria-hidden
     >
       <svg

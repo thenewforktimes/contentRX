@@ -245,7 +245,7 @@ function Stat({
         : "text-stone-900 dark:text-stone-100";
   return (
     <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
-      <div className="text-xs uppercase tracking-wide text-stone-500">
+      <div className="text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
       </div>
       <div className={`mt-1 text-2xl font-semibold tabular-nums ${valueClasses}`}>
@@ -266,7 +266,7 @@ function FileBlock({
     <section className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <code className="text-sm font-medium">{file}</code>
-        <span className="text-xs text-stone-500">
+        <span className="text-xs text-stone-500 dark:text-stone-400">
           {items.length} {items.length === 1 ? "finding" : "findings"}
         </span>
       </header>

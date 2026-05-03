@@ -185,7 +185,7 @@ export default async function OverridesPage() {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
           Last {RANGE_DAYS} days
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Override report</h1>
@@ -222,7 +222,7 @@ export default async function OverridesPage() {
       </section>
 
       {overrides_count === 0 ? (
-        <section className="rounded-lg border border-dashed border-stone-300 p-6 text-sm text-stone-500 dark:border-stone-700">
+        <section className="rounded-lg border border-dashed border-stone-300 p-6 text-sm text-stone-500 dark:border-stone-700 dark:text-stone-400">
           Nothing to show yet. Your team hasn&apos;t dismissed any
           findings. Dismissals from the Figma plugin or{" "}
           <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-xs dark:bg-stone-900">
@@ -274,7 +274,7 @@ export default async function OverridesPage() {
             </h2>
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500 dark:border-stone-800">
+                <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500 dark:border-stone-800 dark:text-stone-400">
                   <th className="py-2">Standard</th>
                   <th className="py-2">Moment</th>
                   <th className="py-2 text-right">Overrides</th>
@@ -391,7 +391,7 @@ function Stat({
       : "text-stone-900 dark:text-stone-100";
   return (
     <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
-      <p className="text-xs uppercase tracking-wider text-stone-500">
+      <p className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400">
         {label}
       </p>
       <p className={`mt-1 text-2xl font-semibold ${valueColor}`}>{value}</p>

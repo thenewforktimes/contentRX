@@ -29,7 +29,7 @@ export default async function ExplainPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <header className="mb-8">
-        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
           Live demo
         </p>
         <h1 className="mt-2 text-2xl font-semibold">Explain a verdict</h1>
@@ -40,7 +40,7 @@ export default async function ExplainPage() {
           detected, standards applied, confidence at every hop.
           Misdetections route back to the review queue with one click.
         </p>
-        <p className="mt-3 text-xs text-stone-500">
+        <p className="mt-3 text-xs text-stone-500 dark:text-stone-400">
           Each check counts against your{" "}
           <Link href="/dashboard" className="underline underline-offset-2">
             monthly quota

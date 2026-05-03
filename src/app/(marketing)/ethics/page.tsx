@@ -30,7 +30,7 @@ export default function EthicsPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16">
       <header className="mb-10">
-        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
           ContentRX ethical framework
         </p>
         <h1 className="mt-3 text-3xl font-semibold">
@@ -298,7 +298,7 @@ export default function EthicsPage() {
         </p>
       </section>
 
-      <footer className="mt-16 text-xs text-stone-500">
+      <footer className="mt-16 text-xs text-stone-500 dark:text-stone-400">
         <p>
           Last updated 2026-04-23. This page lives under the ContentRX
           main site at <code className="font-mono">contentrx.io/ethics</code>
@@ -329,7 +329,7 @@ function Section({
 }) {
   return (
     <section className="mt-8 border-t border-stone-200 pt-8 first:border-t-0 first:pt-0 dark:border-stone-800">
-      <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
+      <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
         Commitment {number}
       </p>
       <h2 className="mt-2 text-xl font-semibold">{title}</h2>

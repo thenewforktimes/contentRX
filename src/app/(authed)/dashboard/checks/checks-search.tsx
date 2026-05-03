@@ -156,7 +156,7 @@ export function ChecksSearch({
           value={localQuery}
           onChange={(e) => onQueryChange(e.target.value)}
           placeholder="Try a phrase you remember writing"
-          className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500"
+          className="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-base text-stone-900 placeholder:text-stone-400 focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-neutral-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100 dark:placeholder:text-stone-500 dark:text-stone-400"
           autoComplete="off"
         />
         <p className="text-xs text-stone-500 dark:text-stone-400">

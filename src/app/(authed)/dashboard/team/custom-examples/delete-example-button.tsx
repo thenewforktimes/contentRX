@@ -51,7 +51,7 @@ export function DeleteExampleButton({ id }: { id: string }) {
         <button
           type="button"
           onClick={() => setState("idle")}
-          className="text-[11px] text-stone-500 underline"
+          className="text-[11px] text-stone-500 underline dark:text-stone-400"
         >
           Cancel
         </button>
@@ -60,7 +60,7 @@ export function DeleteExampleButton({ id }: { id: string }) {
   }
 
   if (state === "deleting") {
-    return <span className="text-[11px] text-stone-500">Deleting…</span>;
+    return <span className="text-[11px] text-stone-500 dark:text-stone-400">Deleting…</span>;
   }
 
   if (state === "error") {

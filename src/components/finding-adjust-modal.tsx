@@ -226,7 +226,7 @@ export function FindingAdjustModal({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-stone-700 dark:text-stone-300">
-                    Notes <span className="font-normal text-stone-500">(optional)</span>
+                    Notes <span className="font-normal text-stone-500 dark:text-stone-400">(optional)</span>
                   </label>
                   <textarea
                     value={notes}

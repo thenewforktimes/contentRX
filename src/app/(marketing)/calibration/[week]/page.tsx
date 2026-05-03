@@ -44,13 +44,13 @@ export default async function CalibrationWeekPage({
         </Link>
       </p>
       <header className="mt-4 mb-6">
-        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
           Calibration log
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
           Week {entry.week}
         </h1>
-        <p className="mt-2 text-xs text-stone-500">
+        <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
           Generated {formatIso(entry.modified_at)} ·{" "}
           {entry.size_bytes.toLocaleString()} bytes
         </p>
@@ -62,7 +62,7 @@ export default async function CalibrationWeekPage({
         </pre>
       </article>
 
-      <p className="mt-6 text-xs text-stone-500">
+      <p className="mt-6 text-xs text-stone-500 dark:text-stone-400">
         Source:{" "}
         <a
           href={`https://github.com/thenewforktimes/contentRX/blob/main/reports/calibration/${entry.filename}`}

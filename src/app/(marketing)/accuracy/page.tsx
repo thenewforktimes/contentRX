@@ -37,7 +37,7 @@ export default function AccuracyPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
-        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
           Accountability surface
         </p>
         <h1 className="mt-2 text-3xl font-semibold">
@@ -51,7 +51,7 @@ export default function AccuracyPage() {
           et al., 2019) guidance on honest metric reporting with
           intervals.
         </p>
-        <p className="mt-3 text-xs text-stone-500">
+        <p className="mt-3 text-xs text-stone-500 dark:text-stone-400">
           {snap.generated_at
             ? `Snapshot generated ${formatIso(snap.generated_at)}.`
             : "Snapshot pending. The nightly generator has not run yet."}
@@ -106,7 +106,7 @@ export default function AccuracyPage() {
             count={snap.by_level.autonomous}
           />
         </dl>
-        <p className="mt-3 text-xs text-stone-500">
+        <p className="mt-3 text-xs text-stone-500 dark:text-stone-400">
           {snap.standards_measured} of {snap.standards_total} standards have
           completed the weekly κ series.
         </p>
@@ -139,7 +139,7 @@ export default function AccuracyPage() {
         </p>
       </section>
 
-      <footer className="mt-16 text-xs text-stone-500">
+      <footer className="mt-16 text-xs text-stone-500 dark:text-stone-400">
         <p>
           Public snapshot at{" "}
           <a
@@ -176,7 +176,7 @@ function MetricBlock({
           : "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950"
       }`}
     >
-      <p className="text-xs font-mono uppercase tracking-wider text-stone-500">
+      <p className="text-xs font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400">
         {label}
       </p>
       <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
@@ -189,11 +189,11 @@ function MetricBlock({
               {kappa.value.toFixed(3)}
             </p>
             {isTarget ? (
-              <p className="mt-1 text-xs text-stone-500">
+              <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                 Design assumption · stated separately from measurements
               </p>
             ) : (
-              <p className="mt-1 text-xs text-stone-500 tabular-nums">
+              <p className="mt-1 text-xs text-stone-500 tabular-nums dark:text-stone-400">
                 95% CI [{kappa.ci_low.toFixed(3)},{" "}
                 {kappa.ci_high.toFixed(3)}] · n = {kappa.sample_size}
               </p>
@@ -201,10 +201,10 @@ function MetricBlock({
           </>
         ) : (
           <>
-            <p className="font-mono text-2xl font-semibold text-stone-500">
+            <p className="font-mono text-2xl font-semibold text-stone-500 dark:text-stone-400">
               pending
             </p>
-            <p className="mt-1 text-xs text-stone-500">{kappa.reason}</p>
+            <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">{kappa.reason}</p>
           </>
         )}
       </div>
@@ -221,7 +221,7 @@ function LadderCell({
 }) {
   return (
     <div className="rounded-md border border-stone-200 bg-white px-4 py-3 dark:border-stone-800 dark:bg-stone-950">
-      <dt className="text-xs uppercase tracking-wide text-stone-500">
+      <dt className="text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
         <code className="font-mono">{label}</code>
       </dt>
       <dd className="mt-1 text-lg font-semibold tabular-nums">{count}</dd>

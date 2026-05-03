@@ -114,7 +114,7 @@ function UpgradeCard() {
     <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Upgrade</h2>
-        <span className="text-xs text-stone-500">
+        <span className="text-xs text-stone-500 dark:text-stone-400">
           Billed monthly or annually. Cancel anytime.
         </span>
       </header>
@@ -233,7 +233,7 @@ function PaidCard({
     <section className="rounded-lg border border-stone-200 p-5 dark:border-stone-800">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Subscription</h2>
-        <span className="text-xs text-stone-500">
+        <span className="text-xs text-stone-500 dark:text-stone-400">
           Billing handled by Stripe
         </span>
       </header>
@@ -246,7 +246,7 @@ function PaidCard({
         )}
       </p>
       {currentPeriodEnd && (
-        <p className="mb-3 text-xs text-stone-500">
+        <p className="mb-3 text-xs text-stone-500 dark:text-stone-400">
           Renews {formatDate(currentPeriodEnd)}
         </p>
       )}
@@ -292,7 +292,7 @@ function PlanOption({
     >
       <div className="mb-1 flex items-baseline justify-between">
         <span className="text-sm font-semibold">{name}</span>
-        <span className="text-xs text-stone-500">{price}</span>
+        <span className="text-xs text-stone-500 dark:text-stone-400">{price}</span>
       </div>
       <p className="text-xs text-stone-600 dark:text-stone-300">
         {description}

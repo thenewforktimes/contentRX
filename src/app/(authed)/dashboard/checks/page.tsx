@@ -192,7 +192,7 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
       <header>
         <Link
           href="/dashboard"
-          className="text-xs text-stone-500 hover:text-stone-900 dark:hover:text-stone-100"
+          className="text-xs text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100"
         >
           ← Back to dashboard
         </Link>

@@ -19,7 +19,7 @@ export function Eyebrow({
 }) {
   return (
     <p
-      className={`text-xs font-mono uppercase tracking-widest text-stone-500 ${className}`.trim()}
+      className={`text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400 ${className}`.trim()}
     >
       {children}
     </p>

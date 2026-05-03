@@ -286,7 +286,7 @@ function SurfaceChip({
       className="flex items-baseline gap-2 rounded-md border border-stone-300 px-3 py-1.5 text-xs hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
     >
       <span className="font-mono font-semibold">{label}</span>
-      <span className="text-stone-500">{tagline}</span>
+      <span className="text-stone-500 dark:text-stone-400">{tagline}</span>
     </a>
   );
 }

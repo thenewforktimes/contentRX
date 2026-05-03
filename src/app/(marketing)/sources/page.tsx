@@ -52,7 +52,7 @@ export default function SourcesPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header className="mb-12">
-        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
           Attribution surface
         </p>
         <h1 className="mt-3 text-3xl font-semibold">Sources</h1>
@@ -154,7 +154,7 @@ export default function SourcesPage() {
         </p>
       </section>
 
-      <footer className="mt-16 text-xs text-stone-500">
+      <footer className="mt-16 text-xs text-stone-500 dark:text-stone-400">
         <p>
           Generated {formatDate(data.generated_at)} from committed
           attribution metadata. Source:{" "}
@@ -174,7 +174,7 @@ export default function SourcesPage() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-stone-200 bg-stone-50 px-4 py-3 dark:border-stone-800 dark:bg-stone-900">
-      <dt className="text-xs uppercase tracking-wide text-stone-500">
+      <dt className="text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
         {label}
       </dt>
       <dd className="mt-1 text-lg font-semibold tabular-nums">{value}</dd>
@@ -208,7 +208,7 @@ function StyleGuideCard({ source }: { source: StyleGuideSource }) {
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-stone-700 dark:text-stone-300">
         <div>
-          <dt className="text-xs uppercase tracking-wide text-stone-500">
+          <dt className="text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Standards influenced
           </dt>
           <dd className="mt-0.5 tabular-nums">
@@ -216,7 +216,7 @@ function StyleGuideCard({ source }: { source: StyleGuideSource }) {
           </dd>
         </div>
         <div>
-          <dt className="text-xs uppercase tracking-wide text-stone-500">
+          <dt className="text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Example pairs
           </dt>
           <dd className="mt-0.5 tabular-nums">
@@ -225,7 +225,7 @@ function StyleGuideCard({ source }: { source: StyleGuideSource }) {
         </div>
       </dl>
 
-      <p className="mt-4 text-xs text-stone-500">
+      <p className="mt-4 text-xs text-stone-500 dark:text-stone-400">
         <a
           href={optOutMailto(source.name)}
           className="underline underline-offset-2"
@@ -267,7 +267,7 @@ function OSSRepoCard({ repo }: { repo: OSSRepoSource }) {
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-stone-700 dark:text-stone-300">
         <div>
-          <dt className="text-xs uppercase tracking-wide text-stone-500">
+          <dt className="text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Quality signals
           </dt>
           <dd className="mt-0.5 text-xs">
@@ -275,7 +275,7 @@ function OSSRepoCard({ repo }: { repo: OSSRepoSource }) {
           </dd>
         </div>
         <div>
-          <dt className="text-xs uppercase tracking-wide text-stone-500">
+          <dt className="text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
             Last crawl
           </dt>
           <dd className="mt-0.5 text-xs tabular-nums">
@@ -286,7 +286,7 @@ function OSSRepoCard({ repo }: { repo: OSSRepoSource }) {
         </div>
       </dl>
 
-      <p className="mt-4 text-xs text-stone-500">
+      <p className="mt-4 text-xs text-stone-500 dark:text-stone-400">
         <a
           href={optOutMailto(`${repo.owner}/${repo.name}`)}
           className="underline underline-offset-2"

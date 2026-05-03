@@ -27,7 +27,7 @@ export default function CalibrationIndexPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
-        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-500 dark:text-stone-400">
           Calibration log
         </p>
         <h1 className="mt-2 text-3xl font-semibold">Weekly calibration log</h1>
@@ -49,7 +49,7 @@ export default function CalibrationIndexPage() {
       </header>
 
       {entries.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-6 text-center text-sm text-stone-500 dark:border-stone-700 dark:bg-stone-900">
+        <p className="rounded-lg border border-dashed border-stone-300 bg-white px-4 py-6 text-center text-sm text-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400">
           No calibration log entries yet. The Monday cron generator
           publishes new entries as they land.
         </p>
@@ -65,7 +65,7 @@ export default function CalibrationIndexPage() {
                   <h2 className="font-mono text-base font-semibold">
                     Week {entry.week}
                   </h2>
-                  <span className="font-mono text-[10px] text-stone-500">
+                  <span className="font-mono text-[10px] text-stone-500 dark:text-stone-400">
                     {formatIso(entry.modified_at)}
                   </span>
                 </div>

@@ -30,7 +30,7 @@ export default function DashboardLayout({
             <SignOutButton>
               <button
                 type="button"
-                className="text-stone-500 hover:text-stone-900 dark:hover:text-stone-100"
+                className="text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100"
               >
                 Sign out
               </button>

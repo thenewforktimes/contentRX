@@ -171,7 +171,7 @@ export default function PrivacyPage() {
         </p>
         <table className="mt-4 w-full text-sm">
           <thead>
-            <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500 dark:border-stone-800">
+            <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wider text-stone-500 dark:border-stone-800 dark:text-stone-400">
               <th className="py-2 pr-4">Subprocessor</th>
               <th className="py-2 pr-4">Purpose</th>
               <th className="py-2">Data they see</th>
