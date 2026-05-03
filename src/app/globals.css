@@ -39,7 +39,7 @@
 :root {
   /* ─── SURFACES ─── */
   --surface-canvas:   #14142b;
-  --surface-raised:   #1d1d3e;
+  --surface-raised:   #22224a;
   --surface-sunken:   #0d0d1f;
   --surface-overlay:  #2a2b50;
 
@@ -52,13 +52,21 @@
   --state-hover-bg:   #2a2b50;
 
   /* ─── TEXT ─── */
-  --text-strong:      #f3efe5;
-  --text-default:     #c5c0b5;
-  --text-quiet:       #aaa494;
+  /* Cool near-whites with the same blue-violet undertone as the
+     canvas. The previous warm cream (#f3efe5, R243 G239 B229) read
+     as muddy because warm-on-cool fights the canvas — the eye sees
+     the cream as "yellowed" against the deep navy. Cool whites
+     match the canvas family; reads crisp like Plausible / Sentry. */
+  --text-strong:      #eef0f5;
+  --text-default:     #c4c8d0;
+  --text-quiet:       #a0a4b0;
 
   /* ─── BORDERS + RINGS ─── */
-  --border-default:   #2c2c52;
-  --border-strong:    #45456e;
+  /* Borders bumped to ≥3:1 vs canvas (WCAG 1.4.11) so card edges
+     actually define cards. Previous values (#2c2c52 = 1.36:1) made
+     containers feel like they were floating in space. */
+  --border-default:   #646494;
+  --border-strong:    #7070b4;
   --ring-focus:       #fb923c;
 
   /* ─── ACCENT: PRIMARY (warm orange — the brand colour) ─── */
@@ -114,8 +122,11 @@
     --text-quiet:       #574e3f;
 
     /* ─── BORDERS + RINGS ─── */
-    --border-default:   #d9cfb6;
-    --border-strong:    #b8ad94;
+    /* Bumped to ≥3:1 vs canvas (WCAG 1.4.11) so card edges actually
+       define cards in light mode too. Previous values (#d9cfb6 =
+       1.35:1) felt like the borders weren't there. */
+    --border-default:   #888070;
+    --border-strong:    #7e7565;
     --ring-focus:       #c2410c;
 
     /* ─── ACCENT: PRIMARY ─── */
