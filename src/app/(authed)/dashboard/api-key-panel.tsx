@@ -11,6 +11,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertDialog } from "@/components/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   initialPrefix: string | null;
@@ -115,27 +116,24 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       </header>
 
       {state.kind === "fresh" && (
-        <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-800 dark:bg-amber-950">
-          <p className="mb-2 font-medium text-amber-900 dark:text-amber-200">
+        <div className="mb-4 rounded-md border border-accent-caution-border bg-accent-caution-soft p-3 text-sm text-accent-caution-text">
+          <p className="mb-2 font-medium">
             Copy this key now. We won&apos;t show it again.
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 truncate rounded border border-amber-200 bg-white px-2 py-1 font-mono text-xs text-stone-900 select-all dark:border-amber-800 dark:bg-stone-900 dark:text-stone-100">
+            <code className="flex-1 truncate rounded border border-accent-caution-border bg-raised px-2 py-1 font-mono text-xs text-strong select-all">
               {state.rawKey}
             </code>
-            <button
-              type="button"
+            <Button
+              variant="warning"
+              size="sm"
               onClick={() => copyKey(state.rawKey)}
-              className="rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:bg-stone-900 dark:text-amber-200 dark:hover:bg-stone-800"
             >
               {copyState === "copied" ? "Copied" : "Copy"}
-            </button>
+            </Button>
           </div>
           {copyState === "failed" && (
-            <p
-              role="status"
-              className="mt-2 text-xs text-amber-900 dark:text-amber-200"
-            >
+            <p role="status" className="mt-2 text-xs">
               Copy failed. Select the text above and copy it manually.
             </p>
           )}
@@ -143,7 +141,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       )}
 
       {state.kind === "error" && (
-        <div className="mb-4 rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">
+        <div className="mb-4 rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-sm text-accent-concern-text">
           {state.message}
         </div>
       )}
@@ -161,22 +159,22 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
             )}
           </div>
           <div className="flex gap-2">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               disabled={isLoading}
               onClick={rotate}
-              className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-900"
             >
               {isLoading && state.action === "rotate" ? "Rotating…" : "Rotate"}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
               disabled={isLoading}
               onClick={() => setConfirmingRevoke(true)}
-              className="rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950"
             >
               {isLoading && state.action === "revoke" ? "Revoking…" : "Revoke"}
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -185,14 +183,9 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
             No active API key. Generate one to sign in from the Figma plugin
             or the CLI.
           </p>
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={rotate}
-            className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
-          >
+          <Button disabled={isLoading} onClick={rotate} size="sm">
             {isLoading ? "Generating…" : "Generate key"}
-          </button>
+          </Button>
         </div>
       )}
 

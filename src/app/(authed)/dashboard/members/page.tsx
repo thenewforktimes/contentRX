@@ -11,6 +11,7 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { buttonStyles } from "@/components/ui/button";
 import {
   countSeats,
   listMembers,
@@ -47,10 +48,7 @@ export default async function MembersPage() {
           Available on the Team plan. Invite teammates to share your
           monthly check limit, custom rules, and custom examples.
         </p>
-        <Link
-          href="/dashboard"
-          className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
-        >
+        <Link href="/dashboard" className={buttonStyles({ size: "sm" })}>
           Upgrade to Team
         </Link>
       </section>

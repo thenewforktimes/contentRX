@@ -1,17 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Button, Heading, Text } from "@react-email/components";
-import { EmailShell } from "./_shell";
-
-const button: React.CSSProperties = {
-  backgroundColor: "#000000",
-  color: "#ffffff",
-  borderRadius: 6,
-  padding: "10px 20px",
-  fontWeight: 500,
-  fontSize: 14,
-  textDecoration: "none",
-  display: "inline-block",
-};
+import { EmailShell, primaryButton, subheadingStyle } from "./_shell";
 
 export function QuotaExhaustedEmail({
   appUrl,
@@ -34,7 +23,7 @@ export function QuotaExhaustedEmail({
           : "Team";
   return (
     <EmailShell preview={`Used all ${quota} ${planLabel} checks for the month.`}>
-      <Heading as="h1" style={{ fontSize: 20, marginBottom: 12 }}>
+      <Heading as="h1" style={subheadingStyle}>
         You've used your {quota} checks this month.
       </Heading>
       <Text>
@@ -59,7 +48,7 @@ export function QuotaExhaustedEmail({
               ? `${appUrl}/dashboard?upgrade=pro`
               : `${appUrl}/dashboard`
           }
-          style={button}
+          style={primaryButton}
         >
           {plan === "free" ? "Upgrade to Pro" : "Open dashboard"}
         </Button>

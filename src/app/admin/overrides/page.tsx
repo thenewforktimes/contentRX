@@ -20,6 +20,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
+import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
@@ -276,20 +277,20 @@ function TriageForm({
         placeholder="Optional one-line note"
         className="flex-1 min-w-[180px] rounded-md border border-stone-300 bg-white px-2 py-1 text-xs text-stone-900 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
       />
-      <button
+      <Button
         type="submit"
         name="newStatus"
         value="addressed_corpus"
+        size="sm"
         disabled={!canAddToCorpus}
         title={
           canAddToCorpus
             ? undefined
             : "Pilot did not opt in to share text; triage to corpus unavailable"
         }
-        className="rounded-md bg-emerald-700 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-300 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300 dark:disabled:bg-emerald-900 dark:disabled:text-emerald-700"
       >
         Add to corpus
-      </button>
+      </Button>
       <button
         type="submit"
         name="newStatus"

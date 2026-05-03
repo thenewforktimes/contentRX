@@ -15,6 +15,7 @@ import { auth } from "@clerk/nextjs/server";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { buttonStyles } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
@@ -51,10 +52,7 @@ export default async function OverridesPage() {
           disagrees with most so you can disable or tune them in team
           rules.
         </p>
-        <Link
-          href="/dashboard"
-          className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
-        >
+        <Link href="/dashboard" className={buttonStyles({ size: "sm" })}>
           Upgrade to Team
         </Link>
       </section>

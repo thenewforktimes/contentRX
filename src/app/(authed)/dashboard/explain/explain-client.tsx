@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 import { FindingAdjustModal } from "@/components/finding-adjust-modal";
 import { FindingMakeRuleModal } from "@/components/finding-make-rule-modal";
 import { FlagForReview } from "@/components/flag-for-review";
-import { Button } from "@/components/ui/button";
+import { Button, buttonStyles } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 import type { PublicCheckEnvelope, PublicViolation } from "@/lib/api-envelope";
 import {
@@ -495,24 +495,24 @@ function DiffSpan({
  *   - one CTA when there's a useful one, never a list of links
  */
 function ErrorBlock({ error }: { error: CheckError }) {
+  const cautionBox =
+    "flex flex-col gap-2 rounded-md border border-accent-caution-border bg-accent-caution-soft p-4 text-sm text-accent-caution-text";
+  const concernBox =
+    "flex flex-col gap-2 rounded-md border border-accent-concern-border bg-accent-concern-soft p-4 text-sm text-accent-concern-text";
+
   if (error.kind === "quota") {
     const resetDay = error.resetsAt ? formatResetDate(error.resetsAt) : null;
     return (
-      <div
-        role="alert"
-        className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
-      >
-        <h3 className="font-semibold text-amber-900 dark:text-amber-200">
-          Monthly limit reached
-        </h3>
-        <p className="text-amber-900 dark:text-amber-300">
+      <div role="alert" className={cautionBox}>
+        <h3 className="font-semibold">Monthly limit reached</h3>
+        <p>
           You&apos;ve used all {error.quota.toLocaleString()} checks for this
           month
           {resetDay ? `. Resets ${resetDay}` : ""}.
         </p>
         <Link
           href="/pricing?from=quota"
-          className="mt-1 inline-block self-start rounded-md bg-amber-900 px-3 py-1.5 text-xs font-medium text-amber-50 hover:opacity-90 dark:bg-amber-200 dark:text-amber-950"
+          className={buttonStyles({ variant: "warning", size: "sm", className: "self-start" })}
         >
           View plans
         </Link>
@@ -521,30 +521,18 @@ function ErrorBlock({ error }: { error: CheckError }) {
   }
   if (error.kind === "auth") {
     return (
-      <div
-        role="alert"
-        className="flex flex-col gap-2 rounded-md border border-rose-300 bg-rose-50 p-4 text-sm dark:border-rose-800 dark:bg-rose-950"
-      >
-        <h3 className="font-semibold text-rose-900 dark:text-rose-200">
-          Session expired
-        </h3>
-        <p className="text-rose-900 dark:text-rose-300">
-          You were signed out. Refresh the page to sign back in.
-        </p>
+      <div role="alert" className={concernBox}>
+        <h3 className="font-semibold">Session expired</h3>
+        <p>You were signed out. Refresh the page to sign back in.</p>
       </div>
     );
   }
   if (error.kind === "rate_limit") {
     const seconds = error.retryAfterSeconds;
     return (
-      <div
-        role="alert"
-        className="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
-      >
-        <h3 className="font-semibold text-amber-900 dark:text-amber-200">
-          Hold on a sec
-        </h3>
-        <p className="text-amber-900 dark:text-amber-300">
+      <div role="alert" className={cautionBox}>
+        <h3 className="font-semibold">Hold on a sec</h3>
+        <p>
           Too many checks too fast
           {seconds ? `. Try again in ${seconds}s` : ", try again in a moment"}.
         </p>
@@ -553,14 +541,9 @@ function ErrorBlock({ error }: { error: CheckError }) {
   }
   if (error.kind === "server") {
     return (
-      <div
-        role="alert"
-        className="flex flex-col gap-2 rounded-md border border-rose-300 bg-rose-50 p-4 text-sm dark:border-rose-800 dark:bg-rose-950"
-      >
-        <h3 className="font-semibold text-rose-900 dark:text-rose-200">
-          Something broke on our end
-        </h3>
-        <p className="text-rose-900 dark:text-rose-300">
+      <div role="alert" className={concernBox}>
+        <h3 className="font-semibold">Something broke on our end</h3>
+        <p>
           The check service hit an error. Try again. If it keeps happening,
           it&apos;s on us.
         </p>
@@ -569,29 +552,17 @@ function ErrorBlock({ error }: { error: CheckError }) {
   }
   if (error.kind === "network") {
     return (
-      <div
-        role="alert"
-        className="flex flex-col gap-2 rounded-md border border-rose-300 bg-rose-50 p-4 text-sm dark:border-rose-800 dark:bg-rose-950"
-      >
-        <h3 className="font-semibold text-rose-900 dark:text-rose-200">
-          Couldn&apos;t reach the check service
-        </h3>
-        <p className="text-rose-900 dark:text-rose-300">
-          Check your connection and try again.
-        </p>
+      <div role="alert" className={concernBox}>
+        <h3 className="font-semibold">Couldn&apos;t reach the check service</h3>
+        <p>Check your connection and try again.</p>
       </div>
     );
   }
   // unknown: render the upstream message but in a readable shape.
   return (
-    <div
-      role="alert"
-      className="flex flex-col gap-2 rounded-md border border-rose-300 bg-rose-50 p-4 text-sm dark:border-rose-800 dark:bg-rose-950"
-    >
-      <h3 className="font-semibold text-rose-900 dark:text-rose-200">
-        Couldn&apos;t complete the check
-      </h3>
-      <p className="text-rose-900 dark:text-rose-300">{error.message}</p>
+    <div role="alert" className={concernBox}>
+      <h3 className="font-semibold">Couldn&apos;t complete the check</h3>
+      <p>{error.message}</p>
     </div>
   );
 }

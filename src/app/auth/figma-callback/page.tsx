@@ -17,6 +17,7 @@ import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { buttonStyles } from "@/components/ui/button";
 import { getDb, schema } from "@/db";
 import { apiKeyPrefix, generateApiKey, hashApiKey } from "@/lib/api-key";
 import {
@@ -179,7 +180,7 @@ export default async function FigmaCallbackPage({ searchParams }: PageProps) {
           <input type="hidden" name="handoff" value={handoff} />
           <button
             type="submit"
-            className="w-full rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
+            className={buttonStyles({ className: "w-full" })}
           >
             Revoke existing key and sign in to plugin
           </button>

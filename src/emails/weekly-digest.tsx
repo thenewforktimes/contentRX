@@ -17,35 +17,14 @@ import { Heading, Link, Section, Text } from "@react-email/components";
 import type { WeeklyDigestPayload } from "@/lib/cadence";
 import { humanizeMoment } from "@/lib/humanize";
 import { STANDARDS_BY_ID } from "@/lib/standards";
-import { EmailShell } from "./_shell";
-
-const heading: React.CSSProperties = {
-  fontSize: 18,
-  fontWeight: 600,
-  color: "#111",
-  margin: "0 0 12px",
-};
-
-const sub: React.CSSProperties = {
-  fontSize: 13,
-  color: "#555",
-  margin: "0 0 4px",
-};
-
-const body: React.CSSProperties = {
-  fontSize: 14,
-  color: "#222",
-  lineHeight: "1.5",
-  margin: "0 0 12px",
-};
-
-const flagBox: React.CSSProperties = {
-  backgroundColor: "#fff7ed",
-  border: "1px solid #fed7aa",
-  borderRadius: 6,
-  padding: 12,
-  marginBottom: 8,
-};
+import {
+  EmailShell,
+  bodyStyle as body,
+  cautionBox as flagBox,
+  primaryButton,
+  subStyle as sub,
+  subheadingStyle as heading,
+} from "./_shell";
 
 // Render a standard's human-readable rule text. Falls back to a
 // generic phrase for custom (TEAM-NN) rules so we never leak the raw
@@ -108,18 +87,7 @@ export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload })
       </Section>
 
       <Section style={{ marginTop: 24 }}>
-        <Link
-          href={payload.dashboardUrl}
-          style={{
-            display: "inline-block",
-            backgroundColor: "#111",
-            color: "#fff",
-            padding: "10px 16px",
-            borderRadius: 6,
-            fontSize: 14,
-            textDecoration: "none",
-          }}
-        >
+        <Link href={payload.dashboardUrl} style={primaryButton}>
           View override report
         </Link>
       </Section>

@@ -10,6 +10,7 @@
  */
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Pill, type PillTone } from "@/components/ui/pill";
 import type { Plan } from "@/lib/quotas";
 
@@ -160,19 +161,14 @@ function UpgradeCard() {
       </div>
 
       {error && (
-        <div className="mb-3 rounded-md border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">
+        <div className="mb-3 rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-xs text-accent-concern-text">
           {error}
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={submit}
-        disabled={loading}
-        className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
-      >
+      <Button onClick={submit} disabled={loading}>
         {loading ? "Redirecting to Stripe…" : "Continue to checkout"}
-      </button>
+      </Button>
     </section>
   );
 }
@@ -251,18 +247,18 @@ function PaidCard({
         </p>
       )}
       {error && (
-        <div className="mb-3 rounded-md border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">
+        <div className="mb-3 rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-xs text-accent-concern-text">
           {error}
         </div>
       )}
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={openPortal}
         disabled={loading}
-        className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:hover:bg-stone-900"
       >
         {loading ? "Redirecting to Stripe…" : "Manage subscription"}
-      </button>
+      </Button>
     </section>
   );
 }

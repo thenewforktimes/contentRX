@@ -1,17 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Button, Heading, Text } from "@react-email/components";
-import { EmailShell } from "./_shell";
-
-const button: React.CSSProperties = {
-  backgroundColor: "#000000",
-  color: "#ffffff",
-  borderRadius: 6,
-  padding: "10px 20px",
-  fontWeight: 500,
-  fontSize: 14,
-  textDecoration: "none",
-  display: "inline-block",
-};
+import { EmailShell, primaryButton, subheadingStyle } from "./_shell";
 
 export function InviteAcceptedEmail({
   appUrl,
@@ -22,7 +11,7 @@ export function InviteAcceptedEmail({
 }) {
   return (
     <EmailShell preview={`${inviteeEmail} joined your ContentRX team.`}>
-      <Heading as="h1" style={{ fontSize: 20, marginBottom: 12 }}>
+      <Heading as="h1" style={subheadingStyle}>
         {inviteeEmail} joined your team.
       </Heading>
       <Text>
@@ -30,7 +19,7 @@ export function InviteAcceptedEmail({
         to your shared monthly quota.
       </Text>
       <Text style={{ marginTop: 20 }}>
-        <Button href={`${appUrl}/dashboard`} style={button}>
+        <Button href={`${appUrl}/dashboard`} style={primaryButton}>
           Open dashboard
         </Button>
       </Text>

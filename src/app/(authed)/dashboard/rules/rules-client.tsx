@@ -16,6 +16,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertDialog } from "@/components/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 import type { CategorySummary } from "@/lib/standards";
 
@@ -165,7 +166,7 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
   return (
     <div className="flex flex-col gap-8">
       {error && (
-        <div className="rounded-md border border-rose-300 bg-rose-50 p-3 text-sm text-rose-900 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-200">
+        <div className="rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-sm text-accent-concern-text">
           {error}
         </div>
       )}
@@ -468,13 +469,9 @@ function AddCustomRuleCard({
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="self-start rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
-      >
+      <Button onClick={() => setOpen(true)} size="sm" className="self-start">
         Add custom rule
-      </button>
+      </Button>
     );
   }
 
@@ -545,14 +542,13 @@ function AddCustomRuleCard({
           </label>
         </div>
         <div className="flex gap-2">
-          <button
-            type="button"
+          <Button
             disabled={busy || !title || !rule || !pattern}
             onClick={submit}
-            className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
+            size="sm"
           >
             {busy ? "Saving…" : "Create rule"}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={() => setOpen(false)}

@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Pill } from "@/components/ui/pill";
 
 type State = "idle" | "submitting" | "error";
 
@@ -42,21 +44,13 @@ export function JoinButton({ token }: { token: string }) {
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={onAccept}
-        disabled={state === "submitting"}
-        className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
-      >
+      <Button onClick={onAccept} disabled={state === "submitting"}>
         {state === "submitting" ? "Joining…" : "Accept invitation"}
-      </button>
+      </Button>
       {error && (
-        <p
-          role="alert"
-          className="mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300"
-        >
-          {error}
-        </p>
+        <div role="alert" className="mt-3">
+          <Pill tone="red">{error}</Pill>
+        </div>
       )}
     </div>
   );

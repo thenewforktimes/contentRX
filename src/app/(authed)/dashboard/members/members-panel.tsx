@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 
 type Member = {
@@ -101,13 +102,13 @@ export function MembersPanel({
             disabled={state === "submitting" || seatsAvailable === 0}
             className="flex-1 min-w-[240px] rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
           />
-          <button
+          <Button
             type="submit"
             disabled={state === "submitting" || seatsAvailable === 0 || !email.trim()}
-            className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
+            size="sm"
           >
             {state === "submitting" ? "Sending…" : "Send invite"}
-          </button>
+          </Button>
         </form>
         {error && (
           <p

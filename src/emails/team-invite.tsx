@@ -1,17 +1,11 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Button, Heading, Text } from "@react-email/components";
-import { EmailShell } from "./_shell";
-
-const button: React.CSSProperties = {
-  backgroundColor: "#000000",
-  color: "#ffffff",
-  borderRadius: 6,
-  padding: "10px 20px",
-  fontWeight: 500,
-  fontSize: 14,
-  textDecoration: "none",
-  display: "inline-block",
-};
+import {
+  EmailShell,
+  captionStyle,
+  primaryButton,
+  subheadingStyle,
+} from "./_shell";
 
 export function TeamInviteEmail({
   appUrl,
@@ -26,7 +20,7 @@ export function TeamInviteEmail({
     <EmailShell
       preview={`${teamOwnerEmail} invited you to a ContentRX team.`}
     >
-      <Heading as="h1" style={{ fontSize: 20, marginBottom: 12 }}>
+      <Heading as="h1" style={subheadingStyle}>
         You're invited to a ContentRX team.
       </Heading>
       <Text>
@@ -35,11 +29,11 @@ export function TeamInviteEmail({
         check quota.
       </Text>
       <Text style={{ marginTop: 20 }}>
-        <Button href={acceptUrl} style={button}>
+        <Button href={acceptUrl} style={primaryButton}>
           Accept invite
         </Button>
       </Text>
-      <Text style={{ fontSize: 12, color: "#777" }}>
+      <Text style={captionStyle}>
         If you didn't expect this, you can ignore the email. Nothing
         happens until you click Accept. Or visit {appUrl} to learn more.
       </Text>

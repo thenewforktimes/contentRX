@@ -227,9 +227,9 @@ function Connector({ active }: { active: boolean }) {
 function ThinkingDots() {
   return (
     <span className="inline-flex items-end gap-1" aria-label="Reviewing">
-      <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-emerald-500" />
-      <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-emerald-500 [animation-delay:0.2s]" />
-      <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-emerald-500 [animation-delay:0.4s]" />
+      <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-accent-primary" />
+      <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-accent-primary [animation-delay:0.2s]" />
+      <span className="thinking-dot h-1.5 w-1.5 rounded-full bg-accent-primary [animation-delay:0.4s]" />
     </span>
   );
 }

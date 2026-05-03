@@ -7,6 +7,7 @@
  */
 
 import { useEffect, useId, useRef } from "react";
+import { buttonStyles } from "@/components/ui/button";
 
 type Props = {
   open: boolean;
@@ -77,10 +78,11 @@ export function AlertDialog({
 
   if (!open) return null;
 
-  const confirmClass =
-    tone === "danger"
-      ? "rounded-md border border-rose-600 bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700"
-      : "rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300";
+  const confirmClass = buttonStyles({
+    variant: tone === "danger" ? "danger" : "primary",
+    size: "sm",
+  });
+  const cancelClass = buttonStyles({ variant: "secondary", size: "sm" });
 
   return (
     <div
@@ -94,15 +96,12 @@ export function AlertDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="w-full max-w-sm rounded-lg border border-stone-200 bg-white p-5 shadow-lg dark:border-stone-800 dark:bg-stone-950"
+        className="w-full max-w-sm rounded-lg border border-line bg-overlay p-5 shadow-lg"
       >
-        <h2 id={titleId} className="mb-2 text-sm font-semibold">
+        <h2 id={titleId} className="mb-2 text-sm font-semibold text-strong">
           {title}
         </h2>
-        <p
-          id={descId}
-          className="mb-4 text-sm text-stone-600 dark:text-stone-400"
-        >
+        <p id={descId} className="mb-4 text-sm text-quiet">
           {description}
         </p>
         <div className="flex justify-end gap-2">
@@ -110,7 +109,7 @@ export function AlertDialog({
             ref={cancelBtnRef}
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-900"
+            className={cancelClass}
           >
             {cancelLabel}
           </button>

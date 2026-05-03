@@ -364,7 +364,7 @@ function InsightsPanel({
             </ul>
           )}
           {plan === "team" && insights.overrides >= 5 && (
-            <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            <p className="rounded-md border border-accent-caution-border bg-accent-caution-soft px-3 py-2 text-xs text-accent-caution-text">
               Your team is dismissing findings often. The override report
               breaks down which rules your team disagrees with most.
               Consider tuning them in team rules.

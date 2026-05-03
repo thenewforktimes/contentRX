@@ -15,6 +15,7 @@
  */
 
 import { revalidatePath } from "next/cache";
+import { Button } from "@/components/ui/button";
 import { getDb, schema } from "@/db";
 import { clearCostPause, dailyCostRollup } from "@/lib/cost-monitor";
 
@@ -120,12 +121,7 @@ export default async function AdminCostsPage() {
                 </div>
                 <form action={resumeUser}>
                   <input type="hidden" name="userId" value={user.id} />
-                  <button
-                    type="submit"
-                    className="rounded-md bg-emerald-700 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
-                  >
-                    Resume
-                  </button>
+                  <Button type="submit" size="sm">Resume</Button>
                 </form>
               </li>
             ))}

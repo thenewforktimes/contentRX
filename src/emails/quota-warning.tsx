@@ -1,17 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Button, Heading, Text } from "@react-email/components";
-import { EmailShell } from "./_shell";
-
-const button: React.CSSProperties = {
-  backgroundColor: "#000000",
-  color: "#ffffff",
-  borderRadius: 6,
-  padding: "10px 20px",
-  fontWeight: 500,
-  fontSize: 14,
-  textDecoration: "none",
-  display: "inline-block",
-};
+import { EmailShell, primaryButton, subheadingStyle } from "./_shell";
 
 export function QuotaWarningEmail({
   appUrl,
@@ -37,7 +26,7 @@ export function QuotaWarningEmail({
     <EmailShell
       preview={`${remaining} checks left this month on your ${planLabel} plan.`}
     >
-      <Heading as="h1" style={{ fontSize: 20, marginBottom: 12 }}>
+      <Heading as="h1" style={subheadingStyle}>
         Heads up. You're approaching your monthly limit.
       </Heading>
       <Text>
@@ -57,7 +46,7 @@ export function QuotaWarningEmail({
               ? `${appUrl}/dashboard?upgrade=pro`
               : `${appUrl}/dashboard`
           }
-          style={button}
+          style={primaryButton}
         >
           {plan === "free" ? "Upgrade to Pro" : "Open dashboard"}
         </Button>

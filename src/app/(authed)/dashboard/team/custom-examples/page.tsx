@@ -23,6 +23,7 @@ import { auth } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { buttonStyles } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import { CUSTOM_EXAMPLES_CAP_PER_TEAM } from "@/lib/custom-examples";
@@ -59,10 +60,7 @@ export default async function CustomExamplesPage() {
           short-circuits those strings on every subsequent check
           without running the LLM, without weakening any global rule.
         </p>
-        <Link
-          href="/dashboard"
-          className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-800 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
-        >
+        <Link href="/dashboard" className={buttonStyles({ size: "sm" })}>
           Upgrade to Team
         </Link>
       </section>
