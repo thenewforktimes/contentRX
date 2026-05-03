@@ -76,6 +76,12 @@ const EXCLUDE_PATTERNS: ReadonlyArray<RegExp> = [
   // These don't follow customer-copy rules — same architectural
   // reason /admin pages don't.
   /^src\/app\/api\/admin\//,
+  // Admin-only components (command palette, refinement forms, etc.)
+  // share the founder-voice exemption with their callers. They render
+  // exclusively inside /admin/* routes and surface substrate IDs and
+  // engineer-flavored prose by design — same rationale as the route
+  // and API exclusions above.
+  /^src\/components\/admin\//,
   /\.test\.(ts|tsx)$/,
   /\.spec\.(ts|tsx)$/,
   /__tests__\//,
