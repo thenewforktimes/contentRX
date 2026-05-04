@@ -187,7 +187,12 @@ function StageCard({
       <p className="text-[10px] font-semibold uppercase tracking-widest text-quiet">
         Stage {index + 1}
       </p>
-      <p className="mt-1 text-sm font-semibold leading-snug text-strong">
+      {/* Reserve 2 lines of vertical space for the label even when the
+          text fits on one ("You decide"). Without this, single-line
+          labels collapse the column and the output below them sits
+          higher in the card than its peers. 2.5rem = 2 × 14px ×
+          leading-snug rounded up. */}
+      <p className="mt-1 min-h-10 text-sm font-semibold leading-snug text-strong">
         {stage.label}
       </p>
       <div
