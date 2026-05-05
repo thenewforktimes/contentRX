@@ -306,12 +306,12 @@ export default function PrivacyPage() {
           >
             /dashboard/settings
           </Link>
-          : the &ldquo;Delete my account&rdquo; flow under the Privacy
-          panel runs the cancellation, the pseudonymization, and the
-          Clerk-account delete in one call. A few records have
-          legally required retention periods (Stripe receipts at 7
-          years for tax purposes and fraud-prevention logs), and
-          we&apos;ll tell you specifically which when you ask.
+          . The Privacy panel has a &ldquo;Delete my account&rdquo;
+          flow that cancels your subscription, pseudonymizes your
+          data, and removes your Clerk login in a single call. A few
+          records have legally required retention (Stripe receipts at
+          7 years for tax, fraud-prevention logs); we&apos;ll tell you
+          specifically which when you ask.
         </p>
       </Section>
 
@@ -328,21 +328,22 @@ export default function PrivacyPage() {
             the dashboard. For anything that isn&apos;t, ask us.
           </li>
           <li>
-            <strong>Delete it.</strong> Open{" "}
+            <strong>Delete it</strong> from{" "}
             <Link
               href="/dashboard/settings"
               className="underline underline-offset-2"
             >
               /dashboard/settings
             </Link>
-            {" "}and use the &ldquo;Delete my account&rdquo; flow.
-            Cancellation + pseudonymization + Clerk-account delete run
-            in a single call; the only deliberate friction is the
-            typed-confirm input (&ldquo;Type DELETE&rdquo;) so it
-            doesn&apos;t happen by accident. Some records (Stripe
-            receipts, fraud-prevention logs) may have longer legally
-            required retention; we&apos;ll tell you specifically which
-            if you ask.
+            . The &ldquo;Delete my account&rdquo; flow under the
+            Privacy panel cancels your subscription, pseudonymizes
+            your data, and removes your Clerk login in a single call.
+            The deliberate friction is a typed-confirm input
+            (<code>DELETE</code>) so it doesn&apos;t
+            happen by accident. Some records (Stripe receipts,
+            fraud-prevention logs) may have longer legally required
+            retention; we&apos;ll tell you specifically which if you
+            ask.
           </li>
           <li>
             <strong>Export it.</strong> Same address; subject line{" "}
