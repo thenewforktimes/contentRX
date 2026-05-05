@@ -6,7 +6,26 @@ adheres to semantic versioning.
 
 The PyPI history for this package skipped 0.5.0 and 0.6.0 — those version
 numbers were bumped in source but never published. The published progression
-is `0.2.0 → 0.3.0 → 0.4.0 → 0.7.0 → 0.8.0`.
+is `0.2.0 → 0.3.0 → 0.4.0 → 0.7.0 → 0.8.0 → 0.9.0`.
+
+## [0.9.0] — 2026-05-05
+
+Adds team-rule CRUD over MCP. Closes the agent-authored-rules gap
+identified in the Ditto competitive read: an agent inside Cursor /
+Claude Code can now create and manage team rules without leaving the
+editor (previously a dashboard-only flow).
+
+### Added
+- `team_rule_add` — create a disable / override / add rule. Mirrors
+  the discriminated-union shape of `POST /api/team-rules`.
+- `team_rule_list` — list the team's rules, including stock-standard
+  disables/overrides and team-owned add rules.
+- `team_rule_update` — patch an existing rule's body. Disable rules
+  reject this; override and add rules accept their respective body
+  schemas.
+- `team_rule_remove` — delete a rule by id.
+- `TeamRule` dataclass + `_team_rule_from_json` parser (handles both
+  Drizzle camelCase and snake_case payload shapes).
 
 ## [0.8.0] — 2026-05-05
 
