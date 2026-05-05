@@ -38,18 +38,19 @@ export default function AccuracyPage() {
     <main className="mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
         <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
-          Accountability surface
+          Accuracy
         </p>
         <h1 className="mt-2 text-3xl font-semibold">
-          Accuracy, reported honestly
+          How I measure accuracy
         </h1>
         <p className="mt-4 text-sm text-quiet">
-          Three numbers govern how ContentRX evaluates its own calibration.
-          They are kept separate on purpose. A single &ldquo;accuracy score&rdquo;
-          would obscure the self-drift ceiling and misrepresent what the
-          measurement can actually say. This follows Model Cards (Mitchell
-          et al., 2019) guidance on honest metric reporting with
-          intervals.
+          Three numbers describe how ContentRX scores against a fixed
+          bar. They&rsquo;re kept separate on purpose. A single
+          &ldquo;accuracy score&rdquo; would hide the self-drift
+          ceiling and overstate what the system can know about
+          itself. The reporting format (measured numbers, 95%
+          intervals, pending cells named honestly) follows the Model
+          Cards pattern from Mitchell et al., 2019.
         </p>
         <p className="mt-3 text-xs text-quiet">
           {snap.generated_at
@@ -61,12 +62,12 @@ export default function AccuracyPage() {
       <section className="grid gap-4 sm:grid-cols-3">
         <MetricBlock
           label="Measured system κ"
-          sublabel="System vs Robert Ballard&apos;s held-out golden verdicts"
+          sublabel="The engine vs my blind labels on the held-out set"
           kappa={snap.measured_system}
         />
         <MetricBlock
           label="Measured self-drift κ"
-          sublabel="Robert Ballard vs past Robert Ballard (quarterly blind re-label)"
+          sublabel="Me vs past me, on the same panel, blind"
           kappa={snap.measured_self_drift}
         />
         <MetricBlock
@@ -86,11 +87,11 @@ export default function AccuracyPage() {
       <section className="mt-10">
         <h2 className="text-lg font-semibold">Coverage</h2>
         <p className="mt-2 text-sm text-quiet">
-          ContentRX evaluates against {snap.standards_total} standards. As
-          standards accumulate enough labelled data, they graduate up the
-          ladder: every verdict reviewed → sampled review → no per-verdict
-          review. Per-standard measurements are kept internal. The page is
-          a calibration surface, not a rule catalogue.
+          ContentRX evaluates against {snap.standards_total} standards.
+          As a standard collects enough labelled cases, it moves up
+          the ladder: every verdict reviewed, then sampled review,
+          then no per-verdict review. The per-standard numbers stay
+          internal; this page reports the aggregate.
         </p>
         <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
           <LadderCell
@@ -107,35 +108,35 @@ export default function AccuracyPage() {
           />
         </dl>
         <p className="mt-3 text-xs text-quiet">
-          {snap.standards_measured} of {snap.standards_total} standards have
-          completed the weekly κ series.
+          {snap.standards_measured} of {snap.standards_total} standards
+          have enough data for a measured κ.
         </p>
       </section>
 
       <section className="mt-10 rounded-lg border border-line-strong bg-overlay p-6">
-        <h2 className="text-lg font-semibold">How these numbers come to be</h2>
+        <h2 className="text-lg font-semibold">How I measure</h2>
         <p className="mt-2 text-sm text-quiet">
-          Each weekday the engine evaluates strings against the standards
-          library and a held-out golden set Robert maintains. The measured
-          system κ is the agreement between what the engine says and what
-          Robert would say on the same input. The self-drift κ is the
-          agreement between Robert and a past version of Robert on the
-          same panel: the expert ceiling, since the system can&apos;t
-          exceed the labeller&apos;s agreement with themselves. The 0.90
-          design target is a stated assumption, not a measurement.
+          Each weekday the engine evaluates strings against the
+          standards library and the held-out cases I&rsquo;ve blind-
+          labelled. The system κ is how often the engine and I agree
+          on the same input. The self-drift κ is how often I agree
+          with a past version of myself on the same panel. That number
+          is the ceiling: the system can&rsquo;t exceed how well I
+          agree with me. The 0.90 design target is a stated
+          assumption, not a measurement.
         </p>
         <p className="mt-3 text-sm text-quiet">
-          Pending cells render as &ldquo;pending&rdquo;: never zero, never
-          filled from the design target. Honest reporting of a
-          measurement-in-progress is the whole point of the page.
+          Pending cells render as &ldquo;pending&rdquo;: never zero,
+          never filled from the design target. Reporting a
+          measurement-in-progress honestly is the whole point.
         </p>
         <p className="mt-3 text-sm text-quiet">
           The weekly{" "}
           <Link href="/calibration" className="underline underline-offset-2">
             calibration log
-          </Link>{" "}
-          tracks κ movement, drift signals, and active refinement
-          candidates from the taxonomy refinement log.
+          </Link>
+          {" "}tracks κ movement, drift signals, and active refinement
+          candidates.
         </p>
       </section>
 
@@ -172,8 +173,8 @@ function MetricBlock({
     <article
       className={`rounded-md border p-4 ${
         isTarget
-          ? "border-dashed border-stone-400 bg-stone-50 dark:border-stone-600 dark:bg-stone-900"
-          : "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950"
+          ? "border-dashed border-line bg-overlay"
+          : "border-line bg-raised"
       }`}
     >
       <p className="text-xs font-semibold uppercase tracking-wider text-quiet">
