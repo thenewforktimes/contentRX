@@ -2265,8 +2265,10 @@ class TestPreprocessIntegration:
     def test_total_check_count(self):
         # v4.7.1 (house-style P0): added GRM-07, ACC-08, CLR-03,
         # CON-02-strict-headings → 29 checks.
+        # v4.7.2: GRM-07 moved to internal/human-eval-only and removed
+        # from the customer-facing preprocessor pipeline → 28 checks.
         results = preprocess("Hello world", "short_ui_copy")
-        assert len(results) == 29
+        assert len(results) == 28
 
     def test_clean_copy_no_violations(self):
         results = preprocess("Save your changes", "short_ui_copy")
@@ -2301,9 +2303,10 @@ class TestPreprocessIntegration:
         violations = [r for r in results if r.is_violation]
 
     def test_check_count(self):
-        """Preprocessor runs exactly 29 checks (v4.7.1)."""
+        """Preprocessor runs exactly 28 checks (v4.7.2 — GRM-07 dropped
+        from the customer-facing pipeline)."""
         results = preprocess("Test string", "short_ui_copy")
-        assert len(results) == 29
+        assert len(results) == 28
 
     def test_all_checks_return_preprocess_result(self):
         results = preprocess("Test string", "short_ui_copy")
@@ -2316,12 +2319,12 @@ class TestPreprocessIntegration:
         violations = [r for r in results if r.is_violation]
         assert len(violations) == 0
 
-    def test_check_count_29(self):
+    def test_check_count_canary(self):
         """Canary test — if this changes, a check was added or removed.
-        v4.7.1: 29 checks (added GRM-07, ACC-08, CLR-03, CON-02 strict).
+        v4.7.2: 28 checks (GRM-07 moved to internal/human-eval-only).
         """
         results = preprocess("Hello world", "short_ui_copy")
-        assert len(results) == 29
+        assert len(results) == 28
 
     def test_all_checks_have_standard_ids(self):
         """Every check result must carry a standard_id."""
@@ -2350,7 +2353,9 @@ class TestPreprocessIntegrationFull:
         assert "GRM-04" in standard_ids
         assert "GRM-01" in standard_ids
         assert "GRM-05" in standard_ids
-        assert "GRM-07" in standard_ids  # v4.7.1
+        # GRM-07 moved to internal/human-eval-only in v4.7.2 — no
+        # longer surfaced through preprocess().
+        assert "GRM-07" not in standard_ids
         assert "CON-03" in standard_ids
         assert "GRM-02" in standard_ids
         assert "PRF-01" in standard_ids
@@ -2362,7 +2367,7 @@ class TestPreprocessIntegrationFull:
         assert "PRF-07" in standard_ids
         assert "ACC-08" in standard_ids  # v4.7.1
         assert "CLR-03" in standard_ids  # v4.7.1
-        assert len(results) == 29
+        assert len(results) == 28
 
     def test_multiple_proofing_violations_caught(self):
         """A string with several proofing errors should catch them all."""

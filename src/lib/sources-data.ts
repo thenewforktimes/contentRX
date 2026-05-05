@@ -155,13 +155,6 @@ export const STYLE_GUIDE_METADATA: Record<
     license: "all-rights-reserved",
     homepage_url: "https://www.chicagomanualofstyle.org/",
   },
-  "ContentRX house style": {
-    // ContentRX's own house style — see /essays for live commentary.
-    // Per ADR 2026-04-25 the taxonomy is private; the public surface
-    // is /accuracy, /calibration, /essays, and /reports.
-    license: "all-rights-reserved",
-    homepage_url: "https://contentrx.io/essays",
-  },
 };
 
 interface StandardsLibraryFile {

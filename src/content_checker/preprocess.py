@@ -62,7 +62,6 @@ PREPROCESSOR_STANDARD_IDS: frozenset[str] = frozenset({
     "GRM-04",  # Ampersands (content-type-aware)
     "GRM-05",  # Numerals (unicode hyphen normalization)
     "GRM-06",  # Compound modifier hyphenation
-    "GRM-07",  # Em dashes (v4.7.1 — house-style P0)
     # Convention (2)
     "CON-02",  # Sentence case (pass-only sentence_case + strict_headings sibling)
     "CON-03",  # Date formats
@@ -552,19 +551,25 @@ def check_grm06_compound_modifiers(text: str) -> PreprocessResult:
 
 
 def check_grm07_em_dashes(text: str) -> PreprocessResult:
-    """GRM-07: Flag em or en dashes in copy. House style: never use them.
+    """GRM-07: Flag em dashes in copy.
 
-    Factual detection at confidence 1.0. The slop screen at
-    suggestion_quality.py separately ensures LLM-generated suggestions
-    don't reintroduce em dashes — and bypasses its echo exception when
-    GRM-07 fires on the input, so the suggestion never keeps an em dash
-    even if the original input had one.
+    Internal/human-eval rule. Not run in the customer-facing
+    preprocessor pipeline — em dashes in customer input are not a
+    surfaced violation. The rule still exists for the human-evaluation
+    layer that scores ContentRX's own rewrites: our generated rewrites
+    must never use em dashes (enforced separately at
+    `rewrite_document.py` and `suggestion_quality.is_slop`).
+
+    En dashes are not flagged here. They have valid AP uses (ranges,
+    relationships) and the prior rule was overly strict.
+
+    Factual detection at confidence 1.0 when invoked.
     """
-    if "—" in text or "–" in text:  # em dash + en dash
+    if "—" in text:
         return PreprocessResult(
             standard_id="GRM-07",
             outcome=Outcome.VIOLATION,
-            issue="Em or en dash in copy. House style: never.",
+            issue="Em dash in copy.",
             suggestion=(
                 "Use a period, comma, colon, parens, or sentence break."
             ),
@@ -1138,8 +1143,8 @@ def check_clr03_sentence_length(
                 standard_id="CLR-03",
                 outcome=Outcome.VIOLATION,
                 issue=(
-                    f"Sentence is {len(words)} words. House style: "
-                    f"keep sentences under {threshold} words for "
+                    f"Sentence is {len(words)} words. Aim for under "
+                    f"{threshold} for "
                     f"{content_type.replace('_', ' ')}."
                 ),
                 suggestion=(
@@ -1341,7 +1346,6 @@ def preprocess(
     results.append(check_grm04_ampersands(text, content_type))
     results.append(check_grm05_numerals(text))
     results.append(check_grm06_compound_modifiers(text))
-    results.append(check_grm07_em_dashes(text))
     results.append(check_con03_date_formats(text))
     results.append(check_con02_sentence_case(text))
     results.append(check_con02_strict_headings(text, content_type))

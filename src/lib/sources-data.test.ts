@@ -195,11 +195,12 @@ describe("STYLE_GUIDE_METADATA", () => {
 });
 
 describe("loadSourcesData (committed corpus)", () => {
-  it("loads 14 unique style guides (v4.7.1 added ContentRX house style)", () => {
-    // v4.7.1 (house-style P0): GRM-07 + ACC-08 cite the new internal
-    // "ContentRX house style" source — the 14th attribution entry.
+  it("loads 13 unique style guides", () => {
+    // v4.7.2: removed "ContentRX house style" entry — we don't say
+    // "house style" anywhere customer-facing, and the public /sources
+    // page renders this list.
     const data = loadSourcesData();
-    expect(data.style_guides).toHaveLength(14);
+    expect(data.style_guides).toHaveLength(13);
   });
 
   it("loads the 20 allow-list OSS repos (Session 15)", () => {
@@ -207,13 +208,13 @@ describe("loadSourcesData (committed corpus)", () => {
     expect(data.oss_repos).toHaveLength(20);
   });
 
-  it("carries the v4.7.1 attribution-coverage numbers", () => {
-    // v4.7.1 (house-style P0): added 2 standards (GRM-07, ACC-08), both
-    // with sources → 49 total, 32 with attribution. pairs_total
-    // unchanged (no new entries in evals/examples_corpus/pairs.json).
+  it("carries the v4.7.2 attribution-coverage numbers", () => {
+    // v4.7.2: GRM-07's sole "ContentRX house style" attribution was
+    // removed (rule is internal-only now), dropping standards_with_attribution
+    // from 32 to 31. ACC-08 retains Apple HIG + Material Design.
     const data = loadSourcesData();
     expect(data.standards_total).toBe(49);
-    expect(data.standards_with_attribution).toBe(32);
+    expect(data.standards_with_attribution).toBe(31);
     expect(data.pairs_total).toBe(38);
   });
 });

@@ -51,13 +51,16 @@ class TestIsSlopEmDash:
         assert is_bad
         assert reason == "em_dash"
 
-    def test_em_dash_in_original_passes(self):
-        # The LLM echoing back an em dash from the original is fine.
-        is_bad, _ = is_slop(
+    def test_em_dash_in_original_still_slop(self):
+        # v4.7.2: the prior "echo exception" was removed. ContentRX-
+        # generated rewrites never contain em dashes, regardless of
+        # what the customer's original input had.
+        is_bad, reason = is_slop(
             "Save your work — drafts auto-save every minute.",
             original="Save your work — drafts auto-save",
         )
-        assert not is_bad
+        assert is_bad
+        assert reason == "em_dash"
 
     def test_em_dash_no_original_provided(self):
         # No original supplied → conservative: treat em dash as slop.

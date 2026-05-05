@@ -14,7 +14,8 @@ sentence case, AP-style hyphens, etc.) — to make the customer's
 document clearer and more shippable while preserving their intent,
 structure, and meaning. Customer-facing copy on the rewrite block
 mirrors this: it's their content edited for clarity, not a rewrite in
-our voice.
+our voice. The em-dash rule applies to OUR generated rewrite only;
+em dashes in customer input are not surfaced as a violation.
 
 Output contract (schema 2.4.0): `{rewritten, diagnostic}`. The
 rewritten text is the primary artifact; the diagnostic is a one-
@@ -154,8 +155,9 @@ def _build_system_prompt() -> str:
         "Calm, direct, plain. Name the actor. Don't blame the user. "
         "Point somewhere.\n\n"
         "## Hard rules for the edit\n\n"
-        "- **No em dashes or en dashes.** Use periods, commas, colons, "
-        "parens, or sentence breaks.\n"
+        "- **No em dashes.** Use periods, commas, colons, parens, or "
+        "sentence breaks. (En dashes are fine for ranges and "
+        "relationships per AP style.)\n"
         "- **Short sentences.** Aim for 15–20 words; sentences over 25 "
         "words almost always split.\n"
         "- **Plain language.** Reach for the shorter word. Cut "

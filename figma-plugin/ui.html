@@ -1518,7 +1518,6 @@ function runPreprocessor(text, contentType) {
     checkGrm04Ampersands(text, contentType),
     checkGrm05Numerals(text),
     checkGrm06CompoundModifiers(text),
-    checkGrm07EmDashes(text),
     checkCon03DateFormats(text),
     checkCon02SentenceCase(text),
     checkCon02StrictHeadings(text, contentType),
@@ -1723,20 +1722,12 @@ function checkGrm05Numerals(text) {
 }
 
 
-// GRM-07: Em or en dashes in copy. House style: never (v4.7.1).
-// Factual detection at confidence 1.0. Mirrors Python
-// check_grm07_em_dashes in src/content_checker/preprocess.py.
-function checkGrm07EmDashes(text) {
-  if (text.includes("—") || text.includes("–")) {
-    return {
-      standardId: "GRM-07",
-      outcome: "violation",
-      issue: "Em or en dash in copy. House style: never.",
-      suggestion: "Use a period, comma, colon, parens, or sentence break.",
-    };
-  }
-  return { standardId: "GRM-07", outcome: "pass" };
-}
+// GRM-07 was removed from the customer-facing preprocessor pipeline
+// in v4.7.2 (engine + this JS mirror). It survives as an
+// internal/human-eval rule in src/content_checker/preprocess.py for
+// the rewrite-quality scoring layer; it never fires as a customer
+// violation. ContentRX-generated rewrites still avoid em dashes —
+// enforced server-side at rewrite_document.py and suggestion_quality.
 
 
 function checkCon03DateFormats(text) {

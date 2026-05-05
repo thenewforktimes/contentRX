@@ -2,7 +2,9 @@
 
 Covers the four P0 rules from `_private/beta-prep/rule-integration-plan.md`:
 
-    Rule 1  — GRM-07 em dashes (factual, conf 1.0 → violation)
+    Rule 1  — GRM-07 em dashes (INTERNAL/human-eval only since v4.7.2;
+              no longer surfaced as a customer violation; en dashes
+              dropped from the rule)
     Rule 5  — ACC-08 device verbs (shape, conf 0.65 → review_recommended)
     Rule 7  — CLR-03 sentence length (factual, conf 1.0 → violation)
     Rule 10 — CON-02 strict headings (shape, conf 0.65 → review_recommended)
@@ -46,29 +48,42 @@ from content_checker.suggestion_quality import is_slop, sanitize_violations
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Rule 1 — GRM-07 em dashes (factual, conf 1.0)
+# Rule 1 — GRM-07 em dashes (INTERNAL/human-eval only since v4.7.2)
 # ═══════════════════════════════════════════════════════════════════════
 
 
 class TestRule1GRM07EmDashes:
-    """Em dashes (U+2014) and en dashes (U+2013) are flagged at conf 1.0."""
+    """GRM-07 is internal/human-eval-only. The function still exists for
+    the human-eval layer that scores ContentRX-generated rewrites, but
+    it's no longer wired into the customer-facing preprocessor pipeline.
+    En dashes were dropped from the rule (valid AP uses for ranges).
+    """
 
     @pytest.mark.parametrize("text", [
         "Save your changes — or lose them.",
-        "Pricing – starts at $9/mo.",
         "Wait — there's more.",
         "We tried to email you—but it bounced.",
         "Your subscription renews May 4 — don't miss it.",
     ])
-    def test_violation_cases_flag(self, text: str):
+    def test_em_dash_still_flagged_when_function_invoked(self, text: str):
         result = check_grm07_em_dashes(text)
         assert result.outcome == Outcome.VIOLATION
         assert result.confidence == 1.0
         assert result.standard_id == "GRM-07"
 
     @pytest.mark.parametrize("text", [
+        # En dashes are no longer flagged — valid AP uses for ranges and
+        # relationships (2024–2025, New York–London).
+        "Pricing – starts at $9/mo.",
+        "Open Monday–Friday, 9am–5pm.",
+        "The 2024–2025 fiscal year.",
+    ])
+    def test_en_dashes_no_longer_flagged(self, text: str):
+        result = check_grm07_em_dashes(text)
+        assert result.outcome == Outcome.PASS
+
+    @pytest.mark.parametrize("text", [
         "Save your changes or lose them.",
-        "Pricing starts at $9/mo.",
         "Wait, there's more.",
         "We tried to email you, but it bounced.",
         "Your subscription renews May 4. Don't miss it.",
@@ -77,12 +92,26 @@ class TestRule1GRM07EmDashes:
         result = check_grm07_em_dashes(text)
         assert result.outcome == Outcome.PASS
 
-    def test_grm07_factual_voice_is_direct(self):
-        """Factual rules use direct voice — no soft-guidance hedging."""
+    def test_grm07_issue_copy_drops_house_style(self):
+        """v4.7.2: customer-facing copy never mentions 'house style'.
+        Even though GRM-07 isn't surfaced to customers anymore, its
+        substrate `issue` text shouldn't carry the leaky framing."""
         result = check_grm07_em_dashes("test — case")
-        # Direct voice: states the rule, not "noticed/could be intentional"
+        assert "house style" not in (result.issue or "").lower()
         assert "noticed" not in (result.issue or "").lower()
-        assert "house style" in (result.issue or "").lower()
+
+    def test_grm07_not_in_customer_pipeline(self):
+        """run_preprocess does not include GRM-07 — em dashes in
+        customer input are not surfaced as a violation. The rule still
+        gates ContentRX-generated rewrites via rewrite_document.py and
+        suggestion_quality.is_slop."""
+        violations = run_preprocess(
+            "Save your changes — or lose them.",
+            "long_form_copy",
+            audience=Audience.PRODUCT_UI,
+        )
+        ids = {v.standard_id for v in violations}
+        assert "GRM-07" not in ids
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -309,53 +338,41 @@ class TestRule10CON02StrictHeadings:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Conflict 4 — slop-screen em-dash echo gate
+# Slop screen — em dashes unconditionally stripped from LLM suggestions
 # ═══════════════════════════════════════════════════════════════════════
 
 
-class TestConflict4SlopScreenEmDashGate:
-    """When GRM-07 fires on input, the slop screen must remove em dashes
-    from suggestions even when the original had one."""
+class TestSlopScreenEmDashes:
+    """ContentRX-generated rewrites never contain em dashes. The prior
+    'echo exception' (let the suggestion keep an em dash if the user's
+    input had one) was dropped in v4.7.2 along with GRM-07's move to
+    internal-only — we don't surface em dashes as a customer violation,
+    but we also don't propagate them in our suggestions."""
 
-    def test_echo_exception_holds_when_grm07_inactive(self):
-        """Existing behavior preserved when GRM-07 isn't in the violation set."""
+    def test_em_dash_is_slop_regardless_of_input(self):
+        """Em dashes in LLM suggestions are slop even when the user's
+        original input contained an em dash."""
         original = "Pre-existing text with — em dash."
         suggestion = "Replacement with — em dash echoed."
-        is_bad, reason = is_slop(
-            suggestion, original=original, grm07_active=False,
-        )
-        # Echo exception keeps the LLM's em dash since the original had one.
-        assert is_bad is False
-
-    def test_echo_exception_disabled_when_grm07_active(self):
-        """Conflict 4: with GRM-07 active, em dash in suggestion is slop
-        even when the original input contained one."""
-        original = "Pre-existing text with — em dash."
-        suggestion = "Replacement with — em dash echoed."
-        is_bad, reason = is_slop(
-            suggestion, original=original, grm07_active=True,
-        )
+        is_bad, reason = is_slop(suggestion, original=original)
         assert is_bad is True
         assert reason == "em_dash"
 
-    def test_sanitize_violations_threads_grm07_state(self):
-        """sanitize_violations auto-detects GRM-07 in the violation set
-        and threads grm07_active=True into the slop screen."""
+    def test_em_dash_in_suggestion_with_clean_original_is_slop(self):
+        suggestion = "Replacement with — em dash."
+        is_bad, reason = is_slop(suggestion, original="Clean input.")
+        assert is_bad is True
+        assert reason == "em_dash"
+
+    def test_sanitize_violations_replaces_em_dash_suggestions(self):
+        """sanitize_violations replaces any LLM-source suggestion with
+        an em dash, regardless of what was in the original input."""
         violations = [
-            Violation(
-                standard_id="GRM-07",
-                rule="GRM-07",
-                issue="Em dash in copy.",
-                suggestion="Use a period.",
-                source="deterministic",
-                confidence=1.0,
-            ),
             Violation(
                 standard_id="CLR-01",
                 rule="Wordy phrase.",
                 issue="Wordy phrase.",
-                # The LLM echoed the em dash from the input — slop now.
-                suggestion="Replacement with — em dash echoed.",
+                suggestion="Replacement with — em dash.",
                 source="llm",
                 confidence=0.85,
             ),
@@ -366,8 +383,7 @@ class TestConflict4SlopScreenEmDashGate:
             Audience.PRODUCT_UI,
         )
         assert replaced == 1
-        # The LLM violation's suggestion was replaced with the fallback.
-        assert "—" not in violations[1].suggestion
+        assert "—" not in violations[0].suggestion
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -388,11 +404,11 @@ class TestPublicEnvelopeSnapshot:
             Violation(
                 standard_id="GRM-07",
                 rule="No em dashes.",
-                issue="Em or en dash in copy. House style: never.",
+                issue="Em dash in copy.",
                 suggestion="Use a period, comma, or sentence break.",
                 source="deterministic",
                 confidence=1.0,
-                rule_version="4.7.1",
+                rule_version="4.7.2",
             ),
             Violation(
                 standard_id="ACC-08",
@@ -539,35 +555,34 @@ class TestP0Integration:
     end-to-end. Confirms PreprocessResult.confidence flows through to
     Violation.confidence on the deterministic path."""
 
-    def test_all_four_p0_rules_fire_together(self):
-        # Designed to trigger all four P0 rules simultaneously:
-        #   - em dash → GRM-07 (factual, conf 1.0)
+    def test_three_p0_rules_fire_together(self):
+        # Designed to trigger the three customer-facing P0 rules
+        # simultaneously (GRM-07 was moved to internal-only in v4.7.2):
         #   - "Click" → ACC-08 (shape, conf 0.65)
         #   - "Your" capital in heading → CON-02 strict (shape, conf 0.65)
         #   - Long sentence — but heading is exempt for CLR-03.
-        text = "Click — Manage Your Account"
+        text = "Click to Manage Your Account"
         violations = run_preprocess(
             text, "heading", audience=Audience.PRODUCT_UI,
         )
         ids = {v.standard_id for v in violations}
-        assert "GRM-07" in ids
         assert "ACC-08" in ids
         assert "CON-02" in ids
+        # GRM-07 is no longer in the customer pipeline — em dashes in
+        # input are not flagged.
+        assert "GRM-07" not in ids
 
         # Verify per-violation confidence routing
         by_id = {v.standard_id: v for v in violations}
-        assert by_id["GRM-07"].confidence == 1.0
         assert by_id["ACC-08"].confidence == 0.65
         assert by_id["CON-02"].confidence == 0.65
 
     def test_native_mobile_suppresses_acc08(self):
-        text = "Tap to continue — the app is loading."
+        text = "Tap to continue while the app is loading."
         violations = run_preprocess(
             text, "short_ui_copy", audience=Audience.NATIVE_MOBILE,
         )
         ids = {v.standard_id for v in violations}
-        # GRM-07 still fires (em dash is universal house style)
-        assert "GRM-07" in ids
         # ACC-08 does NOT fire on native mobile
         assert "ACC-08" not in ids
 
