@@ -19,7 +19,7 @@ This ADR captures both the position and the engineering layer that backs it. Wit
 
 ### Five things ContentRX will not do
 
-The five lines we won't cross are public-facing and identical across `/ethics` (commitment 6) and `/privacy`:
+The five lines we won't cross are public-facing and identical across `/ethics` (Commitment 3) and `/privacy`:
 
 1. **No selling customer strings.** Hashed, anonymised, or otherwise. No data-broker contract. No advertiser arrangement.
 2. **No repackaging check history into a profile** of the customer, their team, or their industry that gets marketed against them. The dashboard shows the customer's own activity to the customer; no aggregate "intent signal" product gets sold on top.
@@ -49,7 +49,7 @@ Anthropic retains API logs for 30 days by default. Anthropic's Zero Data Retenti
 
 ### Positive
 
-- **The trust model is verifiable, not just stated.** A customer or third-party auditor can read `/ethics` (commitment 6) and `/privacy` ("What we won't do") and check the engineering claim against the named source files. The promise is anchored to code that exists in the repository.
+- **The trust model is verifiable, not just stated.** A customer or third-party auditor can read `/ethics` (Commitment 3) and `/privacy` ("What we won't do") and check the engineering claim against the named source files. The promise is anchored to code that exists in the repository.
 
 - **Defense extends past the dashboard.** The audit that prompted the engineering work confirmed that admin dashboards never display raw customer text. The engineering layer covers the surfaces that audit didn't initially examine: Sentry events, Vercel function logs, Anthropic's API console retention. Customer text now travels through fewer systems, and through none of them by accident.
 
@@ -69,11 +69,11 @@ Anthropic retains API logs for 30 days by default. Anthropic's Zero Data Retenti
 
 ## Reversal path
 
-Any change to the five non-negotiables — or removal / weakening of any of the three guard files — requires a new ADR superseding this one and customer notification before the change ships. The customer-facing copy at `/ethics` (commitment 6) and `/privacy` ("What we won't do") is the live truth: if no superseding ADR is linked from `/ethics`, the rules in this ADR are the rules.
+Any change to the five non-negotiables — or removal / weakening of any of the three guard files — requires a new ADR superseding this one and customer notification before the change ships. The customer-facing copy at `/ethics` (Commitment 3) and `/privacy` ("What we won't do") is the live truth: if no superseding ADR is linked from `/ethics`, the rules in this ADR are the rules.
 
 ## References
 
-- [/ethics commitment 6](../src/app/ethics/page.tsx) — public-facing position
+- [/ethics Commitment 3](../src/app/(marketing)/ethics/page.tsx) — public-facing position
 - [/privacy "What we won't do"](../src/app/privacy/page.tsx) — public-facing position, plain-language version
 - [src/lib/pii-screen.ts](../src/lib/pii-screen.ts) — pre-screen library
 - [src/lib/sentry-scrub.ts](../src/lib/sentry-scrub.ts) — Sentry beforeSend handler
