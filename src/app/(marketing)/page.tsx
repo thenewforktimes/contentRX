@@ -1,20 +1,22 @@
 /**
- * Landing page — 2026-04-29 IA refresh.
+ * Landing page — 2026-05-05 IA refresh.
  *
- * Robert's brief on this pass: the animated diagram is doing the
- * work of "what it does" + "why it works" combined, so those
- * sections come out. Surfaces and the founder credit move up
- * (they're concrete, they confirm legitimacy fast). Why it works
- * comes back at the end, but tightened to three value props that
- * say what the product is great at: calibrated judgment, less
- * style/voice/ruleset maintenance, and custom rules in the moment.
+ * Robert's brief on this pass: lead the founder credit with the
+ * staff-content-designer claim (not the name); promote the One
+ * approval value prop out of /about and onto home as part of a new
+ * four-card "Built for your stack" section that surfaces Privacy,
+ * Security, One approval, and Integrations together; scrub "moments"
+ * everywhere customer-facing — `moment` is reserved internal vocab
+ * for the human-eval/training layer.
  *
  * Section order:
  *   1. Hero — the brand promise.
  *   2. How it works — animated pipeline carries the explanation.
  *   3. Where it runs — surfaces.
- *   4. Built by — Robert Ballard, with the org arc.
- *   5. Why it works — three value-prop cards. Closer, not opener.
+ *   4. Built for your stack — One approval / Privacy / Security /
+ *      Integrations as a 2x2 card grid.
+ *   5. Built by — Robert Ballard, with the org arc.
+ *   6. Why it works — three product-strength cards. Closer.
  *
  * Voice: per docs/copy-vocabulary.md. Calm, confident, charming.
  * No em dashes. Names the actor. Doesn't blame the reader. Points
@@ -134,7 +136,7 @@ export default function Home() {
           </li>
           <li>
             <strong>Figma plugin</strong> for design-time review.
-            Per-string verdicts with moment banners and rationale
+            Per-string verdicts with context banners and rationale
             chains.{" "}
             <Link
               href="/install#figma"
@@ -147,13 +149,81 @@ export default function Home() {
         </ul>
       </Section>
 
+      <Section
+        eyebrow="Built for your stack"
+        title="Easier to buy. Safer to ship."
+      >
+        <ul className="mt-2 grid gap-4 sm:grid-cols-2 sm:gap-3">
+          <li className="rounded-lg border border-line bg-raised p-5">
+            <p className="text-sm font-semibold text-strong">
+              One approval.
+            </p>
+            <p className="mt-2 text-sm text-default">
+              Most teams can&apos;t get an AI vendor approved fast
+              enough to keep up with how copy is changing. ContentRX
+              is a $39 SaaS subscription, not a new LLM relationship
+              to negotiate. No Anthropic or OpenAI key required from
+              you or your org.
+            </p>
+          </li>
+          <li className="rounded-lg border border-line bg-raised p-5">
+            <p className="text-sm font-semibold text-strong">
+              Privacy.
+            </p>
+            <p className="mt-2 text-sm text-default">
+              We&apos;re a paid tool, not a data product. Customer
+              strings transit, get reviewed, and don&apos;t stick
+              around.{" "}
+              <Link
+                href="/privacy"
+                className="underline underline-offset-2"
+              >
+                Read the position
+              </Link>
+              .
+            </p>
+          </li>
+          <li className="rounded-lg border border-line bg-raised p-5">
+            <p className="text-sm font-semibold text-strong">
+              Security.
+            </p>
+            <p className="mt-2 text-sm text-default">
+              Standard SaaS hygiene, audit-ready posture.{" "}
+              <Link
+                href="/security"
+                className="underline underline-offset-2"
+              >
+                Details
+              </Link>
+              .
+            </p>
+          </li>
+          <li className="rounded-lg border border-line bg-raised p-5">
+            <p className="text-sm font-semibold text-strong">
+              Integrations.
+            </p>
+            <p className="mt-2 text-sm text-default">
+              Wired into the surfaces above: MCP, CLI, GitHub Action,
+              LSP, Figma.{" "}
+              <Link
+                href="/install"
+                className="underline underline-offset-2"
+              >
+                Install instructions
+              </Link>
+              .
+            </p>
+          </li>
+        </ul>
+      </Section>
+
       <Section eyebrow="Built by" title="Someone who has been in the room.">
         <p>
-          Robert Ballard, staff-level content designer. Career arc:
-          Intuit → Meta → Opendoor → PayPal today. The moments, the
-          weights, and the standards all carry a single
-          designer&apos;s judgment calls, attributed and published.
-          Read the{" "}
+          ContentRX was built by a staff content designer. Robert
+          Ballard, with a career arc through Intuit, Meta, Opendoor,
+          and PayPal today. The context, the weights, and the
+          standards all carry a single designer&apos;s judgment calls,
+          attributed and published. Read the{" "}
           <Link href="/about" className="underline underline-offset-2">
             about-the-model
           </Link>
@@ -186,13 +256,13 @@ export default function Home() {
             </p>
             <p className="mt-2 text-sm text-default">
               Stop chasing voice docs and ruleset PDFs. ContentRX
-              holds the standards, watches the moment, and applies
+              holds the standards, watches the context, and applies
               them where you&apos;re shipping copy.
             </p>
           </li>
           <li className="rounded-lg border border-line bg-raised p-5">
             <p className="text-sm font-semibold text-strong">
-              Custom rules in the moment.
+              Custom rules in context.
             </p>
             <p className="mt-2 text-sm text-default">
               Adjust ContentRX&apos;s recommendations with your

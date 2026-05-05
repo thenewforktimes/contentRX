@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 const ROLE_LABELS: Record<Role, string> = {
   standard_influences: "Standard influences",
   examples_corpus: "Examples corpus",
-  moment_weights: "Moment weights",
+  moment_weights: "Context weights",
   training_signal: "Training signal",
 };
 
@@ -86,8 +86,8 @@ export default function SourcesPage() {
           badges show how: <em>standard influences</em> means the system
           is cited on one or more standards;{" "}
           <em>examples corpus</em> means before/after pairs live in the
-          committed examples corpus; <em>moment weights</em> means the
-          system informs how moments emphasize, relax, or suppress
+          committed examples corpus; <em>context weights</em> means the
+          system informs how context emphasizes, relaxes, or suppresses
           standards.
         </p>
         <ul className="mt-6 space-y-6">

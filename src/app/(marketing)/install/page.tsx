@@ -72,7 +72,7 @@ export default function InstallPage() {
           and <code>classify_moment</code> tools (plus team
           custom-example management) to any MCP client. Claude Code
           or Cursor can check a string inline during generation. The
-          LLM narrates the moment first, then the verdict, then a
+          LLM narrates the context first, then the verdict, then a
           suggested rewrite.
         </p>
         <p className="mt-3">
@@ -224,7 +224,7 @@ jobs:
         <p>
           The Figma plugin catches strings that arrive through
           design (badges, empty states, onboarding flows) before
-          they land in code. Per-string verdicts, moment banners,
+          they land in code. Per-string verdicts, context banners,
           three-button stance on every finding (Agree / Disagree /
           Ship anyway), and the rationale chain on demand.
         </p>

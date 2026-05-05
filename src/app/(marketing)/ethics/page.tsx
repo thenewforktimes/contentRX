@@ -65,7 +65,7 @@ export default function EthicsPage() {
           lists every design system, style guide, and OSS repo that has
           informed ContentRX. For each entry you&apos;ll see the last
           crawl timestamp, the license, and how the source contributed:
-          moment weights, standard influences, examples corpus, or
+          context weights, standard influences, examples corpus, or
           training signal. Hidden contributions would be indistinguishable
           from theft; the page is the accountability surface.
         </p>

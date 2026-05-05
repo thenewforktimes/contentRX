@@ -65,9 +65,9 @@ export default function PrivacyPage() {
             is forwarded to the evaluation engine and to Anthropic. In
             our own database we store only a sha256 hash of the text,
             never the plaintext. We do retain metadata: the verdict,
-            severity, moment classification, content type, file path
-            (if your tool supplied one), and the surface that called
-            us (MCP, LSP, CLI, GitHub Action, Figma plugin, web).
+            severity, content type, file path (if your tool supplied
+            one), and the surface that called us (MCP, LSP, CLI,
+            GitHub Action, Figma plugin, web).
           </li>
           <li>
             <strong>Usage and operational telemetry.</strong> Counts

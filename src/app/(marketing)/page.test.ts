@@ -59,15 +59,39 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
 
   it("closes with three value-prop cards", () => {
     // The "Why it works" section is the closer. Three load-bearing
-    // value props per Robert's 2026-04-29 IA refresh:
+    // value props:
     //   1. Calibrated judgment
     //   2. Style guides we maintain
-    //   3. Custom rules in the moment
-    // If a future edit drops one of these labels, the closer goes
-    // soft.
+    //   3. Custom rules in context
+    // (2026-05-05: third card was "Custom rules in the moment" until
+    // the moments→context sweep — `moment` is reserved internal vocab.)
     expect(visible).toMatch(/calibrated judgment/i);
     expect(visible).toMatch(/style guides we maintain/i);
-    expect(visible).toMatch(/custom rules in the moment/i);
+    expect(visible).toMatch(/custom rules in context/i);
+  });
+
+  it("surfaces the four buyer/IT value props (One approval, Privacy, Security, Integrations)", () => {
+    // The "Built for your stack" section bundles One approval (the
+    // procurement-friction killer, promoted from /about), Privacy,
+    // Security, and Integrations as one block of 2x2 cards. If a
+    // future edit drops one of these card titles, the section goes
+    // soft.
+    expect(visible).toMatch(/one approval/i);
+    expect(visible).toMatch(/\bprivacy\./i);
+    expect(visible).toMatch(/\bsecurity\./i);
+    expect(visible).toMatch(/\bintegrations\./i);
+    // The eyebrow + title hold the section together; if either
+    // changes, the section is being meaningfully edited.
+    expect(visible).toMatch(/built for your stack/i);
+    expect(visible).toMatch(/easier to buy.{1,4}safer to ship/i);
+  });
+
+  it("home bio leads with the staff-content-designer claim, not the name", () => {
+    // 2026-05-05: bio reordered to lead with credentialing
+    // ("ContentRX was built by a staff content designer.") before
+    // the name. The claim hooks readers who don't know who Robert
+    // is yet.
+    expect(visible).toMatch(/ContentRX was built by a staff content designer/);
   });
 
   it("names the four orgs in the founder credit (Intuit, Meta, Opendoor, PayPal)", () => {
@@ -77,7 +101,9 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     for (const org of ["Intuit", "Meta", "Opendoor", "PayPal"]) {
       expect(visible).toContain(org);
     }
-    expect(visible).toMatch(/Robert Ballard/);
+    // "Robert Ballard" can wrap across lines in the JSX source —
+    // match across whitespace.
+    expect(visible).toMatch(/Robert\s+Ballard/);
   });
 
   it("links the public accountability surface from the body copy", () => {
@@ -134,26 +160,31 @@ describe("/about page (src/app/(marketing)/about/page.tsx)", () => {
   const source = readSource("src/app/(marketing)/about/page.tsx");
   const visible = visibleCopy(source);
 
-  it("is present + names Robert", () => {
+  it("is present and goes to the moat argument (one designer's judgment)", () => {
+    // 2026-05-05: /about was restructured to first-person voice;
+    // the named-expert credentialing moved to the home bio. /about
+    // now goes straight to the philosophical claim — the rules
+    // are looked up, the *judgment* is the moat.
     expect(source.length).toBeGreaterThan(0);
-    expect(visible).toMatch(/Robert\b/);
+    // Bridges the HTML-encoded apostrophe (`&rsquo;`) with `.{1,10}`
+    // so the regex matches both raw `'` and entity-encoded variants.
+    expect(visible).toMatch(/one designer.{1,10}s judgment/i);
   });
 
-  it("flags pending bio content with a placeholder", () => {
-    // The copy-pin invariant: Robert's bio stays bracketed until
-    // Robert fills it in. Once Robert edits this copy, the
-    // placeholder disappears AND this test is replaced with a
-    // stronger assertion (author name, specific company, etc.).
-    const hasPlaceholder = /\{[^}]*\bbio\b[^}]*\}/.test(visible);
-    const hasAuthorStatement = /written by Robert/i.test(visible);
-    expect(hasPlaceholder || hasAuthorStatement).toBe(true);
+  it("scrubs the bracketed bio placeholder", () => {
+    // 2026-05-05: the {bio: …} placeholder was removed when /about
+    // was rewritten — the home bio now does the credentialing work
+    // and /about goes straight to the moat argument
+    // ("Why one designer's judgment"). This test pins the
+    // anti-regression: the bracket-style placeholder must not
+    // re-enter /about.
+    expect(visible).not.toMatch(/\{[^}]*\bbio\b[^}]*\}/);
   });
 
-  it("opens a path for disagreement (override, correct, explain)", () => {
-    expect(visible).toMatch(/disagree/i);
-    expect(visible).toMatch(/correct/i);
-    expect(visible).toMatch(/rationale/i);
-  });
+  // 2026-05-05: "How to disagree with the model" was dropped (mechanics
+  // belong on dashboard help, not the trust page). The disagreement
+  // contract now lives implicitly in "Why the model stays honest" via
+  // the override signal + calibration log links.
 
   it("inline-links at least one accountability surface from the body copy", () => {
     // The full accountability surface (/accuracy, /calibration,
