@@ -103,6 +103,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Directory of drift report JSON files. Newest by mtime wins.",
     )
     parser.add_argument(
+        "--held-out-kappa",
+        type=Path,
+        default=Path("evals/held_out/kappa.json"),
+        help=(
+            "Path to held-out kappa fallback (substrate input). Used "
+            "when readiness.json has no measured κ. Produced by "
+            "tools/score_held_out_kappa.py."
+        ),
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         default=Path("reports/accuracy/latest.json"),
@@ -112,10 +122,12 @@ def main(argv: list[str] | None = None) -> int:
 
     readiness = _safe_read_json(args.readiness)
     drift = _load_latest_drift(args.drift_dir)
+    held_out = _safe_read_json(args.held_out_kappa)
 
     snapshot = build_snapshot(
         readiness=readiness,
         drift=drift,
+        held_out=held_out,
         now=datetime.now(timezone.utc),
     )
 
@@ -132,10 +144,24 @@ def build_snapshot(
     *,
     readiness: dict | None,
     drift: dict | None,
+    held_out: dict | None = None,
     now: datetime,
 ) -> Snapshot:
-    """Pure builder. Tests exercise this with hand-crafted inputs."""
+    """Pure builder. Tests exercise this with hand-crafted inputs.
+
+    Resolution order for system κ:
+      1. readiness.json — preferred when graduation_metrics has
+         populated per-standard κ values.
+      2. held_out kappa fallback — used while readiness is still
+         pending. Honest measurement against Robert's blind labels;
+         single aggregate κ + 95% CI across the held-out set.
+      3. pending — no data either way; render the sentinel.
+    """
     measured_system = _aggregate_system_kappa(readiness)
+    if measured_system.get("state") == "pending_measurement":
+        held_out_kappa = _held_out_to_kappa(held_out)
+        if held_out_kappa is not None:
+            measured_system = held_out_kappa
     measured_self_drift = _drift_to_kappa(drift)
 
     by_level = {"robo_labels": 0, "batch_approval": 0, "autonomous": 0}
@@ -223,6 +249,28 @@ def _drift_to_kappa(drift: dict | None) -> dict:
         "ci_low": round(float(drift.get("kappa_ci_low", value)), 4),
         "ci_high": round(float(drift.get("kappa_ci_high", value)), 4),
         "sample_size": int(drift.get("sample_size", 0)),
+    }
+
+
+def _held_out_to_kappa(held_out: dict | None) -> dict | None:
+    """Map held-out aggregate κ into the public-snapshot shape.
+
+    Returns None when no usable data is present; callers fall back
+    to the pending sentinel. The same privacy contract applies:
+    only the aggregate (κ, CI, n) is exposed publicly. The
+    `by_standard` rows in `held_out` are substrate and never leak
+    here.
+    """
+    if not held_out or not isinstance(held_out.get("kappa"), (int, float)):
+        return None
+    value = float(held_out["kappa"])
+    sample = int(held_out.get("evaluated", 0))
+    return {
+        "state": "measured",
+        "value": round(value, 4),
+        "ci_low": round(float(held_out.get("ci_low", value)), 4),
+        "ci_high": round(float(held_out.get("ci_high", value)), 4),
+        "sample_size": sample,
     }
 
 

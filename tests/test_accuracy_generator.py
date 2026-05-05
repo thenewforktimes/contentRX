@@ -156,6 +156,89 @@ class TestSystemKappa:
         assert snap.measured_system["state"] == "pending_measurement"
         assert "readiness.json" in snap.measured_system["reason"]
 
+    def test_held_out_fallback_when_readiness_pending(self):
+        """When readiness has no measured κ, the held-out kappa file
+        bridges the gap so /accuracy ships a real number."""
+        held_out = {
+            "schema_version": "1.0.0",
+            "evaluated": 100,
+            "kappa": 0.85,
+            "ci_low": 0.78,
+            "ci_high": 0.92,
+            "observed_agreement": 0.93,
+            "by_standard": [
+                # Sub-standard rows are substrate; the public snapshot
+                # must not echo them. Test below verifies the leak.
+                {"standard_id": "ACC-01", "n": 14, "kappa": 0.82,
+                 "ci_low": 0.71, "ci_high": 0.93,
+                 "observed_agreement": 0.93},
+            ],
+        }
+        snap = accuracy_generator.build_snapshot(
+            readiness=None,
+            drift=None,
+            held_out=held_out,
+            now=FIXED_NOW,
+        )
+        assert snap.measured_system["state"] == "measured"
+        assert snap.measured_system["value"] == 0.85
+        assert snap.measured_system["ci_low"] == 0.78
+        assert snap.measured_system["ci_high"] == 0.92
+        assert snap.measured_system["sample_size"] == 100
+
+    def test_held_out_fallback_does_not_leak_per_standard_data(self):
+        """The held-out file's by_standard rows include standard_ids;
+        those are substrate and must not appear in the public snapshot."""
+        held_out = {
+            "schema_version": "1.0.0",
+            "evaluated": 100,
+            "kappa": 0.85,
+            "ci_low": 0.78,
+            "ci_high": 0.92,
+            "by_standard": [
+                {"standard_id": "ACC-01", "n": 14, "kappa": 0.82,
+                 "ci_low": 0.71, "ci_high": 0.93,
+                 "observed_agreement": 0.93},
+                {"standard_id": "GRM-06", "n": 18, "kappa": 0.71,
+                 "ci_low": 0.55, "ci_high": 0.87,
+                 "observed_agreement": 0.83},
+            ],
+        }
+        snap = accuracy_generator.build_snapshot(
+            readiness=None,
+            drift=None,
+            held_out=held_out,
+            now=FIXED_NOW,
+        )
+        import json
+        blob = json.dumps(snap.__dict__)
+        assert "ACC-01" not in blob
+        assert "GRM-06" not in blob
+        assert "by_standard" not in blob
+
+    def test_readiness_takes_precedence_over_held_out(self):
+        """When readiness has measured κ AND held_out is present,
+        readiness wins — graduation_metrics is the long-term substrate."""
+        held_out = {"evaluated": 100, "kappa": 0.50, "ci_low": 0.40, "ci_high": 0.60}
+        snap = accuracy_generator.build_snapshot(
+            readiness=_readiness_with_two_measured(),
+            drift=None,
+            held_out=held_out,
+            now=FIXED_NOW,
+        )
+        # Sample-weighted aggregate of readiness rows, NOT 0.50 from held_out.
+        assert snap.measured_system["state"] == "measured"
+        assert snap.measured_system["value"] != 0.50
+
+    def test_pending_when_neither_readiness_nor_held_out_have_data(self):
+        snap = accuracy_generator.build_snapshot(
+            readiness=None,
+            drift=None,
+            held_out={"evaluated": 0, "kappa": None},
+            now=FIXED_NOW,
+        )
+        assert snap.measured_system["state"] == "pending_measurement"
+
     def test_pending_when_no_standard_has_measured_kappa(self):
         # No criteria.kappa.value on any standard → pending.
         readiness = _readiness_with_two_measured()

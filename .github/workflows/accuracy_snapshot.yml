@@ -42,6 +42,18 @@ jobs:
       - name: Run accuracy generator
         run: python3 reports/accuracy/generate.py
 
+      - name: Save prior-week snapshot for the calibration log delta
+        # The weekly calibration log generator
+        # (reports/calibration/generate.py) reads the prior week's
+        # snapshot at reports/accuracy/YYYY-WW.json to compute the κ
+        # delta line. Without this step only `latest.json` exists and
+        # the delta always renders "no prior week to compare against."
+        # ISO week (`%G-%V`) is used so the calibration lookup
+        # matches.
+        run: |
+          ISO_WEEK=$(date -u +%G-%V)
+          cp reports/accuracy/latest.json "reports/accuracy/${ISO_WEEK}.json"
+
       - name: Open PR if snapshot changed
         uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676  # v7
         with:
