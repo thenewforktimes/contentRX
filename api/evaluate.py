@@ -177,7 +177,14 @@ class handler(BaseHTTPRequestHandler):
             return self._respond(
                 200,
                 {
-                    "result": {"rewritten": result.rewritten},
+                    "result": {
+                        "rewritten": result.rewritten,
+                        # Schema 2.4.0 — one-sentence diagnostic for the
+                        # Document-tier verdict header. Empty string when
+                        # the LLM's JSON output couldn't be parsed; the
+                        # rewrite still ships in that case.
+                        "diagnostic": result.diagnostic,
+                    },
                     "latency_ms": result.latency_ms,
                     "tokens": {
                         "input": result.input_tokens,

@@ -97,10 +97,20 @@ export function FlagForReview({
     );
   }
 
+  // Both variants use design-token semantic classes. The `link` variant
+  // (used in VerdictHeader, inline with the verdict pill) used to be a
+  // raw-stone underlined-link that read as broken at full contrast — a
+  // known a11y antipattern flagged in the doc-tier v2.1 critique. It's
+  // now a quiet secondary button: visible enough to invite the action
+  // (a customer disagreeing with the verdict is high-signal calibration
+  // data), subordinate enough to not compete with the verdict pill.
+  // The `card-action` variant matches the rest of the per-finding
+  // toolbar so the flag affordance reads as a peer of Adjust + Make a
+  // rule on each finding row.
   const triggerClassName =
     variant === "card-action"
-      ? "shrink-0 rounded-md border border-stone-300 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900"
-      : "text-xs text-stone-600 underline underline-offset-2 hover:text-quiet dark:hover:text-stone-100";
+      ? "shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover"
+      : "shrink-0 rounded-md border border-line bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover";
   const triggerLabel =
     variant === "card-action" ? "Flag" : "Flag for review";
 

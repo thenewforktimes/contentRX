@@ -31,12 +31,12 @@ describe("api-envelope", () => {
     expect(SCHEMA_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it("SCHEMA_VERSION is 2.3.0 (Document-tier holistic rewrite)", () => {
-    // Locks the additive minor that surfaces content_type + moment
-    // on the public envelope. Old clients ignoring unknown fields
-    // continue to work; new clients can ground recommendations in
-    // the customer's specific situation.
-    expect(SCHEMA_VERSION).toBe("2.3.0");
+  it("SCHEMA_VERSION is 2.4.0 (Document-tier diagnostic)", () => {
+    // 2.3.0 added the holistic rewrite; 2.4.0 adds the
+    // suggested_diagnostic companion field used as the lead text in
+    // the unified verdict header. Both ride together (same engine
+    // call, same null gating).
+    expect(SCHEMA_VERSION).toBe("2.4.0");
   });
 });
 
@@ -161,7 +161,7 @@ describe("publicCheckEnvelope", () => {
     process.env = original;
   });
 
-  it("emits schema 2.3.0 top-level shape", () => {
+  it("emits schema 2.4.0 top-level shape", () => {
     delete process.env.PUBLIC_TAXONOMY;
     const env = publicCheckEnvelope(makeSubstrateResult());
     expect(Object.keys(env).sort()).toEqual([
@@ -169,15 +169,18 @@ describe("publicCheckEnvelope", () => {
       "moment",
       "review_reason",
       "schema_version",
+      // 2.4.0 — additive diagnostic companion to suggested_rewrite.
+      "suggested_diagnostic",
       // 2.3.0 — additive holistic rewrite for tier=document calls.
       "suggested_rewrite",
       "verdict",
       "violations",
       "warnings",
     ]);
-    expect(env.schema_version).toBe("2.3.0");
-    // Default to null when caller didn't provide a rewrite.
+    expect(env.schema_version).toBe("2.4.0");
+    // Default to null when caller didn't provide a rewrite/diagnostic.
     expect(env.suggested_rewrite).toBeNull();
+    expect(env.suggested_diagnostic).toBeNull();
   });
 
   it("forwards content_type and moment from the substrate result", () => {
@@ -278,7 +281,7 @@ describe("publicCheckEnvelope", () => {
     // surprises across runs.
     expect(JSON.stringify(env, null, 2)).toMatchInlineSnapshot(`
       "{
-        "schema_version": "2.3.0",
+        "schema_version": "2.4.0",
         "violations": [
           {
             "issue": "This destructive confirmation does not name what gets deleted.",
@@ -292,7 +295,8 @@ describe("publicCheckEnvelope", () => {
         "warnings": [],
         "content_type": "error",
         "moment": "destructive_action",
-        "suggested_rewrite": null
+        "suggested_rewrite": null,
+        "suggested_diagnostic": null
       }"
     `);
   });

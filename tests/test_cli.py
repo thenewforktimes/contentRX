@@ -333,7 +333,7 @@ class TestMainDispatch:
         # fields — those are NOT substrate, they describe the
         # customer's own input back to them.
         assert parsed["verdict"] == "pass"
-        assert parsed["schema_version"] == "2.3.0"
+        assert parsed["schema_version"] == "2.4.0"
         assert "overall_verdict" not in parsed
         assert "rationale_chain" not in parsed
         assert "passes" not in parsed

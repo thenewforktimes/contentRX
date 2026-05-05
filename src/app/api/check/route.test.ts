@@ -55,8 +55,13 @@ const cannedEval: { current: object | null } = { current: null };
 // document. Default mock returns a stable rewrite text; tests that
 // care assert against this. Tests that want to exercise the failure
 // path can `vi.mocked(rewriteDocument).mockRejectedValueOnce(...)`.
+// Schema 2.4.0: result also carries `diagnostic` — one-sentence
+// judgment of the document's broad weaknesses.
 const cannedRewrite = {
-  result: { rewritten: "Stub rewrite for the document tier test." },
+  result: {
+    rewritten: "Stub rewrite for the document tier test.",
+    diagnostic: "Stub diagnostic for the document tier test.",
+  },
   latency_ms: 42,
   tokens: { input: 100, output: 30, cache_creation_input: 0, cache_read_input: 0 },
 };
@@ -432,7 +437,7 @@ describe("/api/check — happy path", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    expect(body.schema_version).toBe("2.3.0");
+    expect(body.schema_version).toBe("2.4.0");
     expect(body.verdict).toBe("violation");
     expect(Array.isArray(body.violations)).toBe(true);
     expect(body.violations).toHaveLength(1);

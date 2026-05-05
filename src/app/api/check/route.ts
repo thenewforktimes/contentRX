@@ -341,6 +341,10 @@ export async function POST(req: Request) {
   // null on clean documents (no findings to rewrite around), and null
   // when the rewrite call fails (best-effort, non-fatal).
   let suggestedRewrite: string | null = null;
+  // Schema 2.4.0: companion to suggestedRewrite — same lifecycle, same
+  // null conditions. Carries the one-sentence diagnostic shown in the
+  // verdict header.
+  let suggestedDiagnostic: string | null = null;
 
   if (customExampleResult) {
     const sc = shortCircuitFromExample(customExampleResult);
@@ -444,6 +448,12 @@ export async function POST(req: Request) {
         },
       };
       suggestedRewrite = rewriteResp.result.rewritten;
+      // Diagnostic is best-effort — empty string when JSON parse
+      // failed engine-side. Coerce to null so the public envelope is
+      // consistently nullable rather than carrying an empty string.
+      suggestedDiagnostic = rewriteResp.result.diagnostic
+        ? rewriteResp.result.diagnostic
+        : null;
     }
   }
 
@@ -564,15 +574,20 @@ export async function POST(req: Request) {
   // Suppress the rewrite for clean documents. The LLM was instructed
   // to return the original largely unchanged when nothing's wrong, so
   // surfacing a near-identical "rewrite" is noise. Only show when the
-  // post-team-rules verdict has something to act on.
+  // post-team-rules verdict has something to act on. The diagnostic
+  // follows the same gate — they ride or hide together.
+  const isCleanDoc = result.verdict === "pass";
   const finalSuggestedRewrite =
-    suggestedRewrite !== null && result.verdict !== "pass"
-      ? suggestedRewrite
+    suggestedRewrite !== null && !isCleanDoc ? suggestedRewrite : null;
+  const finalSuggestedDiagnostic =
+    suggestedDiagnostic !== null && !isCleanDoc
+      ? suggestedDiagnostic
       : null;
 
   return json({
     ...publicCheckEnvelope(result, {
       suggestedRewrite: finalSuggestedRewrite,
+      suggestedDiagnostic: finalSuggestedDiagnostic,
     }),
     latency_ms: evalResponse.latency_ms,
     tokens: evalResponse.tokens,

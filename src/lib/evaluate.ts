@@ -198,7 +198,13 @@ export type SuggestFixResponse = {
 };
 
 export type RewriteDocumentResponse = {
-  result: { rewritten: string };
+  result: {
+    rewritten: string;
+    // Schema 2.4.0: one-sentence diagnostic of the document's broad
+    // weaknesses. Empty string when the LLM's JSON parse failed; the
+    // rewrite still ships in that case.
+    diagnostic: string;
+  };
   latency_ms: number;
   tokens: EngineTokens;
 };

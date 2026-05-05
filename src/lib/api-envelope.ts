@@ -95,7 +95,17 @@
 //         from a parallel rewrite_document call into /api/evaluate.
 //         Additive — clients that don't read the field continue to
 //         work unchanged.
-export const SCHEMA_VERSION = "2.3.0" as const;
+// 2.4.0 — Document-tier diagnostic. Adds `suggested_diagnostic`
+//         (string | null) — one-sentence judgment of the document's
+//         broad weaknesses (e.g. "Heavy jargon, several long
+//         sentences, idiom-rich.") used as the lead text in the
+//         unified verdict header. Same engine call as
+//         `suggested_rewrite`; `rewrite_document` now returns
+//         {rewritten, diagnostic}. Null on standard/surface tiers,
+//         null on clean documents, null when JSON parse fails.
+//         Additive — clients that don't read the field continue to
+//         work unchanged.
+export const SCHEMA_VERSION = "2.4.0" as const;
 
 /**
  * Adds `schema_version` and `warnings` to a response payload. Existing
@@ -169,6 +179,11 @@ export type PublicCheckEnvelope = {
   // tier="document" calls when the check found something worth
   // rewriting; null on standard/surface tiers and on clean documents.
   suggested_rewrite: string | null;
+  // 2.4.0 — Document-tier diagnostic. One-sentence judgment of the
+  // document's broad weaknesses, used as the lead text in the verdict
+  // header. Same engine call as `suggested_rewrite`; null when no
+  // rewrite was attempted or the LLM's JSON parse failed.
+  suggested_diagnostic: string | null;
 };
 
 /**
@@ -263,7 +278,11 @@ export function publicViolation(v: SubstrateViolation): PublicViolation {
  */
 export function publicCheckEnvelope(
   result: SubstrateCheckResult,
-  opts: { warnings?: string[]; suggestedRewrite?: string | null } = {},
+  opts: {
+    warnings?: string[];
+    suggestedRewrite?: string | null;
+    suggestedDiagnostic?: string | null;
+  } = {},
 ): PublicCheckEnvelope {
   const violations = Array.isArray(result.violations)
     ? result.violations.map(publicViolation)
@@ -289,5 +308,10 @@ export function publicCheckEnvelope(
     // rewrite alongside the check. Default null keeps the field
     // present in the envelope even when no rewrite was attempted.
     suggested_rewrite: opts.suggestedRewrite ?? null,
+    // Schema 2.4.0: companion to suggested_rewrite — the one-sentence
+    // diagnostic that lands in the verdict header. Null when no
+    // rewrite was attempted or when the diagnostic field couldn't be
+    // parsed from the LLM output.
+    suggested_diagnostic: opts.suggestedDiagnostic ?? null,
   };
 }

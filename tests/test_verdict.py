@@ -41,7 +41,9 @@ class TestSchemaVersionBump:
         # envelope (customer-grounding fields).
         # 2.3.0 — additive `suggested_rewrite` for tier=document
         # holistic rewrite output.
-        assert SCHEMA_VERSION == "2.3.0"
+        # 2.4.0 — additive `suggested_diagnostic` companion to
+        # `suggested_rewrite` for the unified verdict header.
+        assert SCHEMA_VERSION == "2.4.0"
 
 
 class TestVerdictConstants:

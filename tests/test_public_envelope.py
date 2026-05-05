@@ -50,6 +50,10 @@ PUBLIC_ENVELOPE_TOP_LEVEL_FIELDS = frozenset({
     # Always present in the envelope (null on standard/surface
     # tiers; null on clean documents).
     "suggested_rewrite",
+    # 2.4.0 — additive one-sentence diagnostic; companion to
+    # suggested_rewrite. Always present, null when no rewrite
+    # was attempted or JSON parse failed.
+    "suggested_diagnostic",
 })
 
 SUBSTRATE_TOP_LEVEL_FIELDS = frozenset({
@@ -217,9 +221,10 @@ class TestCheckResultPublicEnvelope:
         assert envelope["schema_version"] == SCHEMA_VERSION
         # 2.2.0 added content_type + moment as customer-grounding fields.
         # 2.3.0 added suggested_rewrite (defaulted to None when not
-        # populated by the caller). Both content_type and moment are
-        # populated here because make_check_result sets them.
-        assert envelope["schema_version"] == "2.3.0"
+        # populated by the caller).
+        # 2.4.0 added suggested_diagnostic on the same default-None
+        # contract.
+        assert envelope["schema_version"] == "2.4.0"
         assert envelope["content_type"] == "error"
         assert envelope["moment"] == "destructive_action"
 

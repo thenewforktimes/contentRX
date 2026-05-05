@@ -95,7 +95,18 @@ from content_checker.config import is_public_taxonomy_enabled
 #         /api/evaluate; see api/evaluate.py and
 #         src/content_checker/rewrite_document.py. Additive — clients
 #         that don't read the field continue to work unchanged.
-SCHEMA_VERSION = "2.3.0"
+# 2.4.0 — Document-tier diagnostic. Adds `suggested_diagnostic`
+#         (string | null) at the top level of the public envelope.
+#         One-sentence judgment of the document's broad weaknesses
+#         (e.g. "Heavy jargon, several long sentences, idiom-rich.")
+#         used as the lead text in the unified verdict header. Same
+#         engine call as `suggested_rewrite` — rewrite_document now
+#         returns {rewritten, diagnostic}. Null on standard/surface
+#         tiers, null on clean documents, null when the LLM's JSON
+#         parse fails (the rewrite still ships in that case).
+#         Additive — clients that don't read the field continue to
+#         work unchanged.
+SCHEMA_VERSION = "2.4.0"
 
 
 # Ambiguity-flag vocabulary (human-eval build plan Session 1).
@@ -630,13 +641,14 @@ class CheckResult:
         *,
         warnings: list[str] | None = None,
         suggested_rewrite: str | None = None,
+        suggested_diagnostic: str | None = None,
     ) -> dict:
         """Public-facing envelope.
 
-        Top-level shape (schema 2.3.0):
+        Top-level shape (schema 2.4.0):
 
             {
-                "schema_version": "2.3.0",
+                "schema_version": "2.4.0",
                 "violations": [...public violations...],
                 "verdict": "...",
                 "review_reason": "..." | None,
@@ -644,6 +656,7 @@ class CheckResult:
                 "content_type": "..." | None,
                 "moment": "..." | None,
                 "suggested_rewrite": "..." | None,
+                "suggested_diagnostic": "..." | None,
             }
 
         Schema 2.2.0 added `content_type` and `moment` — both nullable
@@ -652,11 +665,13 @@ class CheckResult:
 
         Schema 2.3.0 added `suggested_rewrite` — only populated by the
         Document-tier check path when the regular check finds
-        something worth rewriting. Null on standard/surface tiers and
-        on clean documents. The rewrite is produced by the
-        `rewrite_document` mode on `/api/evaluate` and is
-        always-present in the envelope so wire-format clients can rely
-        on the key existing.
+        something worth rewriting.
+
+        Schema 2.4.0 added `suggested_diagnostic` — one-sentence
+        judgment of the document's broad weaknesses, used as the lead
+        text in the verdict header. Null when no rewrite was attempted
+        (standard / surface tiers, clean documents) or when the LLM's
+        JSON output couldn't be parsed.
 
         `passes`, `pipeline`, `rationale_chain`, `audience`,
         `summary`, and the legacy `overall_verdict` are still OMITTED.
@@ -672,6 +687,7 @@ class CheckResult:
             "content_type": self.content_type or None,
             "moment": self.moment or None,
             "suggested_rewrite": suggested_rewrite,
+            "suggested_diagnostic": suggested_diagnostic,
         }
 
 

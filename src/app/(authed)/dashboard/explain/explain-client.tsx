@@ -17,7 +17,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FindingAdjustModal } from "@/components/finding-adjust-modal";
 import { FindingMakeRuleModal } from "@/components/finding-make-rule-modal";
 import { FlagForReview } from "@/components/flag-for-review";
@@ -108,6 +108,31 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<CheckError | null>(null);
   const [response, setResponse] = useState<CheckEnvelope | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * "Use this version" handler — replaces the textarea with the
+   * Document-tier suggested rewrite, clears the existing result block
+   * (so the user sees a fresh state), and scrolls focus back to the
+   * textarea + Check button. Does NOT auto-fire Check: the customer
+   * may want to skim or lightly edit before re-checking, and the
+   * Check click is a deliberate quota commitment (8 units flat at
+   * Document tier).
+   */
+  function onUseThisVersion(rewrite: string) {
+    setText(rewrite);
+    setResponse(null);
+    setError(null);
+    // Defer to next paint so the textarea has the new value before we
+    // measure + scroll.
+    requestAnimationFrame(() => {
+      textareaRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      textareaRef.current?.focus();
+    });
+  }
 
   async function onCheck() {
     setLoading(true);
@@ -260,6 +285,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
         </div>
         <textarea
           id="explain-text"
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={4}
@@ -318,7 +344,11 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
 
       {response &&
         (response.submittedTier === "document" ? (
-          <DocumentReviewResult response={response} plan={plan} />
+          <DocumentReviewResult
+            response={response}
+            plan={plan}
+            onUseThisVersion={onUseThisVersion}
+          />
         ) : (
           <section className="space-y-4">
             <VerdictHeader
@@ -453,9 +483,11 @@ function VerdictHeader({
 function DocumentReviewResult({
   response,
   plan,
+  onUseThisVersion,
 }: {
   response: CheckEnvelope;
   plan: Plan;
+  onUseThisVersion: (rewrite: string) => void;
 }) {
   const findingCount = response.violations.length;
   const severityCounts = {
@@ -467,23 +499,33 @@ function DocumentReviewResult({
 
   return (
     <section className="space-y-4">
-      <VerdictHeader
+      {/*
+        v2.1 unification: verdict + counts + Flag for review + diagnostic
+        in ONE bordered card. Replaces the v1 split (small verdict pill +
+        floating "Detected as…" line + standalone DocumentSummaryCard).
+        The "Detected as long form copy · moment" line is intentionally
+        omitted on Document tier — customers care about outcomes, not
+        the engine's classification of their input. Standard tier still
+        surfaces it via VerdictHeader because there it grounds the
+        per-string finding.
+      */}
+      <DocumentVerdictBlock
         verdict={response.verdict}
         findingCount={findingCount}
-        contentType={response.content_type}
-        moment={response.moment}
+        worthAdjusting={
+          severityCounts.high + severityCounts.medium
+        }
+        quickPolish={severityCounts.low}
+        diagnostic={response.suggested_diagnostic}
         submittedText={response.submittedText}
       />
 
-      {findingCount > 0 && (
-        <DocumentSummaryCard
-          findingCount={findingCount}
-          severityCounts={severityCounts}
-        />
-      )}
-
       {response.suggested_rewrite && (
-        <SuggestedRewriteBlock rewrite={response.suggested_rewrite} />
+        <SuggestedRewriteBlock
+          rewrite={response.suggested_rewrite}
+          original={response.submittedText}
+          onUseThisVersion={onUseThisVersion}
+        />
       )}
 
       {findingCount > 0 ? (
@@ -505,48 +547,104 @@ function DocumentReviewResult({
   );
 }
 
-function DocumentSummaryCard({
+/**
+ * Document-tier verdict block — schema 2.4.0 unified header.
+ *
+ * Combines what were previously three separate UI elements (verdict
+ * pill, Flag-for-review link, summary card) into a single bordered
+ * card. Per the doc-tier v2.1 critique:
+ *
+ *   - The previous split read as floating islands above the rewrite.
+ *   - "Detected as long form copy · moment" was meta-info that
+ *     competed with the actual artifact and confidently surfaced
+ *     classifier hallucinations (e.g. a jargon doc reading as
+ *     "celebration"). Dropped on Document tier; Standard tier still
+ *     uses it through VerdictHeader.
+ *   - Flag-for-review now reads as a peer of the verdict (proper
+ *     contrast, button styling), not a faded link.
+ *   - The diagnostic answers "what's broadly wrong?" so the customer
+ *     doesn't have to scan all findings to decide whether to invest
+ *     time in the rewrite.
+ */
+function DocumentVerdictBlock({
+  verdict,
   findingCount,
-  severityCounts,
+  worthAdjusting,
+  quickPolish,
+  diagnostic,
+  submittedText,
 }: {
+  verdict: string;
   findingCount: number;
-  severityCounts: { high: number; medium: number; low: number };
+  worthAdjusting: number;
+  quickPolish: number;
+  diagnostic: string | null;
+  submittedText: string;
 }) {
-  // Per ADR 2026-04-29 §9b — substrate severity collapses to two
-  // visible customer tiers: high + medium → "Worth adjusting", low →
-  // "Quick polish". We surface counts in those buckets so the card
-  // matches the per-finding badges.
-  const worthAdjusting = severityCounts.high + severityCounts.medium;
-  const quickPolish = severityCounts.low;
+  const { label, tone } = humanizeVerdict(verdict, findingCount);
+  const flagVerdict =
+    verdict === "pass" ||
+    verdict === "violation" ||
+    verdict === "review_recommended"
+      ? verdict
+      : null;
   return (
-    <div className="rounded-md border border-line bg-raised p-4 text-sm">
-      <p className="text-default">
-        <span className="font-semibold">{findingCount}</span>{" "}
-        {findingCount === 1 ? "finding" : "findings"} across this document.
-        {worthAdjusting > 0 && (
-          <>
-            {" "}
-            <span className="font-medium">{worthAdjusting}</span> worth
-            adjusting
-          </>
-        )}
-        {worthAdjusting > 0 && quickPolish > 0 && ", "}
-        {worthAdjusting === 0 && quickPolish > 0 && " "}
-        {quickPolish > 0 && (
-          <>
-            <span className="font-medium">{quickPolish}</span> quick polish
-          </>
-        )}
-        .
-      </p>
+    <div className="rounded-md border border-line bg-raised p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Pill tone={tone}>{label}</Pill>
+          {findingCount > 0 && (
+            <span className="text-sm text-default">
+              <span className="font-semibold">{findingCount}</span>{" "}
+              {findingCount === 1 ? "finding" : "findings"}
+              {worthAdjusting > 0 && (
+                <>
+                  {" · "}
+                  <span className="font-medium">{worthAdjusting}</span>{" "}
+                  worth adjusting
+                </>
+              )}
+              {quickPolish > 0 && (
+                <>
+                  {worthAdjusting > 0 ? ", " : " · "}
+                  <span className="font-medium">{quickPolish}</span> quick
+                  polish
+                </>
+              )}
+            </span>
+          )}
+        </div>
+        <FlagForReview
+          text={submittedText}
+          verdict={flagVerdict}
+          source="dashboard"
+        />
+      </div>
+      {diagnostic && (
+        <p className="mt-2 text-sm text-default">{diagnostic}</p>
+      )}
     </div>
   );
 }
 
-function SuggestedRewriteBlock({ rewrite }: { rewrite: string }) {
+function SuggestedRewriteBlock({
+  rewrite,
+  original,
+  onUseThisVersion,
+}: {
+  rewrite: string;
+  original: string;
+  onUseThisVersion: (rewrite: string) => void;
+}) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">(
     "idle",
   );
+  // v2.1: viewMode toggle. "clean" renders the rewrite as prose; "diff"
+  // renders an inline word-diff against the original so the user can
+  // verify what changed before committing. Without this, the rewrite
+  // is a black box — the highest-impact addition for trust per the
+  // doc-tier v2.1 critique.
+  const [viewMode, setViewMode] = useState<"clean" | "diff">("clean");
 
   useEffect(() => {
     if (copyState === "idle") return;
@@ -579,31 +677,125 @@ function SuggestedRewriteBlock({ rewrite }: { rewrite: string }) {
           </h3>
           <p className="mt-0.5 text-xs text-accent-affirm-text/80">
             A cleaned version in the ContentRX house voice. Copy and edit
-            from here.
+            from here, or use it as the new working version.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onCopy}
-          aria-label="Copy clean version to clipboard"
-          className={[
-            "shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
-            copyState === "copied"
-              ? "border-accent-affirm-border bg-accent-affirm-solid text-accent-affirm-on"
-              : copyState === "error"
-                ? "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text"
-                : "border-accent-affirm-border bg-raised text-accent-affirm-text hover:bg-accent-affirm-solid hover:text-accent-affirm-on",
-          ].join(" ")}
-        >
-          {copyLabel}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/*
+            View toggle — "Clean" (default, the rewrite as prose) /
+            "Diff" (inline word-level strikethrough+added against the
+            original, using the same wordDiff library Standard tier
+            uses on per-finding cards). Lets the customer verify what
+            changed without leaving the page.
+          */}
+          <div
+            role="radiogroup"
+            aria-label="Rewrite view mode"
+            className="inline-flex rounded-md border border-accent-affirm-border bg-raised p-0.5 text-xs"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={viewMode === "clean"}
+              onClick={() => setViewMode("clean")}
+              className={`rounded-sm px-2 py-1 transition ${
+                viewMode === "clean"
+                  ? "bg-accent-affirm-solid text-accent-affirm-on"
+                  : "text-accent-affirm-text hover:bg-accent-affirm-soft"
+              }`}
+            >
+              Clean
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={viewMode === "diff"}
+              onClick={() => setViewMode("diff")}
+              className={`rounded-sm px-2 py-1 transition ${
+                viewMode === "diff"
+                  ? "bg-accent-affirm-solid text-accent-affirm-on"
+                  : "text-accent-affirm-text hover:bg-accent-affirm-soft"
+              }`}
+            >
+              Diff
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => onUseThisVersion(rewrite)}
+            aria-label="Replace the input with this rewrite"
+            className="shrink-0 rounded-md border border-accent-affirm-border bg-raised px-3 py-1.5 text-xs font-medium text-accent-affirm-text transition-colors hover:bg-accent-affirm-solid hover:text-accent-affirm-on"
+          >
+            Use this version
+          </button>
+          <button
+            type="button"
+            onClick={onCopy}
+            aria-label="Copy clean version to clipboard"
+            className={[
+              "shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+              copyState === "copied"
+                ? "border-accent-affirm-border bg-accent-affirm-solid text-accent-affirm-on"
+                : copyState === "error"
+                  ? "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text"
+                  : "border-accent-affirm-border bg-raised text-accent-affirm-text hover:bg-accent-affirm-solid hover:text-accent-affirm-on",
+            ].join(" ")}
+          >
+            {copyLabel}
+          </button>
+        </div>
       </header>
       <div className="bg-raised px-4 py-3">
-        <pre className="whitespace-pre-wrap break-words font-sans text-sm text-strong">
-          {rewrite}
-        </pre>
+        {viewMode === "clean" ? (
+          <pre className="whitespace-pre-wrap break-words font-sans text-sm text-strong">
+            {rewrite}
+          </pre>
+        ) : (
+          <RewriteDiffView before={original} after={rewrite} />
+        )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Block-level diff renderer for the Suggested rewrite "Diff" view.
+ *
+ * Reuses the existing `wordDiff` library (same algorithm Standard
+ * tier's per-finding cards use) but renders inline within a single
+ * <pre> block at document scale. Removed words show with strikethrough
+ * and red background; added words show with a green background.
+ *
+ * Performance note: wordDiff is O(n * m) on token counts. At our 50K
+ * char ceiling that's ~10K tokens per side; comfortably under
+ * any user-facing latency threshold.
+ */
+function RewriteDiffView({ before, after }: { before: string; after: string }) {
+  const tokens = wordDiff(before, after);
+  return (
+    <pre className="whitespace-pre-wrap break-words font-sans text-sm text-strong">
+      {tokens.map((t, i) => {
+        if (t.kind === "equal") return <span key={i}>{t.text}</span>;
+        if (t.kind === "removed") {
+          return (
+            <span
+              key={i}
+              className="bg-red-100 text-red-900 line-through dark:bg-red-950/60 dark:text-red-300"
+            >
+              {t.text}
+            </span>
+          );
+        }
+        return (
+          <span
+            key={i}
+            className="bg-green-100 text-green-900 dark:bg-green-950/60 dark:text-green-300"
+          >
+            {t.text}
+          </span>
+        );
+      })}
+    </pre>
   );
 }
 
