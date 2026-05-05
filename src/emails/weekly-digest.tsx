@@ -2,8 +2,8 @@
  * Weekly review-cadence digest.
  *
  * Fires Monday to the team owner. Summarizes last week's overrides,
- * highlights spikes / new clusters, and points at this week's moment
- * deep-review slot. Dedupe is handled by `sendEmail`'s Redis layer
+ * highlights spikes / new clusters, and points at this week's
+ * deep-review focus. Dedupe is handled by `sendEmail`'s Redis layer
  * keyed by (user, ISO week).
  *
  * Per ADR 2026-04-25 (private-taxonomy pivot), this email is a
@@ -82,7 +82,7 @@ export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload })
       )}
 
       <Section>
-        <Text style={sub}>This week&apos;s moment deep-review</Text>
+        <Text style={sub}>This week&apos;s deep-review focus</Text>
         <Text style={body}>{humanizeMoment(payload.nextMoment)}</Text>
       </Section>
 

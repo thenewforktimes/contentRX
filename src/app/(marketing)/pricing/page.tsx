@@ -149,7 +149,7 @@ export default function PricingPage() {
           />
           <Faq
             q="Why bill by length?"
-            a="Because reviewing one button label and reviewing a full screen of copy aren't the same work. Length is honest and predictable — short copy is cheap, long content costs proportionally more. No tier toggles to learn, no decision to mis-make at submit time."
+            a="Because reviewing one button label and reviewing a full screen of copy aren't the same work. Length is honest and predictable. Short copy is cheap; long content costs proportionally more. No tier toggles to learn, no decision to mis-make at submit time."
           />
           <Faq
             q="What happens if I hit my limit on Pro?"

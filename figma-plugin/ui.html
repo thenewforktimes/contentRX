@@ -2329,7 +2329,7 @@ function checkClr03SentenceLength(text, contentType) {
       return {
         standardId: "CLR-03",
         outcome: "violation",
-        issue: `Sentence is ${words.length} words. House style: keep sentences under ${threshold} words for ${friendlyType}.`,
+        issue: `Sentence is ${words.length} words. Aim for under ${threshold} for ${friendlyType}.`,
         suggestion: "Split into shorter sentences. Look for natural breaks after coordinating conjunctions ('and', 'but', 'because') or before a new clause.",
       };
     }
@@ -3284,9 +3284,11 @@ const MOMENT_WEIGHT_COUNTS = {
 
 
 /**
- * Render the "Moment detected" banner for a single node-card. Mirrors
+ * Render the "Context detected" banner for a single node-card. Mirrors
  * src/components/moment-banner.tsx (the React equivalent on the web
- * app). Session 22.
+ * app). The internal `moment` taxonomy stays as the data shape
+ * (data-moment attribute, classify_moment API call); the customer-
+ * facing label says "context" per the 2026-05-05 vocabulary scrub.
  */
 function renderMomentBanner(result) {
   const moment = result.moment;
@@ -3320,7 +3322,7 @@ function renderMomentBanner(result) {
   return `<div class="moment-banner" data-moment="${escapeHtml(moment)}"
                data-text-hash="${escapeHtml(textHash)}">
     <div class="moment-banner-head">
-      <span>Moment detected</span>
+      <span>Context detected</span>
       ${situationChip}
     </div>
     <div class="moment-banner-body">
@@ -3331,8 +3333,8 @@ function renderMomentBanner(result) {
     <div class="moment-banner-actions">
       <button type="button" class="btn-moment-correct btn-moment-correct-toggle">Not ${escapeHtml(moment)}?</button>
       <div class="moment-correct-form" hidden>
-        <select class="moment-correct-picker" aria-label="Correct moment">
-          <option value="">Pick a moment…</option>
+        <select class="moment-correct-picker" aria-label="Correct context">
+          <option value="">Pick a context…</option>
           ${dropdownOptions}
         </select>
         <button type="button" class="btn-moment-correct btn-moment-correct-send" disabled>Send</button>

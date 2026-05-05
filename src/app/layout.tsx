@@ -24,7 +24,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ContentRX. The content model for product copy",
   description:
-    "Situation-aware review for the moments where copy stops being decoration and starts being the product: error states, destructive confirmations, permissions flows, empty states. Runs in Claude Code, Cursor, your CLI, your CI, and Figma.",
+    "Staff-level content design review for the copy that decides whether the product works: error states, destructive confirmations, permissions flows, empty states. Runs in Claude Code, Cursor, your CLI, your CI, and Figma.",
 };
 
 export default function RootLayout({

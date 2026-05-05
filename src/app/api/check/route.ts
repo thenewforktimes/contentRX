@@ -326,14 +326,13 @@ export async function POST(req: Request) {
   }
 
   let evalResponse: EvaluateResponse;
-  // Schema 2.3.0: holistic rewrite for tier="document". Populated
-  // alongside the evalResponse below; null on standard/surface tiers,
-  // null on clean documents (no findings to rewrite around), and null
-  // when the rewrite call fails (best-effort, non-fatal).
+  // Holistic rewrite, fired for large inputs (>UNIT_WINDOW chars) when
+  // there are findings worth editing around. Null on small inputs,
+  // null on clean docs, null on rewrite-call failure (best-effort,
+  // non-fatal).
   let suggestedRewrite: string | null = null;
-  // Schema 2.4.0: companion to suggestedRewrite — same lifecycle, same
-  // null conditions. Carries the one-sentence diagnostic shown in the
-  // verdict header.
+  // One-sentence diagnostic that rides alongside suggestedRewrite —
+  // same lifecycle, same null conditions. Powers the verdict header.
   let suggestedDiagnostic: string | null = null;
 
   if (customExampleResult) {
@@ -422,7 +421,7 @@ export async function POST(req: Request) {
       const rewriteResp = rewriteSettled.value;
       // Extend tokens with the rewrite call's usage so cost telemetry
       // stays accurate. The rewrite is real LLM work the customer
-      // paid for via the document tier's flat 8-unit rate.
+      // paid for via the length-routed billing on the input.
       evalResponse = {
         ...evalResponse,
         latency_ms:
@@ -594,11 +593,11 @@ export async function POST(req: Request) {
       used: newUsed,
       quota,
       remaining: Math.max(0, quota - newUsed),
-      // checks_consumed reflects the tier-aware billing for this
-      // single call. Mirrors `metering.units_consumed`. Callers (web
-      // app counter, MCP agents) use either to explain "this paste
-      // cost you 8 units (document tier)" without re-implementing
-      // the metering math client-side.
+      // checks_consumed reflects the units charged for this single
+      // call. Mirrors `metering.units_consumed`. Callers (web app
+      // counter, MCP agents) read either to explain "this paste cost
+      // 5 units" without re-implementing the metering math client-
+      // side.
       checks_consumed: checksNeeded,
       month: currentMonth(),
       text_hash: hashText(text),

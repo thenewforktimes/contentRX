@@ -379,21 +379,21 @@ function VerdictHeader({
 }
 
 /**
- * Document-tier result renderer. Built to fix the per-finding-shows-the-
- * whole-document antipattern that the standard-tier DiffBlock pattern
- * produces when applied to a 5K-char input. Shape:
+ * Long-form review renderer. Used for inputs above UNIT_WINDOW (200
+ * chars). Built to avoid the per-finding-shows-the-whole-document
+ * antipattern that the per-finding DiffBlock pattern produces when
+ * applied to a 5K-char input. Shape:
  *
- *   1. VerdictHeader   — reused; carries the customer-grounding line.
- *   2. SummaryCard     — counts + severity breakdown.
- *   3. SuggestedRewrite — the holistic clean version (Schema 2.3.0).
- *      The named-expert moat made visible.
- *   4. FindingsList    — issue + tight suggestion text per finding.
+ *   1. VerdictHeader    — carries the customer-grounding line.
+ *   2. SummaryCard      — counts + severity breakdown.
+ *   3. SuggestedRewrite — the holistic clean version. The named-
+ *      expert moat made visible.
+ *   4. FindingsList     — issue + tight suggestion text per finding.
  *      NO per-finding diff against the whole document.
  *   5. View original    — collapsed disclosure with the input.
  *
- * The original DiffBlock pattern is deliberately NOT used here. For
- * Document tier, the rewrite IS the diff visualization; per-finding
- * suggestions are receipts of what changed and why.
+ * For long-form input, the rewrite IS the diff visualization;
+ * per-finding suggestions are receipts of what changed and why.
  */
 function DocumentReviewResult({
   response,
@@ -480,23 +480,16 @@ function DocumentReviewResult({
 }
 
 /**
- * Document-tier verdict block — schema 2.4.0 unified header.
+ * Unified verdict block for long-form review. Combines what were
+ * previously three separate UI elements (verdict pill, Flag-for-
+ * review link, summary card) into a single bordered card so the
+ * verdict reads as one artifact, not floating islands above the
+ * rewrite. The diagnostic answers "what's broadly wrong?" so the
+ * customer doesn't have to scan every finding to decide whether to
+ * invest time in the rewrite.
  *
- * Combines what were previously three separate UI elements (verdict
- * pill, Flag-for-review link, summary card) into a single bordered
- * card. Per the doc-tier v2.1 critique:
- *
- *   - The previous split read as floating islands above the rewrite.
- *   - "Detected as long form copy · moment" was meta-info that
- *     competed with the actual artifact and confidently surfaced
- *     classifier hallucinations (e.g. a jargon doc reading as
- *     "celebration"). Dropped on Document tier; Standard tier still
- *     uses it through VerdictHeader.
- *   - Flag-for-review now reads as a peer of the verdict (proper
- *     contrast, button styling), not a faded link.
- *   - The diagnostic answers "what's broadly wrong?" so the customer
- *     doesn't have to scan all findings to decide whether to invest
- *     time in the rewrite.
+ * The short-input path keeps the original VerdictHeader treatment
+ * (per-finding cards with inline diffs).
  */
 function DocumentVerdictBlock({
   verdict,
@@ -896,12 +889,12 @@ function DocumentFindingsCategory({
 }
 
 /**
- * Per-finding row in the Document-tier findings list. Renders the
+ * Per-finding row in the long-form findings list. Renders the
  * issue, an inline source excerpt (when one can be extracted from the
  * issue text), and the suggestion text. The action toolbar varies by
  * whether the finding is anchored (line edit) or document-shape (Big
  * picture observation). NEVER renders a DiffBlock against the whole
- * document — that's the antipattern the doc-tier redesign exists to
+ * document — that's the antipattern the long-form view exists to
  * kill.
  *
  * Make-a-rule: per ADR 2026-04-29 §3, the button stays accessible to
