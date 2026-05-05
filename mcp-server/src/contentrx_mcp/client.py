@@ -17,7 +17,7 @@ import httpx
 
 from .auth import get_api_base_url, get_api_key
 
-_USER_AGENT = "contentrx-mcp/0.8.0"
+_USER_AGENT = "contentrx-mcp/0.9.0"
 _TIMEOUT_SECONDS = 60.0
 
 
@@ -86,6 +86,21 @@ class CustomExampleCap:
     examples: list[CustomExample]
     count: int
     cap: int
+
+
+@dataclass
+class TeamRule:
+    """A single team_rules row. Mirrors the Drizzle schema at
+    `src/db/schema.ts` but keeps the substrate `team_owner_user_id`
+    field internal — the caller IS the team, no need to surface it.
+    """
+
+    id: str
+    standard_id: str
+    action: str  # "disable" | "override" | "add"
+    rule_json: dict[str, Any]
+    created_at: str
+    updated_at: str
 
 
 class ContentRXClient:
@@ -239,6 +254,69 @@ class ContentRXClient:
         self._raise_for_typed_status(resp)
         return True
 
+    # ------------------------------------------------------------------
+    # Team rules (CRUD on /api/team-rules)
+    # ------------------------------------------------------------------
+
+    async def add_team_rule(
+        self,
+        *,
+        action: str,
+        standard_id: str | None = None,
+        rule_json: dict[str, Any] | None = None,
+    ) -> TeamRule:
+        """POST /api/team-rules — create a disable / override / add rule.
+
+        action="disable": needs `standard_id` (a stock standard or a
+            custom TEAM-NN id). `rule_json` is ignored.
+        action="override": needs `standard_id` + `rule_json` carrying
+            at least one of {rule, severity, title}.
+        action="add": needs `rule_json` with {title, rule, pattern}
+            and optionally {severity, case_insensitive, content_types}.
+            `standard_id` is auto-generated as TEAM-NN server-side.
+        """
+        body: dict[str, Any] = {"action": action}
+        if standard_id is not None:
+            body["standard_id"] = standard_id
+        if rule_json is not None:
+            body["rule_json"] = rule_json
+        resp = await self._client.post("/api/team-rules", json=body)
+        self._raise_for_typed_status(resp)
+        data = resp.json()
+        rule = (data.get("result") or {}).get("rule") or {}
+        return _team_rule_from_json(rule)
+
+    async def list_team_rules(self) -> list[TeamRule]:
+        """GET /api/team-rules — list the team's rules."""
+        resp = await self._client.get("/api/team-rules")
+        self._raise_for_typed_status(resp)
+        result = (resp.json().get("result") or {})
+        return [
+            _team_rule_from_json(r) for r in (result.get("rules") or [])
+        ]
+
+    async def update_team_rule(
+        self,
+        *,
+        rule_id: str,
+        rule_json: dict[str, Any],
+    ) -> TeamRule:
+        """PATCH /api/team-rules/[id] — update an existing rule's body."""
+        resp = await self._client.patch(
+            f"/api/team-rules/{rule_id}",
+            json={"rule_json": rule_json},
+        )
+        self._raise_for_typed_status(resp)
+        data = resp.json()
+        rule = (data.get("result") or {}).get("rule") or {}
+        return _team_rule_from_json(rule)
+
+    async def remove_team_rule(self, *, rule_id: str) -> bool:
+        """DELETE /api/team-rules/[id]. Returns True on success."""
+        resp = await self._client.delete(f"/api/team-rules/{rule_id}")
+        self._raise_for_typed_status(resp)
+        return True
+
     @staticmethod
     def _raise_for_typed_status(resp: httpx.Response) -> None:
         if resp.is_success:
@@ -301,6 +379,22 @@ def _example_from_json(entry: dict[str, Any]) -> CustomExample:
         contribute_upstream=bool(
             entry.get("contributeUpstream") or entry.get("contribute_upstream") or False
         ),
+        created_at=str(entry.get("createdAt") or entry.get("created_at") or ""),
+        updated_at=str(entry.get("updatedAt") or entry.get("updated_at") or ""),
+    )
+
+
+def _team_rule_from_json(entry: dict[str, Any]) -> TeamRule:
+    """Convert the REST payload shape into the TeamRule dataclass.
+    Drizzle returns camelCase from `.returning()`; the route wraps
+    rows into `envelope({rule: row})` so the field names there are
+    Drizzle-camel.
+    """
+    return TeamRule(
+        id=entry.get("id", ""),
+        standard_id=entry.get("standardId") or entry.get("standard_id") or "",
+        action=entry.get("action", ""),
+        rule_json=dict(entry.get("ruleJson") or entry.get("rule_json") or {}),
         created_at=str(entry.get("createdAt") or entry.get("created_at") or ""),
         updated_at=str(entry.get("updatedAt") or entry.get("updated_at") or ""),
     )
