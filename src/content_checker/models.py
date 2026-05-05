@@ -106,7 +106,17 @@ from content_checker.config import is_public_taxonomy_enabled
 #         parse fails (the rewrite still ships in that case).
 #         Additive — clients that don't read the field continue to
 #         work unchanged.
-SCHEMA_VERSION = "2.4.0"
+# 2.5.0 — Per-violation `category` field on the public Violation.
+#         Customer-facing label ("Voice & tone", "Mechanics",
+#         "Structure", "Accessibility", "Inclusion", "Big picture")
+#         derived from the substrate `standard_id` via
+#         `labels.STANDARD_CATEGORY`. Surfaces the customer-facing
+#         taxonomy without exposing substrate IDs. The Document-tier
+#         dashboard uses this to group findings into named buckets
+#         instead of rendering a flat list. LLM-emitted findings
+#         without a standard_id default to "Big picture". Additive —
+#         clients that don't read the field continue to work.
+SCHEMA_VERSION = "2.5.0"
 
 
 # Ambiguity-flag vocabulary (human-eval build plan Session 1).
@@ -354,25 +364,34 @@ class Violation:
             self.severity = derive_severity(self.confidence)
 
     def to_public_dict(self) -> dict:
-        """Public-facing serialization — schema 2.0.0 four-field shape.
+        """Public-facing serialization — schema 2.5.0 five-field shape.
 
         Returns the user-visible Violation: `issue`, `suggestion`,
-        `severity`, `confidence`. Substrate fields (standard_id, rule,
-        rule_version, related_standards, ambiguity_flag, source,
-        validate_rejection_reason) are stripped — they never reach the
-        web dashboard, MCP, CLI, Figma plugin, GitHub Action, LSP, or
-        editor extensions.
+        `severity`, `confidence`, `category`. Substrate fields
+        (standard_id, rule, rule_version, related_standards,
+        ambiguity_flag, source, validate_rejection_reason) are stripped
+        — they never reach the web dashboard, MCP, CLI, Figma plugin,
+        GitHub Action, LSP, or editor extensions.
+
+        Schema 2.5.0 adds `category` — a customer-facing label
+        ("Voice & tone", "Mechanics", "Structure", "Accessibility",
+        "Inclusion", "Big picture"). The label is derived from
+        `standard_id` via `labels.STANDARD_CATEGORY`; LLM-emitted
+        findings without a standard_id default to "Big picture".
+        Substrate IDs stay private.
 
         When `PUBLIC_TAXONOMY=true` (reversibility insurance, default
         false), substrate fields are included alongside the public ones
         for downstream rendering. The flag is read at call time, so
         tests and request-scoped contexts can flip it without re-import.
         """
+        from content_checker.labels import get_category  # noqa: PLC0415
         public: dict[str, Any] = {
             "issue": self.issue,
             "suggestion": self.suggestion,
             "severity": self.severity,
             "confidence": self.confidence,
+            "category": get_category(self.standard_id),
         }
         if is_public_taxonomy_enabled():
             public.update({
@@ -394,7 +413,14 @@ class Violation:
 
         Note: `docs_url` is removed entirely in schema 2.0.0; the
         public taxonomy that page would have linked to is private now.
+
+        Schema 2.5.0: `category` is derived from `standard_id` via
+        `labels.get_category` and included alongside the substrate
+        fields. The TS-side `publicViolation` projection picks it up
+        from this dict to forward into the public envelope without
+        re-deriving the mapping. Same field appears in `to_public_dict`.
         """
+        from content_checker.labels import get_category  # noqa: PLC0415
         return {
             "standard_id": self.standard_id,
             "rule": self.rule,
@@ -403,6 +429,7 @@ class Violation:
             "source": self.source,
             "confidence": self.confidence,
             "severity": self.severity,
+            "category": get_category(self.standard_id),
             "related_standards": list(self.related_standards),
             "ambiguity_flag": self.ambiguity_flag,
             "rule_version": self.rule_version,

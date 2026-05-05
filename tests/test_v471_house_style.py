@@ -445,13 +445,14 @@ class TestPublicEnvelopeSnapshot:
         reason=(
             "PUBLIC_TAXONOMY=true intentionally exposes substrate fields "
             "as reversibility insurance per ADR 2026-04-25. The strict "
-            "four-field envelope shape is the production-default behavior."
+            "five-field envelope shape is the production-default behavior."
         ),
     )
     def test_no_substrate_fields_in_public_envelope(self):
-        """Per schema 2.0.0: public Violation has only issue/suggestion/
-        severity/confidence. No standard_id, rule, rule_version, source,
-        related_standards, ambiguity_flag, or validate_rejection_reason."""
+        """Per schema 2.5.0: public Violation has issue / suggestion /
+        severity / confidence / category. Substrate fields (standard_id,
+        rule, rule_version, source, related_standards, ambiguity_flag,
+        validate_rejection_reason) stay private."""
         result = self._build_result_with_p0_violations()
         envelope = result.to_public_envelope()
 
@@ -466,9 +467,10 @@ class TestPublicEnvelopeSnapshot:
                     f"Substrate field {field!r} leaked into public "
                     f"envelope: {v}"
                 )
-            # Required public fields (schema 2.0.0)
+            # Required public fields (schema 2.5.0)
             assert set(v.keys()) == {
                 "issue", "suggestion", "severity", "confidence",
+                "category",
             }
 
     @pytest.mark.skipif(

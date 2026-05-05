@@ -17,7 +17,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { FindingAdjustModal } from "@/components/finding-adjust-modal";
 import { FindingMakeRuleModal } from "@/components/finding-make-rule-modal";
 import { FlagForReview } from "@/components/flag-for-review";
@@ -108,31 +108,14 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<CheckError | null>(null);
   const [response, setResponse] = useState<CheckEnvelope | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  /**
-   * "Use this version" handler — replaces the textarea with the
-   * Document-tier suggested rewrite, clears the existing result block
-   * (so the user sees a fresh state), and scrolls focus back to the
-   * textarea + Check button. Does NOT auto-fire Check: the customer
-   * may want to skim or lightly edit before re-checking, and the
-   * Check click is a deliberate quota commitment (8 units flat at
-   * Document tier).
-   */
-  function onUseThisVersion(rewrite: string) {
-    setText(rewrite);
-    setResponse(null);
-    setError(null);
-    // Defer to next paint so the textarea has the new value before we
-    // measure + scroll.
-    requestAnimationFrame(() => {
-      textareaRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      textareaRef.current?.focus();
-    });
-  }
+  // The v2.1 "Use this version" CTA was removed in v2.2 — it dead-
+  // ended (cleared the result block, asked the user to spend another
+  // 8 units to verify in ContentRX) without matching how customers
+  // actually work. Their writing surface is Notion / Slack / a CMS;
+  // ContentRX is a review touchpoint, not a working surface. The
+  // natural flow is now: paste → review → Copy → take it away. The
+  // textareaRef state was only used for that scroll-back behavior, so
+  // it's gone too.
 
   async function onCheck() {
     setLoading(true);
@@ -285,7 +268,6 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
         </div>
         <textarea
           id="explain-text"
-          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={4}
@@ -344,11 +326,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
 
       {response &&
         (response.submittedTier === "document" ? (
-          <DocumentReviewResult
-            response={response}
-            plan={plan}
-            onUseThisVersion={onUseThisVersion}
-          />
+          <DocumentReviewResult response={response} plan={plan} />
         ) : (
           <section className="space-y-4">
             <VerdictHeader
@@ -483,11 +461,9 @@ function VerdictHeader({
 function DocumentReviewResult({
   response,
   plan,
-  onUseThisVersion,
 }: {
   response: CheckEnvelope;
   plan: Plan;
-  onUseThisVersion: (rewrite: string) => void;
 }) {
   const findingCount = response.violations.length;
   const severityCounts = {
@@ -500,31 +476,33 @@ function DocumentReviewResult({
   return (
     <section className="space-y-4">
       {/*
-        v2.1 unification: verdict + counts + Flag for review + diagnostic
-        in ONE bordered card. Replaces the v1 split (small verdict pill +
-        floating "Detected as…" line + standalone DocumentSummaryCard).
-        The "Detected as long form copy · moment" line is intentionally
-        omitted on Document tier — customers care about outcomes, not
-        the engine's classification of their input. Standard tier still
-        surfaces it via VerdictHeader because there it grounds the
-        per-string finding.
+        v2.2: verdict block sticks to the top of the viewport while the
+        user scrolls through the rewrite + findings. The "lose context"
+        complaint had two roots — (a) the verdict went out of view as
+        the user scrolled into findings, and (b) the findings lived in
+        a flat list with no anchor back to the source. Sticky verdict
+        addresses (a); category grouping + inline excerpts in
+        DocumentFindingRow address (b). top-2 leaves a small breathing
+        gap above the viewport edge so the card doesn't read as
+        flush-bonded to the chrome.
       */}
-      <DocumentVerdictBlock
-        verdict={response.verdict}
-        findingCount={findingCount}
-        worthAdjusting={
-          severityCounts.high + severityCounts.medium
-        }
-        quickPolish={severityCounts.low}
-        diagnostic={response.suggested_diagnostic}
-        submittedText={response.submittedText}
-      />
+      <div className="sticky top-2 z-10">
+        <DocumentVerdictBlock
+          verdict={response.verdict}
+          findingCount={findingCount}
+          worthAdjusting={
+            severityCounts.high + severityCounts.medium
+          }
+          quickPolish={severityCounts.low}
+          diagnostic={response.suggested_diagnostic}
+          submittedText={response.submittedText}
+        />
+      </div>
 
       {response.suggested_rewrite && (
         <SuggestedRewriteBlock
           rewrite={response.suggested_rewrite}
           original={response.submittedText}
-          onUseThisVersion={onUseThisVersion}
         />
       )}
 
@@ -537,6 +515,23 @@ function DocumentReviewResult({
       ) : response.verdict === "review_recommended" ? (
         <ReviewReasonFallback reviewReason={response.review_reason} />
       ) : null}
+
+      {/*
+        v2.2: single Make-a-rule pitch at the bottom (Pro/Free only).
+        Replaces the per-finding ghost button that was reading as a
+        broken paid feature.
+      */}
+      {plan !== "team" && findingCount > 0 && (
+        <p className="text-sm text-default">
+          Have rules you want enforced for your team?{" "}
+          <Link
+            href="/pricing#team"
+            className="font-medium text-accent-affirm-text underline underline-offset-2 hover:text-accent-affirm-on"
+          >
+            Upgrade to Team →
+          </Link>
+        </p>
+      )}
 
       <ViewOriginalDisclosure original={response.submittedText} />
 
@@ -630,20 +625,18 @@ function DocumentVerdictBlock({
 function SuggestedRewriteBlock({
   rewrite,
   original,
-  onUseThisVersion,
 }: {
   rewrite: string;
   original: string;
-  onUseThisVersion: (rewrite: string) => void;
 }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">(
     "idle",
   );
-  // v2.1: viewMode toggle. "clean" renders the rewrite as prose; "diff"
-  // renders an inline word-diff against the original so the user can
-  // verify what changed before committing. Without this, the rewrite
-  // is a black box — the highest-impact addition for trust per the
-  // doc-tier v2.1 critique.
+  // v2.2: viewMode toggle. "clean" renders the rewrite as prose;
+  // "diff" renders an inline word-diff against the original so the
+  // customer can verify what changed before committing. The toggle
+  // visual is a slider pill — the v2.1 segmented control didn't read
+  // as toggleable per Robert's correction.
   const [viewMode, setViewMode] = useState<"clean" | "diff">("clean");
 
   useEffect(() => {
@@ -671,37 +664,46 @@ function SuggestedRewriteBlock({
   return (
     <div className="overflow-hidden rounded-md border border-accent-affirm-border bg-accent-affirm-soft">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-accent-affirm-border px-4 py-3">
+        {/*
+          Header copy is intentionally minimal. The earlier subtitle
+          ("A cleaned version in the ContentRX house voice…") leaked
+          a framing we don't believe in — ContentRX doesn't impose a
+          house voice, it applies discernment to the customer's own
+          content. Robert's correction (2026-05-05): "It's their
+          content and our discernment, we don't have a house voice."
+          Tight, neutral subtitle keeps the focus on the artifact.
+        */}
         <div>
           <h3 className="text-sm font-semibold text-accent-affirm-text">
             Suggested rewrite
           </h3>
           <p className="mt-0.5 text-xs text-accent-affirm-text/80">
-            A cleaned version in the ContentRX house voice. Copy and edit
-            from here, or use it as the new working version.
+            Your document, edited for clarity.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           {/*
-            View toggle — "Clean" (default, the rewrite as prose) /
-            "Diff" (inline word-level strikethrough+added against the
-            original, using the same wordDiff library Standard tier
-            uses on per-finding cards). Lets the customer verify what
-            changed without leaving the page.
+            v2.2: slider-style Clean / Diff toggle. Pill container with
+            a solid filled active half — the contrast carries the
+            "selected" state where the segmented-control box-and-line
+            previously didn't. The Copy button stays as its own
+            rectangular CTA next to the toggle so the two visual
+            patterns (toggle vs action) read as different things.
           */}
           <div
             role="radiogroup"
             aria-label="Rewrite view mode"
-            className="inline-flex rounded-md border border-accent-affirm-border bg-raised p-0.5 text-xs"
+            className="inline-flex rounded-full border border-accent-affirm-border bg-raised p-0.5 text-xs font-medium"
           >
             <button
               type="button"
               role="radio"
               aria-checked={viewMode === "clean"}
               onClick={() => setViewMode("clean")}
-              className={`rounded-sm px-2 py-1 transition ${
+              className={`rounded-full px-3 py-1 transition-colors ${
                 viewMode === "clean"
-                  ? "bg-accent-affirm-solid text-accent-affirm-on"
-                  : "text-accent-affirm-text hover:bg-accent-affirm-soft"
+                  ? "bg-accent-affirm-solid text-accent-affirm-on shadow-sm"
+                  : "text-accent-affirm-text/70 hover:text-accent-affirm-text"
               }`}
             >
               Clean
@@ -711,23 +713,15 @@ function SuggestedRewriteBlock({
               role="radio"
               aria-checked={viewMode === "diff"}
               onClick={() => setViewMode("diff")}
-              className={`rounded-sm px-2 py-1 transition ${
+              className={`rounded-full px-3 py-1 transition-colors ${
                 viewMode === "diff"
-                  ? "bg-accent-affirm-solid text-accent-affirm-on"
-                  : "text-accent-affirm-text hover:bg-accent-affirm-soft"
+                  ? "bg-accent-affirm-solid text-accent-affirm-on shadow-sm"
+                  : "text-accent-affirm-text/70 hover:text-accent-affirm-text"
               }`}
             >
               Diff
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => onUseThisVersion(rewrite)}
-            aria-label="Replace the input with this rewrite"
-            className="shrink-0 rounded-md border border-accent-affirm-border bg-raised px-3 py-1.5 text-xs font-medium text-accent-affirm-text transition-colors hover:bg-accent-affirm-solid hover:text-accent-affirm-on"
-          >
-            Use this version
-          </button>
           <button
             type="button"
             onClick={onCopy}
@@ -799,6 +793,86 @@ function RewriteDiffView({ before, after }: { before: string; after: string }) {
   );
 }
 
+// Customer-facing category order. Defines render order; categories
+// not in this list (defensive default if the engine ever emits a new
+// label) sort to the end alphabetically. "Big picture" leads because
+// document-shape observations are the highest-leverage things to
+// engage with — they shape the user's read of the rest.
+const CATEGORY_ORDER: ReadonlyArray<string> = [
+  "Big picture",
+  "Voice & tone",
+  "Mechanics",
+  "Structure",
+  "Accessibility",
+  "Inclusion",
+];
+
+/**
+ * Group findings by their `category` field (schema 2.5.0). Returns
+ * an ordered array of [category, findings[]] tuples, with categories
+ * sorted by CATEGORY_ORDER. Empty categories are dropped — the user
+ * sees only categories that have findings.
+ */
+function groupFindingsByCategory(
+  findings: PublicViolation[],
+): Array<[string, PublicViolation[]]> {
+  const buckets = new Map<string, PublicViolation[]>();
+  for (const f of findings) {
+    const cat = f.category || "Big picture";
+    const list = buckets.get(cat) ?? [];
+    list.push(f);
+    buckets.set(cat, list);
+  }
+  const ordered: Array<[string, PublicViolation[]]> = [];
+  for (const cat of CATEGORY_ORDER) {
+    const list = buckets.get(cat);
+    if (list && list.length > 0) {
+      ordered.push([cat, list]);
+      buckets.delete(cat);
+    }
+  }
+  // Defensive: any unexpected category (forward-compat with new engine
+  // outputs) lands at the end alphabetically.
+  for (const cat of Array.from(buckets.keys()).sort()) {
+    ordered.push([cat, buckets.get(cat)!]);
+  }
+  return ordered;
+}
+
+/**
+ * Extract a one-line excerpt from the original document for a
+ * finding. Heuristic: the finding's `issue` text usually quotes the
+ * offending token in single quotes ("'Two' should be a numeral",
+ * "Repeated word: 'in in'", "ContentRX noticed 'touch' here..."). We
+ * pull out the first quoted token, find its first occurrence in the
+ * source, and return ±60 chars surrounding with ellipsis padding.
+ *
+ * Returns null when the issue text doesn't carry a quoted token, or
+ * when the token isn't found in the source. Document-level findings
+ * (Big picture category — incoherence, idioms, walls of text) don't
+ * carry quoted tokens and intentionally have no excerpt.
+ */
+function extractExcerpt(
+  issue: string,
+  originalText: string,
+): string | null {
+  const quoted = /'([^']+)'/.exec(issue);
+  if (!quoted) return null;
+  const token = quoted[1];
+  if (!token) return null;
+  let pos = originalText.indexOf(token);
+  if (pos === -1) {
+    pos = originalText.toLowerCase().indexOf(token.toLowerCase());
+  }
+  if (pos === -1) return null;
+  const start = Math.max(0, pos - 60);
+  const end = Math.min(originalText.length, pos + token.length + 60);
+  let excerpt = originalText.slice(start, end).trim();
+  if (start > 0) excerpt = "…" + excerpt;
+  if (end < originalText.length) excerpt = excerpt + "…";
+  return excerpt;
+}
+
 function DocumentFindingsList({
   findings,
   submittedText,
@@ -808,54 +882,121 @@ function DocumentFindingsList({
   submittedText: string;
   plan: Plan;
 }) {
+  const groups = groupFindingsByCategory(findings);
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-semibold text-default">
-        Findings ({findings.length})
-      </h3>
-      <p className="text-xs text-quiet">
-        What changed and why. Each finding fired against the original
-        document; the rewrite above already incorporates them.
-      </p>
-      <ul className="space-y-2">
+    <div className="space-y-3">
+      <div>
+        <h3 className="text-sm font-semibold text-default">
+          Findings ({findings.length})
+        </h3>
+        <p className="mt-0.5 text-xs text-quiet">
+          What changed and why. Each finding fired against the original
+          document; the rewrite above already incorporates them.
+        </p>
+      </div>
+      <div className="space-y-2">
+        {groups.map(([category, items], idx) => (
+          <DocumentFindingsCategory
+            key={category}
+            category={category}
+            findings={items}
+            submittedText={submittedText}
+            plan={plan}
+            // Big picture (the first group when present) opens by default —
+            // those are the load-bearing observations. Other categories
+            // collapse so the user can navigate without a wall of cards.
+            defaultOpen={idx === 0}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One category section in the findings list — collapsible <details>
+ * with a count in the summary row. Big picture findings get a
+ * flatter visual treatment (no Adjust action) because they're
+ * document-shape observations, not anchored line edits.
+ */
+function DocumentFindingsCategory({
+  category,
+  findings,
+  submittedText,
+  plan,
+  defaultOpen,
+}: {
+  category: string;
+  findings: PublicViolation[];
+  submittedText: string;
+  plan: Plan;
+  defaultOpen: boolean;
+}) {
+  const isBigPicture = category === "Big picture";
+  return (
+    <details
+      open={defaultOpen}
+      className="overflow-hidden rounded-md border border-line bg-raised"
+    >
+      <summary className="flex cursor-pointer select-none items-center justify-between px-4 py-3 text-sm font-medium text-default hover:bg-hover">
+        <span>
+          {category}{" "}
+          <span className="text-quiet">({findings.length})</span>
+        </span>
+        <span aria-hidden className="text-xs text-quiet">▾</span>
+      </summary>
+      <ul className="space-y-2 border-t border-line bg-canvas p-3">
         {findings.map((v, i) => (
           <DocumentFindingRow
             key={i}
             finding={v}
             submittedText={submittedText}
             plan={plan}
+            isBigPicture={isBigPicture}
           />
         ))}
       </ul>
-    </div>
+    </details>
   );
 }
 
 /**
  * Per-finding row in the Document-tier findings list. Renders the
- * issue, the suggestion text plainly (no DiffBlock against the whole
- * document — that's the antipattern this redesign exists to kill),
- * and the per-finding action toolbar (Copy suggestion / Adjust / Flag
- * / Make a rule).
+ * issue, an inline source excerpt (when one can be extracted from the
+ * issue text), and the suggestion text. The action toolbar varies by
+ * whether the finding is anchored (line edit) or document-shape (Big
+ * picture observation). NEVER renders a DiffBlock against the whole
+ * document — that's the antipattern the doc-tier redesign exists to
+ * kill.
+ *
+ * Make-a-rule: per ADR 2026-04-29 §3, the button stays accessible to
+ * Team-plan customers per-finding. On Pro/Free a single prose pitch
+ * lives at the bottom of the findings list (DocumentReviewResult);
+ * the per-row ghost button was removing that link from this row.
  */
 function DocumentFindingRow({
   finding,
   submittedText,
   plan,
+  isBigPicture,
 }: {
   finding: PublicViolation;
   submittedText: string;
   plan: Plan;
+  isBigPicture: boolean;
 }) {
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [makeRuleOpen, setMakeRuleOpen] = useState(false);
+  const excerpt = isBigPicture
+    ? null
+    : extractExcerpt(finding.issue, submittedText);
 
   return (
     <li className="rounded-md border border-line bg-raised p-3 text-sm">
       <div className="flex items-start justify-between gap-3">
         <SeverityBadge severity={finding.severity} />
         <div className="flex shrink-0 items-center gap-2">
-          {finding.suggestion && (
+          {finding.suggestion && !isBigPicture && (
             <CopySuggestionButton
               submittedText={submittedText}
               suggestion={finding.suggestion}
@@ -864,14 +1005,16 @@ function DocumentFindingRow({
               issue={finding.issue}
             />
           )}
-          <button
-            type="button"
-            onClick={() => setAdjustOpen(true)}
-            aria-label="Adjust this finding"
-            className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover"
-          >
-            Adjust
-          </button>
+          {!isBigPicture && (
+            <button
+              type="button"
+              onClick={() => setAdjustOpen(true)}
+              aria-label="Adjust this finding"
+              className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover"
+            >
+              Adjust
+            </button>
+          )}
           <FlagForReview
             text={submittedText}
             verdict="violation"
@@ -879,9 +1022,19 @@ function DocumentFindingRow({
             source="dashboard"
             contextLine={`Flagging finding: "${truncateForContext(finding.issue)}"`}
           />
-          <MakeRuleButton plan={plan} onOpen={() => setMakeRuleOpen(true)} />
+          {plan === "team" && (
+            <MakeRuleButton
+              plan={plan}
+              onOpen={() => setMakeRuleOpen(true)}
+            />
+          )}
         </div>
       </div>
+      {excerpt && (
+        <p className="mt-2 rounded border border-line bg-canvas px-2 py-1 font-mono text-xs text-quiet">
+          {excerpt}
+        </p>
+      )}
       <p className="mt-2 text-strong">{finding.issue}</p>
       {finding.suggestion && (
         <p className="mt-1 text-default">

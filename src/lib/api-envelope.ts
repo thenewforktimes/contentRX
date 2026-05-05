@@ -105,7 +105,16 @@
 //         null on clean documents, null when JSON parse fails.
 //         Additive — clients that don't read the field continue to
 //         work unchanged.
-export const SCHEMA_VERSION = "2.4.0" as const;
+// 2.5.0 — Per-violation `category` field on the public Violation
+//         (always present). Customer-facing label ("Voice & tone",
+//         "Mechanics", "Structure", "Accessibility", "Inclusion",
+//         "Big picture") derived from substrate standard_id via
+//         labels.STANDARD_CATEGORY. The Document-tier dashboard
+//         groups findings by this label instead of rendering a flat
+//         list — categorization without exposing substrate IDs.
+//         Additive — clients that don't read the field continue to
+//         work unchanged.
+export const SCHEMA_VERSION = "2.5.0" as const;
 
 /**
  * Adds `schema_version` and `warnings` to a response payload. Existing
@@ -143,6 +152,12 @@ export type PublicViolation = {
   suggestion: string;
   severity: string; // "high" | "medium" | "low"
   confidence: number;
+  // 2.5.0 — Customer-facing category. One of "Voice & tone",
+  // "Mechanics", "Structure", "Accessibility", "Inclusion", or
+  // "Big picture". Always populated — the public projection assigns
+  // "Big picture" as the default for findings without a substrate
+  // standard_id.
+  category: string;
   // Substrate fields — present only when PUBLIC_TAXONOMY=true.
   // Default product surfaces (web dashboard, MCP, CLI, Figma plugin,
   // GitHub Action, LSP, editor extensions) MUST NOT render these.
@@ -208,6 +223,10 @@ type SubstrateViolation = {
   suggestion?: string;
   severity?: string;
   confidence?: number;
+  // 2.5.0 — customer-facing category derived in to_substrate_dict on
+  // the Python side from the substrate standard_id. We forward it as-
+  // is without re-deriving the mapping.
+  category?: string;
   standard_id?: string;
   rule?: string;
   source?: string;
@@ -242,6 +261,10 @@ export function publicViolation(v: SubstrateViolation): PublicViolation {
     suggestion: typeof v.suggestion === "string" ? v.suggestion : "",
     severity: typeof v.severity === "string" ? v.severity : "medium",
     confidence: typeof v.confidence === "number" ? v.confidence : 0,
+    // 2.5.0 — customer-facing category. Default to "Big picture" when
+    // the engine didn't supply one (e.g. fixture data or a pre-2.5.0
+    // engine response in flight during a deploy).
+    category: typeof v.category === "string" ? v.category : "Big picture",
   };
   if (publicTaxonomyEnabled()) {
     if (v.standard_id !== undefined) out.standard_id = v.standard_id;

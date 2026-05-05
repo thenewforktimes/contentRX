@@ -437,17 +437,19 @@ describe("/api/check — happy path", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    expect(body.schema_version).toBe("2.4.0");
+    expect(body.schema_version).toBe("2.5.0");
     expect(body.verdict).toBe("violation");
     expect(Array.isArray(body.violations)).toBe(true);
     expect(body.violations).toHaveLength(1);
 
     const v = body.violations[0];
-    // Public envelope shape — exactly four fields.
+    // Public envelope shape — five fields (issue/suggestion/severity/
+    // confidence/category since 2.5.0).
     expect(v.issue).toBe("Link text is too vague to convey destination.");
     expect(v.suggestion).toBe("Replace with the destination noun.");
     expect(v.severity).toBe("high");
     expect(v.confidence).toBeCloseTo(0.91);
+    expect(typeof v.category).toBe("string");
 
     // Substrate fields MUST NOT leak.
     expect(v.standard_id).toBeUndefined();

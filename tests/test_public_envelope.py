@@ -36,6 +36,12 @@ from content_checker.models import (
 
 PUBLIC_VIOLATION_FIELDS = frozenset({
     "issue", "suggestion", "severity", "confidence",
+    # 2.5.0 — customer-facing category derived from substrate
+    # standard_id ("Voice & tone", "Mechanics", "Structure",
+    # "Accessibility", "Inclusion", "Big picture"). Substrate
+    # standard_ids stay private; the category is the customer-facing
+    # taxonomy.
+    "category",
 })
 
 SUBSTRATE_ONLY_VIOLATION_FIELDS = frozenset({
@@ -224,7 +230,9 @@ class TestCheckResultPublicEnvelope:
         # populated by the caller).
         # 2.4.0 added suggested_diagnostic on the same default-None
         # contract.
-        assert envelope["schema_version"] == "2.4.0"
+        # 2.5.0 added per-Violation `category` (customer-facing
+        # category labels derived from standard_id).
+        assert envelope["schema_version"] == "2.5.0"
         assert envelope["content_type"] == "error"
         assert envelope["moment"] == "destructive_action"
 

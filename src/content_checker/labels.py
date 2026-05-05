@@ -108,6 +108,135 @@ def get_display_label(standard_id: str) -> str:
     return DISPLAY_LABELS.get(standard_id, standard_id)
 
 
+# ---------------------------------------------------------------------------
+# Standard ID → customer-facing CATEGORY (schema 2.5.0)
+#
+# Findings on the Document-tier dashboard are grouped by category
+# instead of rendered as a flat list. The category mapping is the
+# customer-facing taxonomy on the public envelope. Substrate
+# standard_ids stay private (per ADR 2026-04-25); customers see the
+# category label only.
+#
+# When adding a new standard, add its category here. The fallback for
+# unknown / LLM-emitted findings without a standard_id is "Big picture"
+# — those are document-shape observations (incoherence, idiom-rich,
+# wall-of-text) that don't map to a specific rule.
+# ---------------------------------------------------------------------------
+
+# Customer-facing category labels. The mapping has six buckets:
+#   - Big picture: document-shape observations from the LLM scan
+#   - Voice & tone: hedging, jargon, register, action verbs
+#   - Mechanics: grammar, conventions, proofing
+#   - Structure: sentence length, paragraph layout
+#   - Accessibility: link text, device verbs, alt text, etc.
+#   - Inclusion: gendered language, non-inclusive terminology
+#
+# Buckets are intentionally few — too many categories defeats the
+# purpose of grouping. If a customer can't choose between five
+# meaningful buckets in two seconds, the grouping isn't helping.
+STANDARD_CATEGORY: dict[str, str] = {
+    # Voice & tone — speaks to *how* the content sounds.
+    "VT-01": "Voice & tone",
+    "VT-02": "Voice & tone",
+    "VT-03": "Voice & tone",
+    "VT-04": "Voice & tone",
+    "VT-05": "Voice & tone",
+    "VT-06": "Voice & tone",
+    "VT-07": "Voice & tone",
+    "ACT-01": "Voice & tone",
+    "ACT-02": "Voice & tone",
+    "ACT-03": "Voice & tone",
+    "ACT-04": "Voice & tone",
+    "CLR-01": "Voice & tone",  # plain language / banned words
+    "CLR-02": "Voice & tone",  # lead with most important info
+    "CLR-04": "Voice & tone",
+    "CLR-05": "Voice & tone",
+    "CLR-06": "Voice & tone",  # short words
+    "CLR-07": "Voice & tone",  # benefit-first (P2)
+    "PRF-11": "Voice & tone",  # dismissive language
+
+    # Mechanics — grammar, punctuation, conventions, proofing.
+    "GRM-01": "Mechanics",
+    "GRM-02": "Mechanics",
+    "GRM-03": "Mechanics",
+    "GRM-04": "Mechanics",
+    "GRM-05": "Mechanics",
+    "GRM-06": "Mechanics",
+    "GRM-07": "Mechanics",
+    "GRM-08": "Mechanics",
+    "CON-01": "Mechanics",
+    "CON-02": "Mechanics",
+    "CON-03": "Mechanics",
+    "CON-04": "Mechanics",
+    "CON-05": "Mechanics",
+    "PRF-01": "Mechanics",
+    "PRF-02": "Mechanics",
+    "PRF-03": "Mechanics",
+    "PRF-04": "Mechanics",
+    "PRF-05": "Mechanics",
+    "PRF-06": "Mechanics",
+    "PRF-07": "Mechanics",
+    "PRF-08": "Mechanics",
+    "PRF-09": "Mechanics",
+    "PRF-10": "Mechanics",
+
+    # Structure — sentence length, paragraph layout, hierarchy.
+    "CLR-03": "Structure",
+    "STR-01": "Structure",
+    "STR-02": "Structure",
+    "STR-03": "Structure",
+    "STR-04": "Structure",
+    "STR-05": "Structure",
+    "STR-06": "Structure",
+    "STR-07": "Structure",  # mobile readable (P2)
+
+    # Accessibility — vague link text, device verbs, alt text.
+    "ACC-01": "Accessibility",
+    "ACC-02": "Accessibility",
+    "ACC-03": "Accessibility",
+    "ACC-04": "Accessibility",
+    "ACC-05": "Accessibility",
+    "ACC-06": "Accessibility",
+    "ACC-07": "Accessibility",
+    "ACC-08": "Accessibility",  # device verbs (v4.7.1)
+
+    # Inclusion — gendered language, non-inclusive terminology.
+    "INC-01": "Inclusion",
+    "INC-02": "Inclusion",
+
+    # Translation readiness folds into Mechanics — these are typically
+    # syntactic/punctuation issues that hurt MT and i18n. Keeping it
+    # under Mechanics avoids a 7th bucket the customer doesn't need.
+    "TRN-01": "Mechanics",
+    "TRN-02": "Mechanics",
+    "TRN-03": "Mechanics",
+    "TRN-04": "Mechanics",
+    "TRN-05": "Mechanics",
+    "TRN-06": "Mechanics",
+    "TRN-07": "Mechanics",
+}
+
+# Default category for findings without a standard_id (LLM-emitted
+# document-shape observations) or with an unrecognized standard_id.
+# Big picture findings render with a distinct visual treatment in the
+# UI — they're observations, not anchored line edits.
+DEFAULT_CATEGORY = "Big picture"
+
+
+def get_category(standard_id: str | None) -> str:
+    """Return the customer-facing category for a standard ID.
+
+    Defaults to "Big picture" for findings without a standard_id (LLM-
+    emitted document-shape observations) or with an unrecognized
+    standard_id. The default keeps the engine forward-compatible —
+    new standards added later get categorized as Big picture until the
+    map is updated, rather than crashing the public projection.
+    """
+    if not standard_id:
+        return DEFAULT_CATEGORY
+    return STANDARD_CATEGORY.get(standard_id, DEFAULT_CATEGORY)
+
+
 def get_display_label_with_id(standard_id: str) -> str:
     """Return the display label with the standard ID as a suffix.
 

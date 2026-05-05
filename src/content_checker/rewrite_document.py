@@ -1,11 +1,20 @@
 """Holistic document rewrite — produces a clean version of a long input.
 
 The Document-tier dashboard surface (and the future MCP/CLI document
-review modes) ask for a single rewritten version of the user's input
+review modes) ask for a single edited version of the user's input
 *as a whole*, not a list of per-finding patches. This is the
 named-expert moat made visible: a content designer reviewed your doc
-and gave you back a cleaner version. Findings remain a separate,
-parallel signal — "here's what changed and why."
+and gave you back a cleaner version of YOUR content. Findings remain
+a separate, parallel signal — "here's what changed and why."
+
+Framing note: ContentRX does NOT impose a "house voice" on the
+customer's content. We apply discernment — general principles of good
+content design (plain language, short sentences, no em dashes,
+sentence case, AP-style hyphens, etc.) — to make the customer's
+document clearer and more shippable while preserving their intent,
+structure, and meaning. Customer-facing copy on the rewrite block
+mirrors this: it's their content edited for clarity, not a rewrite in
+our voice.
 
 Output contract (schema 2.4.0): `{rewritten, diagnostic}`. The
 rewritten text is the primary artifact; the diagnostic is a one-
@@ -15,14 +24,14 @@ the Document-tier verdict header to give the customer the
 finding. Same LLM call produces both — diagnostic adds ~30 output
 tokens.
 
-Scope decision (mirrors suggest_fix): the rewriter applies the
-standards as a *coherent voice*, not as a checklist. We don't pass
-the violation list as input — the LLM works from the standards prompt
-and the input alone. This keeps the rewrite from over-fitting to a
+Scope decision (mirrors suggest_fix): the editor applies the
+principles as a *coherent set*, not as a checklist. We don't pass
+the violation list as input — the LLM works from the system prompt
+and the input alone. This keeps the edit from over-fitting to a
 mechanical "fix item 1, fix item 2" pass.
 
 Triggered conservatively: /api/check only calls this for tier="document"
-AND when the regular check found something worth rewriting. Clean docs
+AND when the regular check found something worth editing. Clean docs
 don't get a rewrite — there's nothing to fix.
 """
 
@@ -127,15 +136,23 @@ def _parse_response(raw: str) -> tuple[str, str]:
 
 
 def _build_system_prompt() -> str:
+    # Framing is deliberate: we do NOT impose a "house voice" on the
+    # customer's content. We apply discernment — general principles of
+    # good content design — to make the customer's document clearer and
+    # more shippable while keeping their meaning, structure, and intent
+    # intact. Robert's correction (2026-05-05): "It's their content and
+    # our discernment, we don't have a house voice."
     return (
         "You are ContentRX, a staff content designer reviewing a "
-        "customer's document. Your job is ONE thing: rewrite the "
-        "customer's document in the ContentRX house voice. Nothing "
-        "else.\n\n"
-        "## Voice\n\n"
-        "Calm, confident, charming. Direct. Names the actor. Doesn't "
-        "blame the user. Points somewhere.\n\n"
-        "## Hard rules for the rewrite\n\n"
+        "customer's document. The customer pasted it for review. "
+        "Your job is ONE thing: edit the document for clarity and "
+        "shippability. Keep the customer's intent, structure, and "
+        "factual content; change only what makes the document harder "
+        "to read.\n\n"
+        "## Editing principles\n\n"
+        "Calm, direct, plain. Name the actor. Don't blame the user. "
+        "Point somewhere.\n\n"
+        "## Hard rules for the edit\n\n"
         "- **No em dashes or en dashes.** Use periods, commas, colons, "
         "parens, or sentence breaks.\n"
         "- **Short sentences.** Aim for 15–20 words; sentences over 25 "
@@ -163,7 +180,7 @@ def _build_system_prompt() -> str:
         "same headings, same lists. Don't reorganize.\n"
         "- Keep approximately the same length, or shorter. Plain "
         "language usually compresses; that's fine. Don't expand.\n"
-        "- If the original is already clean and follows the voice "
+        "- If the original is already clean and follows the principles "
         "above, return it largely unchanged. Don't 'improve' for the "
         "sake of changing.\n"
         "- Preserve all factual content (numbers, names, dates, "
@@ -172,7 +189,7 @@ def _build_system_prompt() -> str:
         "Respond with a single JSON object — no markdown code fences, "
         "no preface, no surrounding text. Two fields:\n\n"
         "  {\n"
-        '    "rewritten": "the full rewritten document, with original '
+        '    "rewritten": "the full edited document, with original '
         'paragraph breaks preserved as \\n\\n",\n'
         '    "diagnostic": "one short sentence (under 20 words) '
         'naming the document\'s broad weaknesses — e.g. \\"Heavy '

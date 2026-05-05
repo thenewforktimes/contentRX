@@ -31,12 +31,12 @@ describe("api-envelope", () => {
     expect(SCHEMA_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it("SCHEMA_VERSION is 2.4.0 (Document-tier diagnostic)", () => {
-    // 2.3.0 added the holistic rewrite; 2.4.0 adds the
-    // suggested_diagnostic companion field used as the lead text in
-    // the unified verdict header. Both ride together (same engine
-    // call, same null gating).
-    expect(SCHEMA_VERSION).toBe("2.4.0");
+  it("SCHEMA_VERSION is 2.5.0 (per-Violation category for findings grouping)", () => {
+    // 2.3.0 added the holistic rewrite; 2.4.0 added the
+    // suggested_diagnostic companion field. 2.5.0 adds per-Violation
+    // `category` so the Document-tier dashboard can group findings by
+    // customer-facing label without exposing substrate standard_ids.
+    expect(SCHEMA_VERSION).toBe("2.5.0");
   });
 });
 
@@ -55,6 +55,9 @@ const PUBLIC_VIOLATION_FIELDS = [
   "suggestion",
   "severity",
   "confidence",
+  // 2.5.0 — customer-facing category derived from substrate
+  // standard_id ("Voice & tone", "Mechanics", etc).
+  "category",
 ] as const;
 
 // Fields that MUST stay off the public envelope. content_type +
@@ -161,7 +164,7 @@ describe("publicCheckEnvelope", () => {
     process.env = original;
   });
 
-  it("emits schema 2.4.0 top-level shape", () => {
+  it("emits schema 2.5.0 top-level shape", () => {
     delete process.env.PUBLIC_TAXONOMY;
     const env = publicCheckEnvelope(makeSubstrateResult());
     expect(Object.keys(env).sort()).toEqual([
@@ -177,7 +180,7 @@ describe("publicCheckEnvelope", () => {
       "violations",
       "warnings",
     ]);
-    expect(env.schema_version).toBe("2.4.0");
+    expect(env.schema_version).toBe("2.5.0");
     // Default to null when caller didn't provide a rewrite/diagnostic.
     expect(env.suggested_rewrite).toBeNull();
     expect(env.suggested_diagnostic).toBeNull();
@@ -281,13 +284,14 @@ describe("publicCheckEnvelope", () => {
     // surprises across runs.
     expect(JSON.stringify(env, null, 2)).toMatchInlineSnapshot(`
       "{
-        "schema_version": "2.4.0",
+        "schema_version": "2.5.0",
         "violations": [
           {
             "issue": "This destructive confirmation does not name what gets deleted.",
             "suggestion": "Replace 'Are you sure?' with 'Delete the workspace?'.",
             "severity": "high",
-            "confidence": 0.92
+            "confidence": 0.92,
+            "category": "Big picture"
           }
         ],
         "verdict": "violation",

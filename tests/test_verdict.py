@@ -43,7 +43,9 @@ class TestSchemaVersionBump:
         # holistic rewrite output.
         # 2.4.0 — additive `suggested_diagnostic` companion to
         # `suggested_rewrite` for the unified verdict header.
-        assert SCHEMA_VERSION == "2.4.0"
+        # 2.5.0 — additive per-Violation `category` for customer-facing
+        # findings grouping ("Voice & tone" / "Mechanics" / etc).
+        assert SCHEMA_VERSION == "2.5.0"
 
 
 class TestVerdictConstants:
