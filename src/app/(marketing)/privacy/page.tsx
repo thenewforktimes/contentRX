@@ -81,8 +81,7 @@ export default function PrivacyPage() {
         <p className="mt-3">
           We do <strong>not</strong> collect: your IP address beyond
           what&apos;s needed for short-window rate limiting, advertising
-          identifiers, third-party tracking pixels, or keystroke-level
-          behavior in the editor extensions.
+          identifiers, or third-party tracking pixels.
         </p>
       </Section>
 
@@ -150,13 +149,13 @@ export default function PrivacyPage() {
         <p className="mt-4">
           And the engineering layer behind that: every public route
           that takes a string runs a pre-screen that refuses obvious
-          credentials and PII (credit card numbers, SSNs, AWS / Stripe
-          / OpenAI / GitHub keys) before they can reach Anthropic, our
-          error logs, or anyone&apos;s eyes. Sentry events have
-          request bodies and auth headers stripped before send. The
-          long-form version of this commitment, with the rationale
-          and the &ldquo;what changes if we ever change our mind&rdquo;
-          path, is at{" "}
+          credentials and PII (credit card numbers, SSNs, AWS /
+          Stripe / OpenAI / Anthropic / GitHub keys) before they can
+          reach Anthropic, our error logs, or anyone&apos;s eyes.
+          Sentry events have request bodies and auth headers stripped
+          before send. The long-form version of this commitment, with
+          the rationale and the &ldquo;what changes if we ever change
+          our mind&rdquo; path, is at{" "}
           <Link href="/ethics" className="underline underline-offset-2">
             /ethics
           </Link>
@@ -240,24 +239,16 @@ export default function PrivacyPage() {
       <Section title="Where the data lives">
         <p>
           Our application data lives in US-region Supabase Postgres.
-          Anthropic processes content in its own infrastructure.
-          Vercel runs functions in regions close to your users.
-        </p>
-        <p className="mt-3">
-          <strong>Anthropic retention, current state:</strong>{" "}
-          Anthropic retains API inputs for up to 30 days under their
-          standard policy. We&apos;re negotiating a zero-data-retention
-          agreement that would limit retention to the request
-          lifecycle. Once that&apos;s in place, this section will
-          reflect it. If your compliance program needs ZDR before then,
-          email <code>{PRIVACY_EMAIL}</code> and we&apos;ll tell you
-          the timeline directly.
+          Anthropic processes content in its own infrastructure under
+          its standard API policy. Vercel runs functions in regions
+          close to your users.
         </p>
         <p className="mt-3">
           If you have a regulatory requirement for EU-region data
-          residency, email <code>{PRIVACY_EMAIL}</code> before signing
-          up. We&apos;ll be straight with you about whether we can
-          meet it today.
+          residency or specific retention guarantees from any of the
+          subprocessors named above, email{" "}
+          <code>{PRIVACY_EMAIL}</code> before signing up. We&apos;ll
+          be straight with you about whether we can meet it today.
         </p>
       </Section>
 
