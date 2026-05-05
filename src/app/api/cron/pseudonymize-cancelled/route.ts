@@ -19,10 +19,11 @@
  * the CRON_SECRET bearer.
  */
 
-import { and, eq, inArray, isNull, lte, notInArray, sql } from "drizzle-orm";
+import { and, inArray, isNull, lte, notInArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb, schema } from "@/db";
 import { requireCronAuth } from "@/lib/cron-auth";
+import { pseudonymizeUser } from "@/lib/pseudonymize";
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 /** Cap per run to keep transactions bounded; cron repeats nightly. */
@@ -110,67 +111,6 @@ export async function POST(req: Request) {
     checked: cancelledIds.length,
     pseudonymized: processed,
   });
-}
-
-/**
- * Anonymize one user. Each step is intentionally separate so a partial
- * failure leaves the user in a recoverable state (next run picks up
- * where this one left off — `pseudonymizedAt` is set last).
- */
-async function pseudonymizeUser(userId: string): Promise<void> {
-  const db = getDb();
-
-  // 1. Drop personal attribution from training-relevant rows.
-  await db
-    .update(schema.violations)
-    .set({ userId: null })
-    .where(eq(schema.violations.userId, userId));
-
-  await db
-    .update(schema.violationOverrides)
-    .set({ userId: null })
-    .where(eq(schema.violationOverrides.userId, userId));
-
-  await db
-    .update(schema.preferences)
-    .set({ userId: null })
-    .where(eq(schema.preferences.userId, userId));
-
-  // 2. Delete team-scoped rows (no engine-training value once
-  //    anonymized; PII-adjacent because they reference the user's
-  //    workflow).
-  await db
-    .delete(schema.teamRules)
-    .where(eq(schema.teamRules.teamOwnerUserId, userId));
-
-  await db
-    .delete(schema.teamCustomExamples)
-    .where(eq(schema.teamCustomExamples.teamOwnerUserId, userId));
-
-  await db
-    .delete(schema.teamMembers)
-    .where(eq(schema.teamMembers.teamOwnerUserId, userId));
-
-  await db
-    .delete(schema.teamInvitations)
-    .where(eq(schema.teamInvitations.teamOwnerUserId, userId));
-
-  // 3. Replace identifiers on the users row with sentinel values.
-  //    `users.email` is NOT NULL + UNIQUE — use a stable sentinel
-  //    keyed on the user id so uniqueness is preserved without a
-  //    schema change. `apiKeyHash` is cleared to revoke the key.
-  await db
-    .update(schema.users)
-    .set({
-      email: `pseudonymized-${userId}@deleted.contentrx.io`,
-      apiKeyHash: null,
-      apiKeyPrefix: null,
-      apiKeyCreatedAt: null,
-      stripeCustomerId: null,
-      dittoApiKeyEncrypted: null,
-      pseudonymizedAt: new Date(),
-    })
-    .where(eq(schema.users.id, userId));
 }
 
 // Mark this route dynamic so Vercel doesn't try to statically

@@ -10,8 +10,9 @@
  *   1. Account (email + Clerk profile link for password / 2FA / etc.)
  *   2. Subscription (current plan, manage in Stripe)
  *   3. API key (mint / rotate / revoke — same panel as /dashboard)
- *   4. Privacy (export your data, delete account — mailto links per
- *      the /privacy commitments; no in-product flow yet)
+ *   4. Privacy (export your data via email; delete account in-product
+ *      via the typed-confirm flow at DeleteAccountSection — wires
+ *      through /api/dashboard/delete-account)
  *
  * Auth + provisioning mirrors /dashboard. If the user record isn't
  * provisioned yet (mid-Clerk-webhook), render the same "finishing up"
@@ -32,6 +33,7 @@ import { type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { ApiKeyPanel } from "../api-key-panel";
 import { SubscriptionPanel } from "../subscription-panel";
+import { DeleteAccountSection } from "./delete-account-section";
 
 export const metadata = {
   title: "Settings. ContentRX",
@@ -121,7 +123,6 @@ function AccountPanel({ email }: { email: string }) {
 
 function PrivacyPanel({ email }: { email: string }) {
   const exportSubject = encodeURIComponent("[EXPORT] " + email);
-  const deleteSubject = encodeURIComponent("[DELETE] " + email);
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
@@ -131,24 +132,18 @@ function PrivacyPanel({ email }: { email: string }) {
         </span>
       </header>
       <p className="mb-3 text-sm text-default">
-        Two rights baked into the product: see what we have on you, and
-        ask us to delete it. We confirm receipt within two business days
-        and complete the request within thirty.
+        See what we have on you, or delete your account. Both rights
+        are baked into the product.
       </p>
       <div className="flex flex-wrap gap-2">
         <a
           href={`mailto:privacy@contentrx.io?subject=${exportSubject}`}
-          className="inline-flex items-center rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium hover:bg-hover"
+          className="inline-flex items-center rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium hover:bg-overlay"
         >
           Export my data
         </a>
-        <a
-          href={`mailto:privacy@contentrx.io?subject=${deleteSubject}`}
-          className="inline-flex items-center rounded-md border border-rose-300 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950"
-        >
-          Delete my account
-        </a>
       </div>
+      <DeleteAccountSection />
     </section>
   );
 }
