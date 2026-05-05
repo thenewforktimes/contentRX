@@ -681,30 +681,32 @@ function SuggestedRewriteBlock({
             Your document, edited for clarity.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {/*
-            v2.2: slider-style Clean / Diff toggle. Pill container with
-            a solid filled active half — the contrast carries the
-            "selected" state where the segmented-control box-and-line
-            previously didn't. The Copy button stays as its own
-            rectangular CTA next to the toggle so the two visual
-            patterns (toggle vs action) read as different things.
+            v2.3: Clean and Diff are two independent buttons, not a
+            toggle widget. Two earlier iterations (segmented control;
+            pill slider with sliding thumb) failed to read as
+            toggleable — the bundling container was the problem.
+            Two equal-shape buttons with filled-active /
+            outlined-inactive treatment uses the same vocabulary as
+            every other primary-vs-secondary pair in the design
+            system, so customers don't have to learn a new pattern.
+            ARIA stays radiogroup so screen readers see the
+            mutually-exclusive view-mode semantics; only the visual
+            metaphor changes.
           */}
-          <div
-            role="radiogroup"
-            aria-label="Rewrite view mode"
-            className="inline-flex rounded-full border border-accent-affirm-border bg-raised p-0.5 text-xs font-medium"
-          >
+          <div role="radiogroup" aria-label="Rewrite view mode" className="flex items-center gap-2">
             <button
               type="button"
               role="radio"
               aria-checked={viewMode === "clean"}
               onClick={() => setViewMode("clean")}
-              className={`rounded-full px-3 py-1 transition-colors ${
+              className={[
+                "shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
                 viewMode === "clean"
-                  ? "bg-accent-affirm-solid text-accent-affirm-on shadow-sm"
-                  : "text-accent-affirm-text/70 hover:text-accent-affirm-text"
-              }`}
+                  ? "border-accent-affirm-border bg-accent-affirm-solid text-accent-affirm-on"
+                  : "border-accent-affirm-border bg-raised text-accent-affirm-text hover:bg-accent-affirm-soft",
+              ].join(" ")}
             >
               Clean
             </button>
@@ -713,11 +715,12 @@ function SuggestedRewriteBlock({
               role="radio"
               aria-checked={viewMode === "diff"}
               onClick={() => setViewMode("diff")}
-              className={`rounded-full px-3 py-1 transition-colors ${
+              className={[
+                "shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
                 viewMode === "diff"
-                  ? "bg-accent-affirm-solid text-accent-affirm-on shadow-sm"
-                  : "text-accent-affirm-text/70 hover:text-accent-affirm-text"
-              }`}
+                  ? "border-accent-affirm-border bg-accent-affirm-solid text-accent-affirm-on"
+                  : "border-accent-affirm-border bg-raised text-accent-affirm-text hover:bg-accent-affirm-soft",
+              ].join(" ")}
             >
               Diff
             </button>
