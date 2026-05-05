@@ -160,7 +160,7 @@ export default function PrivacyPage() {
           <Link href="/ethics" className="underline underline-offset-2">
             /ethics
           </Link>
-          {" "}(commitment 6).
+          {" "}(Commitment 3).
         </p>
       </Section>
 

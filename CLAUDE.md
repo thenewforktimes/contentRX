@@ -527,7 +527,7 @@ every API change, every new surface, every code review going forward.
 
 ContentRX is a customer-not-product business. The subscription is the
 entire revenue model; we don't sell, repackage, profile, or train
-on customer strings. The full position is at `/ethics` (commitment 6),
+on customer strings. The full position is at `/ethics` (Commitment 3),
 the contract is in [decisions/2026-04-28-customer-not-product.md](decisions/2026-04-28-customer-not-product.md),
 and the engineering layer that backs it lives in three files. None of
 this is aspirational — every public route handling a string already
