@@ -618,31 +618,26 @@ function SuggestedRewriteBlock({
             Your document, edited for clarity.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           {/*
-            v2.3: Clean and Diff are two independent buttons, not a
-            toggle widget. Two earlier iterations (segmented control;
-            pill slider with sliding thumb) failed to read as
-            toggleable — the bundling container was the problem.
-            Two equal-shape buttons with filled-active /
-            outlined-inactive treatment uses the same vocabulary as
-            every other primary-vs-secondary pair in the design
-            system, so customers don't have to learn a new pattern.
-            ARIA stays radiogroup so screen readers see the
-            mutually-exclusive view-mode semantics; only the visual
-            metaphor changes.
+            Hierarchy: Clean / Diff are tertiary view-state toggles
+            (ghost-style — text only, no chrome on inactive); Copy
+            clean version is the single primary action (filled affirm,
+            opacity-only hover so we never color-flip text on hover and
+            re-create the dark-on-dark legibility bug).
           */}
-          <div role="radiogroup" aria-label="Rewrite view mode" className="flex items-center gap-2">
+          <div role="radiogroup" aria-label="Rewrite view mode" className="flex items-center gap-1">
             <button
               type="button"
               role="radio"
               aria-checked={viewMode === "clean"}
               onClick={() => setViewMode("clean")}
               className={[
-                "shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                "shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
                 viewMode === "clean"
-                  ? "border-accent-affirm-border bg-accent-affirm-solid text-accent-affirm-on"
-                  : "border-accent-affirm-border bg-raised text-accent-affirm-text hover:bg-accent-affirm-soft",
+                  ? "bg-overlay text-strong"
+                  : "text-quiet hover:text-strong",
               ].join(" ")}
             >
               Clean
@@ -653,10 +648,11 @@ function SuggestedRewriteBlock({
               aria-checked={viewMode === "diff"}
               onClick={() => setViewMode("diff")}
               className={[
-                "shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                "shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
                 viewMode === "diff"
-                  ? "border-accent-affirm-border bg-accent-affirm-solid text-accent-affirm-on"
-                  : "border-accent-affirm-border bg-raised text-accent-affirm-text hover:bg-accent-affirm-soft",
+                  ? "bg-overlay text-strong"
+                  : "text-quiet hover:text-strong",
               ].join(" ")}
             >
               Diff
@@ -667,12 +663,11 @@ function SuggestedRewriteBlock({
             onClick={onCopy}
             aria-label="Copy clean version to clipboard"
             className={[
-              "shrink-0 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
-              copyState === "copied"
-                ? "border-accent-affirm-border bg-accent-affirm-solid text-accent-affirm-on"
-                : copyState === "error"
-                  ? "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text"
-                  : "border-accent-affirm-border bg-raised text-accent-affirm-text hover:bg-accent-affirm-solid hover:text-accent-affirm-on",
+              "shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-opacity",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
+              copyState === "error"
+                ? "bg-accent-caution-solid text-accent-caution-on"
+                : "bg-accent-affirm-solid text-accent-affirm-on hover:opacity-90",
             ].join(" ")}
           >
             {copyLabel}
