@@ -37,9 +37,9 @@ import {
 import { hashText, logViolations } from "@/lib/log-violations";
 import {
   MAX_INPUT_CHARS,
+  isLargeInput,
   meter,
   meteringBlock,
-  meterTierSchema,
 } from "@/lib/metering";
 import { fetchPrecedentsForCheck } from "@/lib/precedents";
 import {
@@ -65,24 +65,23 @@ import { QuotaWarningEmail } from "@/emails/quota-warning";
 
 // ----- billing model ---------------------------------------------------------
 //
-// Tier-aware metering (pre-pilot launch, schema 2.1.0). The /api/check
-// route accepts an optional `segment_type` field; if absent, the call
-// defaults to standard tier. The actual unit math lives in
-// `src/lib/metering.ts` so the dashboard's real-time estimator can
-// import the same function and stay in lock-step.
+// Length-routed metering (schema 3.0.0). The /api/check route no longer
+// accepts a `segment_type` parameter — the engine derives the size
+// class from `text.length`:
 //
-//   - standard (default): 1 unit per 300 characters of input, rounded
-//                         up. A 50-char button label is 1 unit; a
-//                         600-char paragraph is 2; a 1,500-char screen
-//                         is 5.
-//   - document: 8 units flat, regardless of length. Caller declares
-//               this for end-to-end help articles, full empty states,
-//               multi-paragraph onboarding flows.
-//   - surface:  25 units flat. Caller declares this for full PR diffs,
-//               complete Figma frames, multi-file content audits.
+//   - small (≤200 chars): 1 unit (the floor).
+//   - large (>200 chars):  Math.ceil(chars / 200) units, proportional.
 //
-// Hard input ceiling is MAX_INPUT_CHARS = 50,000 across all tiers.
-// Beyond that the caller splits into multiple calls.
+// The same boundary governs the dashboard's UX routing: small inputs
+// render the per-finding inline-diff cards; large inputs render the
+// rich doc-tier UX (sticky verdict, holistic rewrite, categorized
+// findings, inline excerpts). The wall-of-red-strikethrough antipattern
+// is no longer reachable from any input — long content always gets the
+// rich rendering.
+//
+// Hard input ceiling is MAX_INPUT_CHARS = 50,000. Beyond that the
+// caller splits into multiple calls (MCP evaluate_copy_batch and the
+// GitHub Action handle this client-side).
 
 // CORS allowlist (audit S5): see `lib/cors.ts`. The Figma plugin
 // iframe sends `Origin: null`; the marketing site is same-origin to
@@ -95,12 +94,10 @@ export async function OPTIONS(req: Request) {
 }
 
 const RequestSchema = z.object({
-  // Hard ceiling: MAX_INPUT_CHARS = 50,000 per call. Tier-aware
-  // metering bills the call by `segment_type` (1 unit per 300 chars at
-  // standard, 8 flat at document, 25 flat at surface). A single call
-  // can cost from 1 unit (button label at standard) to 167 units
-  // (50,000 chars at standard — economically silly, the caller would
-  // declare surface for 25 units instead).
+  // Hard ceiling: MAX_INPUT_CHARS = 50,000 per call. Schema 3.0.0
+  // bills proportionally — 1 unit per 200 characters, rounded up,
+  // with a floor of 1 unit. A 50-char button label is 1 unit; a
+  // 600-char paragraph is 3; a 4,000-char document is 20.
   //
   // Why a hard ceiling at 50,000 instead of letting the caller send
   // arbitrary length: defense-in-depth against runaway tokens reaching
@@ -118,23 +115,17 @@ const RequestSchema = z.object({
     .max(MAX_INPUT_CHARS, {
       message:
         `Text is too long (max ${MAX_INPUT_CHARS.toLocaleString()} ` +
-        `characters per call). ContentRX bills checks by tier — a ` +
-        `standard check is 1 unit per 300 chars, document is 8 flat, ` +
-        `surface is 25 flat. The same cap applies on every surface ` +
-        `(web app, MCP, CLI, GitHub Action, Figma plugin). For copy ` +
-        `longer than ${MAX_INPUT_CHARS.toLocaleString()} chars, split ` +
-        `into multiple calls — MCP evaluate_copy_batch and the GitHub ` +
+        `characters per call). ContentRX bills 1 unit per 200 ` +
+        `characters, rounded up. For copy longer than ` +
+        `${MAX_INPUT_CHARS.toLocaleString()} chars, split into ` +
+        `multiple calls — MCP evaluate_copy_batch and the GitHub ` +
         `Action handle this client-side.`,
     }),
-  // Optional billing tier. If absent, defaults to standard (per-300-char
-  // proportional billing). Callers that already know the shape of their
-  // input declare it explicitly:
-  //   - MCP `evaluate_copy` → standard
-  //   - MCP `evaluate_copy_batch` → document or surface based on size
-  //   - Figma plugin → standard (one layer per call)
-  //   - GitHub Action → surface (whole PR diff)
-  //   - CLI: standard or document depending on the --batch flag
-  segment_type: meterTierSchema.optional().default("standard"),
+  // Schema 3.0.0 dropped the `segment_type` parameter. Size is now
+  // derived from `text.length` server-side. A pre-3.0.0 caller that
+  // still sends `segment_type` will have it ignored (zod's default
+  // `.strict()` would reject it; we keep the schema permissive so
+  // old callers don't 400 during the cutover).
   // content_type and moment go INTO the LLM system prompt verbatim.
   // Accepting arbitrary strings here is a prompt-injection vector.
   content_type: z.enum(CONTENT_TYPES).optional(),
@@ -194,7 +185,6 @@ export async function POST(req: Request) {
     source,
     file_path,
     run_id,
-    segment_type,
   } = parsed.data;
 
   // PII pre-screen — refuse credit cards, SSNs, and credential-shaped
@@ -261,14 +251,14 @@ export async function POST(req: Request) {
     );
   }
 
-  // Tier-aware quota claim. A 50-char button label at standard tier
-  // costs 1 unit; a 600-char paragraph at standard costs 2; a 5,000-char
-  // help article at document costs 8 flat; a 30,000-char PR diff at
-  // surface costs 25 flat. The atomic claim is all-or-nothing — if the
-  // user has 1 unit left and this call costs 8, we 402 without touching
-  // the engine. Burst concurrency is still safe (the upsert + setWhere
-  // guard composes the same way for n > 1).
-  const meterDecision = meter(text, segment_type);
+  // Length-routed quota claim (schema 3.0.0). 1 unit per 200 chars,
+  // rounded up, floor 1. A 50-char button label is 1 unit; a 600-char
+  // paragraph is 3; a 4,000-char document is 20. The atomic claim is
+  // all-or-nothing — if the user has 1 unit left and this call costs
+  // 20, we 402 without touching the engine. Burst concurrency is
+  // still safe (the upsert + setWhere guard composes the same way
+  // for n > 1).
+  const meterDecision = meter(text);
   const checksNeeded = meterDecision.unitsConsumed;
   const claim = await claimQuotaSlots(auth.user.id, checksNeeded, quota);
   if (!claim.granted) {
@@ -385,13 +375,14 @@ export async function POST(req: Request) {
       logSafeError("precedent retrieval failed", err);
     }
 
-    // Schema 2.3.0: the dashboard's Document tier wants both findings
-    // AND a holistic rewrite in the ContentRX house voice. Fire the
-    // rewrite call IN PARALLEL with the regular evaluate so wall time
-    // is one round-trip, not two. The rewrite is best-effort — if it
-    // fails, we still return the check results with `suggested_rewrite:
-    // null` so the surface degrades gracefully.
-    const wantsRewrite = segment_type === "document";
+    // Schema 3.0.0: the holistic rewrite fires for any "large" input
+    // (>200 chars) — that's the dashboard's rich-UX threshold and the
+    // billing window's upper boundary. Fired IN PARALLEL with the
+    // regular evaluate so wall time is one round-trip, not two. The
+    // rewrite is best-effort — if it fails, we still return the
+    // check results with `suggested_rewrite: null` so the surface
+    // degrades gracefully.
+    const wantsRewrite = isLargeInput(text);
     const evaluatePromise = evaluate({
       text,
       content_type,
@@ -508,7 +499,7 @@ export async function POST(req: Request) {
     // days.
     recordUsageEvent({
       userId: auth.user.id,
-      segmentType: meterDecision.tier,
+      segmentType: meterDecision.sizeClass,
       unitsConsumed: meterDecision.unitsConsumed,
       ...tokens,
       modelId: null,

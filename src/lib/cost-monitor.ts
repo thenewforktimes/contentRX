@@ -27,7 +27,7 @@
 
 import { and, eq, gte, sql, sum } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import type { CheckTier } from "./metering";
+import type { SizeClass } from "./metering";
 import { estimateCostUsd } from "./pricing/model-rates";
 
 export type CheckSource =
@@ -41,7 +41,11 @@ export type CheckSource =
 
 export interface RecordUsageEventArgs {
   userId: string;
-  segmentType: CheckTier;
+  /** Schema 3.0.0: the three-tier model collapsed to length-routed
+   * `SizeClass` ("small" / "large"). The DB column accepts the old
+   * tier names for historical-row compat, but new rows write the new
+   * size class. */
+  segmentType: SizeClass;
   unitsConsumed: number;
   inputTokens: number;
   outputTokens: number;

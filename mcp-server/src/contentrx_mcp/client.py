@@ -17,7 +17,7 @@ import httpx
 
 from .auth import get_api_base_url, get_api_key
 
-_USER_AGENT = "contentrx-mcp/0.7.0"
+_USER_AGENT = "contentrx-mcp/0.8.0"
 _TIMEOUT_SECONDS = 60.0
 
 
@@ -115,25 +115,21 @@ class ContentRXClient:
         text: str,
         moment: str | None = None,
         content_type: str | None = None,
-        segment_type: str | None = None,
     ) -> CheckResult:
         """POST /api/check — full evaluation. Counts against monthly quota.
 
-        `segment_type` declares the metering tier (Phase 3 of the
-        pre-pilot launch build). One of "standard" | "document" |
-        "surface"; if omitted, /api/check defaults to standard. Single-
-        string MCP calls (`evaluate_copy`) are standard; batch calls
-        (`evaluate_copy_batch`) declare per-string standard for now —
-        an aggregate-document mode could be added when a single LLM
-        round-trip across many strings is wired.
+        Schema 3.0.0 (2026-05-05) dropped the `segment_type`
+        parameter. The /api/check endpoint now derives the size class
+        from `text.length` server-side: 1 unit per 200 characters,
+        rounded up, floor 1 unit. Inputs >200 chars get the rich
+        long-form review (holistic rewrite + categorized findings
+        + inline excerpts); shorter inputs get per-finding diff cards.
         """
         body: dict[str, Any] = {"text": text, "source": "mcp"}
         if moment:
             body["moment"] = moment
         if content_type:
             body["content_type"] = content_type
-        if segment_type:
-            body["segment_type"] = segment_type
         # Closes audit M-26. Was source="plugin" because the engine's
         # source enum was locked; we widened it across /api/check,
         # /api/violations/override, log-violations.ts, and actor-role.ts

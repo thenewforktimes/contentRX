@@ -449,7 +449,7 @@ class TestPublicEnvelopeSnapshot:
         ),
     )
     def test_no_substrate_fields_in_public_envelope(self):
-        """Per schema 2.5.0: public Violation has issue / suggestion /
+        """Per schema 3.0.0: public Violation has issue / suggestion /
         severity / confidence / category. Substrate fields (standard_id,
         rule, rule_version, source, related_standards, ambiguity_flag,
         validate_rejection_reason) stay private."""
@@ -467,7 +467,7 @@ class TestPublicEnvelopeSnapshot:
                     f"Substrate field {field!r} leaked into public "
                     f"envelope: {v}"
                 )
-            # Required public fields (schema 2.5.0)
+            # Required public fields (schema 3.0.0)
             assert set(v.keys()) == {
                 "issue", "suggestion", "severity", "confidence",
                 "category",

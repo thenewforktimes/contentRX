@@ -116,7 +116,25 @@ from content_checker.config import is_public_taxonomy_enabled
 #         instead of rendering a flat list. LLM-emitted findings
 #         without a standard_id default to "Big picture". Additive —
 #         clients that don't read the field continue to work.
-SCHEMA_VERSION = "2.5.0"
+# 3.0.0 — **Breaking.** Two-size check model collapses Standard /
+#         Document / Surface tiers into length-routed sizing.
+#         Removed entirely:
+#           - `segment_type` request parameter on /api/check (the
+#             engine derives size from text length).
+#           - The three-tier names ("standard", "document", "surface")
+#             in the response `metering` block.
+#         Renamed: `metering.tier` → `metering.size_class` (`"small"`
+#         ≤200 chars, `"large"` above). Pricing changes from flat
+#         tiers to proportional: 1 unit per 200 characters, rounded
+#         up, floor 1 unit. Pre-launch with zero paying customers,
+#         breaking the wire format is the right time to simplify the
+#         model. The Document-tier UX (rewrite, sticky verdict,
+#         categorized findings, inline excerpts) now triggers on
+#         `text.length > 200` regardless of caller intent — the
+#         wall-of-red-strikethrough antipattern is no longer reachable
+#         from any input. The CHANGE_VERSION block in
+#         `src/lib/api-envelope.ts` mirrors this entry verbatim.
+SCHEMA_VERSION = "3.0.0"
 
 
 # Ambiguity-flag vocabulary (human-eval build plan Session 1).
@@ -364,7 +382,7 @@ class Violation:
             self.severity = derive_severity(self.confidence)
 
     def to_public_dict(self) -> dict:
-        """Public-facing serialization — schema 2.5.0 five-field shape.
+        """Public-facing serialization — schema 3.0.0 five-field shape.
 
         Returns the user-visible Violation: `issue`, `suggestion`,
         `severity`, `confidence`, `category`. Substrate fields

@@ -6,7 +6,29 @@ adheres to semantic versioning.
 
 The PyPI history for this package skipped 0.5.0 and 0.6.0 — those version
 numbers were bumped in source but never published. The published progression
-is `0.2.0 → 0.3.0 → 0.4.0 → 0.7.0`.
+is `0.2.0 → 0.3.0 → 0.4.0 → 0.7.0 → 0.8.0`.
+
+## [0.8.0] — 2026-05-05
+
+Schema 3.0.0 cutover: the three-tier check model collapsed into
+length-routed metering. Drops the `segment_type` parameter from
+`evaluate_copy` (and the underlying `client.check()`); the size class
+is now derived server-side from `text.length` (1 unit per 200
+characters, rounded up). Pre-3.0.0 callers that pass `segment_type`
+get a `TypeError` (parameter no longer exists). Breaking change for
+any caller that explicitly passed `segment_type`; transparent for
+the typical caller that relied on the default.
+
+### Changed
+- `evaluate_copy` (and `client.check()`) drop the `segment_type`
+  parameter. The server auto-routes by text length — short inputs
+  (≤200 chars) get the per-finding diff cards; long inputs (>200
+  chars) get the rich long-form review with holistic rewrite.
+- The `metering` block on responses uses `size_class` ("small" /
+  "large") instead of `tier` ("standard" / "document" / "surface").
+
+### Removed
+- `segment_type` parameter from `evaluate_copy` / `client.check()`.
 
 ## [0.7.0] — 2026-04-28
 

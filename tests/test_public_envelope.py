@@ -52,13 +52,13 @@ SUBSTRATE_ONLY_VIOLATION_FIELDS = frozenset({
 PUBLIC_ENVELOPE_TOP_LEVEL_FIELDS = frozenset({
     "schema_version", "violations", "verdict", "review_reason",
     "warnings", "content_type", "moment",
-    # 2.3.0 — additive holistic rewrite for tier=document calls.
-    # Always present in the envelope (null on standard/surface
-    # tiers; null on clean documents).
+    # The holistic rewrite that fires for large inputs (>200 chars).
+    # Always present in the envelope (null on small inputs and on
+    # clean documents).
     "suggested_rewrite",
-    # 2.4.0 — additive one-sentence diagnostic; companion to
-    # suggested_rewrite. Always present, null when no rewrite
-    # was attempted or JSON parse failed.
+    # One-sentence diagnostic; companion to suggested_rewrite.
+    # Always present, null when no rewrite was attempted or JSON
+    # parse failed.
     "suggested_diagnostic",
 })
 
@@ -225,14 +225,10 @@ class TestCheckResultPublicEnvelope:
 
         assert set(envelope.keys()) == PUBLIC_ENVELOPE_TOP_LEVEL_FIELDS
         assert envelope["schema_version"] == SCHEMA_VERSION
-        # 2.2.0 added content_type + moment as customer-grounding fields.
-        # 2.3.0 added suggested_rewrite (defaulted to None when not
-        # populated by the caller).
-        # 2.4.0 added suggested_diagnostic on the same default-None
-        # contract.
-        # 2.5.0 added per-Violation `category` (customer-facing
-        # category labels derived from standard_id).
-        assert envelope["schema_version"] == "2.5.0"
+        # 3.0.0 — BREAKING: collapsed three-tier model. /api/check no
+        # longer accepts segment_type; metering uses size_class
+        # ("small" / "large") derived from text length.
+        assert envelope["schema_version"] == "3.0.0"
         assert envelope["content_type"] == "error"
         assert envelope["moment"] == "destructive_action"
 

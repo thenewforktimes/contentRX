@@ -87,8 +87,6 @@ async def evaluate_copy(
             result = await client.check(
                 text=text,
                 moment=moment_hint,
-                # Single-string MCP call → standard metering tier.
-                segment_type="standard",
             )
     except (AuthError, AuthFailedError, QuotaExhaustedError, RateLimitError) as exc:
         return _typed_error(exc)
@@ -203,11 +201,6 @@ async def evaluate_copy_batch(
                         text=text,
                         moment=moment_hint,
                         content_type=content_type_hint,
-                        # Per-string in a batch is still standard tier;
-                        # batch is just N parallel standard checks. A
-                        # future cross-string-consistency mode would
-                        # declare document instead.
-                        segment_type="standard",
                     )
                 except (
                     AuthError,

@@ -31,12 +31,13 @@ describe("api-envelope", () => {
     expect(SCHEMA_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  it("SCHEMA_VERSION is 2.5.0 (per-Violation category for findings grouping)", () => {
-    // 2.3.0 added the holistic rewrite; 2.4.0 added the
-    // suggested_diagnostic companion field. 2.5.0 adds per-Violation
-    // `category` so the Document-tier dashboard can group findings by
-    // customer-facing label without exposing substrate standard_ids.
-    expect(SCHEMA_VERSION).toBe("2.5.0");
+  it("SCHEMA_VERSION is 3.0.0 (length-routed metering, segment_type dropped)", () => {
+    // 3.0.0 collapses the three-tier model into length-routed metering.
+    // The /api/check request schema no longer accepts segment_type;
+    // the response `metering.tier` field is renamed to `size_class`
+    // and reflects the derived "small" / "large" label, not a
+    // user-chosen tier.
+    expect(SCHEMA_VERSION).toBe("3.0.0");
   });
 });
 
@@ -164,7 +165,7 @@ describe("publicCheckEnvelope", () => {
     process.env = original;
   });
 
-  it("emits schema 2.5.0 top-level shape", () => {
+  it("emits schema 3.0.0 top-level shape", () => {
     delete process.env.PUBLIC_TAXONOMY;
     const env = publicCheckEnvelope(makeSubstrateResult());
     expect(Object.keys(env).sort()).toEqual([
@@ -172,15 +173,14 @@ describe("publicCheckEnvelope", () => {
       "moment",
       "review_reason",
       "schema_version",
-      // 2.4.0 — additive diagnostic companion to suggested_rewrite.
       "suggested_diagnostic",
-      // 2.3.0 — additive holistic rewrite for tier=document calls.
+      // The holistic rewrite that fires for large inputs (>200 chars).
       "suggested_rewrite",
       "verdict",
       "violations",
       "warnings",
     ]);
-    expect(env.schema_version).toBe("2.5.0");
+    expect(env.schema_version).toBe("3.0.0");
     // Default to null when caller didn't provide a rewrite/diagnostic.
     expect(env.suggested_rewrite).toBeNull();
     expect(env.suggested_diagnostic).toBeNull();
@@ -284,7 +284,7 @@ describe("publicCheckEnvelope", () => {
     // surprises across runs.
     expect(JSON.stringify(env, null, 2)).toMatchInlineSnapshot(`
       "{
-        "schema_version": "2.5.0",
+        "schema_version": "3.0.0",
         "violations": [
           {
             "issue": "This destructive confirmation does not name what gets deleted.",

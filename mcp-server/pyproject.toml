@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "contentrx-mcp"
-version = "0.7.0"
+version = "0.8.0"
 description = "ContentRX MCP server — content-design review for Claude Code, Cursor, and any MCP client."
 readme = "README.md"
 requires-python = ">=3.10"

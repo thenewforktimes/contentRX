@@ -1,80 +1,60 @@
 /**
- * Tier-aware metering for /api/check.
+ * Length-routed metering for /api/check.
  *
- * Pre-pilot launch (Phase 3): replaces the flat 3,000-char unit with
- * three tiers chosen by the caller. The /api/check route accepts an
- * optional `segment_type` field; if absent, the call defaults to
- * standard.
+ * Schema 3.0.0 (2026-05-05) collapsed the previous three-tier model
+ * (Standard / Document / Surface) into a single proportional rate
+ * with a length-based size class. The caller no longer chooses a
+ * tier; the engine routes by `text.length`:
  *
- * Tier shapes:
- *   - standard: a single string of UI copy in context (a button label,
- *               an error message, a toast). Billed proportionally —
- *               1 unit per 300 characters, rounded up. A 50-char label
- *               is 1 unit; a 600-char paragraph is 2 units; a
- *               3,000-char paragraph is 10 units.
- *   - document: an end-to-end screen / article reviewed for cross-string
- *               consistency (a help article, a full empty state, a
- *               multi-paragraph onboarding flow). Billed flat at 8 units
- *               per call, regardless of length.
- *   - surface:  a complete review surface (a full PR diff, a Figma frame
- *               with all its labels). Billed flat at 25 units per call.
+ *   - small  (≤200 chars) — billed as 1 unit (the floor).
+ *   - large  (>200 chars) — billed proportionally, 1 unit per 200
+ *                           characters, rounded up. A 201-char input
+ *                           is 2 units; a 4,000-char input is 20.
  *
- * Tiers self-select by caller economics:
- *   - Short content (<300 chars): standard wins (1 unit < 8/25).
- *   - Medium content (300–2,400 chars): standard or document depending
- *     on whether cross-string consistency matters.
- *   - Long content (>2,400 chars): document or surface flat-rate beats
- *     per-300-char windowing.
+ * The `sizeClass` is a derived label used for analytics and to drive
+ * the dashboard's rendering branch (≤200 chars → standard per-finding
+ * UX; >200 chars → rich doc-tier UX with rewrite, sticky verdict,
+ * categorized findings, inline excerpts). It is NOT a customer-facing
+ * tier name. The dashboard estimator surfaces "X characters · Y units"
+ * with no tier label.
  *
- * No automatic escalation — the engine bills exactly the tier the
- * caller declared. Callers who pick the wrong tier overpay; that is
- * a UX problem solved by the dashboard's real-time estimator, not by
- * a server-side override that hides the bill from the user.
- *
- * The 1/8/25 multipliers are constants here (not in customer-facing
- * pricing copy) so we can re-tune quarterly against actual COGS without
- * a wire-format change.
+ * Why this replaced the three-tier model:
+ *   1. Customers couldn't tell Document from Surface — the labels
+ *      created friction without commensurate benefit.
+ *   2. Standard tier on long inputs broke the dashboard UX (the
+ *      wall-of-red-strikethrough antipattern). Routing by length
+ *      lets the rich UX apply automatically.
+ *   3. Flat-rate tiers (8 / 25 units) rewarded picking the right
+ *      tier; proportional billing is honest and tier-free.
+ *   4. Pre-launch with zero paying customers was the right time to
+ *      break the wire format.
  */
 
-import { z } from "zod";
+/** Size class derived from input length. Used for analytics + the
+ * dashboard's UX routing. Never a user-chosen value. */
+export type SizeClass = "small" | "large";
 
-export type CheckTier = "standard" | "document" | "surface";
+/** The single character window used for proportional billing. A
+ * `UNIT_WINDOW`-char input bills as 1 unit; `2 * UNIT_WINDOW` as 2.
+ * The same number governs the small/large boundary for the
+ * dashboard's UX routing. */
+export const UNIT_WINDOW = 200;
 
-export const CHECK_TIERS = ["standard", "document", "surface"] as const;
-
-/** Characters per standard-tier billable unit. A 300-char input bills
- * as 1 unit; 600 as 2; 1,500 as 5. */
-export const STANDARD_CHAR_CAP = 300;
-
-/** Flat unit costs for non-standard tiers, expressed in
- * standard-check equivalents. Document = 8x; surface = 25x. */
-export const UNIT_COST_FLAT: Record<Exclude<CheckTier, "standard">, number> = {
-  document: 8,
-  surface: 25,
-};
-
-/** Hard ceiling on raw input characters per call, all tiers. Above this
- * the caller must split the input into multiple calls. Matches the
- * surface tier's natural cap. */
+/** Hard ceiling on raw input characters per call. Above this the
+ * caller must split the input into multiple calls. */
 export const MAX_INPUT_CHARS = 50_000;
 
-/** Zod schema for the optional segment_type field on /api/check
- * requests. Use as `segment_type: meterTierSchema.optional().default("standard")`
- * in the route's RequestSchema. */
-export const meterTierSchema = z.enum(CHECK_TIERS);
-
 export interface MeterDecision {
-  /** The tier billed for this call. Equals the caller's declared
-   * tier when present; otherwise `"standard"`. */
-  tier: CheckTier;
+  /** Derived size class. `"small"` for ≤UNIT_WINDOW; `"large"` above. */
+  sizeClass: SizeClass;
   /** Billable units consumed in standard-check equivalents. */
   unitsConsumed: number;
   /** Raw character count of the input — populated for the response
-   * `metering` block so integrators can show "$X chars · N units". */
+   * `metering` block so integrators can show "X chars · N units". */
   inputChars: number;
   /** Always 1 for single-string calls. Reserved for batch/multi-segment
    * surfaces; populated forward-compat so wire-format consumers don't
-   * see the field appear later in 2.x. */
+   * see the field appear later in 3.x. */
   inputSegments: number;
   /** Always false in the single-string regime. Reserved for the
    * batch/split path. */
@@ -88,25 +68,17 @@ export interface MeterDecision {
  * dashboard's live estimator (`explain-client.tsx`) and server-side
  * from `/api/check`. The same code is the source of truth on both
  * sides; mirroring drift can't happen.
+ *
+ * Empty input still costs 1 unit so that zero-length probes don't get
+ * a free pass through the meter.
  */
-export function meter(
-  text: string,
-  segmentType: CheckTier = "standard",
-): MeterDecision {
+export function meter(text: string): MeterDecision {
   const chars = text.length;
-
-  let units: number;
-  if (segmentType === "standard") {
-    // Per-window billing: empty input still costs 1 unit so that
-    // zero-length probes don't get a free pass through the meter.
-    units = Math.max(1, Math.ceil(chars / STANDARD_CHAR_CAP));
-  } else {
-    units = UNIT_COST_FLAT[segmentType];
-  }
-
+  const unitsConsumed = Math.max(1, Math.ceil(chars / UNIT_WINDOW));
+  const sizeClass: SizeClass = chars > UNIT_WINDOW ? "large" : "small";
   return {
-    tier: segmentType,
-    unitsConsumed: units,
+    sizeClass,
+    unitsConsumed,
     inputChars: chars,
     inputSegments: 1,
     splitApplied: false,
@@ -115,11 +87,12 @@ export function meter(
 
 /**
  * The metering block surfaced on /api/check responses. Wire-format
- * 2.1.0 — additive minor, clients that don't read this block keep
- * working unchanged.
+ * 3.0.0 — replaces the three-tier `tier` field with a derived
+ * `size_class`. Clients that read the metering block need to update
+ * their type definitions; clients that ignore the block keep working.
  */
 export interface MeteringBlock {
-  tier: CheckTier;
+  size_class: SizeClass;
   units_consumed: number;
   input_chars: number;
   input_segments: number;
@@ -131,10 +104,35 @@ export interface MeteringBlock {
  * convention (`schema_version`, `review_reason`, etc.). */
 export function meteringBlock(decision: MeterDecision): MeteringBlock {
   return {
-    tier: decision.tier,
+    size_class: decision.sizeClass,
     units_consumed: decision.unitsConsumed,
     input_chars: decision.inputChars,
     input_segments: decision.inputSegments,
     split_applied: decision.splitApplied,
   };
 }
+
+/**
+ * Predicate for the rich-UX branch on the dashboard. Inputs above the
+ * unit window (>200 chars) get the doc-tier UX (sticky verdict,
+ * suggested rewrite, categorized findings, inline excerpts). At-or-
+ * below get the standard per-finding-card UX with inline word diffs.
+ */
+export function isLargeInput(text: string): boolean {
+  return text.length > UNIT_WINDOW;
+}
+
+// Backward-compat re-exports for any consumer still importing the
+// pre-3.0.0 names. These are deprecated — new code should use
+// `UNIT_WINDOW` / `meter(text)` / `SizeClass` directly. The Zod
+// schema is no longer needed (no segment_type request param), so it's
+// removed entirely.
+//
+// `STANDARD_CHAR_CAP` previously held 300; the new boundary is 200,
+// reflecting both the smaller billing window and the UX cutoff. If a
+// downstream caller imports the old constant, they'll silently shift
+// from 300-char windows to 200-char windows on import, which is the
+// correct behavior under the new schema.
+/** @deprecated Use `UNIT_WINDOW` instead. Retained for one cycle as
+ * a soft-fail import path during the 3.0.0 cutover. */
+export const STANDARD_CHAR_CAP = UNIT_WINDOW;

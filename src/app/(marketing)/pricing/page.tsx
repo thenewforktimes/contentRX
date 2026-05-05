@@ -11,10 +11,8 @@
  *   - Enterprise: Coming soon. SSO/SAML, SCIM, audit logs, custom rules,
  *                 dedicated CSM, SOC 2 Type II. $36k/yr floor when ready.
  *
- * Metering shape (Phase 3 ships the engine; this page documents it):
- *   - 1 standard check  = up to 300 characters of UI copy
- *   - 1 document check  = up to 5,000 chars (8× standard equivalents)
- *   - 1 surface check   = up to 50,000 chars (25× standard equivalents)
+ * Metering shape (schema 3.0.0): 1 unit per 200 characters, rounded up.
+ * A button label bills as 1 unit; a 4,000-char doc bills as 20.
  */
 
 import type { Metadata } from "next";
@@ -60,7 +58,7 @@ export default function PricingPage() {
           quota="20 checks per month"
           features={[
             "1 repo",
-            "Standard checks only",
+            "Short copy and long-form review",
             "All five surfaces",
           ]}
           cta={{ href: "/sign-up", label: "Start free" }}
@@ -71,7 +69,7 @@ export default function PricingPage() {
           priceSubnote="$32/month billed annually"
           quota="2,000 checks per month"
           features={[
-            "Standard, document, and surface checks",
+            "Short copy and long-form review",
             "Custom rule overrides",
             "Slack + Figma plugin + GitHub Action",
           ]}
@@ -139,33 +137,30 @@ export default function PricingPage() {
             q="What's a check?"
             a={
               <>
-                One pass of the engine over your content. Three sizes:
-                a <strong>standard check</strong> covers up to 300
-                characters of UI copy (a button label, an error message,
-                a single string in context) and bills as 1 unit.
-                A <strong>document check</strong> covers an end-to-end
-                screen or article up to 5,000 characters and bills as 8
-                units. A <strong>surface check</strong> covers a full
-                PR diff or Figma frame up to 50,000 characters and
-                bills as 25 units. The estimator in your dashboard shows
-                the unit cost before you submit.
+                One pass of the engine over your content. We bill by
+                content length: <strong>1 unit per 200 characters</strong>,
+                rounded up. A button label or error message bills as 1
+                unit. A 1,000-character paragraph bills as 5. A
+                4,000-character doc bills as 20. The estimator in your
+                dashboard shows the unit cost before you submit, so the
+                price is never a surprise.
               </>
             }
           />
           <Faq
-            q="Why three sizes instead of one?"
-            a="Because reviewing one button label and reviewing a full PR diff aren't the same work. Standard checks run in under a second; document and surface checks do cross-string consistency reasoning that costs more. Tiered metering makes the cost match the work — you never overpay for a button label and never underpay for a full review."
+            q="Why bill by length?"
+            a="Because reviewing one button label and reviewing a full screen of copy aren't the same work. Length is honest and predictable — short copy is cheap, long content costs proportionally more. No tier toggles to learn, no decision to mis-make at submit time."
           />
           <Faq
             q="What happens if I hit my limit on Pro?"
             a={
               <>
-                Pro caps at 2,000 standard-equivalent checks per month.
-                A hard cap, no surprise overage charges. We email at 80%
-                so you have warning before you hit the limit. If
-                you&apos;re bumping 2,000 most months, the Team plan
-                ($59/seat with 5,000 pooled per seat) is the right next
-                step.{" "}
+                Pro caps at 2,000 checks per month, equivalent to
+                400,000 characters of content reviewed. A hard cap, no
+                surprise overage charges. We email at 80% so you have warning
+                before you hit the limit. If you&apos;re bumping 2,000
+                most months, the Team plan ($59/seat with 5,000 pooled
+                per seat) is the right next step.{" "}
                 <a
                   href="mailto:hello@contentrx.io?subject=Team plan"
                   className="underline underline-offset-2"

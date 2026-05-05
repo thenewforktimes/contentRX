@@ -1,6 +1,6 @@
 """Holistic document rewrite — produces a clean version of a long input.
 
-The Document-tier dashboard surface (and the future MCP/CLI document
+The dashboard's long-form review (and the future MCP/CLI document
 review modes) ask for a single edited version of the user's input
 *as a whole*, not a list of per-finding patches. This is the
 named-expert moat made visible: a content designer reviewed your doc
@@ -19,7 +19,7 @@ our voice.
 Output contract (schema 2.4.0): `{rewritten, diagnostic}`. The
 rewritten text is the primary artifact; the diagnostic is a one-
 sentence judgment of what's broadly wrong with the document, used by
-the Document-tier verdict header to give the customer the
+the dashboard verdict header to give the customer the
 "should I bother?" answer in two seconds without scanning every
 finding. Same LLM call produces both — diagnostic adds ~30 output
 tokens.
@@ -30,9 +30,10 @@ the violation list as input — the LLM works from the system prompt
 and the input alone. This keeps the edit from over-fitting to a
 mechanical "fix item 1, fix item 2" pass.
 
-Triggered conservatively: /api/check only calls this for tier="document"
-AND when the regular check found something worth editing. Clean docs
-don't get a rewrite — there's nothing to fix.
+Triggered conservatively: /api/check only calls this when the input
+is "large" (>200 chars per `metering.UNIT_WINDOW`) AND the regular
+check found something worth editing. Clean docs don't get a rewrite
+— there's nothing to fix.
 """
 
 from __future__ import annotations

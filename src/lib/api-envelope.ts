@@ -114,7 +114,28 @@
 //         list — categorization without exposing substrate IDs.
 //         Additive — clients that don't read the field continue to
 //         work unchanged.
-export const SCHEMA_VERSION = "2.5.0" as const;
+// 3.0.0 — **Breaking.** Two-size check model collapses Standard /
+//         Document / Surface tiers into length-routed sizing.
+//         Removed entirely:
+//           - `segment_type` request parameter on /api/check (the
+//             engine derives size from text length).
+//           - The three-tier names ("standard", "document",
+//             "surface") in the `metering` response block.
+//         Renamed on the metering response block:
+//           - `tier` → `size_class` (`"small"` ≤200 chars, `"large"`
+//             above). Clients that read `metering.tier` need to
+//             update their type definitions; clients that ignore the
+//             metering block continue to work.
+//         Pricing changes: 1 unit per 200 characters, rounded up,
+//         floor 1 unit. Replaces `1u/300c` (standard) + `8u flat`
+//         (document) + `25u flat` (surface). Pre-launch with zero
+//         paying customers, breaking the wire format is the right
+//         time to simplify the model. The Document-tier UX
+//         (rewrite, sticky verdict, categorized findings, inline
+//         excerpts) now triggers on `text.length > 200` regardless
+//         of caller intent — the wall-of-red-strikethrough
+//         antipattern is no longer reachable from any tier.
+export const SCHEMA_VERSION = "3.0.0" as const;
 
 /**
  * Adds `schema_version` and `warnings` to a response payload. Existing

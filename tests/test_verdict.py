@@ -39,13 +39,18 @@ class TestSchemaVersionBump:
         # 2.1.0 — additive metering block (TS-side only).
         # 2.2.0 — additive content_type + moment on the public
         # envelope (customer-grounding fields).
-        # 2.3.0 — additive `suggested_rewrite` for tier=document
+        # 2.3.0 — additive `suggested_rewrite` for the long-form
         # holistic rewrite output.
         # 2.4.0 — additive `suggested_diagnostic` companion to
         # `suggested_rewrite` for the unified verdict header.
         # 2.5.0 — additive per-Violation `category` for customer-facing
         # findings grouping ("Voice & tone" / "Mechanics" / etc).
-        assert SCHEMA_VERSION == "2.5.0"
+        # 3.0.0 — BREAKING: collapsed three-tier model (Standard /
+        # Document / Surface) into length-routed metering. /api/check
+        # no longer accepts `segment_type`; the response `metering`
+        # block uses `size_class` ("small" / "large") derived from
+        # text length (1 unit per 200 chars, rounded up).
+        assert SCHEMA_VERSION == "3.0.0"
 
 
 class TestVerdictConstants:

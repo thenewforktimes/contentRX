@@ -21,7 +21,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 
-type SegmentType = "standard" | "document" | "surface";
+// Includes legacy three-tier values for historical rows that pre-date
+// schema 3.0.0; new rows always write "small" or "large". The label
+// itself is no longer rendered to customers.
+type SegmentType = "small" | "large" | "standard" | "document" | "surface";
 
 interface CheckHistoryRow {
   id: string;
@@ -219,7 +222,7 @@ export function ChecksSearch({
                 <div className="text-right text-xs text-quiet">
                   <p>{formatRelative(new Date(row.createdAt))}</p>
                   <p>
-                    {row.segmentType} · {row.unitsConsumed} unit
+                    {row.unitsConsumed} unit
                     {row.unitsConsumed === 1 ? "" : "s"}
                     {row.source ? ` · ${row.source}` : ""}
                   </p>

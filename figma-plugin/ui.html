@@ -2869,11 +2869,6 @@ async function checkContentViaApi(text, contentType, moment, signal) {
     text,
     content_type: contentType,
     source: "plugin",
-    // Phase 3g: declare metering tier so /api/check bills the call
-    // correctly. Figma plugin scans one layer per request → standard.
-    // Frame-level scans iterate one layer at a time (not document or
-    // surface) — we make N standard requests, not one larger request.
-    segment_type: "standard",
   };
   // Only send `moment` when it's informative — the server defaults to
   // browsing_discovery internally, so we save a few bytes on the wire.

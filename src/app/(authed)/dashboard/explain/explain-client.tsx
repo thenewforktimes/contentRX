@@ -24,14 +24,7 @@ import { FlagForReview } from "@/components/flag-for-review";
 import { Button, buttonStyles } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 import type { PublicCheckEnvelope, PublicViolation } from "@/lib/api-envelope";
-import {
-  CHECK_TIERS,
-  MAX_INPUT_CHARS,
-  STANDARD_CHAR_CAP,
-  UNIT_COST_FLAT,
-  type CheckTier,
-  meter,
-} from "@/lib/metering";
+import { MAX_INPUT_CHARS, isLargeInput, meter } from "@/lib/metering";
 import type { Plan } from "@/lib/quotas";
 import {
   humanizeContentType,
@@ -64,26 +57,6 @@ type CheckEnvelope = PublicCheckEnvelope & {
   // like the engine flagged the new text but actually reflects the
   // earlier check.
   submittedText: string;
-  // Snapshot of the tier the user picked when submitting. We branch
-  // the result renderer on this — Document tier gets a totally
-  // different layout (suggested rewrite + findings list, no per-finding
-  // full-document diff) because the per-string DiffBlock pattern
-  // catastrophically fails for 5K-character inputs.
-  submittedTier: CheckTier;
-};
-
-// Tier metadata for the selector. Labels stay user-facing; the
-// underlying tier values (`standard | document | surface`) match the
-// /api/check `segment_type` enum.
-const TIER_LABELS: Record<CheckTier, string> = {
-  standard: "Standard",
-  document: "Document",
-  surface: "Surface",
-};
-const TIER_HINTS: Record<CheckTier, string> = {
-  standard: `1 unit per ${STANDARD_CHAR_CAP} chars`,
-  document: `${UNIT_COST_FLAT.document} units flat`,
-  surface: `${UNIT_COST_FLAT.surface} units flat`,
 };
 
 /**
@@ -104,18 +77,14 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
   const [text, setText] = useState(
     "Unable to complete operation. Please contact administrator.",
   );
-  const [tier, setTier] = useState<CheckTier>("standard");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<CheckError | null>(null);
   const [response, setResponse] = useState<CheckEnvelope | null>(null);
-  // The v2.1 "Use this version" CTA was removed in v2.2 — it dead-
-  // ended (cleared the result block, asked the user to spend another
-  // 8 units to verify in ContentRX) without matching how customers
-  // actually work. Their writing surface is Notion / Slack / a CMS;
-  // ContentRX is a review touchpoint, not a working surface. The
-  // natural flow is now: paste → review → Copy → take it away. The
-  // textareaRef state was only used for that scroll-back behavior, so
-  // it's gone too.
+  // Schema 3.0.0 (2026-05-05) collapsed the three-tier model
+  // (Standard / Document / Surface) into length-routed sizing. The
+  // tier selector UI is gone; the engine derives size from text
+  // length and the dashboard's rendering branches on
+  // `isLargeInput(submittedText)`.
 
   async function onCheck() {
     setLoading(true);
@@ -125,7 +94,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
       const res = await fetch("/api/check", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, source: "dashboard", segment_type: tier }),
+        body: JSON.stringify({ text, source: "dashboard" }),
       });
       if (!res.ok) {
         const body = await res.text();
@@ -140,14 +109,14 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
       }
       const data = (await res.json()) as Omit<
         CheckEnvelope,
-        "submittedText" | "submittedTier"
+        "submittedText"
       >;
-      // Capture the text + tier we just submitted so the renderer
-      // branches on the tier the user actually checked (not on the
-      // tier they may have toggled to since), and DiffBlock renders
-      // against a stable "before" even if the user keeps editing the
-      // textarea afterward.
-      setResponse({ ...data, submittedText: text, submittedTier: tier });
+      // Capture the text we just submitted so the result renderer
+      // branches on the input length we actually checked (not the
+      // current textarea contents the user may have edited since), and
+      // DiffBlock renders against a stable "before" even if the user
+      // keeps editing the textarea afterward.
+      setResponse({ ...data, submittedText: text });
       // Optimistic UI: broadcast the completed check to sibling Client
       // Components (UsagePanelLive, ActiveSurfacesRowLive) so the
       // counter and Web app surface card jump immediately, instead of
@@ -223,49 +192,18 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
     return { kind: "unknown", status, message };
   }
 
-  const decision = meter(text, tier);
+  const decision = meter(text);
   const overLimit = text.length > MAX_INPUT_CHARS;
 
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <label
-            htmlFor="explain-text"
-            className="block text-sm font-medium text-default"
-          >
-            Text to evaluate
-          </label>
-          <fieldset className="flex items-center gap-2 text-xs">
-            <legend className="sr-only">Check tier</legend>
-            <span className="text-quiet">
-              Tier
-            </span>
-            <div
-              role="radiogroup"
-              aria-label="Check tier"
-              className="inline-flex rounded-md border border-line-strong bg-raised p-0.5"
-            >
-              {CHECK_TIERS.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  role="radio"
-                  aria-checked={tier === t}
-                  onClick={() => setTier(t)}
-                  className={`rounded-sm px-2 py-1 transition ${
-                    tier === t
-                      ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-                      : "text-quiet hover:text-strong"
-                  }`}
-                  title={TIER_HINTS[t]}
-                >
-                  {TIER_LABELS[t]}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        </div>
+        <label
+          htmlFor="explain-text"
+          className="block text-sm font-medium text-default"
+        >
+          Text to evaluate
+        </label>
         <textarea
           id="explain-text"
           value={text}
@@ -295,8 +233,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
                 <strong className="font-semibold">
                   {decision.unitsConsumed}{" "}
                   {decision.unitsConsumed === 1 ? "unit" : "units"}
-                </strong>{" "}
-                ({TIER_LABELS[tier].toLowerCase()})
+                </strong>
               </>
             )}
           </span>
@@ -310,7 +247,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
             </span>
           ) : (
             <span className="text-default">
-              {TIER_HINTS[tier]}
+              1 unit per 200 characters
             </span>
           )}
         </div>
@@ -325,7 +262,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
       {error && <ErrorBlock error={error} />}
 
       {response &&
-        (response.submittedTier === "document" ? (
+        (isLargeInput(response.submittedText) ? (
           <DocumentReviewResult response={response} plan={plan} />
         ) : (
           <section className="space-y-4">

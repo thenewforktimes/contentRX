@@ -214,13 +214,6 @@ def run_contentrx(
     run_id: str | None = None,
 ) -> dict:
     """Call the installed `contentrx` CLI with --json and return parsed output."""
-    # segment_type=standard: the action invokes the CLI once per extracted
-    # string, so each /api/check call bills as a per-string standard
-    # check (1 unit per 300 chars). A future "surface" mode would bundle
-    # all strings into one /api/check request — that requires both an
-    # engine-side multi-string mode and a different CLI contract; not
-    # in scope today. Declaring standard explicitly so the intent is
-    # visible at the call site.
     cmd = [
         "contentrx",
         "--json",
@@ -228,8 +221,6 @@ def run_contentrx(
         content_type,
         "--source",
         "action",
-        "--segment-type",
-        "standard",
     ]
     if file_path:
         cmd.extend(["--file-path", file_path])
