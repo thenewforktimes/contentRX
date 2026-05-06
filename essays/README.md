@@ -19,6 +19,33 @@ out-of-band infra. The named-expert moat depends on the founder's
 voice across the cadence; the draft folder is the surface where that
 voice gets shaped before the public site ever sees it.
 
+## Editorial standard: anonymize brand names
+
+Specific brands are anonymized in essays. Permanently. The lesson
+lives in the strings and the reasoning, not the names.
+
+Why: the underlying use of public-facing UI copy for criticism +
+commentary is squarely fair-use, but defending a frivolous lawsuit
+from a well-funded brand can cost six figures regardless of who's
+right. Anonymization is cheap insurance that costs the essays
+nothing — the educational value is in the analysis, not the
+attribution. (Decision 2026-05-05.)
+
+Practical patterns:
+
+- "Apple's iPad page" → "a major consumer-electronics homepage"
+- "Wells Fargo legalese" → "a major bank's checking-account tooltip"
+- "Robinhood label" → "a brokerage app wayfinding label"
+- "Mailchimp form CTA" → "a marketing-platform plan-selection CTA"
+- A specific competitor → "a competitor"
+
+The strings themselves stay quoted verbatim — that's the data the
+essay is reasoning about. Only the source brand gets generalized.
+
+Exceptions: `/sources` cites external systems by name for attribution
+purposes (different legal posture: required disclosure, not
+criticism). Don't change `/sources`.
+
 ## Subdirectories
 
 ### `drafts/`
