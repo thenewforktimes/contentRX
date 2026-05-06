@@ -18,18 +18,13 @@
 
 import Link from "next/link";
 import { buttonStyles } from "@/components/ui/button";
+import { Wordmark } from "@/components/wordmark";
 
 export function SiteHeader() {
   return (
     <header className="border-b border-line bg-raised">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-        <Link
-          href="/"
-          className="text-sm font-semibold tracking-tight"
-          aria-label="ContentRX home"
-        >
-          ContentRX
-        </Link>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
+        <Wordmark size="sm" />
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           <Link
             href="/pricing"

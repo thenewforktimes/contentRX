@@ -1,34 +1,57 @@
 /**
- * Landing page — 2026-05-05 IA refresh.
+ * Landing page — 2026-05-06 design refresh.
  *
- * Robert's brief on this pass: lead the founder credit with the
- * staff-content-designer claim (not the name); promote the One
- * approval value prop out of /about and onto home as part of a new
- * four-card "Built for your stack" section that surfaces Privacy,
- * Security, One approval, and Integrations together; scrub "moments"
- * everywhere customer-facing — `moment` is reserved internal vocab
- * for the human-eval/training layer.
+ * The big shift from the prior pass: this page now reads as a
+ * product page, not a policy document. Specifically:
+ *
+ *   - Wider canvas. max-w-6xl (1152px) on the landing only; other
+ *     marketing pages (privacy/ethics/etc.) keep the narrower
+ *     reading column.
+ *   - Layered hero. 2-column at md+: animated wordmark + headline +
+ *     CTAs on the left, decorative HeroVerdictMock (3-card stack)
+ *     on the right.
+ *   - Trust signal. IntegrationRow shows the seven surfaces
+ *     ContentRX runs in — own the integration breadth as the proof
+ *     point that's currently honest (no customer logos to show yet).
+ *   - Author up. The "Built by Robert Ballard" block moves above
+ *     the feature sections — it's the moat against anonymous AI
+ *     tooling, treat it like an editorial byline rather than a
+ *     buried about-page link.
+ *   - Visual rhythm. The "How it works" section gets a subtle dot-
+ *     grid radial-gradient background to break the otherwise-flat
+ *     section flow; the "One approval" card on "Built for your
+ *     stack" gets an accent-affirm border treatment to distinguish
+ *     the differentiator from the supporting cards.
+ *   - CTA discipline. Hero CTAs trim to two (Try free + See how it
+ *     works); Pricing and Sign-in already live in the global header.
+ *
+ * Voice and copy unchanged from the prior pass — calm, named,
+ * concrete (per docs/copy-vocabulary.md). The visual restructure
+ * lets the existing copy land harder.
  *
  * Section order:
- *   1. Hero — the brand promise.
- *   2. How it works — animated pipeline carries the explanation.
- *   3. Where it runs — surfaces.
- *   4. Built for your stack — One approval / Privacy / Security /
- *      Integrations as a 2x2 card grid.
- *   5. Built by — Robert Ballard, with the org arc.
- *   6. Why it works — three product-strength cards. Closer.
- *
- * Voice: per docs/copy-vocabulary.md. Calm, confident, charming.
- * No em dashes. Names the actor. Doesn't blame the reader. Points
- * at concrete surfaces (PR, IDE, CLI) over abstract value.
+ *   1. Hero — wordmark + brand promise + verdict mock
+ *   2. Integration row — surfaces under the fold, immediately
+ *   3. Built by — named author + career arc (moat)
+ *   4. How it works — animated pipeline, with dot-grid bg
+ *   5. Where it runs — surface detail (the integration row is the
+ *      teaser; this is the index)
+ *   6. Built for your stack — One approval / Privacy / Security /
+ *      Integrations as a 2x2 grid, with the One-approval card
+ *      visually emphasized
+ *   7. Why it works — three product-strength cards
  */
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AuthorBlock } from "@/components/author-block";
+import { HeroVerdictMock } from "@/components/hero-verdict-mock";
+import { HowItWorksDiagram } from "@/components/how-it-works-diagram";
+import { IntegrationRow } from "@/components/integration-row";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { HowItWorksDiagram } from "@/components/how-it-works-diagram";
 import { Section } from "@/components/ui/section";
+import { Wordmark } from "@/components/wordmark";
 
 export const metadata: Metadata = {
   title: "ContentRX. Staff-level content design review, in every repo",
@@ -38,51 +61,76 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-20">
-      <header>
-        <Eyebrow>ContentRX</Eyebrow>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-          Staff-level content design review in every repo
-        </h1>
-        <p className="mt-6 text-lg text-default">
-          ContentRX reads the strings you ship with the judgment of a
-          staff content designer. Verdict, suggestion, rationale, in
-          your pull request, your IDE, and your Figma file. Before the
-          next review cycle, before merge.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3 text-sm">
-          <Link href="/sign-up" className={buttonStyles({ variant: "primary" })}>
-            Try free →
-          </Link>
-          <Link
-            href="/install"
-            className={buttonStyles({ variant: "secondary" })}
-          >
-            Install instructions
-          </Link>
-          <Link
-            href="/pricing"
-            className={buttonStyles({ variant: "secondary" })}
-          >
-            Pricing
-          </Link>
-          <Link href="/sign-in" className={buttonStyles({ variant: "ghost" })}>
-            Sign in →
-          </Link>
+    <main className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+      {/* Hero — 2-column at md+. The animated wordmark replaces the
+          plain Eyebrow that used to label the headline; treats the
+          brand presence as the page's first kinetic moment. */}
+      <header className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-16">
+        <div>
+          <Wordmark size="xl" animate link={false} />
+          <h1 className="mt-8 text-4xl font-semibold tracking-tight text-strong sm:text-5xl lg:text-6xl">
+            Staff-level content design review in every repo
+          </h1>
+          <p className="mt-6 text-lg text-default sm:text-xl">
+            ContentRX reads the strings you ship with the judgment of a
+            staff content designer. Verdict, suggestion, rationale, in
+            your pull request, your IDE, and your Figma file. Before the
+            next review cycle, before merge.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
+            <Link href="/sign-up" className={buttonStyles({ variant: "primary" })}>
+              Try free →
+            </Link>
+            <Link
+              href="#how-it-works"
+              className={buttonStyles({ variant: "secondary" })}
+            >
+              See how it works
+            </Link>
+            <span className="ml-1 text-xs text-quiet">
+              Free plan, 20 checks/month. No card.
+            </span>
+          </div>
+        </div>
+        <div className="relative">
+          <HeroVerdictMock />
         </div>
       </header>
 
-      <Section
-        eyebrow="How it works"
-        title="The model around the model."
+      <IntegrationRow />
+
+      {/* Author up. The named-byline block sits high so the moat
+          lands before the feature copy. */}
+      <div className="mt-20">
+        <AuthorBlock />
+      </div>
+
+      {/* How it works — same animated diagram, now with a subtle dot-
+          grid backdrop to break the otherwise-flat section flow. The
+          radial-gradient is one of two repeating visual punctuation
+          marks on the page (the other is the integration row). */}
+      <section
+        id="how-it-works"
+        className="mt-20 rounded-3xl border border-line bg-raised/40 p-8 sm:p-12"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, var(--color-line) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }}
       >
-        <p>
+        <Eyebrow>How it works</Eyebrow>
+        <h2 className="mt-2 text-2xl font-semibold text-strong sm:text-3xl">
+          The model around the model.
+        </h2>
+        <p className="mt-4 max-w-2xl text-base text-default">
           ContentRX isn&apos;t an LLM with a prompt. It&apos;s a
           content-design pipeline that gives the LLM the context it
           needs to render a real judgment.
         </p>
-        <HowItWorksDiagram />
-      </Section>
+        <div className="mt-6">
+          <HowItWorksDiagram />
+        </div>
+      </section>
 
       <Section eyebrow="Where it runs" title="Where you ship copy.">
         <ul className="mt-1 ml-5 list-disc space-y-2">
@@ -154,10 +202,19 @@ export default function Home() {
         title="Easier to buy. Safer to ship."
       >
         <ul className="mt-2 grid gap-4 sm:grid-cols-2 sm:gap-3">
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <p className="text-sm font-semibold text-strong">
-              One approval.
-            </p>
+          {/* "One approval" gets the accent-affirm treatment — it's
+              the differentiator that closes the deal vs custom-LLM
+              alternatives. The other three cards stay neutral so this
+              one reads as the lead. */}
+          <li className="rounded-lg border-2 border-accent-affirm-border bg-accent-affirm-soft/30 p-5">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-affirm-text/10 text-[10px] font-bold text-accent-affirm-text">
+                ✓
+              </span>
+              <p className="text-sm font-semibold text-strong">
+                One approval.
+              </p>
+            </div>
             <p className="mt-2 text-sm text-default">
               Most teams can&apos;t get an AI vendor approved fast
               enough to keep up with how copy is changing. ContentRX
@@ -215,20 +272,6 @@ export default function Home() {
             </p>
           </li>
         </ul>
-      </Section>
-
-      <Section eyebrow="Built by" title="Someone who has been in the room.">
-        <p>
-          ContentRX was built by a staff content designer. Robert
-          Ballard, with a career arc through Intuit, Meta, Opendoor,
-          and PayPal today. The context, the weights, and the
-          standards all carry a single designer&apos;s judgment calls,
-          attributed and published. Read the{" "}
-          <Link href="/about" className="underline underline-offset-2">
-            about-the-model
-          </Link>
-          {" "}page for the longer story.
-        </p>
       </Section>
 
       <Section eyebrow="Why it works" title="What ContentRX is great at.">

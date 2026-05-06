@@ -22,6 +22,7 @@
  */
 
 import Link from "next/link";
+import { Wordmark } from "@/components/wordmark";
 
 const productLinks = [
   { href: "/pricing", label: "Pricing" },
@@ -50,7 +51,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <div>
-            <p className="text-sm font-semibold">ContentRX</p>
+            <Wordmark size="sm" link={false} />
             <p className="mt-2 text-xs text-quiet">
               The content model for product copy.
             </p>
