@@ -16,13 +16,23 @@ import { describe, expect, it } from "vitest";
  */
 
 const HEADER_PATH = path.join(__dirname, "site-header.tsx");
+const WORDMARK_PATH = path.join(__dirname, "wordmark.tsx");
 
 describe("site header (src/components/site-header.tsx)", () => {
   const source = fs.readFileSync(HEADER_PATH, "utf-8");
+  // 2026-05-06: the brand mark moved into <Wordmark>, which the
+  // header now imports. The "linked home" assertion checks the
+  // Wordmark component's link wiring, which is the canonical
+  // source of truth for the brand-link contract.
+  const wordmarkSource = fs.readFileSync(WORDMARK_PATH, "utf-8");
 
   it("links the ContentRX logo home", () => {
-    expect(source).toMatch(/href="\/"/);
-    expect(source).toContain("ContentRX home");
+    // Header renders <Wordmark size="sm" /> which (with default
+    // link=true) wraps the mark in <Link href="/"> with the
+    // "ContentRX home" aria-label.
+    expect(source).toContain("Wordmark");
+    expect(wordmarkSource).toMatch(/href="\/"/);
+    expect(wordmarkSource).toContain("ContentRX home");
   });
 
   it("carries the primary marketing nav", () => {
