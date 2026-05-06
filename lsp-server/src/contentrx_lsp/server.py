@@ -338,11 +338,10 @@ async def _apply_suggestion(
 ) -> None:
     """Call /api/suggest-fix and apply the rewrite as a WorkspaceEdit.
 
-    PR-38 (ADR 2026-04-25) — schema 2.0.0 LSP diagnostics don't carry
-    `standard_id`, so the apply path no longer requires it. The
-    rewriter anchors on `issue` + `current_suggestion` instead. We
-    still need at least ONE of those three to even bother invoking
-    the API; an empty payload would just round-trip the input.
+    Schema 2.0.0 LSP diagnostics don't carry `standard_id`, so the
+    rewriter anchors on `issue` + `current_suggestion` (or `rule` for
+    team-custom rules). We need at least ONE of those to bother
+    invoking the API; an empty payload would just round-trip the input.
     """
     if not args:
         return
@@ -353,8 +352,8 @@ async def _apply_suggestion(
         return
     issue = payload.get("issue") or ""
     current_suggestion = payload.get("current_suggestion") or ""
-    standard_id = payload.get("standard_id") or ""
-    if not (issue or current_suggestion or standard_id):
+    rule = payload.get("rule") or ""
+    if not (issue or current_suggestion or rule):
         server.show_message(
             "ContentRX: nothing to anchor a rewrite on — "
             "no issue or suggestion attached to this diagnostic.",
@@ -396,8 +395,7 @@ async def _apply_suggestion(
     try:
         result = await suggest_fix(
             text=text,
-            standard_id=standard_id or None,
-            rule=payload.get("rule") or None,
+            rule=rule or None,
             issue=issue or None,
             current_suggestion=current_suggestion or None,
         )
