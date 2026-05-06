@@ -25,6 +25,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AuthorBlock } from "@/components/author-block";
 import { PageHeader } from "@/components/ui/page-header";
 import { Section } from "@/components/ui/section";
 
@@ -156,6 +157,13 @@ export default function AboutPage() {
           .
         </p>
       </Section>
+
+      {/* Named-byline closer. The page is "about the model"; the
+          model is one designer's judgment. Closing on the byline
+          binds the claim to the named author. */}
+      <div className="mt-16">
+        <AuthorBlock />
+      </div>
     </main>
   );
 }

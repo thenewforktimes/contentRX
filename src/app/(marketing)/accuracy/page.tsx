@@ -20,6 +20,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AuthorBlock } from "@/components/author-block";
 import { PageHeader } from "@/components/ui/page-header";
 import {
   loadPublicAccuracySnapshot,
@@ -141,7 +142,14 @@ export default function AccuracyPage() {
         </p>
       </section>
 
-      <footer className="mt-16 text-xs text-quiet">
+      {/* Named-byline. The accuracy methodology is the named-
+          author's claim; the byline is the proof. Same component
+          used on the landing hero and at the bottom of /about. */}
+      <div className="mt-16">
+        <AuthorBlock />
+      </div>
+
+      <footer className="mt-12 text-xs text-quiet">
         <p>
           Public snapshot at{" "}
           <a
