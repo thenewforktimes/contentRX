@@ -121,18 +121,3 @@ export function meteringBlock(decision: MeterDecision): MeteringBlock {
 export function isLargeInput(text: string): boolean {
   return text.length > UNIT_WINDOW;
 }
-
-// Backward-compat re-exports for any consumer still importing the
-// pre-3.0.0 names. These are deprecated — new code should use
-// `UNIT_WINDOW` / `meter(text)` / `SizeClass` directly. The Zod
-// schema is no longer needed (no segment_type request param), so it's
-// removed entirely.
-//
-// `STANDARD_CHAR_CAP` previously held 300; the new boundary is 200,
-// reflecting both the smaller billing window and the UX cutoff. If a
-// downstream caller imports the old constant, they'll silently shift
-// from 300-char windows to 200-char windows on import, which is the
-// correct behavior under the new schema.
-/** @deprecated Use `UNIT_WINDOW` instead. Retained for one cycle as
- * a soft-fail import path during the 3.0.0 cutover. */
-export const STANDARD_CHAR_CAP = UNIT_WINDOW;

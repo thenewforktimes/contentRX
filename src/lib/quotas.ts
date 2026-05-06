@@ -51,3 +51,8 @@ export function currentMonth(date = new Date()): string {
   const m = String(date.getUTCMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
 }
+
+export function monthResetISO(date = new Date()): string {
+  const next = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1));
+  return next.toISOString();
+}

@@ -27,7 +27,7 @@ import {
   findMatchingExample,
   shortCircuitFromExample,
 } from "@/lib/custom-examples";
-import { appUrl as emailAppUrl, sendEmail } from "@/lib/email";
+import { appUrl, sendEmail } from "@/lib/email";
 import { AUDIENCES, CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 import {
   evaluate,
@@ -46,7 +46,7 @@ import {
   detectSensitivePatterns,
   sensitiveDataErrorMessage,
 } from "@/lib/pii-screen";
-import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
+import { currentMonth, monthResetISO, monthlyQuota, type Plan } from "@/lib/quotas";
 import { logSafeError } from "@/lib/safe-error-log";
 import { checkRateLimit } from "@/lib/ratelimit";
 import {
@@ -605,16 +605,6 @@ export async function POST(req: Request) {
   });
 }
 
-function appUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-}
-
-function monthResetISO(): string {
-  const now = new Date();
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  return next.toISOString();
-}
-
 function warningThreshold(_plan: Plan, quota: number): number {
   // 2026-04-27: aligned the email + dashboard at 80% used (= 20%
   // remaining). Robert's call: gentle nudge as the customer approaches
@@ -636,7 +626,7 @@ async function notifyQuotaWarning(args: {
       to: args.to,
       subject: `Heads up. ${Math.max(0, args.quota - args.used)} ContentRX checks left this month`,
       react: QuotaWarningEmail({
-        appUrl: emailAppUrl(),
+        appUrl: appUrl(),
         used: args.used,
         quota: args.quota,
         plan: args.plan,
@@ -659,7 +649,7 @@ async function notifyQuotaExhausted(args: {
       to: args.to,
       subject: "You've hit this month's ContentRX limit",
       react: QuotaExhaustedEmail({
-        appUrl: emailAppUrl(),
+        appUrl: appUrl(),
         quota: args.quota,
         plan: args.plan,
         resetsAt: new Date(monthResetISO()).toLocaleDateString(undefined, {
@@ -721,7 +711,7 @@ async function notifyCostPause(args: {
         dailyThresholdUsd: args.dailyThresholdUsd,
         monthlyThresholdUsd: args.monthlyThresholdUsd,
         trigger,
-        appUrl: emailAppUrl(),
+        appUrl: appUrl(),
       }),
       // The threshold-evaluator's atomic UPDATE guard already de-dupes
       // re-pause attempts, so this won't fire twice for the same

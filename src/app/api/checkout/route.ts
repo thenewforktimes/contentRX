@@ -20,6 +20,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb, schema } from "@/db";
+import { appUrl } from "@/lib/email";
 import { checkRateLimit } from "@/lib/ratelimit";
 import {
   getStripe,
@@ -138,11 +139,4 @@ function resolveQuantity(
   const n = seats ?? TEAM_MIN_SEATS;
   if (n < TEAM_MIN_SEATS) return "invalid";
   return n;
-}
-
-function appUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    "",
-  );
 }

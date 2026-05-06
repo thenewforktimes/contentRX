@@ -24,7 +24,7 @@ import { and, desc, eq, gte, isNull, lt, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { buildWeeklyDigest, weekKey, momentForWeek } from "@/lib/cadence";
 import { requireCronAuth } from "@/lib/cron-auth";
-import { sendEmail } from "@/lib/email";
+import { appUrl, sendEmail } from "@/lib/email";
 import { WeeklyDigestEmail } from "@/emails/weekly-digest";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -54,8 +54,7 @@ export async function POST(req: Request) {
       ),
     )) as Array<{ id: string; email: string }>;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://contentrx.io";
-  const dashboardUrl = `${appUrl}/dashboard/overrides`;
+  const dashboardUrl = `${appUrl()}/dashboard/overrides`;
 
   const results: Array<{
     teamId: string;
