@@ -35,7 +35,12 @@ vi.mock("@/db", async () => {
   };
 });
 
-import { claimQuotaSlot, getCurrentUsage, recordTokenUsage } from "./usage";
+import {
+  claimQuotaSlot,
+  claimQuotaSlots,
+  getCurrentUsage,
+  recordTokenUsage,
+} from "./usage";
 import { currentMonth } from "./quotas";
 
 let harness: TestDbHarness;
@@ -187,6 +192,118 @@ describe("claimQuotaSlot", () => {
 
     expect(await getCurrentUsage(alice)).toBe(2);
     expect(await getCurrentUsage(bob)).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// claimQuotaSlots — proportional-billing path (schema 3.0.0)
+//
+// /api/check calls claimQuotaSlots(userId, n, quota) where n is the
+// proportional unit count from meter(text). Multi-slot claims are
+// all-or-nothing: a request that needs 3 slots against a 1-remaining
+// user must reject without partial fulfillment, otherwise customers
+// could squeeze cheap multi-unit requests past the cap.
+// ---------------------------------------------------------------------------
+
+describe("claimQuotaSlots", () => {
+  it("grants a 5-slot claim against an empty quota and increments by 5", async () => {
+    const userId = await seedUser(harness);
+    const result = await claimQuotaSlots(userId, 5, 100);
+    expect(result).toEqual({ granted: true, count: 5 });
+    expect(await getCurrentUsage(userId)).toBe(5);
+  });
+
+  it("grants exactly at the boundary (count + n == quota)", async () => {
+    const userId = await seedUser(harness);
+    await claimQuotaSlots(userId, 7, 10); // count = 7
+    const result = await claimQuotaSlots(userId, 3, 10); // count + n = 10
+    expect(result).toEqual({ granted: true, count: 10 });
+  });
+
+  it("rejects all-or-nothing — 3-slot claim against a 2-remaining user", async () => {
+    // Free user with quota=20, count=18, requests 401 chars (3 units).
+    // The atomic guard `count + n <= quota` rejects 18 + 3 = 21 > 20
+    // even though 2 slots are technically free.
+    const userId = await seedUser(harness);
+    await harness.db
+      .insert(schema.usage)
+      .values({ userId, month: currentMonth(), count: 18 });
+
+    const rejected = await claimQuotaSlots(userId, 3, 20);
+    expect(rejected.granted).toBe(false);
+    expect(rejected.count).toBe(18);
+    // Count must NOT have moved — partial fulfillment would be a
+    // privacy / billing leak.
+    expect(await getCurrentUsage(userId)).toBe(18);
+  });
+
+  it("admits a first claim that exactly fills the quota (count=n)", async () => {
+    // A 4000-char input (20 units) against a Free user (quota=20)
+    // who hasn't checked anything yet must succeed exactly. The
+    // single-slot test at line ~127 documents the asymmetry between
+    // the INSERT branch (no WHERE-guard) and the UPDATE branch — the
+    // multi-slot variant inherits that contract. The follow-up claim
+    // here is what proves the cap holds: a 1-unit claim once a 20-
+    // unit row exists must reject.
+    const userId = await seedUser(harness);
+    const ok = await claimQuotaSlots(userId, 20, 20);
+    expect(ok).toEqual({ granted: true, count: 20 });
+
+    const denied = await claimQuotaSlots(userId, 1, 20);
+    expect(denied.granted).toBe(false);
+    expect(denied.count).toBe(20);
+  });
+
+  it("treats n <= 0 as a free pass (defensive — should never happen in prod)", async () => {
+    // /api/check's meter() floors at 1, so n=0 is a callsite bug.
+    // The function fields it without crashing; count stays accurate.
+    const userId = await seedUser(harness);
+    await claimQuotaSlots(userId, 5, 100);
+    expect(await getCurrentUsage(userId)).toBe(5);
+
+    const result = await claimQuotaSlots(userId, 0, 100);
+    expect(result).toEqual({ granted: true, count: 5 });
+    expect(await getCurrentUsage(userId)).toBe(5);
+
+    const negative = await claimQuotaSlots(userId, -3, 100);
+    expect(negative).toEqual({ granted: true, count: 5 });
+    expect(await getCurrentUsage(userId)).toBe(5);
+  });
+
+  it("under N concurrent multi-slot claims, the cap holds atomically", async () => {
+    // Five concurrent claims of 3 units each against a quota of 10.
+    // 10 / 3 = 3 with remainder 1 → exactly 3 should succeed
+    // (consuming 9 slots), and the rest must reject. Crucially: count
+    // never exceeds quota.
+    const userId = await seedUser(harness);
+    const QUOTA = 10;
+    const SLOTS_PER_CLAIM = 3;
+    const ATTEMPTS = 5;
+
+    const results = await Promise.all(
+      Array.from(
+        { length: ATTEMPTS },
+        () => claimQuotaSlots(userId, SLOTS_PER_CLAIM, QUOTA),
+      ),
+    );
+
+    const granted = results.filter((r) => r.granted).length;
+    const rejected = results.filter((r) => !r.granted).length;
+    // Exactly 3 must succeed (3 × 3 = 9 ≤ 10; a 4th would push to 12).
+    expect(granted).toBe(3);
+    expect(rejected).toBe(ATTEMPTS - 3);
+    expect(await getCurrentUsage(userId)).toBe(granted * SLOTS_PER_CLAIM);
+  });
+
+  it("multi-slot and single-slot claims share state on the same usage row", async () => {
+    // A common production pattern: small button-label checks (1 unit)
+    // and long-form doc checks (20 units) hit the same row.
+    const userId = await seedUser(harness);
+    await claimQuotaSlot(userId, 100); // count = 1
+    await claimQuotaSlots(userId, 20, 100); // count = 21
+    await claimQuotaSlot(userId, 100); // count = 22
+
+    expect(await getCurrentUsage(userId)).toBe(22);
   });
 });
 
