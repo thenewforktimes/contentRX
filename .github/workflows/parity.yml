@@ -1,11 +1,14 @@
 name: JS/Python preprocessor parity
 
-# Runs the parity gate on every PR and every push to main. Fails the
-# build if `tools/parity_check.py` reports any divergence between the
-# Python preprocessor (src/content_checker/preprocess.py) and the JS
-# preprocessor (figma-plugin/ui.html → runPreprocessor).
+# Runs two parity gates on every PR and every push to main:
 #
-# This is the v2 Session 2 deliverable. See tests/corpus/README.md.
+#   1. `tools/parity_check.py` — JS preprocessor (figma-plugin/ui.html)
+#      vs. Python preprocessor (src/content_checker/preprocess.py).
+#      v2 Session 2 deliverable.
+#
+#   2. `scripts/check-display-labels-parity.py` — DISPLAY_LABELS map
+#      mirrored across four packages (engine, MCP, CLI, web TS). Fails
+#      if any sibling drifts from the engine canonical.
 
 on:
   push:
@@ -52,5 +55,11 @@ jobs:
           SUBSTRATE_TOKEN: ${{ secrets.SUBSTRATE_TOKEN }}
         run: scripts/fetch-substrate.sh
 
-      - name: Run parity gate
+      - name: Run preprocessor parity gate
         run: python3 tools/parity_check.py
+
+      - name: Run display-labels parity gate
+        # No substrate or pip deps needed — pure regex parse over the
+        # four DISPLAY_LABELS sources. Always runs, even if the
+        # preprocessor gate is itself skipped.
+        run: python3 scripts/check-display-labels-parity.py

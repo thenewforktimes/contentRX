@@ -31,6 +31,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from .auth import AuthError
+from .display_labels import display_label_for
 from .humanize import humanize_severity, humanize_verdict
 from .client import (
     AuthFailedError,
@@ -613,14 +614,21 @@ async def team_rule_remove(rule_id: str) -> dict[str, Any]:
 
 
 def _example_as_dict(entry: "CustomExample") -> dict[str, Any]:
-    """Shape a CustomExample dataclass as the MCP tool return dict."""
+    """Shape a CustomExample dataclass as the MCP tool return dict.
+
+    Per ADR 2026-04-25, MCP responses must not surface engine substrate
+    IDs. The substrate `standard_id` is replaced by a customer-facing
+    `display_label` ("Punctuation", "Casing", "Empathy", …). Agents
+    that need to act on the example use the row `id`. User-generated
+    team rules (TEAM-NN) pass through display_label_for unchanged.
+    """
     return {
         "id": entry.id,
         "text": entry.text,
         "verdict": entry.verdict,
         "moment": entry.moment,
         "content_type": entry.content_type,
-        "standard_id": entry.standard_id,
+        "display_label": display_label_for(entry.standard_id),
         "notes": entry.notes,
         "contribute_upstream": entry.contribute_upstream,
         "created_at": entry.created_at,
@@ -629,10 +637,16 @@ def _example_as_dict(entry: "CustomExample") -> dict[str, Any]:
 
 
 def _team_rule_as_dict(rule: "TeamRule") -> dict[str, Any]:
-    """Shape a TeamRule dataclass as the MCP tool return dict."""
+    """Shape a TeamRule dataclass as the MCP tool return dict.
+
+    Per ADR 2026-04-25, the substrate `standard_id` doesn't appear in
+    the response — agents identify rules by `id` (the team_rules row
+    PK) for update / remove tool calls, and read `display_label`
+    when surfacing the rule to the user.
+    """
     return {
         "id": rule.id,
-        "standard_id": rule.standard_id,
+        "display_label": display_label_for(rule.standard_id),
         "action": rule.action,
         "rule_json": rule.rule_json,
         "created_at": rule.created_at,
