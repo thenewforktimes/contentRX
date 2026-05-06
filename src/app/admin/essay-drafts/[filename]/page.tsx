@@ -69,7 +69,7 @@ export default async function AdminEssayDraftPreviewPage({
         </dl>
       </header>
 
-      <div className="rounded-lg border border-line bg-white dark:bg-stone-900">
+      <div className="rounded-lg border border-line bg-raised">
         <div className="border-b border-line px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-quiet">
           Raw contents
         </div>
@@ -82,7 +82,7 @@ export default async function AdminEssayDraftPreviewPage({
         Edits live on the primary{" "}
         <Link
           href="/admin/essay-drafts"
-          className="text-stone-700 underline hover:text-default dark:hover:text-stone-100"
+          className="text-default underline hover:text-default"
         >
           /admin/essay-drafts
         </Link>{" "}

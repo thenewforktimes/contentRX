@@ -97,14 +97,14 @@ export default async function AdminPilotsPage() {
 function PilotTable({ rows }: { rows: PilotRow[] }) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-lg border border-line bg-white p-6 text-sm text-quiet dark:bg-stone-900">
+      <p className="rounded-lg border border-line bg-raised p-6 text-sm text-quiet">
         No users yet. The tracker populates as Clerk sign-ups hit the DB.
       </p>
     );
   }
   return (
     <div className="overflow-x-auto rounded-lg border border-line">
-      <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
+      <table className="min-w-full divide-y divide-line text-sm">
         <thead className="bg-overlay text-left text-xs font-medium uppercase tracking-wide text-quiet">
           <tr>
             <th className="px-4 py-2">Status</th>
@@ -116,7 +116,7 @@ function PilotTable({ rows }: { rows: PilotRow[] }) {
             <th className="px-4 py-2 text-right">Overrides</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-stone-100 dark:divide-stone-900">
+        <tbody className="divide-y divide-line">
           {rows.map((row) => (
             <tr key={row.userId}>
               <td className="px-4 py-2">
@@ -184,7 +184,7 @@ function TriggerSidebar({
           {triggers.map((trigger, i) => (
             <li
               key={`${trigger.kind}-${trigger.userId}-${i}`}
-              className="rounded-lg border border-line bg-white p-3 text-xs dark:bg-stone-900"
+              className="rounded-lg border border-line bg-raised p-3 text-xs"
             >
               {trigger.kind === "debrief_50_checks" ? (
                 <>
@@ -228,7 +228,7 @@ function SummaryCard({
     ? STATUS_PILL_TONE[tone as ActivityStatus]
     : "neutral";
   return (
-    <div className="rounded-lg border border-line bg-white p-3 dark:bg-stone-900">
+    <div className="rounded-lg border border-line bg-raised p-3">
       <p className="text-xs uppercase tracking-wide text-quiet">
         {label}
       </p>

@@ -167,7 +167,7 @@ export default async function AdminOverridesPage({
       )}
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-line bg-white p-6 text-sm text-quiet dark:bg-stone-900">
+        <p className="rounded-lg border border-line bg-raised p-6 text-sm text-quiet">
           No overrides match. Inbox zero — or the filter is too tight.
         </p>
       ) : (
@@ -175,7 +175,7 @@ export default async function AdminOverridesPage({
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900"
+              className="rounded-lg border border-line bg-raised p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="text-xs text-quiet">
@@ -323,7 +323,7 @@ function FilterPill({
 }) {
   const tone = active
     ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-    : "bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700";
+    : "bg-sunken text-default hover:bg-hover";
   return (
     <a
       href={href}

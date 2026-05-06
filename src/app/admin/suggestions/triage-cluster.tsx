@@ -135,7 +135,7 @@ export function TriageCluster({
   }
 
   return (
-    <article className="rounded-md border border-line bg-white p-4 text-sm dark:bg-stone-900">
+    <article className="rounded-md border border-line bg-raised p-4 text-sm">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="flex flex-wrap items-baseline gap-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-quiet">
@@ -150,7 +150,7 @@ export function TriageCluster({
             type="button"
             onClick={() => setMode(mode === "editing" ? "idle" : "editing")}
             disabled={mode === "submitting"}
-            className="rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-stone-700 hover:bg-hover dark:text-stone-200"
+            className="rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default hover:bg-hover"
           >
             {mode === "editing" ? "Stop editing" : "Edit"}
           </button>
@@ -189,7 +189,7 @@ export function TriageCluster({
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
             rows={3}
-            className="mt-1 block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
+            className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
           />
         </div>
       )}
@@ -198,7 +198,7 @@ export function TriageCluster({
         {candidates.map((c) => (
           <li
             key={c.id}
-            className="rounded border border-line bg-stone-50 px-3 py-2 dark:bg-stone-950"
+            className="rounded border border-line bg-sunken px-3 py-2"
           >
             <p className="text-strong">
               {c.candidateText || (

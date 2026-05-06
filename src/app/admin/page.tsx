@@ -122,7 +122,7 @@ export default async function AdminTodayPage({ searchParams }: PageProps) {
         180-day window?{" "}
         <Link
           href="/admin/queue"
-          className="underline underline-offset-2 hover:text-strong dark:hover:text-stone-100"
+          className="underline underline-offset-2 hover:text-strong"
         >
           Open the full queue
         </Link>
@@ -252,7 +252,7 @@ function SubtypePill({
 function QueueList({ rows }: { rows: TodayQueueRow[] }) {
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-line-strong bg-white p-8 text-center text-sm text-quiet dark:bg-stone-900">
+      <div className="rounded-lg border border-dashed border-line-strong bg-raised p-8 text-center text-sm text-quiet">
         <p className="font-medium text-default">
           Nothing in this view.
         </p>
@@ -275,7 +275,7 @@ function QueueList({ rows }: { rows: TodayQueueRow[] }) {
 function QueueRow({ row }: { row: TodayQueueRow }) {
   const tone = subtypePillTone(row.subtype);
   return (
-    <li className="rounded-md border border-line bg-white p-3 text-sm dark:bg-stone-900">
+    <li className="rounded-md border border-line bg-raised p-3 text-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <Pill tone={tone}>{SUBTYPE_LABEL[row.subtype]}</Pill>
@@ -349,7 +349,7 @@ function RightRail({
         </ul>
         <Link
           href="/admin/pilots"
-          className="mt-2 block text-xs text-stone-700 underline underline-offset-2 hover:text-default dark:hover:text-stone-100"
+          className="mt-2 block text-xs text-default underline underline-offset-2 hover:text-default"
         >
           Open pilot tracker →
         </Link>
@@ -371,7 +371,7 @@ function RightRail({
             {triggers.map((trigger, i) => (
               <li
                 key={`${trigger.kind}-${trigger.userId}-${i}`}
-                className="rounded-lg border border-line bg-white p-3 text-xs dark:bg-stone-900"
+                className="rounded-lg border border-line bg-raised p-3 text-xs"
               >
                 {trigger.kind === "debrief_50_checks" ? (
                   <>

@@ -185,7 +185,7 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
               {rows.map((r) => (
                 <tr
                   key={r.standardId}
-                  className="border-b border-stone-100 dark:border-stone-900"
+                  className="border-b border-line"
                 >
                   <td className="py-2 font-mono text-xs">
                     <Link

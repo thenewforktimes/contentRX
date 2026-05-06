@@ -43,7 +43,7 @@ export default function AdminCaseStudiesPage() {
 
       {studies.length === 0 ? <EmptyState /> : <StudiesList studies={studies} />}
 
-      <section className="rounded-md border border-line bg-white p-5 text-xs dark:bg-stone-900">
+      <section className="rounded-md border border-line bg-raised p-5 text-xs">
         <h2 className="text-sm font-semibold text-strong">
           Workflow
         </h2>
@@ -86,7 +86,7 @@ export default function AdminCaseStudiesPage() {
 
 function StudiesList({ studies }: { studies: CaseStudySummary[] }) {
   return (
-    <ul className="divide-y divide-stone-100 rounded-lg border border-line bg-white dark:divide-stone-800 dark:bg-stone-900">
+    <ul className="divide-y divide-line rounded-lg border border-line bg-raised">
       {studies.map((s) => (
         <StudyRow key={s.slug} study={s} />
       ))}
@@ -196,7 +196,7 @@ function Counter({
 
 function EmptyState() {
   return (
-    <div className="rounded-lg border border-dashed border-line-strong bg-white px-6 py-10 text-center dark:bg-stone-900">
+    <div className="rounded-lg border border-dashed border-line-strong bg-raised px-6 py-10 text-center">
       <p className="text-sm font-semibold text-strong">
         No case studies yet.
       </p>

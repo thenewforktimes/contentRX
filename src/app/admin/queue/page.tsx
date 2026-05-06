@@ -213,7 +213,7 @@ export default async function AdminQueuePage({
       )}
 
       {rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-line-strong bg-white p-6 text-center text-sm text-quiet dark:bg-stone-900">
+        <p className="rounded-lg border border-dashed border-line-strong bg-raised p-6 text-center text-sm text-quiet">
           No pending cases in this window.
         </p>
       ) : (
@@ -250,7 +250,7 @@ function FilterTab({
 }) {
   const cls = active
     ? "rounded-md bg-stone-900 text-white dark:bg-white dark:text-black"
-    : "rounded-md bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700";
+    : "rounded-md bg-sunken text-default hover:bg-hover";
   return (
     <Link href={href} className={`${cls} px-3 py-1.5 text-xs font-medium`}>
       {label}
@@ -285,8 +285,8 @@ function QueueRow({
     <li
       className={`rounded-lg border p-3 text-sm ${
         isDecided
-          ? "border-stone-200 bg-stone-50 opacity-60 dark:border-stone-800 dark:bg-stone-950"
-          : "border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"
+          ? "border-line bg-sunken opacity-60"
+          : "border-line bg-raised"
       }`}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -308,14 +308,14 @@ function QueueRow({
                   ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
                   : row.severity === "medium"
                     ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                    : "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300"
+                    : "bg-sunken text-default"
               }`}
             >
               {row.severity}
             </span>
           )}
           {row.reviewReasonSubtype && (
-            <span className="rounded bg-stone-100 px-2 py-0.5 text-[10px] font-medium text-default dark:bg-stone-800">
+            <span className="rounded bg-sunken px-2 py-0.5 text-[10px] font-medium text-default">
               {humanizeReviewReason(row.reviewReasonSubtype)}
             </span>
           )}
@@ -397,7 +397,7 @@ function DecisionForm({
       ? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900"
       : stance === "disagree"
         ? "border-rose-300 bg-rose-50 text-rose-900 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900"
-        : "border-stone-300 bg-white text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:bg-stone-800";
+        : "border-line-strong bg-raised text-default hover:bg-hover";
 
   async function handle() {
     "use server";

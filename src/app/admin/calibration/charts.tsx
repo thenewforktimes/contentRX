@@ -1,5 +1,15 @@
 "use client";
 
+/* eslint-disable no-restricted-syntax --
+ * Hand-rolled SVG chart: `fill-stone-*` and `text-stone-*` classes
+ * here drive SVG element rendering (Tailwind compiles them to
+ * `fill: var(--color-stone-...)` and the SVG `text` element reads
+ * from `currentColor`). The design-token system maps to bg/text/
+ * border for HTML, not SVG fill — these raw shades are the right
+ * boundary for chart axis labels and gridlines. Founder-only
+ * surface; the visual choice was made when the chart was rolled
+ * by hand (audit Pf7). */
+
 /**
  * Hand-rolled SVG calibration chart (audit Pf7).
  *
@@ -54,7 +64,7 @@ export function SystemKappaTrendChart({
 
   if (points.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-line-strong bg-white p-6 text-center text-sm text-quiet dark:bg-stone-900">
+      <div className="rounded-lg border border-dashed border-line-strong bg-raised p-6 text-center text-sm text-quiet">
         No weekly κ measurements available yet. The chart populates as
         per-standard κ accumulates across multiple weeks.
       </div>
@@ -80,7 +90,7 @@ export function SystemKappaTrendChart({
   const autonomousY = yFor(autonomousThreshold);
 
   return (
-    <div className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
+    <div className="rounded-lg border border-line bg-raised p-4">
       <svg
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="none"
