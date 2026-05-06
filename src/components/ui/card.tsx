@@ -1,10 +1,16 @@
 /**
- * Card — codifies the two card treatments the codebase already uses
- * implicitly:
+ * Card — codifies the three card treatments the codebase uses:
  *
  *   - default:  raised surface + default border. Most cards.
  *   - emphasis: overlay surface + strong border. Callout / opt-out
- *     boxes that should sit visually one level above default cards.
+ *               boxes that should sit visually one level above
+ *               default cards.
+ *   - accent:   double-weight border in the affirm accent + a soft
+ *               tinted background. The "this is the recommended /
+ *               differentiated thing in this grid" treatment. Used
+ *               on the landing's "One approval" card and the Pro
+ *               tier on /pricing. Reserve for one card per grid —
+ *               two accents in the same grid kills the emphasis.
  *
  * Backed by the design tokens in `src/app/globals.css` so cards
  * automatically follow the canonical dark-mode treatment without
@@ -17,12 +23,13 @@
 
 import type { ReactNode } from "react";
 
-export type CardVariant = "default" | "emphasis";
+export type CardVariant = "default" | "emphasis" | "accent";
 export type CardPadding = "sm" | "md" | "lg";
 
 const variantClasses: Record<CardVariant, string> = {
-  default: "border-line bg-raised",
-  emphasis: "border-line-strong bg-overlay",
+  default: "border border-line bg-raised",
+  emphasis: "border border-line-strong bg-overlay",
+  accent: "border-2 border-accent-affirm-border bg-accent-affirm-soft/30",
 };
 
 const paddingClasses: Record<CardPadding, string> = {
@@ -44,7 +51,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-lg border ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`.trim()}
+      className={`rounded-lg ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`.trim()}
     >
       {children}
     </div>
