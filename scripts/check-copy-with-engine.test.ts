@@ -82,9 +82,9 @@ describe("evaluateString (wire shape)", () => {
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const call = fetchMock.mock.calls[0];
-    const url = call[0] as string;
-    const init = call[1] as RequestInit;
+    const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    const url = call[0];
+    const init = call[1];
     expect(url).toBe("https://example.test/api/evaluate");
     expect(init.method).toBe("POST");
     expect((init.headers as Record<string, string>)["x-internal-secret"]).toBe("shh");
@@ -121,7 +121,9 @@ describe("evaluateString (wire shape)", () => {
         timeoutMs: 5000,
       },
     );
-    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const init = (
+      fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    )[1];
     const body = JSON.parse(init.body as string);
     expect(body.content_type).toBeUndefined();
   });
