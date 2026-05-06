@@ -19,7 +19,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonStyles } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Eyebrow } from "@/components/ui/eyebrow";
+import { PageHeader } from "@/components/ui/page-header";
 import { Pill } from "@/components/ui/pill";
 
 export const metadata: Metadata = {
@@ -31,22 +31,25 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-20">
-      <header className="mb-12 max-w-3xl">
-        <Eyebrow>Pricing</Eyebrow>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-          A staff content designer&apos;s verdict on every string you ship.
-        </h1>
-        <p className="mt-4 text-lg text-default">
-          Free to start, $39/month to use it daily, $59/seat for teams.
-          In your repo, your PR, your Figma file, your terminal, without
-          ever leaving the work.
-        </p>
-        <p className="mt-4 text-sm text-quiet">
-          All paid plans share the same engine, the same calibrated reviewer,
-          and the same five surfaces. The differences are seat count, monthly
-          checks, and admin features.
-        </p>
-      </header>
+      <PageHeader
+        className="max-w-3xl"
+        eyebrow="Pricing"
+        title="A staff content designer's verdict on every string you ship."
+        lede={
+          <>
+            Free to start, $39/month to use it daily, $59/seat for teams.
+            In your repo, your PR, your Figma file, your terminal, without
+            ever leaving the work.
+          </>
+        }
+        meta={
+          <>
+            All paid plans share the same engine, the same calibrated
+            reviewer, and the same five surfaces. The differences are
+            seat count, monthly checks, and admin features.
+          </>
+        }
+      />
 
       <section
         className="grid grid-cols-1 gap-4 sm:grid-cols-3"

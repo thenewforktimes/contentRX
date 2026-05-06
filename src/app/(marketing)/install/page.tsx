@@ -19,7 +19,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonStyles } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/eyebrow";
+import { PageHeader } from "@/components/ui/page-header";
 import { Section } from "@/components/ui/section";
 
 export const metadata: Metadata = {
@@ -31,28 +31,34 @@ export const metadata: Metadata = {
 export default function InstallPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-20">
-      <header className="mb-12">
-        <Eyebrow>Install</Eyebrow>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Five surfaces, one content model.
-        </h1>
-        <p className="mt-4 text-lg text-default">
-          Content-standards enforcement is moving upstream into the
-          generation layer. Install ContentRX where your team actually
-          writes product copy (in the IDE, on the command line, in
-          pull requests) with the Figma plugin alongside for the
-          strings that arrive through design.
-        </p>
-        <p className="mt-4 text-sm text-quiet">
-          All five surfaces hit the same public API. One{" "}
-          <Link href="/dashboard" className="underline underline-offset-2">
-            API key
-          </Link>
-          {" "}covers them all. ContentRX handles the LLM relationship,
-          which means your text travels through one vendor relationship
-          (us to Anthropic), not two. You don&apos;t need an Anthropic
-          or OpenAI key. Pick the surfaces your team lives in.
-        </p>
+      <PageHeader
+        eyebrow="Install"
+        title="Five surfaces, one content model."
+        lede={
+          <>
+            Content-standards enforcement is moving upstream into the
+            generation layer. Install ContentRX where your team actually
+            writes product copy (in the IDE, on the command line, in
+            pull requests) with the Figma plugin alongside for the
+            strings that arrive through design.
+          </>
+        }
+        meta={
+          <>
+            All five surfaces hit the same public API. One{" "}
+            <Link
+              href="/dashboard"
+              className="underline underline-offset-2"
+            >
+              API key
+            </Link>
+            {" "}covers them all. ContentRX handles the LLM relationship,
+            which means your text travels through one vendor relationship
+            (us to Anthropic), not two. You don&apos;t need an Anthropic
+            or OpenAI key. Pick the surfaces your team lives in.
+          </>
+        }
+      >
         <nav className="mt-6 flex flex-wrap gap-2 text-sm">
           <SurfaceChip href="#mcp" label="MCP" tagline="Claude Code · Cursor" />
           <SurfaceChip href="#lsp" label="LSP" tagline="VS Code · Cursor · Zed" />
@@ -60,7 +66,7 @@ export default function InstallPage() {
           <SurfaceChip href="#action" label="GitHub Action" tagline="PR gate" />
           <SurfaceChip href="#figma" label="Figma plugin" tagline="design-time" />
         </nav>
-      </header>
+      </PageHeader>
 
       <Section
         id="mcp"

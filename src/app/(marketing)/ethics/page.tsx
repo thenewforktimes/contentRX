@@ -19,6 +19,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata: Metadata = {
   title: "Ethics. ContentRX",
@@ -28,27 +29,25 @@ export const metadata: Metadata = {
 
 export default function EthicsPage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <header className="mb-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
-          Ethics
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold">
-          How we handle your work
-        </h1>
-        <p className="mt-4 text-sm text-quiet">
-          Three commitments hold the rest of the product together.
-          They&apos;re short on purpose. The deep policy lives at{" "}
-          <Link href="/privacy" className="underline underline-offset-2">
-            /privacy
-          </Link>{" "}
-          and{" "}
-          <Link href="/security" className="underline underline-offset-2">
-            /security
-          </Link>
-          ; this page is the position those policies sit under.
-        </p>
-      </header>
+    <main className="mx-auto max-w-2xl px-6 py-20">
+      <PageHeader
+        eyebrow="Ethics"
+        title="How we handle your work"
+        lede={
+          <p className="text-sm text-quiet">
+            Three commitments hold the rest of the product together.
+            They&apos;re short on purpose. The deep policy lives at{" "}
+            <Link href="/privacy" className="underline underline-offset-2">
+              /privacy
+            </Link>{" "}
+            and{" "}
+            <Link href="/security" className="underline underline-offset-2">
+              /security
+            </Link>
+            ; this page is the position those policies sit under.
+          </p>
+        }
+      />
 
       <Section
         number="1"

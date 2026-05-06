@@ -20,6 +20,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/ui/page-header";
 import { Pill } from "@/components/ui/pill";
 import {
   loadSourcesData,
@@ -50,21 +51,23 @@ export default function SourcesPage() {
   const data = loadSourcesData();
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
-      <header className="mb-12">
-        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
-          Attribution surface
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold">Sources</h1>
-        <p className="mt-4 text-sm text-quiet">
-          Every public source that informs ContentRX (design systems,
-          style guides, OSS repositories) listed with its role, license,
-          and opt-out path. This page is the accountability surface for{" "}
-          <Link href="/ethics" className="underline underline-offset-2">
-            /ethics
-          </Link>
-          &apos;s transparency commitment.
-        </p>
+    <main className="mx-auto max-w-3xl px-6 py-20">
+      <PageHeader
+        eyebrow="Attribution surface"
+        title="Sources"
+        lede={
+          <p className="text-sm text-quiet">
+            Every public source that informs ContentRX (design systems,
+            style guides, OSS repositories) listed with its role,
+            license, and opt-out path. This page is the accountability
+            surface for{" "}
+            <Link href="/ethics" className="underline underline-offset-2">
+              /ethics
+            </Link>
+            &apos;s transparency commitment.
+          </p>
+        }
+      >
         <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
           <Stat
             label="Style guides"
@@ -75,7 +78,7 @@ export default function SourcesPage() {
             value={data.pairs_total.toString()}
           />
         </dl>
-      </header>
+      </PageHeader>
 
       <section className="mt-12">
         <h2 className="text-xl font-semibold">

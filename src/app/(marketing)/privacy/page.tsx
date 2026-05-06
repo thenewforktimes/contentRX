@@ -15,7 +15,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eyebrow } from "@/components/ui/eyebrow";
+import { PageHeader } from "@/components/ui/page-header";
 import { Section } from "@/components/ui/section";
 
 const EFFECTIVE_DATE = "April 27, 2026";
@@ -30,22 +30,26 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-20">
-      <header className="mb-12">
-        <Eyebrow>Privacy</Eyebrow>
-        <h1 className="mt-3 text-3xl font-semibold">Privacy policy</h1>
-        <p className="mt-3 text-sm text-quiet">
-          Effective <time>{EFFECTIVE_DATE}</time>. Material changes get
-          a new effective date and a note in the changelog.
-        </p>
-        <p className="mt-4 text-lg text-default">
-          ContentRX is a content-design review tool. To do that job,
-          we have to receive the strings you check, run them through
-          our evaluation engine (which uses Anthropic&apos;s Claude
-          models), and store enough of a record to bill you and to
-          show you your own history. This page lays out exactly what
-          flows where, who else sees it, and how to make us forget you.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Privacy"
+        title="Privacy policy"
+        lede={
+          <>
+            ContentRX is a content-design review tool. To do that job,
+            we have to receive the strings you check, run them through
+            our evaluation engine (which uses Anthropic&apos;s Claude
+            models), and store enough of a record to bill you and to
+            show you your own history. This page lays out exactly what
+            flows where, who else sees it, and how to make us forget you.
+          </>
+        }
+        meta={
+          <>
+            Effective <time>{EFFECTIVE_DATE}</time>. Material changes
+            get a new effective date and a note in the changelog.
+          </>
+        }
+      />
 
       <Section title="What we collect">
         <p>Three buckets:</p>

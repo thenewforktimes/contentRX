@@ -13,7 +13,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eyebrow } from "@/components/ui/eyebrow";
+import { PageHeader } from "@/components/ui/page-header";
 import { Section } from "@/components/ui/section";
 
 const SECURITY_EMAIL = "security@contentrx.io";
@@ -27,18 +27,18 @@ export const metadata: Metadata = {
 export default function SecurityPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-20">
-      <header className="mb-12">
-        <Eyebrow>Security</Eyebrow>
-        <h1 className="mt-3 text-3xl font-semibold">
-          Reporting a vulnerability
-        </h1>
-        <p className="mt-4 text-lg text-default">
-          If you&apos;ve found something that looks like a security issue
-          in ContentRX, please tell us before you tell anyone else.
-          We&apos;ll work with you on a fix and a coordinated disclosure
-          timeline.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Security"
+        title="Reporting a vulnerability"
+        lede={
+          <>
+            If you&apos;ve found something that looks like a security
+            issue in ContentRX, please tell us before you tell anyone
+            else. We&apos;ll work with you on a fix and a coordinated
+            disclosure timeline.
+          </>
+        }
+      />
 
       <Section title="How to report">
         <p>
