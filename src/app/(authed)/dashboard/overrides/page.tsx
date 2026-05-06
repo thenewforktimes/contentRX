@@ -23,7 +23,20 @@ import {
   type BehaviorQuadrant,
 } from "@/lib/behavior-quadrant";
 import { aggregateOverrides } from "@/lib/session-aggregation";
+import { CATEGORIES, STANDARDS_BY_ID } from "@/lib/standards";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
+
+const UNKNOWN_CATEGORY = "Other";
+
+const CATEGORY_NAMES_BY_ID: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.id, c.name]),
+);
+
+function categoryNameFor(standardId: string): string {
+  const std = STANDARDS_BY_ID[standardId];
+  if (!std) return UNKNOWN_CATEGORY;
+  return CATEGORY_NAMES_BY_ID[std.category] ?? UNKNOWN_CATEGORY;
+}
 
 const RANGE_DAYS = 30;
 
@@ -87,7 +100,7 @@ export default async function OverridesPage() {
       ? Math.round((overrides_count / violations_count) * 1000) / 10
       : null;
 
-  const topStandards = (await db
+  const rawStandardCounts = (await db
     .select({
       standard_id: schema.violationOverrides.standardId,
       moment: schema.violationOverrides.moment,
@@ -104,12 +117,26 @@ export default async function OverridesPage() {
       schema.violationOverrides.standardId,
       schema.violationOverrides.moment,
     )
-    .orderBy(desc(sql`count(*)`))
-    .limit(10)) as Array<{
+    .orderBy(desc(sql`count(*)`))) as Array<{
     standard_id: string;
     moment: string | null;
     count: number;
   }>;
+
+  const categoryTotals = new Map<string, { category: string; moment: string | null; count: number }>();
+  for (const row of rawStandardCounts) {
+    const category = categoryNameFor(row.standard_id);
+    const key = `${category}|${row.moment ?? ""}`;
+    const existing = categoryTotals.get(key);
+    if (existing) {
+      existing.count += row.count;
+    } else {
+      categoryTotals.set(key, { category, moment: row.moment, count: row.count });
+    }
+  }
+  const topCategories = Array.from(categoryTotals.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
 
   const byType = (await db
     .select({
@@ -233,11 +260,18 @@ export default async function OverridesPage() {
         <>
           {pushbacks.length > 0 && (
             <section>
-              <h2 className="mb-1 text-sm font-semibold">Standard pushbacks</h2>
+              <h2 className="mb-1 text-sm font-semibold">Pushbacks</h2>
               <p className="mb-3 text-xs text-default">
-                Clusters of 3+ overrides on the same standard inside a
+                Clusters of 3+ overrides on the same rule inside a
                 single session (scan, CI run, dashboard session).
-                Strongest signal that a rule needs a refinement-log look.
+                Strongest signal that a rule needs a look in your{" "}
+                <Link
+                  href="/dashboard/rules"
+                  className="underline underline-offset-2"
+                >
+                  team rules
+                </Link>
+                .
               </p>
               <ul className="flex flex-col gap-2">
                 {pushbacks.map((p) => (
@@ -246,7 +280,9 @@ export default async function OverridesPage() {
                     className="flex items-start justify-between gap-4 rounded-md border border-amber-300 bg-amber-50/60 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/40"
                   >
                     <div>
-                      <p className="font-mono text-xs">{p.standardId}</p>
+                      <p className="text-xs font-medium">
+                        {categoryNameFor(p.standardId)}
+                      </p>
                       <p className="text-xs text-default">
                         Session{" "}
                         <code className="font-mono">
@@ -268,23 +304,23 @@ export default async function OverridesPage() {
 
           <section>
             <h2 className="mb-3 text-sm font-semibold">
-              Most-overridden standards
+              Most-overridden categories
             </h2>
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-quiet">
-                  <th className="py-2">Standard</th>
+                  <th className="py-2">Category</th>
                   <th className="py-2">Moment</th>
                   <th className="py-2 text-right">Overrides</th>
                 </tr>
               </thead>
               <tbody>
-                {topStandards.map((s) => (
+                {topCategories.map((s) => (
                   <tr
-                    key={`${s.standard_id}|${s.moment ?? ""}`}
-                    className="border-b border-stone-100 dark:border-stone-900"
+                    key={`${s.category}|${s.moment ?? ""}`}
+                    className="border-b border-line"
                   >
-                    <td className="py-2 font-mono text-xs">{s.standard_id}</td>
+                    <td className="py-2 text-xs">{s.category}</td>
                     <td className="py-2 text-xs text-default">
                       {s.moment ?? "n/a"}
                     </td>
