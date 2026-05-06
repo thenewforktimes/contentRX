@@ -158,20 +158,29 @@ def sanitize_label(label: str, max_len: int = 200) -> str:
 # JSON parsing — single implementation, used everywhere
 # ---------------------------------------------------------------------------
 
-def parse_llm_json(raw: str, *, context: str = "") -> dict:
+def parse_llm_json(
+    raw: str,
+    *,
+    context: str = "",
+    required_keys: list[str] | None = None,
+) -> dict:
     """Strip markdown fences and parse LLM output as JSON.
 
     Args:
         raw: The raw string from the LLM response.
         context: Pipeline stage name for error messages (e.g., "scan",
             "validate", "consistency"). Used in logging only.
+        required_keys: When supplied, every name in the list must appear
+            as a top-level key in the parsed dict, otherwise ParseError.
+            Catches the "valid JSON, wrong shape" failure mode where
+            callers would otherwise KeyError downstream.
 
     Returns:
         Parsed dict from the JSON.
 
     Raises:
-        ParseError: If the string cannot be parsed after fence-stripping.
-            The exception carries the raw string and context for debugging.
+        ParseError: If the string cannot be parsed after fence-stripping,
+            isn't a dict, or is missing any required key.
     """
     cleaned = _strip_fences(raw)
 
@@ -204,6 +213,16 @@ def parse_llm_json(raw: str, *, context: str = "") -> dict:
             raw=raw,
             context=context,
         )
+
+    if required_keys:
+        missing = [k for k in required_keys if k not in result]
+        if missing:
+            raise ParseError(
+                f"LLM JSON in {context or 'unknown'} missing required keys: "
+                f"{missing}",
+                raw=raw,
+                context=context,
+            )
 
     return result
 
