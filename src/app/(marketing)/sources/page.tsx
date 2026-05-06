@@ -195,7 +195,7 @@ function StyleGuideCard({ source }: { source: StyleGuideSource }) {
             {source.name}
           </a>
         </h3>
-        <span className="rounded bg-stone-100 px-2 py-0.5 font-mono text-xs text-default dark:bg-stone-900">
+        <span className="rounded bg-raised px-2 py-0.5 font-mono text-xs text-default">
           {source.license}
         </span>
       </div>
@@ -256,7 +256,7 @@ function OSSRepoCard({ repo }: { repo: OSSRepoSource }) {
             {repo.owner}/{repo.name}
           </a>
         </h3>
-        <span className="rounded bg-stone-100 px-2 py-0.5 font-mono text-xs text-default dark:bg-stone-900">
+        <span className="rounded bg-raised px-2 py-0.5 font-mono text-xs text-default">
           {repo.license}
         </span>
       </div>

@@ -293,7 +293,7 @@ function SurfaceChip({
 
 function Code({ children }: { children: string }) {
   return (
-    <pre className="mt-3 overflow-x-auto rounded-md border border-line bg-stone-50 p-3 text-xs dark:bg-stone-950">
+    <pre className="mt-3 overflow-x-auto rounded-md border border-line bg-sunken p-3 text-xs">
       <code className="font-mono text-default">
         {children}
       </code>

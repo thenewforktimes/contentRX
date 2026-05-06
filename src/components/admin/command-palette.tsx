@@ -174,10 +174,10 @@ export function CommandPalette() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open search palette"
-        className="flex w-full items-center justify-between gap-2 rounded-md border border-line-strong bg-white px-3 py-1.5 text-left text-xs text-quiet hover:border-line-strong dark:bg-stone-900"
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-line-strong bg-raised px-3 py-1.5 text-left text-xs text-quiet hover:border-line-strong"
       >
         <span>Find a case…</span>
-        <kbd className="rounded border border-line-strong bg-stone-100 px-1.5 py-0.5 font-mono text-[10px] text-quiet dark:bg-stone-800">
+        <kbd className="rounded border border-line-strong bg-sunken px-1.5 py-0.5 font-mono text-[10px] text-quiet">
           ⌘K
         </kbd>
       </button>
@@ -195,7 +195,7 @@ export function CommandPalette() {
           <div
             ref={dialogRef}
             onKeyDown={onKeyDown}
-            className="w-full max-w-2xl overflow-hidden rounded-lg border border-line bg-white shadow-2xl dark:bg-stone-900"
+            className="w-full max-w-2xl overflow-hidden rounded-lg border border-line bg-raised shadow-2xl"
           >
             <div className="border-b border-line">
               <input
@@ -205,7 +205,7 @@ export function CommandPalette() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Find a case across overrides, queue, and customer flags…"
-                className="w-full bg-transparent px-4 py-3 text-base text-strong placeholder:text-stone-400 focus:outline-none dark:placeholder:text-stone-600"
+                className="w-full bg-transparent px-4 py-3 text-base text-strong placeholder:text-quiet focus:outline-none"
               />
             </div>
 
@@ -297,7 +297,7 @@ function ResultRow({
       role="option"
       aria-selected={active}
       onMouseEnter={onHover}
-      className={`border-b border-stone-100 last:border-b-0 dark:border-stone-800 ${
+      className={`border-b border-line last:border-b-0 ${
         active ? "bg-stone-50 dark:bg-stone-800" : ""
       }`}
     >

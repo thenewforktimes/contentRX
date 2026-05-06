@@ -148,7 +148,7 @@ export function FindingMakeRuleModal({
               onChange={(e) => setText(e.target.value)}
               rows={3}
               maxLength={100_000}
-              className="mt-1 block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
+              className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
             />
             <p className="mt-1 text-xs text-quiet">
               Match is case-insensitive. Whitespace gets normalized
@@ -167,7 +167,7 @@ export function FindingMakeRuleModal({
               rows={2}
               maxLength={1000}
               placeholder="Visible to your team when this rule fires."
-              className="mt-1 block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
+              className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
             />
           </div>
 

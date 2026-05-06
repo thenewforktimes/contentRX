@@ -416,7 +416,7 @@ function SubprocessorRow({
   data: string;
 }) {
   return (
-    <tr className="border-b border-stone-100 align-top dark:border-stone-900">
+    <tr className="border-b border-line align-top">
       <td className="py-3 pr-4 font-medium text-strong">
         {name}
       </td>

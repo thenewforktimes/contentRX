@@ -138,7 +138,7 @@ export default async function CustomExamplesPage() {
               {entries.map((e) => (
                 <tr
                   key={e.id}
-                  className="border-b border-stone-100 dark:border-stone-900"
+                  className="border-b border-line"
                 >
                   <td className="max-w-[280px] truncate py-2 pr-4 font-mono text-xs">
                     <span title={e.text}>{e.text}</span>

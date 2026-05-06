@@ -410,7 +410,7 @@ function PatternLine({ pattern }: { pattern: FindingPattern }) {
     return (
       <>
         Same file flagged most:{" "}
-        <code className="rounded bg-stone-100 px-1 py-0.5 text-xs dark:bg-stone-800">
+        <code className="rounded bg-sunken px-1 py-0.5 text-xs">
           {pattern.filePath}
         </code>{" "}
         (

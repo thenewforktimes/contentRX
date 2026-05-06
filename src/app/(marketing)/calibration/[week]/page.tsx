@@ -56,7 +56,7 @@ export default async function CalibrationWeekPage({
         </p>
       </header>
 
-      <article className="rounded-lg border border-line bg-white p-6 dark:bg-stone-900">
+      <article className="rounded-lg border border-line bg-raised p-6">
         <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-default">
 {entry.contents}
         </pre>

@@ -48,7 +48,7 @@ export default function CalibrationIndexPage() {
       </header>
 
       {entries.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-line-strong bg-white px-4 py-6 text-center text-sm text-quiet dark:bg-stone-900">
+        <p className="rounded-lg border border-dashed border-line-strong bg-raised px-4 py-6 text-center text-sm text-quiet">
           No calibration log entries yet. The Monday cron generator
           publishes new entries as they land.
         </p>
@@ -58,7 +58,7 @@ export default function CalibrationIndexPage() {
             <li key={entry.week}>
               <Link
                 href={`/calibration/${entry.week}`}
-                className="block rounded-lg border border-line bg-white p-4 transition hover:border-line-strong dark:bg-stone-900"
+                className="block rounded-lg border border-line bg-raised p-4 transition hover:border-line-strong"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <h2 className="font-mono text-base font-semibold">

@@ -89,10 +89,10 @@ export function ReadOnlyRulesView({
 function RuleCard({ standard }: { standard: PublicStandard }) {
   return (
     <li
-      className={`rounded-md border p-3 text-sm dark:border-stone-800 ${
+      className={`rounded-md border p-3 text-sm ${
         standard.disabled
-          ? "border-stone-200 bg-stone-50 opacity-60 dark:bg-stone-900"
-          : "border-stone-200 bg-raised"
+          ? "border-line bg-sunken opacity-60"
+          : "border-line bg-raised"
       }`}
     >
       <div className="flex items-start justify-between gap-3">

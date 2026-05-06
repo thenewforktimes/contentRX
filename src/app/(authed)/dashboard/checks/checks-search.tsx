@@ -184,7 +184,7 @@ export function ChecksSearch({
                 className={`rounded-full px-3 py-1 font-medium transition ${
                   active
                     ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-                    : "bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                    : "bg-sunken text-default hover:bg-hover"
                 }`}
               >
                 {VERDICT_LABEL[v]} · {counts[v || "all"] ?? 0}

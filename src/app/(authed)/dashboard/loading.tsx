@@ -9,7 +9,7 @@
 import { Eyebrow } from "@/components/ui/eyebrow";
 
 const skeletonClass =
-  "animate-pulse rounded-lg border border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40";
+  "animate-pulse rounded-lg border border-line bg-sunken/40";
 
 export default function DashboardLoading() {
   return (
@@ -17,9 +17,9 @@ export default function DashboardLoading() {
       <header className="flex items-center justify-between">
         <div>
           <Eyebrow>Dashboard</Eyebrow>
-          <div className="mt-2 h-7 w-56 animate-pulse rounded bg-stone-200 dark:bg-stone-800" />
+          <div className="mt-2 h-7 w-56 animate-pulse rounded bg-sunken" />
         </div>
-        <div className="h-6 w-16 animate-pulse rounded-full bg-stone-200 dark:bg-stone-800" />
+        <div className="h-6 w-16 animate-pulse rounded-full bg-sunken" />
       </header>
       <section className={`${skeletonClass} h-44 p-5`} />
       <section className={`${skeletonClass} h-32 p-5`} />

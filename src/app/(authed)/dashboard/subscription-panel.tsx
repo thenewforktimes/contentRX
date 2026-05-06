@@ -283,8 +283,8 @@ function PlanOption({
       onClick={onSelect}
       className={`flex flex-col rounded-md border p-3 text-left transition ${
         selected
-          ? "border-black bg-stone-50 dark:border-white dark:bg-stone-900"
-          : "border-stone-200 hover:border-stone-400 dark:border-stone-800 dark:hover:border-stone-600"
+          ? "border-black bg-sunken dark:border-white"
+          : "border-line hover:border-stone-400 dark:hover:border-stone-600"
       }`}
     >
       <div className="mb-1 flex items-baseline justify-between">

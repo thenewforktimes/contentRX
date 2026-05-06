@@ -210,10 +210,10 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           onChange={(e) => setText(e.target.value)}
           rows={4}
           placeholder="Try pasting a button label, an error message, or a paragraph from your latest PR"
-          className={`w-full rounded-md border bg-white px-3 py-2 font-mono text-sm text-stone-900 focus:outline-none focus:ring-1 dark:bg-stone-950 dark:text-stone-100 ${
+          className={`w-full rounded-md border bg-raised px-3 py-2 font-mono text-sm text-strong focus:outline-none focus:ring-1 ${
             overLimit
               ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"
-              : "border-stone-300 focus:border-stone-500 focus:ring-neutral-500 dark:border-stone-700"
+              : "border-line-strong focus:border-stone-500 focus:ring-neutral-500"
           }`}
         />
         <div className="flex items-center justify-between gap-3 text-xs">
@@ -1237,7 +1237,7 @@ function FindingCard({
   const [ruleSaved, setRuleSaved] = useState(false);
 
   return (
-    <li className="rounded-md border border-line bg-white p-3 text-sm dark:bg-stone-900">
+    <li className="rounded-md border border-line bg-raised p-3 text-sm">
       <div className="flex items-start justify-between gap-3">
         <SeverityBadge severity={finding.severity} />
         <div className="flex shrink-0 items-center gap-2">
@@ -1254,7 +1254,7 @@ function FindingCard({
             type="button"
             onClick={() => setAdjustOpen(true)}
             aria-label="Adjust this finding"
-            className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-hover dark:text-stone-200"
+            className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover"
           >
             Adjust
           </button>
@@ -1351,7 +1351,7 @@ function MakeRuleButton({ plan, onOpen }: { plan: Plan; onOpen: () => void }) {
         type="button"
         onClick={onOpen}
         aria-label="Make a rule for your team"
-        className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-hover dark:text-stone-200"
+        className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover"
       >
         Make a rule
       </button>
@@ -1467,7 +1467,7 @@ function CopySuggestionButton({
           ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
           : state === "error"
             ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
-            : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-200 dark:hover:bg-stone-900",
+            : "border-line-strong bg-raised text-default hover:bg-hover",
       ].join(" ")}
     >
       {label}

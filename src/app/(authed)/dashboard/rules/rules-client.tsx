@@ -324,7 +324,7 @@ function StandardRow({
         <p
           className={`mt-1 text-xs ${
             isDisabled
-              ? "text-stone-500 line-through dark:text-stone-400"
+              ? "text-quiet line-through"
               : "text-default"
           }`}
         >
@@ -533,7 +533,7 @@ function AddCustomRuleCard({
               onChange={(e) =>
                 setSeverity(e.target.value as "low" | "medium" | "high")
               }
-              className="rounded-md border border-line-strong bg-white px-2 py-1 text-xs dark:bg-stone-900"
+              className="rounded-md border border-line-strong bg-raised px-2 py-1 text-xs"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
