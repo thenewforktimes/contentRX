@@ -34,6 +34,7 @@ export default function PricingPage() {
       <PageHeader
         className="max-w-3xl"
         eyebrow="Pricing"
+        scale="display"
         title="A staff content designer's verdict on every string you ship."
         lede={
           <>
@@ -248,7 +249,7 @@ function PlanCard({
 }) {
   return (
     <Card
-      variant={emphasized ? "emphasis" : "default"}
+      variant={emphasized ? "accent" : "default"}
       padding="lg"
       className="flex flex-col gap-4"
     >
