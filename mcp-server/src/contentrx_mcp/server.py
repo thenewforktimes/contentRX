@@ -104,13 +104,27 @@ async def evaluate_copy(
     # 2026-04-29 §9 we also ship `verdict_label` + per-violation
     # `severity_label` so the LLM can surface the calmer customer-
     # facing copy directly without re-rendering the substrate enum.
+    #
+    # The violation projection below is explicit-pick rather than
+    # spread (`{**v, ...}`). Defense-in-depth: /api/check already
+    # strips substrate, but if a future regression or PUBLIC_TAXONOMY
+    # mode flip leaks substrate fields into `result.violations`, the
+    # spread would have propagated them through the MCP boundary.
+    # The explicit projection forecloses that.
     verdict_label, _ = humanize_verdict(
         result.verdict, finding_count=len(result.violations)
     )
     violations_with_labels: list[dict[str, Any]] = []
     for v in result.violations:
         sev_label, _tone = humanize_severity(v.get("severity", "medium"))
-        violations_with_labels.append({**v, "severity_label": sev_label})
+        violations_with_labels.append({
+            "issue": v.get("issue", ""),
+            "suggestion": v.get("suggestion", ""),
+            "severity": v.get("severity", "medium"),
+            "severity_label": sev_label,
+            "confidence": v.get("confidence"),
+            "category": v.get("category"),
+        })
 
     return {
         "verdict": result.verdict,
@@ -225,15 +239,24 @@ async def evaluate_copy_batch(
                     results.append({"text": text, "error": _typed_error(exc)})
                     continue
 
-                # Same humanize treatment as the single-string path
-                # — see evaluate_copy() above for the rationale.
+                # Same humanize + explicit-projection treatment as the
+                # single-string path — see evaluate_copy() above for
+                # the rationale (defense-in-depth substrate fence,
+                # not just trusting /api/check to strip).
                 v_label, _ = humanize_verdict(
                     result.verdict, finding_count=len(result.violations)
                 )
                 violations_with_labels: list[dict[str, Any]] = []
                 for v in result.violations:
                     s_label, _t = humanize_severity(v.get("severity", "medium"))
-                    violations_with_labels.append({**v, "severity_label": s_label})
+                    violations_with_labels.append({
+                        "issue": v.get("issue", ""),
+                        "suggestion": v.get("suggestion", ""),
+                        "severity": v.get("severity", "medium"),
+                        "severity_label": s_label,
+                        "confidence": v.get("confidence"),
+                        "category": v.get("category"),
+                    })
                 results.append(
                     {
                         "text": text,
