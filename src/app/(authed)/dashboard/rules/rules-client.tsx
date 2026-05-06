@@ -19,6 +19,7 @@ import { AlertDialog } from "@/components/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
+import { displayLabelFor } from "@/lib/standard-display-names";
 import type { CategorySummary } from "@/lib/standards";
 
 export type TeamRule = {
@@ -315,9 +316,9 @@ function StandardRow({
     <li className="flex items-start gap-3 rounded-md border border-line p-3">
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs dark:bg-stone-900">
-            {standardId}
-          </code>
+          <span className="text-xs font-semibold uppercase tracking-wide text-quiet">
+            {displayLabelFor(standardId)}
+          </span>
           {isDisabled && <Pill tone="stone">Disabled</Pill>}
         </div>
         <p
