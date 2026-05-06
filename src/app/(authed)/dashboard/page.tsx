@@ -182,7 +182,7 @@ export default async function DashboardPage() {
               href="/admin"
               className="ml-auto rounded-md border border-line-strong px-2 py-0.5 text-xs font-medium text-default hover:bg-hover"
             >
-              Founder admin →
+              Founder dashboard →
             </Link>
           )}
         </nav>

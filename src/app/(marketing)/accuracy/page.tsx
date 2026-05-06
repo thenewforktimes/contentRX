@@ -149,8 +149,8 @@ export default function AccuracyPage() {
           >
             reports/accuracy/latest.json
           </a>
-          , generated nightly by the substrate-to-report pipeline. The
-          docs site picks up the file on next deploy. Schema version{" "}
+          , generated nightly by the calibration pipeline. The docs
+          site picks up the file on next deploy. Schema version{" "}
           <code className="font-mono">{snap.schema_version}</code>.
         </p>
       </footer>

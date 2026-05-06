@@ -32,12 +32,11 @@ export default function CalibrationIndexPage() {
         </p>
         <h1 className="mt-2 text-3xl font-semibold">Weekly calibration log</h1>
         <p className="mt-4 text-sm text-quiet">
-          Every Monday, the substrate-to-report pipeline emits a
-          calibration log entry. Each entry covers the previous week&apos;s
-          measured κ movement, drift signals, override counts, and active
-          taxonomy refinement candidates. The format is templated on
-          purpose: consistency week to week is what makes drift in the
-          writing detectable.
+          Every Monday a new calibration log entry is generated. Each
+          entry covers the previous week&apos;s measured κ movement,
+          drift signals, override counts, and active refinement
+          candidates. The format is templated on purpose: consistency
+          week to week is what makes drift in the writing detectable.
         </p>
         <p className="mt-3 text-sm text-quiet">
           See{" "}
