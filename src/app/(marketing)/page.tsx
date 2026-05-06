@@ -147,10 +147,9 @@ export default function Home() {
             .
           </li>
           <li>
-            <strong>CLI</strong> for the terminal and CI.{" "}
-            <code>contentrx &quot;Click here&quot;</code> or{" "}
-            <code>--batch strings.txt</code>. <code>--explain</code>{" "}
-            prints the rationale chain. Stdlib-only install.{" "}
+            <strong>CLI</strong> for the terminal and CI. Spot-check
+            a string, batch a file, or hook it into pre-commit. One
+            install, zero dependencies.{" "}
             <Link
               href="/install#cli"
               className="underline underline-offset-2"
@@ -216,11 +215,13 @@ export default function Home() {
               </p>
             </div>
             <p className="mt-2 text-sm text-default">
-              Most teams can&apos;t get an AI vendor approved fast
-              enough to keep up with how copy is changing. ContentRX
-              is a $39 SaaS subscription, not a new LLM relationship
-              to negotiate. No Anthropic or OpenAI key required from
-              you or your org.
+              ContentRX is a $39 SaaS subscription on the same
+              approval pattern your team already uses for Slack or
+              Figma. No new LLM contract, no Anthropic or OpenAI key
+              required from your org, no procurement deck to write.
+              If your team is catching up on AI tooling, it&apos;s
+              already caught up enough for this one. Install your
+              favorite surface in five minutes.
             </p>
           </li>
           <li className="rounded-lg border border-line bg-raised p-5">
@@ -228,9 +229,11 @@ export default function Home() {
               Privacy.
             </p>
             <p className="mt-2 text-sm text-default">
-              We&apos;re a paid tool, not a data product. Customer
-              strings transit, get reviewed, and don&apos;t stick
-              around.{" "}
+              Subscriptions are the whole revenue model. No VCs, no
+              investors, no quiet second business that needs your
+              strings to keep the lights on. Your content is your
+              hard work, not a product we sell to other parties
+              because you signed it away.{" "}
               <Link
                 href="/privacy"
                 className="underline underline-offset-2"
@@ -245,7 +248,9 @@ export default function Home() {
               Security.
             </p>
             <p className="mt-2 text-sm text-default">
-              Standard SaaS hygiene, audit-ready posture.{" "}
+              Text gets hashed at the boundary. PII is screened
+              before any LLM call. Cancelled accounts pseudonymize
+              after ninety days. The full posture is documented.{" "}
               <Link
                 href="/security"
                 className="underline underline-offset-2"
@@ -260,8 +265,10 @@ export default function Home() {
               Integrations.
             </p>
             <p className="mt-2 text-sm text-default">
-              Wired into the surfaces above: MCP, CLI, GitHub Action,
-              LSP, Figma.{" "}
+              We meet copy where it&apos;s being written. MCP for
+              Claude Code, CLI for the terminal, GitHub Action for
+              pull requests, LSP for editors, the Figma plugin for
+              design-time. Same verdict on every surface.{" "}
               <Link
                 href="/install"
                 className="underline underline-offset-2"
