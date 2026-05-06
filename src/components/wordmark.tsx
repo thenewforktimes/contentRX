@@ -93,7 +93,7 @@ export function Wordmark({
 
   const content = (
     <span
-      className={`inline-flex items-baseline ${cls.gap} ${className}`.trim()}
+      className={`inline-flex items-center ${cls.gap} ${className}`.trim()}
       aria-label="ContentRX"
     >
       <Mark
@@ -129,10 +129,17 @@ function Mark({
   // itself in over ~600ms and the text fades in just after.
   return (
     <motion.span
-      // Self-align to baseline so the mark sits on the wordmark's
-      // baseline rather than the cap-height — visually anchors next
-      // to lowercase ascenders without floating high.
-      className={`relative inline-flex shrink-0 translate-y-[0.08em] items-center justify-center self-center ${sizeCls}`}
+      // Mark alignment: relies on `items-center` on the parent flex
+      // (see `content` in <Wordmark>) to put the mark's visual center
+      // on the same horizontal line as the wordmark's letterform
+      // center. Earlier drafts used `items-baseline` + a +0.08em
+      // nudge, but baseline-alignment finds a real baseline on the
+      // text and falls back to the bounding-box bottom on the mark
+      // (because flex doesn't know circles aren't text). The result
+      // was the mark sitting ~0.45em higher than the wordmark's
+      // optical center — pronounced at xl size where the mark and
+      // text are nearly the same height.
+      className={`relative inline-flex shrink-0 items-center justify-center ${sizeCls}`}
       initial={animate ? { opacity: 0, scale: 0.8 } : false}
       animate={animate ? { opacity: 1, scale: 1 } : undefined}
       transition={animate ? { duration: 0.4, delay: 0 } : undefined}
