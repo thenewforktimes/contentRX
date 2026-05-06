@@ -690,10 +690,10 @@ class CheckResult:
     ) -> dict:
         """Public-facing envelope.
 
-        Top-level shape (schema 2.4.0):
+        Top-level shape (current schema, see SCHEMA_VERSION):
 
             {
-                "schema_version": "2.4.0",
+                "schema_version": "3.0.0",
                 "violations": [...public violations...],
                 "verdict": "...",
                 "review_reason": "..." | None,

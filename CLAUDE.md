@@ -78,11 +78,18 @@ records the rationale and rejected alternatives.
 stale for a quarter, the moat decays in public. The `reports/` module's
 staleness monitoring is P0 infrastructure, not marketing nice-to-have.
 
-## Wire format — schema_version 2.0.0
+## Wire format — schema_version 3.0.0
 
-The public Violation envelope ships only `issue`, `suggestion`, `severity`,
-and `confidence`. Top-level envelope carries `schema_version`, `verdict`,
-`review_reason`, and `warnings`. Removed entirely from the public envelope:
+Source of truth for the version constant: `SCHEMA_VERSION` in
+`src/content_checker/models.py` (Python) and `src/lib/api-envelope.ts`
+(TS). Both must stay in lockstep.
+
+The public Violation envelope ships `issue`, `suggestion`, `severity`,
+`confidence`, and (since 2.5.0) a customer-facing `category`. Top-level
+envelope carries `schema_version`, `verdict`, `review_reason`,
+`warnings`, plus the input-grounding fields (`content_type`, `moment`)
+and the document-tier outputs (`suggested_rewrite`,
+`suggested_diagnostic`). Removed entirely from the public envelope:
 `docs_url`, `related_standards`, `rationale_chain`. Stripped from
 user-visible surfaces but retained in internal substrate API responses
 (founder-auth only): `standard_id`, `rule_version`.
@@ -91,11 +98,23 @@ Sessions that expose `standard_id` or `rule_version` to a user-facing
 surface — web app cards, MCP response payload, CLI output, Figma plugin
 UI, GitHub Action PR comment text, LSP diagnostic messages, editor
 extension UI — are wrong. Internal logging and the `/admin` dashboard see
-them; product users do not.
+them; product users do not. The one allowed exception today is the
+team-rule management UI at `/dashboard/rules`, which renders standard
+IDs because users need an identifier to enable/disable rules — a
+follow-up will add a `displayName` column so even that surface stops
+leaking IDs.
 
-The schema 2.0.0 cutover lands atomically (engine + all surfaces + snapshot
-tests in one PR) since ContentRX has zero paying customers at the time of
-the bump. No deprecation window; no email migration needed.
+Major-version cutovers (2.0.0 in the privacy pivot, 3.0.0 in the
+metering collapse) land atomically — engine + all surfaces + snapshot
+tests in a single PR. ContentRX has zero paying customers, so the wire
+format can break cleanly with no deprecation window or migration email.
+
+3.0.0 history: the schema bumped from 2.5.0 → 3.0.0 with the metering
+collapse (PR #342). The breaking changes were the removal of the
+`segment_type` request parameter and the rename
+`metering.tier` → `metering.size_class`. The full per-version changelog
+lives in the comment block above `SCHEMA_VERSION` in `models.py` and is
+mirrored verbatim in `src/lib/api-envelope.ts`.
 
 ## /admin founder dashboard
 
@@ -464,8 +483,9 @@ every API change, every new surface, every code review going forward.
 
 **From the original v2 plan (still live):**
 
-- `schema_version` on every API response, semver'd. (Lands in v2 Session 9.
-  Bumps to `2.0.0` at the post-pivot atomic cutover.)
+- `schema_version` on every API response, semver'd. Currently `3.0.0`
+  (post-metering-collapse, PR #342). Source of truth: `SCHEMA_VERSION`
+  in `src/content_checker/models.py` and `src/lib/api-envelope.ts`.
 - All LLM JSON parses go through `parse_llm_json` in `api_utils.py`. (Lands in v2 Session 3.)
 - All Anthropic clients have `max_retries=2`. (Lands in v2 Session 3.)
 - JS/Python parity is CI-gated; divergence blocks merge. (Lands in v2 Session 2.)
