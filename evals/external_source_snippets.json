@@ -1,13 +1,8 @@
 {
   "schema_version": "1.0.0",
-  "description": "External style-guide snippets, transcribed for close-paraphrase detection (human-eval build plan Session 35). Each entry captures a short rule or principle from a public source. The close-paraphrase tool (`tools/check_close_paraphrase.py`) compares ContentRX standards against these snippets and warns when a standard's rule text is suspiciously close to one without naming the source.",
+  "description": "Style-guide snippets from commercial-OK sources (CC-BY, OGL, CC0), used by `tools/check_close_paraphrase.py` to warn when a ContentRX standard's rule text is suspiciously close to one of these without naming the source. Trimmed 2026-05-06 per ADR 2026-05-06-corpus-license-trim.",
   "note": "This corpus is intentionally small at seed time. Grow it as Robert audits new standards or adopts new sources. Each entry is a short transcription, fair-use quantity; attribution lives in the `source` field and (where available) the `url`.",
   "snippets": [
-    {
-      "source": "Shopify Polaris",
-      "text": "Start with a verb that describes the specific action.",
-      "url": "https://polaris.shopify.com/content/actionable-language"
-    },
     {
       "source": "Material Design",
       "text": "Use OK and Cancel as confirmation-dialog button labels.",
@@ -22,16 +17,6 @@
       "source": "18F Content Guide",
       "text": "Write in plain language so anyone can understand. This is not dumbing down; it is writing for everyone.",
       "url": "https://content-guide.18f.gov/our-style/plain-language/"
-    },
-    {
-      "source": "Apple HIG",
-      "text": "Prefer verbs that name the specific action over generic affirmatives like OK, especially on destructive confirmations.",
-      "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
-    },
-    {
-      "source": "Mailchimp",
-      "text": "Exclamation points should be earned in celebration, not piled on in errors. Too much excitement undermines a calm voice.",
-      "url": "https://styleguide.mailchimp.com/grammar-and-mechanics/"
     }
   ]
 }

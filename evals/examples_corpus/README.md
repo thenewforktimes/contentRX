@@ -66,56 +66,37 @@ Fields:
 
 ## Canonical source systems
 
-Per Session 16 plan:
+Post-2026-05-06 license trim (see ADR
+[`decisions/2026-05-06-corpus-license-trim.md`](../../decisions/2026-05-06-corpus-license-trim.md)),
+the canonical list contains only sources with commercial-OK licenses
+(CC-BY, OGL, CC0). Anything more restrictive (NC, ND,
+all-rights-reserved) is out of envelope:
 
-| System | License category | Notes |
+| System | License | Notes |
 |---|---|---|
-| Mailchimp Content Style Guide | CC-BY-NC-ND-4.0 | Voice & tone source |
 | GOV.UK Style Guide | OGL v3.0 | Plain-language canon |
-| 18F Content Guide | CC0-1.0 | Public-domain; plain language |
+| 18F Content Guide | CC0-1.0 | Public domain; plain language |
 | Google Developer Documentation Style Guide | CC-BY-4.0 | Technical writing |
 | Microsoft Writing Style Guide | CC-BY-4.0 | Broad coverage |
-| Atlassian Design System | all-rights-reserved (doc) / code is various | Voice principles |
-| Shopify Polaris | all-rights-reserved (doc) | Empty-state + composition |
-| IBM Carbon Writing | all-rights-reserved (doc) | Technical audiences |
-| Apple Human Interface Guidelines | all-rights-reserved (doc) | Buttons + alerts |
-| Salesforce Lightning Writing | all-rights-reserved (doc) | Enterprise UI copy |
-| GitHub Primer | MIT (code) / all-rights-reserved (doc) | Accessibility + consistency |
 | USWDS (US Web Design System) | CC0-1.0 | Federal UI; plain language |
-| Intuit Content Design Principles | all-rights-reserved (doc) | |
+| Material Design | CC-BY-4.0 | Visual + interaction conventions |
 
-When `source_system` is specified, the entry lives under the source's
-license. Fair-use short quotations for illustrative comparison are
-what power this corpus; pairs never reproduce long passages.
+Re-adding any source outside this list requires a license check first.
+The pre-merge audit on `/ethics` Commitment 4 (No stolen content) is
+load-bearing: every pair has an MIT license, a fair-use standing, or
+a public-style-guide convention behind it. Anything that doesn't fit
+that envelope should not enter the corpus.
 
-## Disagreement map — `disagreement_map.json`
+## Disagreement map (deleted 2026-05-06)
 
-```jsonc
-{
-  "entries": [
-    {
-      "disagreement_id": "destructive-confirm-button-labels",
-      "topic": "What label should sit on a destructive-confirmation button?",
-      "positions": [
-        {
-          "source_system": "Apple HIG",
-          "position": "Use a specific verb naming what happens (e.g., 'Delete', 'Discard')."
-        },
-        {
-          "source_system": "Material Design",
-          "position": "OK / Cancel is acceptable when the question is clear."
-        }
-      ],
-      "contentrx_resolution": "Specific verbs. CLR-01 + ACT-01 both pull toward specificity on destructive moments.",
-      "related_standards": ["ACT-01", "CLR-01"]
-    }
-  ]
-}
-```
-
-The map documents where canonical systems give conflicting guidance
-and where ContentRX's synthesis lands. This feeds Session 35's
-`influences` sub-field work on standards.
+The original Session 16 plan included a `disagreement_map.json` that
+captured cases where canonical design systems gave conflicting
+guidance. Every entry's positions came from sources that didn't
+survive the 2026-05-06 license trim (Mailchimp NC-ND + Apple HIG /
+Atlassian / Shopify Polaris / GitHub Primer all-rights-reserved), so
+the file was deleted with the trim. Re-instating a disagreement map
+with license-compatible sources is a follow-up — not committed
+today.
 
 ## Growth rules
 
@@ -125,13 +106,14 @@ and where ContentRX's synthesis lands. This feeds Session 35's
 - Never fabricate examples or attribute to a system where the
   mapping isn't documented. The ethics / attribution commitment
   (see `/ethics`) applies here.
-- When a source system opts out (via the `/ethics` path), delete
-  its entries from the corpus.
+- License check before adding: anything outside the canonical list
+  above needs a confirmed commercial-OK license.
+- When a source system opts out (via the `/ethics#no-stolen-content`
+  path), delete its entries from the corpus.
 
 ## What this session seeds
 
-The committed `pairs.json` ships with an initial set to prove the
-format works. Not all 47 standards are covered; growth is
-intentional. The disagreement map ships with a few entries that
-demonstrate the shape. Both grow as the attribution audit
-continues.
+The committed `pairs.json` ships with the post-trim set (12 entries)
+covering the standards where commercial-OK sources articulate the
+principle. Growth is intentional: standards with no
+license-compatible source coverage stay uncovered until one is found.

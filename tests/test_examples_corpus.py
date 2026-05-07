@@ -1,8 +1,15 @@
-"""Tests for the Session 16 examples corpus + disagreement map.
+"""Tests for the Session 16 examples corpus.
 
 Schema integrity only — the corpus content is reviewed human-side;
 these tests catch structural drift (missing fields, unknown standard
 IDs, sources that don't match the canonical list).
+
+2026-05-06: per ADR 2026-05-06-corpus-license-trim, the corpus was
+trimmed to commercial-OK licenses (CC-BY, OGL, CC0) and
+disagreement_map.json was deleted because every entry's positions
+were license-incompatible (Mailchimp NC-ND + all-rights-reserved
+sources). Re-instating a disagreement map with license-compatible
+sources is a follow-up.
 """
 
 from __future__ import annotations
@@ -14,9 +21,6 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PAIRS_PATH = REPO_ROOT / "evals" / "examples_corpus" / "pairs.json"
-DISAGREEMENTS_PATH = (
-    REPO_ROOT / "evals" / "examples_corpus" / "disagreement_map.json"
-)
 LIBRARY_PATH = (
     REPO_ROOT / "src" / "content_checker" / "standards" / "private" / "standards_library.json"
 )
@@ -90,30 +94,46 @@ class TestPairsSchema:
             )
 
     def test_source_system_uses_canonical_name(self):
-        # Prevents drift into abbreviations ("mc" vs "Mailchimp").
+        # Prevents drift into abbreviations. Post-2026-05-06 trim, the
+        # canonical list contains only sources with commercial-OK
+        # licenses (CC-BY, OGL, CC0). Re-adding a non-canonical source
+        # requires a license check first — see
+        # decisions/2026-05-06-corpus-license-trim.md.
         canonical = {
-            "Mailchimp",
             "GOV.UK Style Guide",
             "18F Content Guide",
             "Google Developer Documentation Style Guide",
             "Microsoft Writing Style Guide",
-            "Atlassian Design System",
-            "Shopify Polaris",
-            "IBM Carbon",
-            "Apple HIG",
-            "Salesforce Lightning Writing",
-            "GitHub Primer",
             "USWDS",
-            "Intuit Content Design Principles",
             "Material Design",
-            "Chicago Manual of Style",
         }
         data = _load(PAIRS_PATH)
         for pair in data["pairs"]:
             source = pair.get("source_system")
             assert source in canonical, (
                 f"Pair {pair['pair_id']} uses non-canonical source "
-                f"{source!r} — add to the canonical list in the test if new."
+                f"{source!r} — add to the canonical list in the test "
+                "after confirming the source has a commercial-OK license "
+                "(CC-BY, Apache-2.0, MIT, OGL, CC0). Anything more "
+                "restrictive (NC, ND, all-rights-reserved) requires a "
+                "new ADR superseding 2026-05-06-corpus-license-trim."
+            )
+
+    def test_every_pair_has_commercial_ok_license(self):
+        # Anti-regression on the 2026-05-06 license trim. CC-BY-NC-ND
+        # (Mailchimp), all-rights-reserved (Apple HIG / Atlassian /
+        # GitHub Primer / IBM Carbon / Shopify Polaris), and any other
+        # license that doesn't permit commercial use with attribution
+        # must not re-enter the corpus. /ethics Commitment 4 ("No
+        # stolen content") makes a load-bearing claim that this guard
+        # protects.
+        commercial_ok = {"CC-BY-4.0", "OGL-3.0", "CC0-1.0", "MIT", "Apache-2.0"}
+        data = _load(PAIRS_PATH)
+        for pair in data["pairs"]:
+            assert pair["license"] in commercial_ok, (
+                f"Pair {pair['pair_id']} has license {pair['license']!r}, "
+                "outside the commercial-OK envelope. See ADR "
+                "2026-05-06-corpus-license-trim."
             )
 
     def test_not_this_and_but_this_differ(self):
@@ -125,68 +145,13 @@ class TestPairsSchema:
                 "suppress" in pair.get("rationale", "").lower()
             ), f"Pair {pair['pair_id']} has identical not_this/but_this"
 
-    def test_has_at_least_thirty_pairs(self):
-        # Session 16 success criterion aims for 50; this PR ships 30+ as
-        # an initial seed. Future sessions grow the corpus.
+    def test_has_at_least_ten_pairs(self):
+        # Session 16 success criterion aimed for 50; the 2026-05-06
+        # license trim brought the count to 12. Future sessions grow
+        # the corpus from license-compatible sources only — see ADR
+        # 2026-05-06-corpus-license-trim.
         data = _load(PAIRS_PATH)
-        assert len(data["pairs"]) >= 30
-
-
-# ---------------------------------------------------------------------------
-# disagreement_map.json
-# ---------------------------------------------------------------------------
-
-
-class TestDisagreementMap:
-    def test_file_exists_and_parses(self):
-        assert DISAGREEMENTS_PATH.exists()
-        data = _load(DISAGREEMENTS_PATH)
-        assert isinstance(data, dict)
-
-    def test_has_entries(self):
-        data = _load(DISAGREEMENTS_PATH)
-        entries = data.get("entries", [])
-        assert isinstance(entries, list)
-        assert len(entries) >= 3
-
-    def test_every_entry_has_required_fields(self):
-        data = _load(DISAGREEMENTS_PATH)
-        required = {
-            "disagreement_id", "topic", "positions", "contentrx_resolution",
-        }
-        for entry in data["entries"]:
-            missing = required - set(entry.keys())
-            assert not missing, (
-                f"Entry {entry.get('disagreement_id')} missing {missing}"
-            )
-
-    def test_positions_have_source_and_position(self):
-        data = _load(DISAGREEMENTS_PATH)
-        for entry in data["entries"]:
-            positions = entry.get("positions", [])
-            assert len(positions) >= 2, (
-                f"{entry['disagreement_id']} needs ≥2 positions to qualify "
-                "as a disagreement"
-            )
-            for p in positions:
-                assert p.get("source_system")
-                assert p.get("position")
-
-    def test_related_standards_are_known(self):
-        library_ids = _library_standard_ids()
-        allowed = library_ids | PREPROCESSOR_ONLY_STANDARDS
-        data = _load(DISAGREEMENTS_PATH)
-        for entry in data["entries"]:
-            for sid in entry.get("related_standards", []):
-                assert sid in allowed, (
-                    f"{entry['disagreement_id']} references unknown "
-                    f"standard {sid}"
-                )
-
-    def test_disagreement_ids_are_unique(self):
-        data = _load(DISAGREEMENTS_PATH)
-        ids = [e["disagreement_id"] for e in data["entries"]]
-        assert len(ids) == len(set(ids))
+        assert len(data["pairs"]) >= 10
 
 
 # ---------------------------------------------------------------------------
