@@ -36,17 +36,22 @@ DISPLAY_LABELS: dict[str, str] = {
     "GRM-03": "Punctuation",
     "GRM-04": "Punctuation",
     "GRM-05": "Numerals",
+    "GRM-06": "Hyphenation",
+    "GRM-07": "Em dashes",
 
     # Consistency
     "CON-01": "Terminology",
     "CON-02": "Casing",
     "CON-03": "Date format",
     "CON-04": "Terminology",
+    "CON-05": "Product names",
 
     # Clarity
     "CLR-01": "Clarity",
     "CLR-02": "Clarity",
     "CLR-03": "Sentence length",
+    "CLR-04": "One idea per sentence",
+    "CLR-05": "Plain phrasing",
 
     # Voice and tone
     "VT-01": "Voice",
@@ -61,10 +66,13 @@ DISPLAY_LABELS: dict[str, str] = {
     "STR-03": "Structure",
     "STR-04": "Hierarchy",
     "STR-05": "Lists",
+    "STR-06": "Heading hierarchy",
 
     # Actionability
     "ACT-01": "Action verbs",
     "ACT-02": "Action verbs",
+    "ACT-03": "Constructive framing",
+    "ACT-04": "Next step",
 
     # Accessibility
     "ACC-01": "Accessibility",
@@ -74,6 +82,7 @@ DISPLAY_LABELS: dict[str, str] = {
     "ACC-05": "Alt text",
     "ACC-06": "Accessibility",
     "ACC-07": "Form labels",
+    "ACC-08": "Device-neutral verbs",
 
     # Inclusivity
     "INC-01": "Inclusive language",
@@ -82,6 +91,11 @@ DISPLAY_LABELS: dict[str, str] = {
     # Translation readiness
     "TRN-01": "Translation",
     "TRN-02": "Translation",
+    "TRN-03": "Translation",
+    "TRN-04": "Translation",
+    "TRN-05": "Translation",
+    "TRN-06": "Translation",
+    "TRN-07": "Translation",
 
     # Proofing (deterministic preprocessor checks)
     "PRF-01": "Proofing",
