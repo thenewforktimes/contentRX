@@ -7,13 +7,13 @@
  * (_private/pricing-analysis.md):
  *
  *   - Pro Monthly:   $39/mo                       (STRIPE_PRICE_PRO_MONTHLY)
- *   - Pro Annual:    $329/yr (30% off)            (STRIPE_PRICE_PRO_ANNUAL)
- *   - Team Monthly:  $79/seat, 5-seat min         (STRIPE_PRICE_TEAM_MONTHLY)
- *   - Team Annual:   $664/seat/yr (30% off)       (STRIPE_PRICE_TEAM_ANNUAL)
- *   - Scale Monthly: $1,799/mo flat               (STRIPE_PRICE_SCALE_MONTHLY,
+ *   - Pro Annual:    $379/yr (20% off)            (STRIPE_PRICE_PRO_ANNUAL)
+ *   - Team Monthly:  $79/seat, no min             (STRIPE_PRICE_TEAM_MONTHLY)
+ *   - Team Annual:   $759/seat/yr (20% off)       (STRIPE_PRICE_TEAM_ANNUAL)
+ *   - Scale Monthly: $1,799/mo flat, 60k checks   (STRIPE_PRICE_SCALE_MONTHLY,
  *                                                   sales-assisted; no
  *                                                   self-serve checkout yet)
- *   - Scale Annual:  $14,999/yr (30% off)         (STRIPE_PRICE_SCALE_ANNUAL)
+ *   - Scale Annual:  $17,299/yr (20% off)         (STRIPE_PRICE_SCALE_ANNUAL)
  *   - Overage:       $0.10/unit, metered          (STRIPE_PRICE_OVERAGE,
  *                                                   pre-created on every
  *                                                   paid sub for Phase 4)
@@ -49,7 +49,7 @@ export function getStripe(): Stripe {
 export type PaidPlan = "pro" | "team";
 export type Interval = "monthly" | "annual";
 
-export const TEAM_MIN_SEATS = 5;
+export const TEAM_MIN_SEATS = 1;
 
 export function priceIdFor(plan: PaidPlan, interval: Interval): string | null {
   const key = (() => {

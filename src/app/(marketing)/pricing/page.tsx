@@ -3,10 +3,10 @@
  *
  * Five-tier structure (locked 2026-05-07 by _private/pricing-analysis.md):
  *   - Free:       10 checks/mo. Acquisition flywheel.
- *   - Pro:        $39/mo ($329/yr, 30% off). 1,000 checks/mo. Self-serve.
- *   - Team:       $79/seat/mo ($664/seat/yr, 30% off). 2,000 checks/seat,
- *                 pooled across the team. Self-serve.
- *   - Scale:      $1,799/mo ($14,999/yr, 30% off). 40,000 checks pooled,
+ *   - Pro:        $39/mo ($379/yr, 20% off). 1,000 checks/mo. Self-serve.
+ *   - Team:       $79/seat/mo ($759/seat/yr, 20% off). 2,000 checks/seat,
+ *                 pooled across the team. Self-serve, no seat minimum.
+ *   - Scale:      $1,799/mo ($17,299/yr, 20% off). 60,000 checks pooled,
  *                 multi-brand voices, agency multi-client. Sales-assisted.
  *   - Enterprise: Coming soon. SSO/SAML, SCIM, audit logs, custom rules,
  *                 dedicated CSM, SOC 2 Type II. $36k/yr floor when ready.
@@ -73,7 +73,7 @@ export default function PricingPage() {
         <PlanCard
           name="Pro"
           price="$39 / month"
-          priceSubnote="$329/year (save 30%)"
+          priceSubnote="$379/year (save 20%)"
           quota="1,000 checks per month"
           features={[
             "Short copy and long-form review",
@@ -88,7 +88,7 @@ export default function PricingPage() {
         <PlanCard
           name="Team"
           price="$79 / seat / month"
-          priceSubnote="$664/seat/year (save 30%) · 5-seat minimum"
+          priceSubnote="$759/seat/year (save 20%)"
           quota="2,000 checks per seat, pooled"
           features={[
             "Everything in Pro",
@@ -108,8 +108,8 @@ export default function PricingPage() {
         <PlanCard
           name="Scale"
           price="$1,799 / month"
-          priceSubnote="$14,999/year (save 30%)"
-          quota="40,000 checks per month, pooled"
+          priceSubnote="$17,299/year (save 20%)"
+          quota="60,000 checks per month, pooled"
           features={[
             "Everything in Team",
             "10-seat cap, multi-brand voices",

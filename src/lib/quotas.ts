@@ -24,7 +24,7 @@ export const QUOTAS = {
   free: 10,
   pro: 1_000,
   team: 2_000, // per seat, pooled across the team
-  scale: 40_000, // pooled across the team (10-seat cap)
+  scale: 60_000, // pooled across the team (10-seat cap)
 } as const;
 
 export type Plan = keyof typeof QUOTAS;
