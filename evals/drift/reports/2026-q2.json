@@ -1,0 +1,196 @@
+{
+  "schema_version": "1.0.0",
+  "quarter": "2026-q2",
+  "generated_at": "2026-05-07T02:28:29Z",
+  "measured_ceiling": 0.5744680851063828,
+  "kappa": 0.5744680851063828,
+  "kappa_ci_low": 0.3125634678559101,
+  "kappa_ci_high": 0.8363727023568555,
+  "sample_size": 80,
+  "kappa_summary": {
+    "kappa": 0.5744680851063828,
+    "ci_low": 0.3125634678559101,
+    "ci_high": 0.8363727023568555,
+    "n": 80,
+    "observed_agreement": 0.8875
+  },
+  "thresholds": {
+    "measured_ceiling": 0.5744680851063828,
+    "regime": "degraded",
+    "autonomous_kappa": 0.5399999999999998,
+    "batch_approval_kappa": 0.4768085106382977,
+    "autonomous_ratio": 0.94,
+    "batch_approval_ratio": 0.83,
+    "blocks_new_autonomous": true
+  },
+  "panel_size": 80,
+  "responses_received": 80,
+  "pairs_scored": 80,
+  "disagreements": [
+    {
+      "case_id": "case-7d9efc2f",
+      "source_file": "src-f83869ee",
+      "moment": "browsing_discovery",
+      "standard_id": "GRM-01",
+      "past_verdict": "fail",
+      "current_verdict": "pass"
+    },
+    {
+      "case_id": "case-328915de",
+      "source_file": "src-f83869ee",
+      "moment": "browsing_discovery",
+      "standard_id": null,
+      "past_verdict": "pass",
+      "current_verdict": "fail"
+    },
+    {
+      "case_id": "case-e4d9b0a8",
+      "source_file": "src-d25c4747",
+      "moment": "error_recovery",
+      "standard_id": "CLR-01",
+      "past_verdict": "fail",
+      "current_verdict": "pass"
+    },
+    {
+      "case_id": "case-7cc9b1dc",
+      "source_file": "src-d25c4747",
+      "moment": "task_execution",
+      "standard_id": "PRF-10",
+      "past_verdict": "fail",
+      "current_verdict": "pass"
+    },
+    {
+      "case_id": "case-36d41311",
+      "source_file": "src-a3d43d39",
+      "moment": "celebration",
+      "standard_id": "GRM-05",
+      "past_verdict": "pass",
+      "current_verdict": "fail"
+    },
+    {
+      "case_id": "case-ba2bfa4c",
+      "source_file": "src-a3d43d39",
+      "moment": "celebration",
+      "standard_id": "CON-02",
+      "past_verdict": "pass",
+      "current_verdict": "fail"
+    },
+    {
+      "case_id": "case-c67fb110",
+      "source_file": "src-7dd5cf52",
+      "moment": "first_encounter",
+      "standard_id": "CON-02",
+      "past_verdict": "fail",
+      "current_verdict": "pass"
+    },
+    {
+      "case_id": "case-6edd9477",
+      "source_file": "src-7dd5cf52",
+      "moment": "browsing_discovery",
+      "standard_id": "CLR-01",
+      "past_verdict": "fail",
+      "current_verdict": "pass"
+    },
+    {
+      "case_id": "case-15b55c87",
+      "source_file": "src-e63bde2a",
+      "moment": null,
+      "standard_id": "ACC-05",
+      "past_verdict": "fail",
+      "current_verdict": "pass"
+    }
+  ],
+  "per_standard_kappa": {
+    "ACC-01": {
+      "n": 4,
+      "kappa": 1.0,
+      "disagreements": 0
+    },
+    "ACC-05": {
+      "n": 1,
+      "kappa": null,
+      "disagreements": 1
+    },
+    "ACT-01": {
+      "n": 2,
+      "kappa": null,
+      "disagreements": 0
+    },
+    "CLR-01": {
+      "n": 5,
+      "kappa": 0.2857142857142856,
+      "disagreements": 2
+    },
+    "CON-02": {
+      "n": 5,
+      "kappa": -0.2500000000000007,
+      "disagreements": 2
+    },
+    "GRM-01": {
+      "n": 4,
+      "kappa": 0.0,
+      "disagreements": 1
+    },
+    "GRM-02": {
+      "n": 1,
+      "kappa": null,
+      "disagreements": 0
+    },
+    "GRM-03": {
+      "n": 1,
+      "kappa": null,
+      "disagreements": 0
+    },
+    "GRM-05": {
+      "n": 7,
+      "kappa": 0.0,
+      "disagreements": 1
+    },
+    "PRF-03": {
+      "n": 17,
+      "kappa": null,
+      "disagreements": 0
+    },
+    "PRF-09": {
+      "n": 3,
+      "kappa": null,
+      "disagreements": 0
+    },
+    "PRF-10": {
+      "n": 1,
+      "kappa": null,
+      "disagreements": 1
+    },
+    "PRF-11": {
+      "n": 1,
+      "kappa": null,
+      "disagreements": 0
+    },
+    "VT-01": {
+      "n": 1,
+      "kappa": null,
+      "disagreements": 0
+    },
+    "VT-02": {
+      "n": 3,
+      "kappa": null,
+      "disagreements": 0
+    },
+    "VT-04": {
+      "n": 2,
+      "kappa": null,
+      "disagreements": 0
+    }
+  },
+  "missing_current": [],
+  "missing_past": [],
+  "unknown_verdict": [],
+  "implicated_standards": [
+    "ACC-05",
+    "CLR-01",
+    "CON-02",
+    "GRM-01",
+    "GRM-05",
+    "PRF-10"
+  ]
+}

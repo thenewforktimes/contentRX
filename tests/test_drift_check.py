@@ -338,7 +338,13 @@ class TestComputeDriftReport:
         responses = [{"case_id": "1", "human_verdict": "pass"}]
         report = dc.compute_drift_report(panel, responses)
         assert report["pairs_scored"] == 1
-        assert report["missing_current"] == ["2"]
+        # case_id "2" anonymizes to a stable hash. Anonymization
+        # contract: the value reflects sha256(original) prefixed with
+        # `case-`, never the raw input. Triage works by hashing the
+        # local case_id with the same helper to find the row.
+        assert report["missing_current"] == [dc._anon_id("2", prefix="case")]
+        assert report["missing_current"][0].startswith("case-")
+        assert "2" not in report["missing_current"][0]
 
     def test_ignores_unknown_verdicts(self):
         panel = {"quarter": "q", "entries": [
@@ -351,7 +357,135 @@ class TestComputeDriftReport:
         ]
         report = dc.compute_drift_report(panel, responses)
         assert report["pairs_scored"] == 1
-        assert report["unknown_verdict"] == ["1"]
+        assert report["unknown_verdict"] == [dc._anon_id("1", prefix="case")]
+
+
+class TestDriftReportAnonymization:
+    """ADR 2026-05-06-product-extraction-deletion. The drift report is
+    a public-committed artifact; case_id and source_file values must
+    not carry the third-party brand names of Robert's local industry
+    corpus."""
+
+    def _panel_responses_with_brand_ids(self):
+        panel = {
+            "quarter": "2026-q2",
+            "entries": [
+                {
+                    "case_id": "apple-001",
+                    "source_file": "apple_eval_cases.json",
+                    "past_human_verdict": "pass",
+                    "standard_id": "CLR-01",
+                    "moment": "browsing_discovery",
+                },
+                {
+                    "case_id": "wellsfargo-014",
+                    "source_file": "wellsfargo_eval_cases.json",
+                    "past_human_verdict": "fail",
+                    "standard_id": "VT-02",
+                    "moment": "celebration",
+                },
+            ],
+        }
+        responses = [
+            {"case_id": "apple-001", "human_verdict": "fail"},  # flipped
+            {"case_id": "wellsfargo-014", "human_verdict": "fail"},  # agree
+        ]
+        return panel, responses
+
+    def test_disagreements_carry_no_raw_brand_names(self):
+        panel, responses = self._panel_responses_with_brand_ids()
+        report = dc.compute_drift_report(panel, responses)
+        blob = json.dumps(report)
+        # None of the brand-named identifiers from the panel should
+        # survive into the committed report.
+        for forbidden in (
+            "apple-001",
+            "wellsfargo-014",
+            "apple_eval_cases.json",
+            "wellsfargo_eval_cases.json",
+        ):
+            assert forbidden not in blob, (
+                f"raw {forbidden!r} leaked into the drift report"
+            )
+
+    def test_disagreement_case_ids_are_stable_hashes(self):
+        panel, responses = self._panel_responses_with_brand_ids()
+        report = dc.compute_drift_report(panel, responses)
+        # The flipped case is "apple-001" → stable hash.
+        expected = dc._anon_id("apple-001", prefix="case")
+        assert report["disagreements"][0]["case_id"] == expected
+        # Source file gets its own prefix so triage can tell them apart.
+        assert report["disagreements"][0]["source_file"] == dc._anon_id(
+            "apple_eval_cases.json", prefix="src"
+        )
+
+    def test_anonymization_is_deterministic(self):
+        # Same input → same hash. This is the property that makes
+        # local-panel-vs-committed-report cross-reference triage work.
+        a = dc._anon_id("apple-001", prefix="case")
+        b = dc._anon_id("apple-001", prefix="case")
+        assert a == b
+        assert a.startswith("case-")
+        assert len(a) == len("case-") + 8
+
+    def test_anon_id_returns_none_for_empty(self):
+        # Missing fields stay missing rather than collapsing onto a
+        # fixed sentinel. Preserves null-vs-present signal.
+        assert dc._anon_id(None, prefix="case") is None
+        assert dc._anon_id("", prefix="case") is None
+
+    def test_aggregate_metrics_unchanged_by_anonymization(self):
+        # The kappa, sample_size, per_standard breakdown, and
+        # implicated_standards fields don't carry case-level data, so
+        # anonymization should leave them untouched.
+        panel, responses = self._panel_responses_with_brand_ids()
+        report = dc.compute_drift_report(panel, responses)
+        assert report["pairs_scored"] == 2
+        assert report["sample_size"] == 2
+        # Standards stay readable — they're internal taxonomy IDs.
+        assert "CLR-01" in report["implicated_standards"]
+
+
+class TestDriftReportTopLevelKappaFields:
+    """Schema contract with `reports/accuracy/generate.py`. The
+    accuracy generator's `_drift_to_kappa` reads `kappa`,
+    `kappa_ci_low`, `kappa_ci_high`, `sample_size` from the top
+    level — drift_check.py mirrors them out of `kappa_summary` so
+    that consumer doesn't have to descend into the summary dict.
+    """
+
+    def test_top_level_kappa_mirrors_summary(self):
+        panel = {
+            "quarter": "q",
+            "entries": [
+                {"case_id": f"c-{i}", "past_human_verdict": "pass" if i % 2 else "fail"}
+                for i in range(10)
+            ],
+        }
+        responses = [
+            {"case_id": f"c-{i}", "human_verdict": "pass" if i % 2 else "fail"}
+            for i in range(10)
+        ]
+        report = dc.compute_drift_report(panel, responses)
+        assert report["kappa"] == report["kappa_summary"]["kappa"]
+        assert report["kappa_ci_low"] == report["kappa_summary"]["ci_low"]
+        assert report["kappa_ci_high"] == report["kappa_summary"]["ci_high"]
+        assert report["sample_size"] == 10
+
+    def test_top_level_kappa_present_when_summary_present(self):
+        panel = {"quarter": "q", "entries": [
+            {"case_id": "1", "past_human_verdict": "pass"}
+        ]}
+        responses = [{"case_id": "1", "human_verdict": "pass"}]
+        report = dc.compute_drift_report(panel, responses)
+        # Even on a 1-case run where κ is undefined, the top-level
+        # fields exist (None when κ is undefined). The accuracy
+        # generator's `_drift_to_kappa` falls back to "pending"
+        # when the value is non-numeric.
+        assert "kappa" in report
+        assert "kappa_ci_low" in report
+        assert "kappa_ci_high" in report
+        assert "sample_size" in report
 
     def test_threshold_block_flag_propagates_from_ceiling(self):
         # Force κ into the frozen regime.

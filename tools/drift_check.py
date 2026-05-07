@@ -48,11 +48,48 @@ from __future__ import annotations
 import argparse
 import collections
 import datetime as _dt
+import hashlib
 import json
 import math
 import sys
 from pathlib import Path
 from typing import Any
+
+
+# ---------------------------------------------------------------------------
+# Case-ID anonymization (ADR 2026-05-06-product-extraction-deletion)
+# ---------------------------------------------------------------------------
+#
+# The drift report's `disagreements` array, plus the `missing_current`
+# / `missing_past` / `unknown_verdict` arrays, all carry case_id and
+# source_file values that flow through from the panel. The panel was
+# built locally from Robert's gitignored industry corpus, where
+# case_ids look like "apple-001" and source_files look like
+# "apple_eval_cases.json" — i.e. they name the third-party brand the
+# case was extracted from. Committing the report verbatim would
+# re-introduce exactly the brand-name footprint the 2026-05-06
+# product-extraction cleanup arc removed.
+#
+# Approach: hash both fields with SHA-256, take the first 8 hex chars,
+# prefix with `case-` / `src-`. The hash is deterministic, so triage
+# still works — Robert can hash a candidate case_id from his local
+# panel and find the matching row in the committed report. The
+# aggregate metrics (kappa, CI, per-standard κ, regime) don't carry
+# case-level identifiers and pass through untouched.
+
+
+def _anon_id(value: str | None, *, prefix: str) -> str | None:
+    """Stable hash of `value` for committing in a public artifact.
+
+    Returns None when `value` is None / empty (so missing fields stay
+    missing rather than becoming a fixed sentinel). The hash is the
+    first 8 hex chars of SHA-256(value); collision risk is acceptable
+    for an 80-case panel and triage is the only consumer.
+    """
+    if not value:
+        return None
+    h = hashlib.sha256(value.encode("utf-8")).hexdigest()[:8]
+    return f"{prefix}-{h}"
 
 
 # ---------------------------------------------------------------------------
@@ -501,17 +538,22 @@ def compute_drift_report(
     unknown_verdict: list[str] = []
 
     for cid, past in past_by_id.items():
+        # Anonymize for the public artifact (ADR
+        # 2026-05-06-product-extraction-deletion). The hash is stable,
+        # so Robert can hash his local case_id to find the matching row
+        # at triage time.
+        anon_cid = _anon_id(cid, prefix="case")
         cur = current_by_id.get(cid)
         if cur is None:
-            missing_current.append(cid)
+            missing_current.append(anon_cid or "")
             continue
         past_v = _normalize(past.get("past_human_verdict"))
         cur_v = _normalize(cur.get("human_verdict"))
         if past_v is None:
-            missing_past.append(cid)
+            missing_past.append(anon_cid or "")
             continue
         if cur_v is None:
-            unknown_verdict.append(cid)
+            unknown_verdict.append(anon_cid or "")
             continue
         pairs.append((past_v, cur_v))
         std = past.get("standard_id")
@@ -520,8 +562,8 @@ def compute_drift_report(
         if past_v != cur_v:
             disagreements.append(
                 {
-                    "case_id": cid,
-                    "source_file": past.get("source_file"),
+                    "case_id": anon_cid,
+                    "source_file": _anon_id(past.get("source_file"), prefix="src"),
                     "moment": past.get("moment"),
                     "standard_id": std,
                     "past_verdict": past_v,
@@ -550,6 +592,16 @@ def compute_drift_report(
         "quarter": quarter or panel.get("quarter"),
         "generated_at": generated_at,
         "measured_ceiling": measured_ceiling,
+        # Top-level mirror of `kappa_summary` so consumers that expect
+        # a flat shape (notably `reports/accuracy/generate.py`'s
+        # `_drift_to_kappa`, which feeds the public /accuracy page)
+        # can read directly without descending into the summary
+        # object. The summary stays as the canonical record; these are
+        # convenience aliases of its fields. Keep both in lockstep.
+        "kappa": kappa_summary.get("kappa"),
+        "kappa_ci_low": kappa_summary.get("ci_low"),
+        "kappa_ci_high": kappa_summary.get("ci_high"),
+        "sample_size": len(pairs),
         "kappa_summary": kappa_summary,
         "thresholds": thresholds,
         "panel_size": len(past_by_id),

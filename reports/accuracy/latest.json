@@ -1,13 +1,16 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-04-26T04:09:22Z",
+  "generated_at": "2026-05-07T02:28:47Z",
   "measured_system": {
     "state": "pending_measurement",
     "reason": "no standards have completed the weekly \u03ba series"
   },
   "measured_self_drift": {
-    "state": "pending_measurement",
-    "reason": "Session 7 drift panel awaiting blind re-label + score"
+    "state": "measured",
+    "value": 0.5745,
+    "ci_low": 0.3126,
+    "ci_high": 0.8364,
+    "sample_size": 80
   },
   "design_target": 0.9,
   "by_level": {
