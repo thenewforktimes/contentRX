@@ -4,6 +4,17 @@
 evals/industry/
 tools/extract_content.py
 
+# Drift-check working data (panels + blind-relabel responses) is
+# built locally from the gitignored industry corpus. Each entry
+# carries case_id + source_file values that name third-party brands;
+# the aggregate report at evals/drift/reports/<q>.json is the
+# committed surface (anonymized via _anon_id in tools/drift_check.py
+# per ADR 2026-05-06-product-extraction-deletion). Panels +
+# responses stay local so a stray `git add .` can't reintroduce
+# what the cleanup arc removed.
+evals/drift/panels/
+evals/drift/responses/
+
 # --- API keys and secrets ---
 # env files (commit the .env.local.example template; keep secrets local)
 .env
