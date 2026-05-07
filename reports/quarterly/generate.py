@@ -41,6 +41,43 @@ from pathlib import Path
 
 GENERATOR_VERSION = "1.0.0"
 
+# Path to the canonical standards library — source of truth for the
+# total standards count. Same lookup as reports/accuracy/generate.py;
+# keep them in sync if either path changes.
+_STANDARDS_LIBRARY_PATH = (
+    Path(__file__).resolve().parent.parent.parent
+    / "src"
+    / "content_checker"
+    / "standards"
+    / "private"
+    / "standards_library.json"
+)
+
+# Conservative fallback when the substrate isn't fetched (CI on a
+# fork, fresh dev clone, etc.). Better to under-report than to crash
+# the generator.
+_FALLBACK_TOTAL_STANDARDS = 49
+
+
+def _read_total_standards() -> int:
+    """Count standards in the canonical library at runtime.
+
+    Mirrors the helper in reports/accuracy/generate.py so the
+    quarterly fallback denominator stays in lockstep with the
+    nightly accuracy snapshot.
+    """
+    try:
+        data = json.loads(
+            _STANDARDS_LIBRARY_PATH.read_text(encoding="utf-8")
+        )
+    except (FileNotFoundError, json.JSONDecodeError):
+        return _FALLBACK_TOTAL_STANDARDS
+    total = 0
+    for cat in data.get("categories", []):
+        total += len(cat.get("standards", []))
+    return total or _FALLBACK_TOTAL_STANDARDS
+
+
 CALIBRATION_FILENAME_RE = re.compile(r"^(\d{4})-(\d{2})\.md$")
 KAPPA_LINE_RE = re.compile(
     r"κ\s*=\s*\*\*([\d.]+)\*\*\s*\(95%\s*CI\s*\[([\d.]+),\s*([\d.]+)\],\s*n\s*=\s*(\d+)\)"
@@ -130,7 +167,10 @@ def build_quarterly_report(
 
     by_level = {"robo_labels": 0, "batch_approval": 0, "autonomous": 0}
     standards_measured = 0
-    standards_total = 47
+    # Default denominator reads from the canonical library at runtime
+    # so adding a standard auto-updates the quarterly report's count.
+    # Replaces the hardcoded 47 that drifted against the library.
+    standards_total = _read_total_standards()
     if accuracy:
         bl = accuracy.get("by_level")
         if isinstance(bl, dict):

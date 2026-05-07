@@ -108,7 +108,13 @@ function emptySnapshot(): PublicAccuracySnapshot {
       autonomous: 0,
     },
     standards_measured: 0,
-    standards_total: 47,
+    // Fallback denominator for the snapshot-missing case. Mirrors
+    // _FALLBACK_TOTAL_STANDARDS in reports/accuracy/generate.py and
+    // reports/quarterly/generate.py — bump all three together when
+    // the canonical library count changes substantially. Normal
+    // operation reads the count from the snapshot file, which the
+    // Python generator computes dynamically from the library.
+    standards_total: 49,
   };
 }
 

@@ -12,8 +12,9 @@ Privacy contract (per ADR 2026-04-25):
     the architecture doc names — measured system κ with 95% CI,
     self-drift κ with 95% CI, and the 0.90 design target stated
     separately. Plus headline counts (`by_level`) so the page can
-    show "47 standards measured, N at autonomous tier" without
-    naming any standard.
+    show "N of M standards measured" (M is read from the canonical
+    library at generator runtime — see _read_total_standards) and
+    "K at autonomous tier" without naming any standard.
 
   * The snapshot NEVER includes `standards[].standard_id`,
     per-standard kappa values, weekly trend arrays, or any other
@@ -71,7 +72,50 @@ from typing import Any
 
 SCHEMA_VERSION = "1.0.0"
 DESIGN_TARGET_KAPPA = 0.9
-TOTAL_STANDARDS = 47
+
+# Path to the canonical standards library — the source of truth for
+# the total standards count. The library is fetched into the private
+# substrate dir at CI time via scripts/fetch-substrate.sh; locally
+# Robert clones the substrate repo there directly. See
+# CLAUDE.md → "Private substrate" section.
+_STANDARDS_LIBRARY_PATH = (
+    Path(__file__).resolve().parent.parent.parent
+    / "src"
+    / "content_checker"
+    / "standards"
+    / "private"
+    / "standards_library.json"
+)
+
+# Conservative fallback when the substrate isn't present (e.g. a
+# CI run on a fork that didn't fetch substrate, or a local dev
+# environment where the founder hasn't cloned it yet). Better to
+# under-report the denominator than to crash the generator and
+# block the cron PR. The expected production path always has the
+# substrate.
+_FALLBACK_TOTAL_STANDARDS = 49
+
+
+def _read_total_standards() -> int:
+    """Count standards in the canonical library at generator runtime.
+
+    Reading the substrate at each generator run keeps this number
+    self-correcting — adding a new standard pushes the public
+    /accuracy denominator up automatically next nightly cron.
+    Replaces the historical hardcoded TOTAL_STANDARDS = 47 (and 49
+    later) which had a habit of drifting against the library.
+    """
+    try:
+        data = json.loads(_STANDARDS_LIBRARY_PATH.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return _FALLBACK_TOTAL_STANDARDS
+    total = 0
+    for cat in data.get("categories", []):
+        total += len(cat.get("standards", []))
+    return total or _FALLBACK_TOTAL_STANDARDS
+
+
+TOTAL_STANDARDS = _read_total_standards()
 
 
 @dataclass

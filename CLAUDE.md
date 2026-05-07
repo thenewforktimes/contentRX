@@ -50,9 +50,11 @@ in `pyproject.toml` keeps pytest scoped to the Python side.
 
 ## Current positioning (locked by ADR 2026-04-25)
 
-The taxonomy is **private**. The 47 standards, 13 moments, per-standard
-versioning, `version_history`, the `influences` field, and the
-`rationale_chain` detail are internal artifacts only. They live in
+The taxonomy is **private**. The standards (49 as of 2026-05-07; the
+canonical library is the source of truth — count grows as new
+standards land), 13 moments, per-standard versioning,
+`version_history`, the `influences` field, and the `rationale_chain`
+detail are internal artifacts only. They live in
 `src/content_checker/standards/standards_library.json` and the related
 substrate modules; they are never rendered to product users.
 
@@ -154,10 +156,12 @@ flipped to `true` so the path doesn't silently rot.
 **Engine side:**
 - Python 3.10+ package in `src/content_checker/`
 - Pipeline: classify → filter → preprocess + LLM scan → validate → merge
-- 25 preprocessor checks, 47 standards, 13 moments, 8 content types
+- 25 preprocessor checks, 49+ standards, 13 moments, 8 content types
+  (standards count is dynamic — read from
+  `src/content_checker/standards/private/standards_library.json`)
 - Anthropic SDK for LLM calls; `api_utils.py` is the single LLM boundary
 - Tests are structural (no live API calls) — see `tests/`
-- Current version: `4.6.1` (source of truth: `src/content_checker/__init__.py`)
+- Current version: `4.7.6` (source of truth: `src/content_checker/__init__.py`)
 
 **App side:**
 - Next.js 15 App Router, TypeScript, Tailwind v4, React 19
