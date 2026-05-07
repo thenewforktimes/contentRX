@@ -82,6 +82,13 @@ const EXCLUDE_PATTERNS: ReadonlyArray<RegExp> = [
   // engineer-flavored prose by design — same rationale as the route
   // and API exclusions above.
   /^src\/components\/admin\//,
+  // Founder-only email templates: sent TO the founder when an
+  // operational alert fires (cost-pause, etc.), not to a customer.
+  // The docstring on each excluded template names it as a "Founder
+  // alert." Same posture as /admin/* — the recipient is internal,
+  // so /admin/* references and engineer-flavored prose are
+  // appropriate. Add new founder-only templates here as they land.
+  /^src\/emails\/cost-pause-alert\.tsx$/,
   /\.test\.(ts|tsx)$/,
   /\.spec\.(ts|tsx)$/,
   /__tests__\//,

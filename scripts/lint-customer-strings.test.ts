@@ -292,6 +292,12 @@ describe("live codebase is clean of error-severity findings", () => {
           // founder-facing UI by design.
           !f.startsWith("src/app/admin/") &&
           !f.startsWith("src/components/admin/") &&
+          // Founder-only email templates (sent to Robert when an
+          // operational alert fires, not to a customer). Same posture
+          // as /admin/* — recipient is internal, so /admin/* references
+          // and engineer-flavored prose are appropriate. Mirror the
+          // EXCLUDE_PATTERNS list in scripts/extract-customer-strings.ts.
+          f !== "src/emails/cost-pause-alert.tsx" &&
           !f.includes(".test.") &&
           !f.includes(".spec.") &&
           !f.includes("__tests__/") &&
