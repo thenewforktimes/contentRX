@@ -12,13 +12,20 @@
  *
  * 2026-05-06 update: /sources retired (ADR 2026-05-06). The
  * transparency-and-opt-out commitment that page anchored folds in
- * here as Commitment 4, "No stolen content," with a deep-link target
- * (#no-stolen-content) that the /sources route now 308s into. Four
- * commitments, in this order:
+ * here as Commitment 4 with a deep-link target (#no-stolen-content)
+ * that the /sources route now 308s into. The slug is preserved so
+ * external bookmarks and the /about inline link still resolve.
+ *
+ * 2026-05-06 (later): renamed Commitment 4 from "No stolen content"
+ * to "Sources I have rights to use." The original framing
+ * presupposed an accusation no one had made; the new title
+ * describes the standard positively (rights to use) rather than
+ * denying its inverse (theft). Slug intentionally not renamed —
+ * external bookmarks. Four commitments, in this order:
  *   1. Privacy
  *   2. Security
  *   3. Customer, not product
- *   4. No stolen content
+ *   4. Sources I have rights to use
  *
  * Voice: Robert's first-person voice. Calm, direct, plain. No em
  * dashes. Names the actor. Doesn't blame. Points somewhere.
@@ -31,7 +38,7 @@ import { PageHeader } from "@/components/ui/page-header";
 export const metadata: Metadata = {
   title: "Ethics. ContentRX",
   description:
-    "How ContentRX handles your work. Four commitments: Privacy, Security, Customer not product, No stolen content.",
+    "How ContentRX handles your work. Four commitments: Privacy, Security, Customer not product, Sources I have rights to use.",
 };
 
 export default function EthicsPage() {
@@ -169,8 +176,8 @@ export default function EthicsPage() {
 
       <Section
         number="4"
-        title="No stolen content"
-        summary="ContentRX learns from sources I have rights to use. Other people's work isn't mine to take."
+        title="Sources I have rights to use"
+        summary="Open-licensed code, fair-use editorial citation, and original work. The three buckets the model learns from."
         id="no-stolen-content"
       >
         <p>

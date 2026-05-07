@@ -96,11 +96,11 @@ Re-adding any source outside this list requires:
 2. A new descriptor that doesn't name the brand.
 3. A new ADR if either constraint is relaxed.
 
-The pre-merge audit on `/ethics` Commitment 4 (No stolen content)
-is load-bearing: every input has an MIT license, a fair-use
-standing, or a public-style-guide convention behind it. Anything
-that doesn't fit that envelope, or that names a brand directly,
-should not enter the corpus.
+The pre-merge audit on `/ethics` Commitment 4 (Sources I have
+rights to use) is load-bearing: every input has an MIT license, a
+fair-use standing, or a public-style-guide convention behind it.
+Anything that doesn't fit that envelope, or that names a brand
+directly, should not enter the corpus.
 
 ## Disagreement map (deleted 2026-05-06)
 

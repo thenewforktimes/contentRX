@@ -151,8 +151,9 @@ class TestPairsSchema:
         # Anti-regression on the 2026-05-06 license trim. CC-BY-NC-ND,
         # all-rights-reserved, or any other license that doesn't
         # permit commercial use with attribution must not re-enter
-        # the corpus. /ethics Commitment 4 ("No stolen content")
-        # makes a load-bearing claim that this guard protects.
+        # the corpus. /ethics Commitment 4 ("Sources I have rights
+        # to use") makes a load-bearing claim that this guard
+        # protects.
         commercial_ok = {"CC-BY-4.0", "OGL-3.0", "CC0-1.0", "MIT", "Apache-2.0"}
         data = _load(PAIRS_PATH)
         for pair in data["pairs"]:

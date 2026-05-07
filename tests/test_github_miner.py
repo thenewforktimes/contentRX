@@ -215,7 +215,7 @@ class TestLoadAllowList:
         # 2026-05-06-sources-page-retired) removed three entries from
         # the committed allow-list because they fall outside the
         # MIT/Apache/BSD/CC0/ISC envelope the new /ethics
-        # Commitment 4 ("No stolen content") commits to:
+        # Commitment 4 ("Sources I have rights to use") commits to:
         #   - calcom/cal.com    (AGPL-3.0)
         #   - getsentry/sentry  (BUSL-1.1)
         #   - mdn/content       (CC-BY-SA-2.5)
