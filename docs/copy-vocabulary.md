@@ -383,10 +383,11 @@ Rules of thumb, not strings.
   Several places in the codebase still mix these. When touching them,
   prefer the customer format unless you're inside /admin.
 - **Numbers.** *"1,000 checks per month"*, not *"1000 checks/mo"*.
-  Comma separator on thousands. The numbers customers see most: 20
-  (free monthly limit), 1,000 (Pro monthly limit), 1,000/seat (Team),
-  3,000 (chars per check), 15,000 (max chars per call). Match these
-  in copy or you're contradicting another surface.
+  Comma separator on thousands. The numbers customers see most: 10
+  (free monthly limit), 1,000 (Pro monthly limit), 2,000/seat (Team),
+  60,000 (Scale monthly limit), 200 (chars per unit), 50,000 (max
+  chars per call). Match these in copy or you're contradicting another
+  surface.
 - **Punctuation instead of em dashes.** When you reach for an em dash,
   reach for a period, a comma, a colon, parens, or a sentence break.
   Almost always one of those works. The em dash reads as

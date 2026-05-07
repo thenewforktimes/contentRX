@@ -3,7 +3,7 @@
  *
  * Body: { plan: "pro" | "team", interval: "monthly" | "annual", seats?: number }
  *
- * Team plans require seats >= TEAM_MIN_SEATS (3). Pro plans ignore seats
+ * Team plans require seats >= TEAM_MIN_SEATS (1). Pro plans ignore seats
  * (quantity is always 1). The signed-in Clerk user is resolved to a
  * `users` row; if they already have a Stripe Customer ID it's reused so
  * a re-subscription after cancellation stays on the same customer record.

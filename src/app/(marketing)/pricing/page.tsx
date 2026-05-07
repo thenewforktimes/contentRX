@@ -1,15 +1,18 @@
 /**
  * /pricing — public pricing page.
  *
- * Five-tier structure (locked pre-pilot, 2026-04-30 strategy):
- *   - Free:       20 checks/mo, 1 repo. Acquisition flywheel.
- *   - Pro:        $39/mo ($32 annual). 2,000 checks/mo. Solo PMs / designers.
- *   - Team:       $59/seat (5-seat min, annual). 5,000 checks/seat pooled.
- *                 Sales-assisted at launch; self-serve post-pilot.
- *   - Scale:      $1,499/mo flat. 10-seat cap, 50,000 checks/mo,
+ * Five-tier structure (locked 2026-05-07 by _private/pricing-analysis.md):
+ *   - Free:       10 checks/mo. Acquisition flywheel.
+ *   - Pro:        $39/mo ($379/yr, 20% off). 1,000 checks/mo. Self-serve.
+ *   - Team:       $79/seat/mo ($759/seat/yr, 20% off). 2,000 checks/seat,
+ *                 pooled across the team. Self-serve, no seat minimum.
+ *   - Scale:      $1,799/mo ($17,299/yr, 20% off). 60,000 checks pooled,
  *                 multi-brand voices, agency multi-client. Sales-assisted.
  *   - Enterprise: Coming soon. SSO/SAML, SCIM, audit logs, custom rules,
  *                 dedicated CSM, SOC 2 Type II. $36k/yr floor when ready.
+ *
+ * Above the cap: hard cap by default. Pro, Team, and Scale customers
+ * can opt in to $0.10/check overage from their dashboard (Phase 4).
  *
  * Metering shape (schema 3.0.0): 1 unit per 200 characters, rounded up.
  * A button label bills as 1 unit; a 4,000-char doc bills as 20.
@@ -25,7 +28,7 @@ import { Pill } from "@/components/ui/pill";
 export const metadata: Metadata = {
   title: "Pricing. ContentRX",
   description:
-    "Free for solo evaluation. $39/month for individual professionals. $59/seat for small teams. $1,499/mo flat for agencies and design-system orgs. Enterprise coming soon.",
+    "Free for evaluation. $39/month for individual professionals. $79/seat for small teams. $1,799/month for agencies and design-system orgs. Enterprise coming soon.",
 };
 
 export default function PricingPage() {
@@ -38,9 +41,9 @@ export default function PricingPage() {
         title="A staff content designer's verdict on every string you ship."
         lede={
           <>
-            Free to start, $39/month to use it daily, $59/seat for teams.
+            Free to start, $39/month to use it daily, $79/seat for teams.
             In your repo, your PR, your Figma file, your terminal, without
-            ever leaving the work.
+            leaving the work.
           </>
         }
         meta={
@@ -59,7 +62,7 @@ export default function PricingPage() {
         <PlanCard
           name="Free"
           price="$0"
-          quota="20 checks per month"
+          quota="10 checks per month"
           features={[
             "1 repo",
             "Short copy and long-form review",
@@ -70,32 +73,31 @@ export default function PricingPage() {
         <PlanCard
           name="Pro"
           price="$39 / month"
-          priceSubnote="$32/month billed annually"
-          quota="2,000 checks per month"
+          priceSubnote="$379/year (save 20%)"
+          quota="1,000 checks per month"
           features={[
             "Short copy and long-form review",
             "Custom rule overrides",
             "Slack + Figma plugin + GitHub Action",
           ]}
+          overageNote="Hard cap by default. Opt in to $0.10/check overage from your dashboard."
           cta={{ href: "/sign-up?plan=pro", label: "Start free trial" }}
           emphasized
           mostPopular
         />
         <PlanCard
           name="Team"
-          price="$59 / seat / month"
-          priceSubnote="annual billing, 5-seat minimum"
-          quota="5,000 checks per seat, pooled"
+          price="$79 / seat / month"
+          priceSubnote="$759/seat/year (save 20%)"
+          quota="2,000 checks per seat, pooled"
           features={[
             "Everything in Pro",
             "Rule sharing across the team",
             "Member management + analytics",
             "GitHub PR bot at the org level",
           ]}
-          cta={{
-            href: "mailto:hello@contentrx.io?subject=Team plan",
-            label: "Contact sales",
-          }}
+          overageNote="Hard cap by default. Opt in to $0.10/check overage from your dashboard."
+          cta={{ href: "/sign-up?plan=team", label: "Start free trial" }}
         />
       </section>
 
@@ -105,15 +107,15 @@ export default function PricingPage() {
       >
         <PlanCard
           name="Scale"
-          price="$1,499 / month"
-          priceSubnote="flat, billed annually"
-          quota="50,000 checks per month, pooled"
+          price="$1,799 / month"
+          priceSubnote="$17,299/year (save 20%)"
+          quota="60,000 checks per month, pooled"
           features={[
             "Everything in Team",
             "10-seat cap, multi-brand voices",
             "Agency multi-client billing",
-            "$0.05 per check overage",
           ]}
+          overageNote="Hard cap by default. Opt in to $0.10/check overage from your dashboard."
           cta={{
             href: "mailto:hello@contentrx.io?subject=Scale plan",
             label: "Contact sales",
@@ -159,19 +161,15 @@ export default function PricingPage() {
             q="What happens if I hit my limit on Pro?"
             a={
               <>
-                Pro caps at 2,000 checks per month, equivalent to
-                400,000 characters of content reviewed. A hard cap, no
-                surprise overage charges. We email at 80% so you have warning
-                before you hit the limit. If you&apos;re bumping 2,000
-                most months, the Team plan ($59/seat with 5,000 pooled
-                per seat) is the right next step.{" "}
-                <a
-                  href="mailto:hello@contentrx.io?subject=Team plan"
-                  className="underline underline-offset-2"
-                >
-                  Email us
-                </a>{" "}
-                and we&apos;ll set it up.
+                Pro caps at 1,000 checks per month, equivalent to
+                200,000 characters of content reviewed. By default,
+                that&apos;s a hard cap. We email at 80% so you have
+                warning, and again at 100%. To keep checking past the
+                cap, opt in to overage at $0.10/check from your
+                dashboard. We bill it with your next invoice. You can
+                turn it off anytime. If you&apos;re bumping 1,000 most
+                months, the Team plan ($79/seat with 2,000 pooled per
+                seat) is the right next step.
               </>
             }
           />
@@ -197,7 +195,7 @@ export default function PricingPage() {
           />
           <Faq
             q="Do I need a credit card to try it?"
-            a="No. Free is 20 checks/mo, no card required. Sign up, install on your surface of choice, and run your first check."
+            a="No. Free is 10 checks/mo, no card required. Sign up, install on your surface of choice, and run your first check."
           />
           <Faq
             q="Do I need an Anthropic or OpenAI API key?"
@@ -232,6 +230,7 @@ function PlanCard({
   priceSubnote,
   quota,
   features,
+  overageNote,
   cta,
   emphasized = false,
   mostPopular = false,
@@ -242,6 +241,7 @@ function PlanCard({
   priceSubnote?: string;
   quota: string;
   features: string[];
+  overageNote?: string;
   cta?: { href: string; label: string };
   emphasized?: boolean;
   mostPopular?: boolean;
@@ -277,6 +277,9 @@ function PlanCard({
           ))}
         </ul>
       </div>
+      {overageNote && (
+        <p className="text-xs text-quiet">{overageNote}</p>
+      )}
       {cta ? (
         <Link
           href={cta.href}

@@ -333,8 +333,7 @@ def _render_truncation_notice(checked: int, truncated_count: int) -> str:
         f"> ⚠️ **This PR has {total} strings. ContentRX checked the "
         f"first {checked}; {truncated_count} more weren't checked.** "
         "Raise `max-checks` in your workflow config to check all of "
-        "them, or run a one-off Audit Pack ($99 for 25,000 checks) "
-        "for codebase-wide audits."
+        "them."
     )
 
 

@@ -1,41 +1,30 @@
 /**
  * Plan → monthly evaluation quota.
  *
- * Team quota scales by seat count from the subscriptions row.
- * Re-anchored 2026-04-30 alongside the pre-pilot launch (300-char
- * standard tier; document at 8 units flat; surface at 25 units flat —
- * see src/lib/metering.ts).
+ * Locked 2026-05-07 by _private/pricing-analysis.md (Phase 1 atomic
+ * pricing PR). Empirical cost lands at $0.014–$0.015 per unit at the
+ * cache rates Phase 0 measured across two runs. Full-utilization
+ * margins are 64–69% across paid tiers, with room for a 25% Anthropic
+ * price hike before any tier dips below 40%.
  *
- * Pricing rationale (per the 2026-04-30 launch pricing):
- *   - free:  20 checks lets a new user audit a couple of strings with
- *            margin for setup mistakes, without giving away enough to
- *            scan a whole product. Acquisition flywheel.
- *   - pro:   2,000 standard-equivalent checks at $39/month
- *            ($0.0195/check at the listed rate). Comfortable for
- *            sustained daily use AND burst months on standard checks.
- *            A document call costs 8 units; a surface call costs 25;
- *            a Pro user can comfortably mix ~250 standard + 50 document
- *            + 8 surface checks per month.
- *   - team:  5,000 standard-equivalents per seat, pooled across the
- *            team. Pooling matters because team usage isn't uniform —
- *            one designer scanning a release on the last week of the
- *            sprint hits 1,000+ on their own; pooling absorbs that
- *            without the admin re-licensing.
- *   - scale: 50,000 standard-equivalents pooled, flat $1,499/mo. 10
- *            seats max. For agencies running multiple clients and
- *            in-house design-system teams. Above 50,000 the customer
- *            is on the Enterprise sales motion.
+ * Team's per-seat quota scales by seat count from the subscriptions
+ * row. Scale is a flat pool: seat count does not multiply the cap.
  *
- * Revisit at 50 paying customers — see the strategy session notes for
- * the metrics that should drive any change (p50/p95 monthly usage,
- * month-over-month churn, time-to-quota).
+ * Schema 3.0.0 metering: 1 unit per 200 characters, rounded up. A
+ * button label bills as 1 unit; a 1,000-character paragraph bills as
+ * 5; a 4,000-character doc bills as 20.
+ *
+ * Above the cap: hard cap by default. Pro, Team, and Scale customers
+ * can opt in to $0.10 per overage unit from /dashboard/settings/overage
+ * (wired in Phase 4 of the post-pivot build). Free plans cannot opt
+ * in to overage.
  */
 
 export const QUOTAS = {
-  free: 20,
-  pro: 2_000,
-  team: 5_000, // per seat, pooled across the team
-  scale: 50_000, // pooled across the team (10-seat cap)
+  free: 10,
+  pro: 1_000,
+  team: 2_000, // per seat, pooled across the team
+  scale: 60_000, // pooled across the team (10-seat cap)
 } as const;
 
 export type Plan = keyof typeof QUOTAS;

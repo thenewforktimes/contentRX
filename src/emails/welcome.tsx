@@ -15,7 +15,7 @@ export function WelcomeEmail({
         Welcome to ContentRX.
       </Heading>
       <Text>
-        You're on the Free plan: 20 checks a month, every standard,
+        You're on the Free plan: 10 checks a month, every standard,
         no card required. We bill by content length: 1 unit per 200
         characters, rounded up. A button label is 1 unit; a 1,000-
         character paragraph is 5.

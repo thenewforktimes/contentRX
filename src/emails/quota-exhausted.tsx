@@ -32,7 +32,7 @@ export function QuotaExhaustedEmail({
       </Text>
       {plan === "free" ? (
         <Text>
-          Upgrade to Pro (2,000 checks / month) to keep going right now.
+          Upgrade to Pro (1,000 checks / month) to keep going right now.
           Your remaining quota carries over for the rest of the month.
         </Text>
       ) : (

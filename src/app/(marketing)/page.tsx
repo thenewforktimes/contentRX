@@ -88,7 +88,7 @@ export default function Home() {
               See how it works
             </Link>
             <span className="ml-1 text-xs text-quiet">
-              Free plan, 20 checks/month. No card.
+              Free plan, 10 checks/month. No card.
             </span>
           </div>
         </div>
