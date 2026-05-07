@@ -1,15 +1,27 @@
 /**
  * /calibration/[week] — single weekly calibration log entry.
  *
- * Phase C6 of the post-pivot rolling plan. Renders the raw markdown
- * from `reports/calibration/YYYY-WW.md` as a `<pre>` block (no rich
- * markdown rendering yet — the calibration log is intentionally
- * minimal; the founder-written essays at /essays carry the voice).
+ * Phase C6 of the post-pivot rolling plan. Renders the templated
+ * markdown emitted by `reports/calibration/generate.py` into proper
+ * JSX via `<CalibrationMarkdown>`. The page used to dump the file
+ * as a `<pre>` block, which produced an illegible wall of literal
+ * `#`, `**`, `_`, and backtick characters — that's fixed.
+ *
+ * Timestamp source: the markdown body's `_Generated TIMESTAMP._`
+ * line, extracted by the parser. Vercel's build environment doesn't
+ * preserve `fs.statSync().mtime`, which produced a "Generated
+ * 2018-10-20" header before this fix. The body-embedded timestamp
+ * is the source of truth — it's what the generator stamped at
+ * write time.
  */
 
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  CalibrationMarkdown,
+  parseCalibrationMarkdown,
+} from "@/lib/calibration-markdown";
 import { getCalibrationLog } from "@/lib/calibration-loader.server";
 
 export async function generateMetadata({
@@ -33,6 +45,12 @@ export default async function CalibrationWeekPage({
   const entry = getCalibrationLog(week);
   if (!entry) notFound();
 
+  // Prefer the body-embedded timestamp; fall back to fs mtime only
+  // if the body somehow lacks one (older logs that predate the
+  // generator's stamp line).
+  const { generated_at } = parseCalibrationMarkdown(entry.contents);
+  const displayTimestamp = generated_at ?? entry.modified_at;
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <p className="text-xs">
@@ -51,15 +69,12 @@ export default async function CalibrationWeekPage({
           Week {entry.week}
         </h1>
         <p className="mt-2 text-xs text-quiet">
-          Generated {formatIso(entry.modified_at)} ·{" "}
-          {entry.size_bytes.toLocaleString()} bytes
+          Generated {formatIso(displayTimestamp)}
         </p>
       </header>
 
       <article className="rounded-lg border border-line bg-raised p-6">
-        <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-default">
-{entry.contents}
-        </pre>
+        <CalibrationMarkdown md={entry.contents} />
       </article>
 
       <p className="mt-6 text-xs text-quiet">
@@ -80,7 +95,7 @@ export default async function CalibrationWeekPage({
 function formatIso(iso: string): string {
   if (!iso) return "";
   try {
-    return new Date(iso).toISOString().slice(0, 16).replace("T", " ");
+    return new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC";
   } catch {
     return iso;
   }
