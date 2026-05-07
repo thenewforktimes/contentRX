@@ -21,7 +21,20 @@
  * presupposed an accusation no one had made; the new title
  * describes the standard positively (rights to use) rather than
  * denying its inverse (theft). Slug intentionally not renamed —
- * external bookmarks. Four commitments, in this order:
+ * external bookmarks.
+ *
+ * 2026-05-06 (later still): trimmed Commitment 4's body to describe
+ * what's actually true today instead of forecasting future state.
+ * Removed (a) the OSS-repository mention — the github_miner is
+ * built but has never run, so the model doesn't actually draw from
+ * those repos yet — and (b) the maintainer opt-out paragraph — post-
+ * anonymization (ADR 2026-05-06-source-name-anonymization), no
+ * project is named in any tracked file, so there's nothing for a
+ * maintainer to find and request the removal of. If/when either
+ * pattern actually exists, the body grows back to fit. Today it
+ * shouldn't promise things that aren't there.
+ *
+ * Four commitments, in this order:
  *   1. Privacy
  *   2. Security
  *   3. Customer, not product
@@ -181,23 +194,10 @@ export default function EthicsPage() {
         id="no-stolen-content"
       >
         <p>
-          The model draws from a small set of inputs with clear
-          license: published style guides cited as influences, a few
-          permissively-licensed open-source repositories, and content
-          I write myself. Every input has an MIT license, a fair-use
-          standing, or a public-style-guide convention behind it.
-        </p>
-        <p className="mt-3">
-          If you maintain a project I&apos;ve cited and would rather
-          I hadn&apos;t, email{" "}
-          <a
-            href="mailto:hello@contentrx.io?subject=%5BOPTOUT%5D"
-            className="underline underline-offset-2"
-          >
-            hello@contentrx.io
-          </a>
-          {" "}with subject <code>[OPTOUT]</code> and the project
-          name. I&apos;ll remove the influence and confirm.
+          The model draws from two kinds of inputs: principles I&apos;ve
+          taken from published style guides, and content I write
+          myself. Every input has an MIT license, a fair-use standing,
+          or a public-style-guide convention behind it.
         </p>
       </Section>
 
