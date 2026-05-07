@@ -215,13 +215,9 @@ export default function Home() {
               </p>
             </div>
             <p className="mt-2 text-sm text-default">
-              ContentRX is a $39 SaaS subscription on the same
-              approval pattern your team already uses for Slack or
-              Figma. No new LLM contract, no Anthropic or OpenAI key
-              required from your org, no procurement deck to write.
-              If your team is catching up on AI tooling, it&apos;s
-              already caught up enough for this one. Install your
-              favorite surface in five minutes.
+              Same approval pattern your team uses for Slack or
+              Figma. $39/month, five-minute install. No new LLM
+              contract, no Anthropic or OpenAI key needed.
             </p>
           </li>
           <li className="rounded-lg border border-line bg-raised p-5">
@@ -229,11 +225,8 @@ export default function Home() {
               Privacy.
             </p>
             <p className="mt-2 text-sm text-default">
-              Subscriptions are the whole revenue model. No VCs, no
-              investors, no quiet second business that needs your
-              strings to keep the lights on. Your content is your
-              hard work, not a product we sell to other parties
-              because you signed it away.{" "}
+              Your subscription is the whole revenue model. We
+              don&apos;t sell, repackage, or train on your content.{" "}
               <Link
                 href="/privacy"
                 className="underline underline-offset-2"
