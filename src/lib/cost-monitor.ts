@@ -40,6 +40,13 @@ export type CheckSource =
   | "mcp";
 
 export interface RecordUsageEventArgs {
+  /** Optional row id. When the caller wants to wire usage_events.id
+   * to violations.check_event_id (so the run audit page can join
+   * `violations.check_event_id ↔ usage_events.id` and pull
+   * text_preview), they generate one cuid up-front and pass it to
+   * both writers. When omitted, the schema's default cuid is used.
+   * Always supplied from /api/check; not supplied by other callers. */
+  id?: string;
   userId: string;
   /** Schema 3.0.0: the three-tier model collapsed to length-routed
    * `SizeClass` ("small" / "large"). The DB column accepts the old
@@ -101,6 +108,11 @@ export async function recordUsageEvent(
     cacheCreationInputTokens: args.cacheCreationInputTokens,
   });
   await db.insert(schema.usageEvents).values({
+    // Caller-supplied id only when present; schema's `cuid()` default
+    // wins otherwise. /api/check supplies one (and passes the same id
+    // as `checkEventId` to logViolations) so the run audit page can
+    // join the two tables.
+    ...(args.id ? { id: args.id } : {}),
     userId: args.userId,
     segmentType: args.segmentType,
     unitsConsumed: args.unitsConsumed,

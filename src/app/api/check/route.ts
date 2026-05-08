@@ -13,6 +13,7 @@
  *   9. Return the result + quota metadata
  */
 
+import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
 import { publicCheckEnvelope } from "@/lib/api-envelope";
 import { revalidateDashboard } from "@/lib/revalidate";
@@ -520,6 +521,12 @@ export async function POST(req: Request) {
     cacheReadInputTokens: evalResponse.tokens.cache_read_input ?? 0,
     cacheCreationInputTokens: evalResponse.tokens.cache_creation_input ?? 0,
   };
+  // One cuid threaded through both writes so violations.check_event_id
+  // === usage_events.id for this call. The run audit page leftJoin's
+  // on that key to pull text_preview alongside each finding. Without
+  // this — what the schema previously did — the two tables generated
+  // independent cuids and the join always returned NULL.
+  const checkEventId = createId();
   const [logResult, tokenResult, eventResult] = await Promise.allSettled([
     logViolations({
       userId: auth.user.id,
@@ -533,6 +540,7 @@ export async function POST(req: Request) {
       reviewReasonSubtype:
         (result as { review_reason?: string | null }).review_reason ?? null,
       runId: run_id ?? null,
+      checkEventId,
     }),
     recordTokenUsage(usageScopeUserId, tokens),
     // Phase 4 cost-monitor + check-history: one event row per /api/check
@@ -545,6 +553,7 @@ export async function POST(req: Request) {
     // is not aggregation. A future TTL will null text_preview after 90
     // days.
     recordUsageEvent({
+      id: checkEventId,
       userId: auth.user.id,
       segmentType: meterDecision.sizeClass,
       unitsConsumed: meterDecision.unitsConsumed,

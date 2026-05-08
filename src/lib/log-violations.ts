@@ -47,6 +47,14 @@ type LogParams = {
   // single page covering every string checked in that workflow run.
   // Null for inline / LSP / CLI / plugin calls.
   runId?: string | null;
+  // Optional: id to write into `check_event_id`. When the caller
+  // also passes the same id as `recordUsageEvent({ id })` it makes
+  // `violations.check_event_id` ↔ `usage_events.id` joinable,
+  // unlocking the run audit page's text_preview render. /api/check
+  // supplies one. When omitted, logViolations generates its own —
+  // preserves /admin refinement-signal clustering for callers that
+  // don't need the join.
+  checkEventId?: string;
 };
 
 export function hashText(text: string): string {
@@ -58,9 +66,12 @@ export async function logViolations(params: LogParams): Promise<number> {
 
   const textHash = hashText(params.text);
   // One check-event id per call — groups all violation rows from the
-  // same /api/check invocation so the refinement-signals endpoint can
-  // reconstruct co-firing and standards_conflict clusters.
-  const checkEventId = createId();
+  // same /api/check invocation so the refinement-signals endpoint
+  // can reconstruct co-firing and standards_conflict clusters AND so
+  // the run audit page can join `violations.check_event_id ↔
+  // usage_events.id`. The caller (currently /api/check) supplies the
+  // id when it wants the join to work; otherwise we mint a fresh one.
+  const checkEventId = params.checkEventId ?? createId();
 
   const rows = params.violations
     .filter((v) => typeof v.standard_id === "string" && v.standard_id.length > 0)
