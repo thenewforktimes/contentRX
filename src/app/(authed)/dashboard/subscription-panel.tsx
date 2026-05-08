@@ -53,7 +53,9 @@ type Props = {
 
 type Interval = "monthly" | "annual";
 
-const TEAM_MIN_SEATS = 1;
+// Single source of truth in src/lib/billing-constants.ts so server
+// (stripe.ts, checkout/route.ts) and client (this panel) can't drift.
+import { TEAM_MIN_SEATS } from "@/lib/billing-constants";
 
 export function SubscriptionPanel({
   plan,
