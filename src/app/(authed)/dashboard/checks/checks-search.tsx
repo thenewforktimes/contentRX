@@ -23,8 +23,11 @@ import { Pill } from "@/components/ui/pill";
 
 // Includes legacy three-tier values for historical rows that pre-date
 // schema 3.0.0; new rows always write "small" or "large". The label
-// itself is no longer rendered to customers.
-type SegmentType = "small" | "large" | "standard" | "document" | "surface";
+// itself is no longer rendered to customers. The page-level loader
+// coerces legacy rows ("standard" / "document" / "surface") to
+// "large" before they reach this component, so the type can be
+// the narrow post-3.0.0 union.
+type SegmentType = "small" | "large";
 
 interface CheckHistoryRow {
   id: string;
