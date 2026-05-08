@@ -631,17 +631,25 @@ async function loadSourceStats(
   const cached = await unstable_cache(
     async (id: string) => {
       const db = getDb();
+      // Query usage_events, not violations. Every successful /api/check
+      // writes one usage_events row regardless of verdict; violations
+      // rows only land when the engine flagged something. A surface
+      // that ran a clean PR (e.g., a GitHub Action seeing "All clear"
+      // on a PR with no findings) needs to count as connected too.
+      // Closes the bug where the GitHub Action card stayed
+      // "Not connected" after a real run because none of its strings
+      // got flagged.
       const rows = (await db
         .select({
-          source: schema.violations.source,
+          source: schema.usageEvents.source,
           count: sql<number>`count(*)::int`,
-          firstAt: sql<Date>`min(${schema.violations.createdAt})`,
-          lastAt: sql<Date>`max(${schema.violations.createdAt})`,
+          firstAt: sql<Date>`min(${schema.usageEvents.createdAt})`,
+          lastAt: sql<Date>`max(${schema.usageEvents.createdAt})`,
         })
-        .from(schema.violations)
-        .where(eq(schema.violations.teamId, id))
-        .groupBy(schema.violations.source)) as Array<{
-        source: string;
+        .from(schema.usageEvents)
+        .where(eq(schema.usageEvents.teamId, id))
+        .groupBy(schema.usageEvents.source)) as Array<{
+        source: string | null;
         count: number;
         firstAt: Date;
         lastAt: Date;
@@ -660,7 +668,7 @@ async function loadSourceStats(
         null;
 
       for (const r of rows) {
-        if (!(r.source in activity)) continue;
+        if (r.source == null || !(r.source in activity)) continue;
         const surface = r.source as SurfaceKey;
         const firstAt =
           r.firstAt instanceof Date ? r.firstAt : new Date(r.firstAt);
@@ -677,6 +685,11 @@ async function loadSourceStats(
       return { activity, recentlyActivated: recentlyActivated?.source ?? null };
     },
     [`loadSourceStats:${teamId}`],
+    // tags.violations is the "after every check" invalidation tag —
+    // /api/check calls revalidateDashboard which fires this regardless
+    // of whether a violation was recorded. So the cache refreshes on
+    // every API call, which is what we want now that the query reads
+    // from usage_events (one row per check, verdict-agnostic).
     { tags: [tags.violations(teamId)], revalidate: 3600 },
   )(teamId);
   // unstable_cache JSON-serializes Dates back to ISO strings on cache
