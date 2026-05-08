@@ -44,7 +44,11 @@ interface CheckHistoryRow {
   id: string;
   createdAt: string;
   source: string | null;
-  segmentType: "standard" | "document" | "surface";
+  // Schema 3.0.0 collapsed the three-tier model (standard / document /
+  // surface) into length-routed sizing. Legacy rows from pre-launch
+  // test data may still carry the old values; the renderer handles
+  // them by falling back to the small/large branch via humanizeSize.
+  segmentType: "small" | "large";
   unitsConsumed: number;
   verdict: string | null;
   verdictLabel: string;
@@ -176,7 +180,12 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
       id: r.id,
       createdAt: r.createdAt.toISOString(),
       source: r.source,
-      segmentType: r.segmentType as "standard" | "document" | "surface",
+      // Pre-3.0.0 rows carry stale enum values; coerce to "large" so
+      // the renderer's small/large branch covers them. New writes
+      // always land "small" or "large" (per src/lib/metering.ts).
+      segmentType: (r.segmentType === "small" ? "small" : "large") as
+        | "small"
+        | "large",
       unitsConsumed: r.unitsConsumed,
       verdict: r.verdict,
       verdictLabel: label,

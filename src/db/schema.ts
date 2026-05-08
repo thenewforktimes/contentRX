@@ -172,12 +172,16 @@ export const usageEvents = pgTable(
       .defaultNow(),
     // Schema 3.0.0 (2026-05-05): the three-tier model collapsed to a
     // length-routed size class. Drizzle's enum is TS-only (no DB CHECK
-    // constraint), so dropping it here is safe — historical rows with
-    // "standard"/"document"/"surface" stay valid; new rows write
-    // "small"/"large". Pre-launch had no paying customers so the
-    // historical rows are test data; no backfill needed.
+    // constraint), so the live row data on prod is unaffected by
+    // narrowing the TS list. The pre-3.0.0 values
+    // ("standard", "document", "surface") stayed in the enum as
+    // tolerance for legacy rows, but pre-launch test data is the only
+    // possible source — no real customer ever wrote one. Drop them
+    // from the TS enum so future writes can't accidentally hit the
+    // deprecated values, and so the dashboard's per-size-class
+    // rendering doesn't have to handle phantom branches.
     segmentType: text("segment_type", {
-      enum: ["small", "large", "standard", "document", "surface"],
+      enum: ["small", "large"],
     }).notNull(),
     unitsConsumed: integer("units_consumed").notNull(),
     inputTokens: integer("input_tokens").notNull().default(0),
