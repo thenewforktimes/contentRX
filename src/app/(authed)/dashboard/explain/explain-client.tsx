@@ -75,7 +75,13 @@ type CheckError =
 export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
   const router = useRouter();
   const [text, setText] = useState(
-    "Unable to complete operation. Please contact administrator.",
+    // Seed example demonstrating bad copy ContentRX flags: passive
+    // voice, vague action, doesn't name the actor. "support" replaces
+    // "administrator" — same flagging behavior, but matches the
+    // Position-3 ICP (solo / small-team customers don't have an
+    // "administrator" in their workflow). Vocabulary doc:
+    // docs/copy-vocabulary.md "Words and phrases".
+    "Unable to complete operation. Please contact support.",
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<CheckError | null>(null);

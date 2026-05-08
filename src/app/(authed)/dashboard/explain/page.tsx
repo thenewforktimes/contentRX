@@ -43,7 +43,7 @@ export default async function ExplainPage() {
         <p className="mt-3 text-xs text-quiet">
           Each check counts against your{" "}
           <Link href="/dashboard" className="underline underline-offset-2">
-            monthly quota
+            monthly limit
           </Link>
           .
         </p>
