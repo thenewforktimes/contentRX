@@ -46,7 +46,6 @@ import {
   loadFindingAggregates,
   type FindingPattern,
 } from "@/lib/insight-patterns";
-import { isContentRXAdmin } from "@/lib/graduation";
 import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { MotionList } from "@/components/motion-list";
@@ -86,7 +85,9 @@ export default async function DashboardPage() {
   }
 
   const plan = user.plan as Plan;
-  const isAdmin = isContentRXAdmin(clerkId);
+  // Founder badge moved to dashboard/layout.tsx — the layout already
+  // does its own isContentRXAdmin check, so the page body no longer
+  // needs to compute it.
   const [seats, used, activeSub, sourceStats, insights, teamRuleCounts] =
     await Promise.all([
       loadSeats(user.id, plan, user.teamOwnerUserId),
@@ -149,54 +150,23 @@ export default async function DashboardPage() {
           initialActivity={surfaceActivity}
         />
 
-        <nav
-          aria-label="Dashboard sections"
-          className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
-        >
-          <Link
-            href="/dashboard/checks"
-            className="text-default hover:underline"
-          >
-            Check history
-          </Link>
-          <Link
-            href="/dashboard/runs"
-            className="text-default hover:underline"
-          >
-            CI runs
-          </Link>
-          <Link
-            href="/dashboard/overrides"
-            className="text-default hover:underline"
-          >
-            Override report
-          </Link>
-          <Link
-            href="/dashboard/rules"
-            className="text-default hover:underline"
-          >
-            Team rules
-          </Link>
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="ml-auto rounded-md border border-line-strong px-2 py-0.5 text-xs font-medium text-default hover:bg-hover"
-            >
-              Founder dashboard →
-            </Link>
-          )}
-        </nav>
-
         {/*
-          Divider between work surfaces (above) and account configuration
-          (below). The hairline puts a literal pause in the page so the
-          eye stops looking for "more work to do" and starts treating
-          the next sections as settings.
+          Section divider between Activity (work surfaces above —
+          try-a-check, usage, insights, active surfaces) and Account
+          (configuration below — subscription, API key, team links).
+          The eyebrow names the boundary so the eye knows the
+          next sections are settings, not more activity. Pairs with
+          the secondary nav strip in dashboard/layout.tsx; sub-page
+          navigation moved up there, freeing this body for two clear
+          scenes: what's happening now, what you might touch monthly.
         */}
-        <div
-          aria-hidden
-          className="my-2 border-t border-line"
-        />
+        <div className="mt-4 flex items-center gap-3" aria-hidden>
+          <hr className="flex-1 border-line" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-quiet">
+            Account
+          </span>
+          <hr className="flex-1 border-line" />
+        </div>
 
         <SubscriptionPanel
           plan={plan}
