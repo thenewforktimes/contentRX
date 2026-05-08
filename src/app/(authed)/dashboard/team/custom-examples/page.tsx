@@ -128,7 +128,6 @@ export default async function CustomExamplesPage() {
                 <th className="py-2 pr-4">Verdict</th>
                 <th className="py-2 pr-4">Moment</th>
                 <th className="py-2 pr-4">Type</th>
-                <th className="py-2 pr-4">Standard</th>
                 <th className="py-2 pr-4">Contributed</th>
                 <th className="py-2 pr-4">Added</th>
                 <th className="py-2 pr-4" />
@@ -165,13 +164,16 @@ export default async function CustomExamplesPage() {
                       <span className="text-quiet">any</span>
                     )}
                   </td>
-                  <td className="py-2 pr-4 text-xs">
-                    {e.standardId ? (
-                      <code className="font-mono">{e.standardId}</code>
-                    ) : (
-                      <span className="text-quiet">none</span>
-                    )}
-                  </td>
+                  {/*
+                    Standard column removed per ADR 2026-04-25 — taxonomy
+                    IDs (CC-12, etc.) are private substrate. The
+                    underlying column stays in the schema for the
+                    /api/dashboard/export portability contract and to
+                    keep ingestion via MCP/CLI working; we just don't
+                    render it on the audit surface. Future work: add
+                    a `displayName` column so the entry can label
+                    itself without leaking the ID.
+                  */}
                   <td className="py-2 pr-4 text-xs">
                     {e.contributeUpstream ? (
                       <Pill tone="emerald">Upstream</Pill>
