@@ -33,10 +33,15 @@ export function QuotaWarningEmail({
         You've used {used} of {quota} checks on your {planLabel} plan this
         month ({remaining} left).
       </Text>
-      {plan === "free" && (
+      {plan === "free" ? (
         <Text>
           Upgrade to Pro for 1,000 checks a month. No-meeting checkout,
           cancel anytime.
+        </Text>
+      ) : (
+        <Text>
+          Continue uninterrupted past the cap by enabling overage at
+          $0.10 per check from your dashboard. Disable anytime.
         </Text>
       )}
       <Text style={{ marginTop: 20 }}>
@@ -44,11 +49,11 @@ export function QuotaWarningEmail({
           href={
             plan === "free"
               ? `${appUrl}/dashboard?upgrade=pro`
-              : `${appUrl}/dashboard`
+              : `${appUrl}/dashboard/settings/overage`
           }
           style={primaryButton}
         >
-          {plan === "free" ? "Upgrade to Pro" : "Open dashboard"}
+          {plan === "free" ? "Upgrade to Pro" : "Manage overage"}
         </Button>
       </Text>
     </EmailShell>
