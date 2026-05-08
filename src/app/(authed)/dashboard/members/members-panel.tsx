@@ -158,30 +158,42 @@ export function MembersPanel({
 
       <section>
         <h2 className="mb-3 text-sm font-semibold">Members</h2>
-        <ul className="flex flex-col gap-2">
-          {members.map((m) => (
-            <li
-              key={m.userId}
-              className="flex items-center justify-between gap-4 rounded-md border border-line p-3 text-sm"
-            >
-              <div>
-                <p className="font-medium">
-                  {m.email}
-                  {m.isOwner && (
-                    <Pill tone="emerald" className="ml-2">
-                      Owner
-                    </Pill>
-                  )}
-                </p>
-                {!m.isOwner && (
-                  <p className="text-xs text-quiet">
-                    Joined {formatDate(m.joinedAt)}
+        {members.length === 1 && members[0]?.isOwner ? (
+          // Solo team — owner only, no invites accepted yet. The form
+          // above (Invite a teammate) IS the empty-state CTA, so this
+          // copy stays brief and points at it without restating the
+          // action. Pre-beta audit caught this case rendering as just
+          // the owner row with no context.
+          <p className="rounded-md border border-dashed border-line-strong bg-overlay p-4 text-sm text-default">
+            You&apos;re flying solo. Invite a teammate above and
+            they&apos;ll appear here once they accept.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {members.map((m) => (
+              <li
+                key={m.userId}
+                className="flex items-center justify-between gap-4 rounded-md border border-line p-3 text-sm"
+              >
+                <div>
+                  <p className="font-medium">
+                    {m.email}
+                    {m.isOwner && (
+                      <Pill tone="emerald" className="ml-2">
+                        Owner
+                      </Pill>
+                    )}
                   </p>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+                  {!m.isOwner && (
+                    <p className="text-xs text-quiet">
+                      Joined {formatDate(m.joinedAt)}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );
