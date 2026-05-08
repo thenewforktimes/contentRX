@@ -49,7 +49,11 @@ export function getStripe(): Stripe {
 export type PaidPlan = "pro" | "team";
 export type Interval = "monthly" | "annual";
 
-export const TEAM_MIN_SEATS = 1;
+// Re-export so existing server-side imports (`import { TEAM_MIN_SEATS }
+// from "@/lib/stripe"`) keep working. The canonical definition lives
+// in billing-constants.ts so client components can share it without
+// pulling the Stripe SDK into the browser bundle.
+export { TEAM_MIN_SEATS } from "./billing-constants";
 
 export function priceIdFor(plan: PaidPlan, interval: Interval): string | null {
   const key = (() => {

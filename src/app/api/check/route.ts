@@ -50,6 +50,7 @@ import {
 import { currentMonth, monthResetISO, monthlyQuota, type Plan } from "@/lib/quotas";
 import { logSafeError } from "@/lib/safe-error-log";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { SURFACE_SOURCES } from "@/lib/surfaces";
 import {
   applyAddedRules,
   applyDisabledFilter,
@@ -139,7 +140,7 @@ const RequestSchema = z.object({
   // surface-attribution fix PR. Rogue callers now get a 400 instead of
   // polluting analytics. "dashboard" matches the existing terminology in
   // violation_overrides + correction-feedback source enums.
-  source: z.enum(["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"]),
+  source: z.enum(SURFACE_SOURCES),
   // Optional file_path, populated by the GitHub Action only. Upper
   // bound guards against repo paths that could swell the violations
   // table (typical paths are well under this).

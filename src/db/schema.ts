@@ -12,6 +12,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { InferSelectModel } from "drizzle-orm";
+import { SURFACE_SOURCES } from "@/lib/surfaces";
 
 const cuid = () =>
   text("id")
@@ -203,9 +204,7 @@ export const usageEvents = pgTable(
     teamId: text("team_id").references(() => users.id, {
       onDelete: "set null",
     }),
-    source: text("source", {
-      enum: ["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"],
-    }),
+    source: text("source", { enum: SURFACE_SOURCES }),
     contentType: text("content_type"),
     moment: text("moment"),
     verdict: text("verdict"),
@@ -364,9 +363,7 @@ export const violations = pgTable(
     standardId: text("standard_id").notNull(),
     severity: text("severity").notNull(),
     textHash: text("text_hash").notNull(),
-    source: text("source", {
-      enum: ["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"],
-    }).notNull(),
+    source: text("source", { enum: SURFACE_SOURCES }).notNull(),
     // Source-file path for violations that originated from CI extraction
     // (GitHub Action runs against a repo). Nullable because plugin and
     // CLI checks have no file context. Powers the "Top files" panel in
