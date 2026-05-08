@@ -38,13 +38,16 @@ export async function POST(req: Request) {
     // Same posture as /admin/* — don't confirm the route exists during
     // the beta window. Customers without BETA_OVERAGE access see a
     // 404 rather than a 403 + "you don't have access to overage."
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Overage isn't available yet on your account." },
+      { status: 404 },
+    );
   }
 
   const { userId: clerkId } = await auth();
   if (!clerkId) {
     return NextResponse.json(
-      { error: "Authentication required" },
+      { error: "Sign in to change overage settings." },
       { status: 401 },
     );
   }
@@ -54,7 +57,8 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       {
-        error: "Invalid request",
+        error:
+          "We couldn't read your request. Try again, and email hello@contentrx.io if it keeps happening.",
         issues: sanitizeZodIssues(parsed.error.issues),
       },
       { status: 400 },
@@ -76,7 +80,7 @@ export async function POST(req: Request) {
 
   if (!user) {
     return NextResponse.json(
-      { error: "User not provisioned yet" },
+      { error: "Your account isn't ready yet. Try again in a few minutes." },
       { status: 404 },
     );
   }

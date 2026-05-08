@@ -2,10 +2,8 @@
  * GET/POST /api/cron/stripe-overage-meter — end-of-month overage push.
  *
  * Phase 4 of the post-Phase-1 build. Reads `overage_state` rows for
- * the closing billing month, looks up each user's metered Stripe
- * subscription item (the one keyed off STRIPE_PRICE_OVERAGE), and
- * posts a usage record so the next invoice carries the metered line
- * item.
+ * the closing billing month and posts one Stripe Meter Event per
+ * user-month so the next invoice carries the metered line item.
  *
  * Cron wiring (add when enabling):
  *   // vercel.json
@@ -16,20 +14,26 @@
  * five-minute offset gives Stripe-side period rollovers a moment to
  * settle before we read.
  *
- * Idempotency: Stripe usage records use `action: "set"` (not
- * "increment"), so a re-run of the cron with the same period_end
- * timestamp is naturally idempotent — Stripe overwrites the prior
- * total with the same number. We additionally guard with a Redis
- * dedupe key per (userId, billingMonth) so a same-day re-run won't
- * round-trip Stripe at all on the second pass.
+ * Stripe API: stripe.billing.meterEvents.create() (the SDK 22+ way;
+ * the older subscriptionItems.createUsageRecord was removed in this
+ * SDK version). Each event carries a stable `identifier` keyed off
+ * (userId, closingMonth) so Stripe-side dedup catches re-runs within
+ * its rolling identifier-uniqueness window. Redis dedup (TTL 35 days)
+ * is the second-line guarantee for a re-run that lands outside that
+ * window.
+ *
+ * The Stripe Meter must be configured in the Dashboard with
+ * `event_name = STRIPE_OVERAGE_METER_EVENT_NAME` (defaults to
+ * "contentrx_overage_check") and `value_settings.event_payload_key
+ * = "value"`. Customer mapping defaults to "stripe_customer_id".
  *
  * BETA_OVERAGE gate: while the env var is unset / not "true", the
  * cron returns ok+skipped without touching Stripe. The data still
  * accumulates in overage_state; whenever beta opens, the next monthly
- * cron picks it up.
+ * cron picks it up (subject to the meter-event 35-day backdate window).
  */
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb, schema } from "@/db";
 import { requireCronAuth } from "@/lib/cron-auth";
@@ -39,6 +43,7 @@ import { logSafeError } from "@/lib/safe-error-log";
 import { optionalEnv } from "@/lib/require-env";
 
 const DEDUPE_TTL_SECONDS = 35 * 24 * 60 * 60;
+const DEFAULT_METER_EVENT_NAME = "contentrx_overage_check";
 
 function isBetaOverageEnabled(): boolean {
   return process.env.BETA_OVERAGE === "true";
@@ -51,7 +56,7 @@ interface UserPushResult {
   status:
     | "skipped_zero"
     | "skipped_dedupe"
-    | "skipped_no_subscription_item"
+    | "skipped_no_customer"
     | "pushed"
     | "error";
   error?: string;
@@ -89,7 +94,8 @@ function closingMonthFromNow(): string {
 async function run(opts: { month?: string }): Promise<RunResult> {
   const closingMonth = opts.month ?? closingMonthFromNow();
   const beta = isBetaOverageEnabled();
-  const overagePriceId = optionalEnv("STRIPE_PRICE_OVERAGE");
+  const eventName =
+    optionalEnv("STRIPE_OVERAGE_METER_EVENT_NAME") ?? DEFAULT_METER_EVENT_NAME;
 
   if (!beta) {
     return {
@@ -106,25 +112,22 @@ async function run(opts: { month?: string }): Promise<RunResult> {
   const db = getDb();
 
   // Pull every overage_state row for the closing month, joined to the
-  // user's subscription so we have stripeSubId in one query.
+  // user's customer record so we have stripeCustomerId in one query.
   const rows = (await db
     .select({
       userId: schema.overageState.userId,
       overageChecks: schema.overageState.overageChecks,
-      stripeSubId: schema.subscriptions.stripeSubId,
+      stripeCustomerId: schema.users.stripeCustomerId,
     })
     .from(schema.overageState)
     .leftJoin(
-      schema.subscriptions,
-      and(
-        eq(schema.subscriptions.userId, schema.overageState.userId),
-        eq(schema.subscriptions.status, "active"),
-      ),
+      schema.users,
+      eq(schema.users.id, schema.overageState.userId),
     )
     .where(eq(schema.overageState.month, closingMonth))) as Array<{
       userId: string;
       overageChecks: number;
-      stripeSubId: string | null;
+      stripeCustomerId: string | null;
     }>;
 
   const stripe = getStripe();
@@ -160,6 +163,13 @@ async function run(opts: { month?: string }): Promise<RunResult> {
       continue;
     }
 
+    if (!row.stripeCustomerId) {
+      r.status = "skipped_no_customer";
+      results.push(r);
+      skipped++;
+      continue;
+    }
+
     const dedupeKey = `stripe-overage-meter:${row.userId}:${closingMonth}`;
     try {
       const setResult = await redis.set(dedupeKey, "1", {
@@ -174,38 +184,21 @@ async function run(opts: { month?: string }): Promise<RunResult> {
       }
     } catch (err) {
       // Redis hiccup shouldn't block the push; logged + proceed.
+      // The Stripe identifier below provides second-line dedup.
       logSafeError("stripe-overage-meter dedupe lookup failed", err);
     }
 
-    if (!row.stripeSubId) {
-      r.status = "skipped_no_subscription_item";
-      results.push(r);
-      skipped++;
-      continue;
-    }
-
     try {
-      // Find the metered subscription item by matching its price ID
-      // against STRIPE_PRICE_OVERAGE. Pre-Phase-1 setup creates the
-      // metered item alongside the flat-fee item on every paid sub;
-      // a sub without it means the customer was provisioned before
-      // the overage SKU existed and needs a manual backfill.
-      const sub = await stripe.subscriptions.retrieve(row.stripeSubId, {
-        expand: ["items.data"],
-      });
-      const meteredItem = sub.items.data.find(
-        (it) => overagePriceId && it.price.id === overagePriceId,
-      );
-      if (!meteredItem) {
-        r.status = "skipped_no_subscription_item";
-        results.push(r);
-        skipped++;
-        continue;
-      }
-
-      await stripe.subscriptionItems.createUsageRecord(meteredItem.id, {
-        quantity: row.overageChecks,
-        action: "set",
+      await stripe.billing.meterEvents.create({
+        event_name: eventName,
+        payload: {
+          stripe_customer_id: row.stripeCustomerId,
+          value: row.overageChecks.toString(),
+        },
+        // Stable per (userId, closingMonth) so a re-run within the
+        // identifier-uniqueness rolling window is a no-op on Stripe's
+        // side. After that window expires Redis still blocks (35d TTL).
+        identifier: `overage:${row.userId}:${closingMonth}`,
         timestamp: periodEnd,
       });
       results.push(r);
