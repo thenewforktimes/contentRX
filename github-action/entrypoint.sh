@@ -19,6 +19,16 @@ export CONTENTRX_API_KEY="${CONTENTRX_API_KEY:?CONTENTRX_API_KEY is required}"
 export CONTENTRX_API_URL="${CONTENTRX_API_URL:-}"
 export CONTENTRX_STRICT="${CONTENTRX_STRICT:-false}"
 export CONTENTRX_CONTENT_TYPE="${CONTENTRX_CONTENT_TYPE:-short_ui_copy}"
-export CONTENTRX_PATHS="${CONTENTRX_PATHS:-**/*.{tsx,jsx,html}}"
+# POSIX `sh` parameter expansion finds the FIRST `}` to close `${...}`,
+# which means an inline default containing braces (`{tsx,jsx,html}`)
+# silently corrupts the result when CONTENTRX_PATHS is already set:
+# the trailing `}` becomes a literal and the value ends with `}}`.
+# fnmatch then matches nothing and every PR run logs "no files
+# matched the path filter". Doing the default check explicitly avoids
+# the nested-brace pitfall.
+if [ -z "${CONTENTRX_PATHS:-}" ]; then
+    CONTENTRX_PATHS='**/*.{tsx,jsx,html}'
+fi
+export CONTENTRX_PATHS
 
 exec python /action/src/main.py

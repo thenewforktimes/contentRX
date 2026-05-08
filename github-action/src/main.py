@@ -316,7 +316,21 @@ def main() -> int:
     ]
 
     if not matching:
-        print("ContentRX: no files matched the path filter. Nothing to check.")
+        # Surface enough state to diagnose a future regression cheaply.
+        # The historical "no files matched" message gave no signal on
+        # whether the cause was an empty PR diff, a workspace path
+        # mismatch, a wrong glob, or a missing token.
+        print(
+            "ContentRX: no files matched the path filter. Nothing to check."
+        )
+        print(
+            f"ContentRX-debug: workspace={workspace}, "
+            f"workspace_exists={workspace.exists()}, "
+            f"changed_files={len(files)}, "
+            f"paths_glob={paths_glob!r}, "
+            f"github_token_set={'GITHUB_TOKEN' in os.environ}",
+            file=sys.stderr,
+        )
         _write_output("violations", "0")
         _write_output("passed", "true")
         return 0
