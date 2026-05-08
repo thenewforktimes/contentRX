@@ -76,10 +76,16 @@ def render_markdown(
         )
         if truncation_notice:
             body += "\n" + truncation_notice + "\n"
+        # Footer link wording: this comment IS the actionable surface;
+        # the dashboard page is the durable audit record once the PR
+        # closes. Earlier copy ("full report on dashboard") oversold
+        # the dashboard side and confused customers when they clicked
+        # through and found less detail there, not more. Audit-log
+        # framing is honest about what each surface does.
         if run_id:
             body += (
                 f"\n*Run by the [ContentRX](https://contentrx.io) GitHub Action — "
-                f"[full report on dashboard]"
+                f"[audit log]"
                 f"(https://contentrx.io/dashboard/runs/{run_id}).*"
             )
         else:
@@ -152,12 +158,16 @@ def render_markdown(
     lines.append("---")
     lines.append("")
     if run_id:
-        # PR-40 — the dashboard run page survives the PR being closed,
-        # the action log rolling over, etc. Linking from the footer
-        # preserves the audit trail without bloating the comment.
+        # PR-40 — the dashboard run page is the durable audit record
+        # once the PR closes and the action log rolls over. The
+        # comment above is the actionable surface (issue + diff-fenced
+        # suggestion render natively in GitHub's review UI); the
+        # dashboard link is for "what was flagged in this run last
+        # month?". Earlier copy ("full report on dashboard") implied
+        # the dashboard had MORE detail when it actually has less.
         lines.append(
             f"*Run by the [ContentRX](https://contentrx.io) GitHub Action — "
-            f"[full report on dashboard]"
+            f"[audit log]"
             f"(https://contentrx.io/dashboard/runs/{run_id}). "
             "Rotate your API key at the [dashboard](https://contentrx.io/dashboard).*"
         )

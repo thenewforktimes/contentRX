@@ -1,33 +1,44 @@
 /**
- * /dashboard/runs/[run_id] — per-run summary page (PR-40).
+ * /dashboard/runs/[run_id] — durable audit log for a single CI run.
  *
- * The GitHub Action posts a sticky PR comment that links here. PRs
- * close, action logs roll over, the comment scrolls past the PR
- * tab — this page is the durable record of what got flagged in that
- * workflow run.
+ * Positioning (the load-bearing decision): this page is an **audit
+ * log**, not a workflow surface. Customers fix findings in the PR
+ * comment the GitHub Action posts (renders the issue text + a diff-
+ * fenced suggestion natively in GitHub's review UI — far more
+ * actionable than anything we could build here). This page exists for
+ * after the PR closes, the comment scrolls past, and the engineer
+ * needs to answer "what did ContentRX flag in that run last month?"
  *
- * What's on the page:
- *   - run_id + earliest/latest log time in the run
- *   - rollups: total findings, files, hard violations vs review
- *   - per-file breakdown: each file's findings, with severity badge,
- *     issue text, and (when present) source-file line + moment
+ * The audit-log framing is forced by the privacy contract: the
+ * `violations` table stores `text_hash` (sha256), not the original
+ * string. So we cannot render the issue text or the suggestion —
+ * that data is intentionally not persisted. Pretending to be a
+ * "full report" surface would over-promise. We are an audit log:
+ * what got flagged, where, when, in what category. For the actionable
+ * surface, the customer goes back to the PR comment.
  *
- * Privacy contract (ADR 2026-04-25 / schema 2.0.0):
- *   - We render `severity`, `moment`, `content_type`, `file_path`,
- *     `issue` text equivalents — all already user-visible context.
- *   - We do NOT render `standard_id`. The select includes it for
- *     internal aggregation but the JSX never emits it.
- *   - We do NOT render hashed text — there's nothing useful for the
- *     user to do with a sha256.
+ * What renders:
+ *   - run_id + source surface + time range
+ *   - rollups: total findings, files touched, severity breakdown
+ *   - per-file list: severity dot + categorized metadata (content
+ *     type · moment), grouped by file path
  *
- * Auth: Clerk session required. Anyone on the team that owns the run
- * (matched via violations.team_id) can view it. Free/Pro users see
- * their own runs (team_id is null; we match user_id directly).
+ * Privacy contract (ADR 2026-04-25 / schema 3.0.0):
+ *   - NEVER renders `standard_id` (substrate, founder-only)
+ *   - NEVER renders hashed text (no value to the customer)
+ *   - NEVER renders `review_reason_subtype` here — those labels
+ *     ("low_confidence_mixed_signals", etc.) are designed for /admin
+ *     triage, not customer chrome. Out of context they read as
+ *     anxious chatbot voice and violate the calm-voice rule.
+ *   - WILL render: severity, content_type, moment, file_path
  *
- * No-result fallback: if the run_id matches no rows for this team,
- * render a "Run not found or expired" message rather than 404 — the
- * row may still exist but for a different team, and we don't want
- * the URL itself to leak run-id existence.
+ * Auth: Clerk session. Team members see the team's runs (matched via
+ * violations.team_id); solo users see their own (team_id null +
+ * user_id match).
+ *
+ * No-result fallback: render a friendly note rather than 404 — the
+ * row may exist for a different team, and the URL itself shouldn't
+ * leak run-id existence.
  */
 
 import { auth } from "@clerk/nextjs/server";
@@ -36,11 +47,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { getDb, schema } from "@/db";
-import {
-  humanizeContentType,
-  humanizeMoment,
-  humanizeReviewReason,
-} from "@/lib/humanize";
+import { humanizeContentType, humanizeMoment } from "@/lib/humanize";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 
 // Display cap: even runs with thousands of findings render at most
@@ -61,7 +68,6 @@ type ViolationRow = {
   contentType: string;
   severity: string;
   source: string;
-  reviewReasonSubtype: string | null;
 };
 
 export default async function RunPage({ params }: RunParams) {
@@ -107,7 +113,10 @@ export default async function RunPage({ params }: RunParams) {
         contentType: schema.violations.contentType,
         severity: schema.violations.severity,
         source: schema.violations.source,
-        reviewReasonSubtype: schema.violations.reviewReasonSubtype,
+        // review_reason_subtype intentionally not selected. Those
+        // labels are designed for /admin triage; out of context here
+        // they leak anxious chatbot voice. The audit log shows what
+        // got flagged, not why the engine wasn't sure.
       })
       .from(schema.violations)
       .where(filterClause)
@@ -132,12 +141,14 @@ export default async function RunPage({ params }: RunParams) {
   if (!stats || stats.total === 0) {
     return (
       <div className="flex flex-col gap-4">
-        <Eyebrow>Run</Eyebrow>
-        <h1 className="text-2xl font-semibold">{run_id}</h1>
+        <Eyebrow>Run audit log</Eyebrow>
+        <h1 className="text-2xl font-semibold tabular-nums">{run_id}</h1>
         <section className="rounded-lg border border-line p-6">
           <p className="text-sm text-default">
-            This run has no findings on your account, or it expired.
-            ContentRX retains run history for 90 days.
+            No findings logged for this run. Either the GitHub Action
+            checked your strings and they all passed, or the run was
+            from a different team. ContentRX keeps run history for
+            90 days.
           </p>
           <Link
             href="/dashboard"
@@ -186,12 +197,27 @@ export default async function RunPage({ params }: RunParams) {
   return (
     <div className="flex flex-col gap-6">
       <header>
-        <Eyebrow>Run</Eyebrow>
+        <Eyebrow>Run audit log</Eyebrow>
         <h1 className="mt-2 text-2xl font-semibold tabular-nums">{run_id}</h1>
         <p className="mt-1 text-sm text-default">
           {sourceLabel} · {formatTimeRange(earliestAt, latestAt)}
         </p>
       </header>
+
+      {/*
+        The audit log shows what got flagged, not the issue text or
+        suggestion (privacy contract: only sha256 is stored). For the
+        actionable view of the findings, the customer goes back to
+        the GitHub Action's PR comment — which renders the issue +
+        a diff-fenced suggestion natively in GitHub's review UI. The
+        callout below makes that division of labor explicit so this
+        page doesn't read like it's missing content.
+      */}
+      <aside className="rounded-md border border-line bg-overlay p-3 text-xs text-default">
+        Audit log only. To act on findings, open the ContentRX comment
+        on the original pull request. It carries the issue text and a
+        diff-fenced suggestion for each one.
+      </aside>
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="Findings" value={stats.total} />
@@ -287,12 +313,6 @@ function FileBlock({
                   </>
                 )}
               </div>
-              {it.reviewReasonSubtype && (
-                <div className="mt-1 text-xs text-amber-700 dark:text-amber-400">
-                  Review recommended:{" "}
-                  {humanizeReviewReason(it.reviewReasonSubtype)}
-                </div>
-              )}
             </div>
           </li>
         ))}
