@@ -77,6 +77,34 @@ type ViolationRow = {
   // shows for the same row. Nullable: legacy violations rows without
   // a checkEventId, or rows whose usage_event was pruned past TTL.
   textPreview: string | null;
+  // Identity of the input string. The same string flagged against N
+  // standards produces N rows that all share the same textHash; the
+  // rendering layer collapses by textHash so a string appears once
+  // with a severity-pip cluster, not N times in identical-looking
+  // rows.
+  textHash: string;
+};
+
+/** A unique input string within one file, with all the violation
+ * rows that fired against it. The renderer shows one of these per
+ * card; the sub-rows surface on expand. */
+type StringGroup = {
+  textHash: string;
+  textPreview: string | null;
+  contentType: string;
+  moment: string | null;
+  /** All violations that fired on this string, in insertion order
+   * from the SQL `ORDER BY createdAt`. */
+  violations: ViolationRow[];
+  /** Rank used for sort within a file: rank of the highest-severity
+   * violation in this group. high=3, medium=2, low=1. */
+  maxSeverityRank: number;
+};
+
+const SEVERITY_RANK: Record<string, number> = {
+  high: 3,
+  medium: 2,
+  low: 1,
 };
 
 export default async function RunPage({ params }: RunParams) {
@@ -135,6 +163,11 @@ export default async function RunPage({ params }: RunParams) {
         // violations without a checkEventId, or usage_event pruned
         // past TTL.
         textPreview: schema.usageEvents.textPreview,
+        // textHash is the identity of the input string. The renderer
+        // collapses rows by textHash so a string flagged against
+        // multiple standards appears once with a severity-pip cluster,
+        // not N times in identical-looking rows.
+        textHash: schema.violations.textHash,
       })
       .from(schema.violations)
       .leftJoin(
@@ -148,6 +181,11 @@ export default async function RunPage({ params }: RunParams) {
       .select({
         total: sql<number>`count(*)::int`,
         fileCount: sql<number>`count(distinct ${schema.violations.filePath})::int`,
+        // Unique-string count across the whole run (not just the
+        // displayed-rows window). The collapse-by-textHash render
+        // uses this to be honest about the dedup ratio in the stat
+        // card row: "5 strings · 7 findings."
+        stringCount: sql<number>`count(distinct ${schema.violations.textHash})::int`,
         highCount: sql<number>`count(*) filter (where ${schema.violations.severity} = 'high')::int`,
         mediumCount: sql<number>`count(*) filter (where ${schema.violations.severity} = 'medium')::int`,
         lowCount: sql<number>`count(*) filter (where ${schema.violations.severity} = 'low')::int`,
@@ -184,18 +222,62 @@ export default async function RunPage({ params }: RunParams) {
   }
 
   // Stats come from the SQL aggregate over the full set; the displayed
-  // rows may be a capped subset. Group capped rows by file for display.
-  const byFile = new Map<string, ViolationRow[]>();
+  // rows may be a capped subset. Two-level grouping for display:
+  //   1. by file path
+  //   2. within each file, by textHash (one card per unique input
+  //      string; severity-pip cluster shows how many rules fired)
+  //
+  // Without the textHash collapse, a single string flagged against
+  // 4 standards rendered as 4 visually identical rows — at scale
+  // (50-string PR × ~3 rules per string = 150 rows of repeats) the
+  // page becomes unreadable. The collapse reflects the user's mental
+  // model (strings, not rule fires) while preserving full detail
+  // via the per-card expand.
+  const byFile = new Map<string, Map<string, StringGroup>>();
   for (const row of rows) {
-    const key = row.filePath ?? "(no file)";
-    const list = byFile.get(key);
-    if (list) list.push(row);
-    else byFile.set(key, [row]);
+    const filePath = row.filePath ?? "(no file)";
+    let perFile = byFile.get(filePath);
+    if (!perFile) {
+      perFile = new Map<string, StringGroup>();
+      byFile.set(filePath, perFile);
+    }
+    const existing = perFile.get(row.textHash);
+    const severityRank = SEVERITY_RANK[row.severity] ?? 0;
+    if (existing) {
+      existing.violations.push(row);
+      if (severityRank > existing.maxSeverityRank) {
+        existing.maxSeverityRank = severityRank;
+      }
+    } else {
+      perFile.set(row.textHash, {
+        textHash: row.textHash,
+        textPreview: row.textPreview,
+        contentType: row.contentType,
+        moment: row.moment,
+        violations: [row],
+        maxSeverityRank: severityRank,
+      });
+    }
   }
+
   // Files sorted by finding count desc — biggest hot-spots first.
-  const sortedFiles = [...byFile.entries()].sort(
-    (a, b) => b[1].length - a[1].length,
-  );
+  // Within each file, strings sorted by max severity then finding
+  // count, so the loudest problems rise to the top.
+  const sortedFiles: Array<[string, StringGroup[]]> = [...byFile.entries()]
+    .map(([file, groupMap]) => {
+      const stringGroups = [...groupMap.values()].sort((a, b) => {
+        if (b.maxSeverityRank !== a.maxSeverityRank) {
+          return b.maxSeverityRank - a.maxSeverityRank;
+        }
+        return b.violations.length - a.violations.length;
+      });
+      return [file, stringGroups] as [string, StringGroup[]];
+    })
+    .sort((a, b) => {
+      const aFindings = a[1].reduce((sum, g) => sum + g.violations.length, 0);
+      const bFindings = b[1].reduce((sum, g) => sum + g.violations.length, 0);
+      return bFindings - aFindings;
+    });
 
   const earliestAt = stats.earliestAt
     ? new Date(stats.earliestAt)
@@ -240,8 +322,9 @@ export default async function RunPage({ params }: RunParams) {
         them in GitHub&apos;s review UI.
       </aside>
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Stat label="Findings" value={stats.total} />
+        <Stat label="Strings" value={stats.stringCount} />
         <Stat label="Files" value={stats.fileCount} />
         <Stat label="High" value={stats.highCount} tone="high" />
         <Stat
@@ -260,8 +343,8 @@ export default async function RunPage({ params }: RunParams) {
       )}
 
       <section className="flex flex-col gap-4">
-        {sortedFiles.map(([file, items]) => (
-          <FileBlock key={file} file={file} items={items} />
+        {sortedFiles.map(([file, stringGroups]) => (
+          <FileBlock key={file} file={file} groups={stringGroups} />
         ))}
       </section>
 
@@ -304,51 +387,135 @@ function Stat({
 
 function FileBlock({
   file,
-  items,
+  groups,
 }: {
   file: string;
-  items: ViolationRow[];
+  groups: StringGroup[];
 }) {
+  const totalFindings = groups.reduce((sum, g) => sum + g.violations.length, 0);
   return (
     <section className="rounded-lg border border-line p-4">
-      <header className="mb-3 flex items-center justify-between">
-        <code className="text-sm font-medium">{file}</code>
-        <span className="text-xs text-quiet">
-          {items.length} {items.length === 1 ? "finding" : "findings"}
+      <header className="mb-3 flex items-baseline justify-between gap-3">
+        <code className="truncate text-sm font-medium" title={file}>
+          {file}
+        </code>
+        <span className="whitespace-nowrap text-xs text-quiet">
+          {groups.length} {groups.length === 1 ? "string" : "strings"} ·{" "}
+          {totalFindings} {totalFindings === 1 ? "finding" : "findings"}
         </span>
       </header>
       <ul className="flex flex-col gap-2">
-        {items.map((it) => (
-          <li
-            key={it.id}
-            className="flex items-start gap-3 rounded-md bg-overlay p-3 text-sm"
-          >
-            <SeverityDot severity={it.severity} />
-            <div className="flex-1 min-w-0">
-              {it.textPreview && (
-                <p className="truncate font-mono text-xs text-strong">
-                  {it.textPreview}
-                </p>
-              )}
-              <div
-                className={
-                  it.textPreview ? "mt-1 text-xs text-quiet" : "text-default"
-                }
-              >
-                {humanizeContentType(it.contentType)}
-                {it.moment && (
-                  <>
-                    {" · "}
-                    {humanizeMoment(it.moment)}
-                  </>
-                )}
-              </div>
-            </div>
-          </li>
+        {groups.map((g) => (
+          <StringRow key={g.textHash} group={g} />
         ))}
       </ul>
     </section>
   );
+}
+
+/** One row per unique input string. The native <details> element
+ * gives us free expand/collapse with no client JS. The summary
+ * shows the severity-pip cluster + truncated string + categorised
+ * metadata; the body shows each individual rule fire as a sub-row. */
+function StringRow({ group }: { group: StringGroup }) {
+  const findingCount = group.violations.length;
+  const expandable = findingCount > 1;
+  const summary = (
+    <div className="flex items-start gap-3">
+      <SeverityPips severities={group.violations.map((v) => v.severity)} />
+      <div className="min-w-0 flex-1">
+        {group.textPreview ? (
+          <p className="truncate font-mono text-xs text-strong">
+            {group.textPreview}
+          </p>
+        ) : (
+          <p className="font-mono text-xs italic text-quiet">
+            (no preview available)
+          </p>
+        )}
+        <div className="mt-1 flex items-center gap-2 text-xs text-quiet">
+          <span>
+            {findingCount} {findingCount === 1 ? "finding" : "findings"} ·{" "}
+            {humanizeContentType(group.contentType)}
+            {group.moment && (
+              <>
+                {" · "}
+                {humanizeMoment(group.moment)}
+              </>
+            )}
+          </span>
+          {expandable && (
+            <span aria-hidden className="text-quiet">
+              ▸
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!expandable) {
+    return (
+      <li className="rounded-md bg-overlay p-3 text-sm">
+        {summary}
+      </li>
+    );
+  }
+  return (
+    <li>
+      <details className="group rounded-md bg-overlay p-3 text-sm [&[open]>summary>div>div>div>span[aria-hidden]]:rotate-90">
+        <summary className="cursor-pointer list-none">{summary}</summary>
+        <ul className="mt-3 ml-7 flex flex-col gap-1.5 border-l border-line pl-3">
+          {group.violations.map((v) => (
+            <li
+              key={v.id}
+              className="flex items-center gap-2 text-xs text-default"
+            >
+              <SeverityDot severity={v.severity} />
+              <span className="text-strong">
+                {humanizeSeverityLabel(v.severity)}
+              </span>
+              {v.moment && (
+                <>
+                  <span className="text-quiet">·</span>
+                  <span>{humanizeMoment(v.moment)}</span>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      </details>
+    </li>
+  );
+}
+
+/** Up to 4 dots representing each violation's severity. Beyond 4
+ * we render "+N" instead so the cluster doesn't sprawl. */
+function SeverityPips({ severities }: { severities: string[] }) {
+  const visible = severities.slice(0, 4);
+  const overflow = severities.length - visible.length;
+  return (
+    <span
+      className="mt-1 inline-flex flex-none items-center gap-0.5"
+      aria-label={`${severities.length} findings`}
+    >
+      {visible.map((s, i) => (
+        <SeverityDot key={i} severity={s} />
+      ))}
+      {overflow > 0 && (
+        <span className="ml-1 text-[10px] font-medium tabular-nums text-quiet">
+          +{overflow}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function humanizeSeverityLabel(severity: string): string {
+  if (severity === "high") return "High";
+  if (severity === "medium") return "Medium";
+  if (severity === "low") return "Low";
+  return severity.charAt(0).toUpperCase() + severity.slice(1);
 }
 
 function SeverityDot({ severity }: { severity: string }) {
