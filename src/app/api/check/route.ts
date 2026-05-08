@@ -270,20 +270,38 @@ export async function POST(req: Request) {
     });
     return json(
       {
-        error: "Monthly quota exhausted",
+        error: "quota_exhausted",
         quota,
         used: claim.count,
         checks_required: checksNeeded,
         plan: auth.plan,
         upgrade_url: `${appUrl()}/pricing?from=quota`,
         resets_at: monthResetISO(),
+        // Phase 4: surface overage opt-in info on the 402 so customers
+        // know they can flip the switch instead of waiting for reset.
+        // overage_available is false on Free (Free can't opt in) and on
+        // paid plans during a BETA_OVERAGE=false window.
+        overage_available: claim.overageAvailable ?? false,
+        overage_rate_cents: claim.overageRateCents,
+        opt_in_url: claim.optInUrl
+          ? `${appUrl()}${claim.optInUrl}`
+          : undefined,
       },
       { status: 402 },
     );
   }
   const newUsed = claim.count;
   const remainingAfter = Math.max(0, quota - newUsed);
-  if (remainingAfter <= warningThreshold(auth.plan, quota) && remainingAfter > 0) {
+  // Threshold-warning emails fire only on the in-quota path; once a
+  // user crosses into overage they're past the cap and the
+  // "approaching limit" framing no longer applies. The 100% email
+  // already fired the first time the cap closed (claim went denied
+  // before the opt-in flipped on).
+  if (
+    !claim.viaOverage &&
+    remainingAfter <= warningThreshold(auth.plan, quota) &&
+    remainingAfter > 0
+  ) {
     void notifyQuotaWarning({
       to: auth.user.email,
       used: newUsed,

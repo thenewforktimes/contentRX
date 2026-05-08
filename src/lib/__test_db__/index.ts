@@ -64,6 +64,7 @@ const TABLES_TO_RESET = [
   "violation_overrides",
   "violations",
   "usage_events",
+  "overage_state",
   "usage",
   "subscriptions",
   "users",
@@ -118,6 +119,7 @@ export async function seedUser(
     apiKeyHash: partial.apiKeyHash,
     apiKeyPrefix: partial.apiKeyPrefix,
     stripeCustomerId: partial.stripeCustomerId,
+    overageOptInActive: partial.overageOptInActive ?? false,
   });
   return id;
 }
