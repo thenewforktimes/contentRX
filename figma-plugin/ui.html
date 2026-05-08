@@ -4736,7 +4736,7 @@ function renderQuotaBanner(state) {
     title = "Approaching your monthly limit";
     body =
       usage.plan === "free"
-        ? `${remaining} scan${remaining === 1 ? "" : "s"} left this month. Upgrade to Pro for 5,000 scans.`
+        ? `${remaining} scan${remaining === 1 ? "" : "s"} left this month. Upgrade to Pro for 1,000 scans.`
         : `${remaining} scan${remaining === 1 ? "" : "s"} left this month.`;
     cta = usage.plan === "free" ? "Upgrade" : "";
   } else {

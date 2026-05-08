@@ -134,7 +134,7 @@ $ contentrx --content-type button_cta "Read the docs"
   Verb-first. Object named. Length appropriate for a CTA.
 ```
 
-Takes <2 seconds per check. Free tier gives 25 checks/month for
+Takes <2 seconds per check. Free tier gives 10 checks/month for
 exactly this kind of exploration.
 
 ### 2. Linting an i18n catalog during CI
