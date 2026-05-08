@@ -16,7 +16,16 @@ set -e
 cd "${GITHUB_WORKSPACE:-/github/workspace}"
 
 export CONTENTRX_API_KEY="${CONTENTRX_API_KEY:?CONTENTRX_API_KEY is required}"
-export CONTENTRX_API_URL="${CONTENTRX_API_URL:-}"
+# Only export CONTENTRX_API_URL when the consumer actually set
+# `api-url`. The action.yml input default is the empty string (so the
+# yaml schema reads cleanly when omitted). If we re-export `""` here,
+# the CLI sees `CONTENTRX_API_URL=""` and its `os.environ.get(..., default)`
+# never kicks in — the URL fails the https:// check and every check
+# call exits 2. Skipping the export when blank lets the CLI use its
+# own DEFAULT_API_URL.
+if [ -n "${CONTENTRX_API_URL:-}" ]; then
+    export CONTENTRX_API_URL
+fi
 export CONTENTRX_STRICT="${CONTENTRX_STRICT:-false}"
 export CONTENTRX_CONTENT_TYPE="${CONTENTRX_CONTENT_TYPE:-short_ui_copy}"
 # POSIX `sh` parameter expansion finds the FIRST `}` to close `${...}`,

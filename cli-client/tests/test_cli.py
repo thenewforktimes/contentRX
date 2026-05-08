@@ -537,3 +537,48 @@ def test_main_batch_yes_skips_confirm(
 
     code = main(["--batch", str(batch), "--yes"])
     assert code == EXIT_OK
+
+
+# ---------------------------------------------------------------------------
+# _api_base_url URL resolution
+# ---------------------------------------------------------------------------
+class Test_ApiBaseUrl:
+    """The CLI accepts CONTENTRX_API_URL with HTTPS; falls back to the
+    production default when the var is missing OR an empty string. The
+    GitHub Action's docker env exports CONTENTRX_API_URL="" when the
+    consumer doesn't set api-url — empty-string-as-missing is the case
+    that 0.4.1 broke and 0.4.2 restores."""
+
+    def test_missing_var_uses_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("CONTENTRX_API_URL", raising=False)
+        assert cli._api_base_url() == cli.DEFAULT_API_URL
+
+    def test_empty_string_uses_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Reproduces the GitHub Action wiring: the action.yml input
+        # default is '', the docker env carries it through as "", and
+        # os.environ.get(name, default) does NOT honour `default` when
+        # the var is present-but-empty.
+        monkeypatch.setenv("CONTENTRX_API_URL", "")
+        assert cli._api_base_url() == cli.DEFAULT_API_URL
+
+    def test_https_value_returned_verbatim(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("CONTENTRX_API_URL", "https://staging.example.com")
+        assert cli._api_base_url() == "https://staging.example.com"
+
+    def test_trailing_slash_stripped(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("CONTENTRX_API_URL", "https://staging.example.com/")
+        assert cli._api_base_url() == "https://staging.example.com"
+
+    def test_http_without_opt_in_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("CONTENTRX_API_URL", "http://localhost:3000")
+        monkeypatch.delenv("CONTENTRX_INSECURE_HTTP", raising=False)
+        with pytest.raises(CliError) as excinfo:
+            cli._api_base_url()
+        assert excinfo.value.code == EXIT_USAGE
+
+    def test_http_with_insecure_opt_in_returns_url(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("CONTENTRX_API_URL", "http://localhost:3000")
+        monkeypatch.setenv("CONTENTRX_INSECURE_HTTP", "1")
+        assert cli._api_base_url() == "http://localhost:3000"
