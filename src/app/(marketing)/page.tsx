@@ -274,21 +274,34 @@ export default function Home() {
         </ul>
       </Section>
 
-      <Section eyebrow="Why it works" title="What ContentRX is great at.">
+      {/*
+        Section frame: the cards are commitments, not outcome claims.
+        The earlier copy ("Why it works" + "What ContentRX is great
+        at") implied the system has already proven itself — but the
+        latest measurement (reports/accuracy/latest.json) shows
+        self-drift κ = 0.57 with a wide CI on a small sample, and the
+        system kappa is still pending. Saying "great at" was
+        overpromising. The card-level frame now names what we commit
+        to do, not how good we already are. Each of the three cards
+        re-reads as a commitment when the section frames them that
+        way: we publish κ with CIs (incl. drift weeks), we hold the
+        style guides so you don't, your team's rules override ours.
+      */}
+      <Section eyebrow="Commitments" title="What we commit to.">
         <ul className="mt-2 grid gap-4 sm:grid-cols-3 sm:gap-3">
           <li className="rounded-lg border border-line bg-raised p-5">
             <p className="text-sm font-semibold text-strong">
               Calibrated judgment.
             </p>
             <p className="mt-2 text-sm text-default">
-              Content design discretion measured against a held-out
-              golden set. Published kappa with a 95% confidence
-              interval.{" "}
+              Content design discretion benchmarked against a held-out
+              golden set. We publish kappa with its 95% confidence
+              interval, including the weeks we drift.{" "}
               <Link
                 href="/accuracy"
                 className="underline underline-offset-2"
               >
-                See the numbers
+                See what we measured
               </Link>
               .
             </p>
