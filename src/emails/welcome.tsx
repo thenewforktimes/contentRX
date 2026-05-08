@@ -23,10 +23,10 @@ export function WelcomeEmail({
         First, <Link href={`${appUrl}/install#mcp`}>install the MCP server</Link>{" "}
         for Claude Code or Cursor and check a string in 30 seconds.
         <br />
-        Next, <Link href={`${appUrl}/dashboard`}>open your dashboard</Link> to
+        Then, <Link href={`${appUrl}/dashboard`}>open your dashboard</Link> to
         grab an API key for the CLI or GitHub Action.
         <br />
-        Last, reply to this email. We read every message.
+        Finally, reply to this email. We read every message.
       </Text>
       <Text style={{ marginTop: 20 }}>
         <Button href={`${appUrl}/dashboard`} style={primaryButton}>
