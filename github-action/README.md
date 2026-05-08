@@ -203,13 +203,11 @@ for e in extract_strings(Path('some/file.tsx')):
 - **Regex extraction misses dynamic content.** Anything that flows
   through a template string or a translation function
   (`t('welcome_back')`) isn't visible to the extractor.
-- **No comment replacement yet.** Multiple workflow runs create multiple
-  comments on the same PR. A future version will update the existing
-  comment in place.
 - **Rate-limited by your plan.** Each extracted string is one API call.
-  Free plans have 25 checks/month; a modest PR with 30 strings exhausts
-  a Free quota in one run. Use a paid plan for CI.
+  Free plans have 10 checks/month, which is for evaluation, not for
+  CI — even a small PR will exhaust it. Pro at $39/month (1,000
+  checks) is the minimum for a real codebase.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+In-monorepo source: [Functional Source License, FSL-1.1-MIT](../LICENSE) (auto-converts to MIT after the FSL grant period). When this directory splits to the standalone `contentrx-action` repo for the Marketplace, that repo ships under MIT. See [LICENSE](./LICENSE).

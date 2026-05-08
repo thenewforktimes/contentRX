@@ -111,7 +111,7 @@ export default function AdminRefinementLogPage() {
         </dl>
       </header>
 
-      <details className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
+      <details className="rounded-lg border border-line bg-raised p-4">
         <summary className="cursor-pointer text-sm font-semibold text-strong">
           Add a refinement candidate
         </summary>
@@ -142,7 +142,7 @@ export default function AdminRefinementLogPage() {
             </p>
           </header>
           {log.byStatus[section.status].length === 0 ? (
-            <p className="rounded-lg border border-dashed border-line-strong bg-white px-4 py-3 text-xs text-quiet dark:bg-stone-900">
+            <p className="rounded-lg border border-dashed border-line-strong bg-raised px-4 py-3 text-xs text-quiet">
               {section.empty}
             </p>
           ) : (
@@ -170,7 +170,7 @@ function RefinementCard({
   validStandardIds: ReadonlySet<string>;
 }) {
   return (
-    <li className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
+    <li className="rounded-lg border border-line bg-raised p-4">
       <header className="flex flex-wrap items-baseline gap-2">
         <span className="font-mono text-xs text-default">
           {entry.id}
@@ -373,7 +373,7 @@ function todayIso(): string {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-line bg-white px-3 py-2 dark:bg-stone-900">
+    <div className="rounded-lg border border-line bg-raised px-3 py-2">
       <dt className="text-[10px] uppercase tracking-wide text-quiet">
         {label}
       </dt>

@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
  * Site-footer copy-pin tests.
  *
  * The global footer is the canonical carrier of:
- *   - the accountability surface (Accuracy, Calibration, Sources, Ethics)
+ *   - the accountability surface (Accuracy, Calibration, Ethics)
  *   - the policy surface (Privacy, Security)
  *   - the company surface (About, Status, contact email)
  *   - copyright + license attribution
@@ -16,6 +16,10 @@ import { describe, expect, it } from "vitest";
  * suite. Prose inside the footer is editable; the link set is not,
  * because individual page tests now defer to this surface for
  * cross-page navigation (see e.g. src/app/(marketing)/accuracy/page.test.ts).
+ *
+ * 2026-05-06: /sources retired (ADR 2026-05-06). The transparency +
+ * opt-out commitment folds into /ethics as Commitment 4; the route
+ * now 308s to /ethics#no-stolen-content.
  */
 
 const FOOTER_PATH = path.join(__dirname, "site-footer.tsx");
@@ -27,13 +31,19 @@ describe("site footer (src/components/site-footer.tsx)", () => {
     for (const href of [
       "/accuracy",
       "/calibration",
-      "/sources",
       "/ethics",
       "/privacy",
       "/security",
     ]) {
       expect(source).toContain(`href: "${href}"`);
     }
+  });
+
+  it("does not carry a /sources link (route retired 2026-05-06)", () => {
+    // /sources retired per ADR 2026-05-06. The route 308s to
+    // /ethics#no-stolen-content; the footer link must not return —
+    // a stray re-add would imply the route is back.
+    expect(source).not.toContain(`href: "/sources"`);
   });
 
   it("carries the Product column with the buyable surfaces", () => {

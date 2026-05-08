@@ -80,7 +80,7 @@ won't fit. Two ways to scale:
   decrement). Still pays Anthropic credit for each LLM call. The
   engine's `to_public_envelope()` is identical to /api/check's
   output, so the artifact shape is the same either way.
-- **Pro plan** = 5,000 scans/month. Enough for several full crawls.
+- **Pro plan** = 1,000 scans/month. Use the Scale plan (60,000) for full-codebase crawls.
 
 For first iteration on a new target, the workflow above with
 `--limit 25` gets a representative sample without burning anyone's

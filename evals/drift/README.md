@@ -6,6 +6,17 @@ The resulting **measured ceiling** is the single most important number
 in the graduation ladder — Session 10's thresholds are expressed as
 ratios against it, so the ladder auto-recalibrates each quarter.
 
+**2026-05-06 update.** The previously committed
+`panels/2026-q2.json` was deleted in the product-extraction cleanup
+(ADR
+[`2026-05-06-product-extraction-deletion.md`](../../decisions/2026-05-06-product-extraction-deletion.md))
+because every entry's `case_id` and `source_file` named a
+third-party brand whose content was extracted from public-facing
+experiences. Regenerate locally from license-compatible cases when
+the corpus is reseeded; no committed panel until then. The
+`tools/drift_check.py build-panel` command still works — it just
+won't have a committed input until a clean panel is built.
+
 ## Why quarterly
 
 Graduation thresholds depend on the measured ceiling. An annual
@@ -160,8 +171,8 @@ without the anchoring effect of seeing the past verdict.
   },
   "entries": [
     {
-      "case_id": "apple-001",
-      "source_file": "apple_eval_cases.json",
+      "case_id": "sample-001",
+      "source_file": "sample_eval_cases.json",
       "moment": "wayfinding",
       "content_type": "heading",
       "standard_id": "PRF-03",
@@ -178,8 +189,8 @@ without the anchoring effect of seeing the past verdict.
 ```jsonc
 {
   "entries": [
-    {"case_id": "apple-001", "human_verdict": "pass", "human_confidence": "high"},
-    {"case_id": "apple-002", "human_verdict": "fail", "human_confidence": "medium"},
+    {"case_id": "sample-001", "human_verdict": "pass", "human_confidence": "high"},
+    {"case_id": "sample-002", "human_verdict": "fail", "human_confidence": "medium"},
     ...
   ]
 }

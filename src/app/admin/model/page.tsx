@@ -128,7 +128,7 @@ export default async function AdminModelPage() {
             <li key={m.id}>
               <Link
                 href={`/admin/model/moments/${m.id}`}
-                className="block h-full rounded-lg border border-line bg-white p-4 transition hover:border-line-strong dark:bg-stone-900"
+                className="block h-full rounded-lg border border-line bg-raised p-4 transition hover:border-line-strong"
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="font-mono text-xs text-quiet">
@@ -168,7 +168,7 @@ export default async function AdminModelPage() {
         {categories.map((cat) => (
           <article
             key={cat.id}
-            className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900"
+            className="rounded-lg border border-line bg-raised p-4"
           >
             <header className="flex items-baseline justify-between">
               <h3 className="text-base font-semibold text-strong">
@@ -179,7 +179,7 @@ export default async function AdminModelPage() {
                 {cat.standards.length === 1 ? "" : "s"}
               </span>
             </header>
-            <ul className="mt-3 divide-y divide-stone-100 dark:divide-stone-800">
+            <ul className="mt-3 divide-y divide-line">
               {cat.standards.map((s) => {
                 const a = activityByStandard.get(s.id);
                 const hot = a ? needsAttention(a) : false;

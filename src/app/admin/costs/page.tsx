@@ -108,7 +108,7 @@ export default async function AdminCostsPage() {
             {pausedUsers.map((user) => (
               <li
                 key={user.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-white px-3 py-2 dark:bg-stone-900"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-raised px-3 py-2"
               >
                 <div>
                   <p className="font-medium text-strong">
@@ -141,7 +141,7 @@ export default async function AdminCostsPage() {
           </p>
         ) : (
           <div className="mt-3 overflow-x-auto rounded-lg border border-line">
-            <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
+            <table className="min-w-full divide-y divide-line text-sm">
               <thead className="bg-overlay text-left text-xs font-medium uppercase tracking-wide text-quiet">
                 <tr>
                   <th className="px-4 py-2">User</th>
@@ -151,7 +151,7 @@ export default async function AdminCostsPage() {
                   <th className="px-4 py-2 text-right">Monthly threshold</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100 dark:divide-stone-900">
+              <tbody className="divide-y divide-line">
                 {usersWithActivity.map((user) => {
                   const rows = rowsByUser.get(user.id) ?? [];
                   const total = totalForUser(rows);
@@ -200,7 +200,7 @@ export default async function AdminCostsPage() {
           </p>
         ) : (
           <div className="mt-3 overflow-x-auto rounded-lg border border-line">
-            <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
+            <table className="min-w-full divide-y divide-line text-sm">
               <thead className="bg-overlay text-left text-xs font-medium uppercase tracking-wide text-quiet">
                 <tr>
                   <th className="px-4 py-2">Day</th>
@@ -209,7 +209,7 @@ export default async function AdminCostsPage() {
                   <th className="px-4 py-2 text-right">Events</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100 dark:divide-stone-900">
+              <tbody className="divide-y divide-line">
                 {rollup.map((row, i) => {
                   const user = userById.get(row.userId);
                   return (

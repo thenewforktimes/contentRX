@@ -317,11 +317,29 @@ class TestByLevel:
 
 
 class TestStandardsCounts:
-    def test_total_locks_at_47(self):
+    def test_total_reads_from_canonical_library(self):
+        # Pre-2026-05-07 this asserted == 47 as a hardcoded constant.
+        # The constant drifted (library reached 49 standards while the
+        # generator + tests still said 47); the fix moved
+        # TOTAL_STANDARDS to a runtime read of the canonical library
+        # so the count auto-updates as standards land. Assertion
+        # pivoted to range + library-match: total must be at least the
+        # current floor (49) and equal whatever the canonical library
+        # reports.
         snap = accuracy_generator.build_snapshot(
             readiness=None, drift=None, now=FIXED_NOW
         )
-        assert snap.standards_total == 47
+        assert snap.standards_total >= 49, (
+            "Library has at least 49 standards as of 2026-05-07. If "
+            "this test fails because the library shrank, confirm "
+            "whether the standards retirement was intentional and "
+            "lower this floor."
+        )
+        # The dynamic read should match whatever
+        # _read_total_standards() returns from the library.
+        assert (
+            snap.standards_total == accuracy_generator._read_total_standards()
+        )
 
     def test_measured_counts_only_standards_with_kappa(self):
         snap = accuracy_generator.build_snapshot(

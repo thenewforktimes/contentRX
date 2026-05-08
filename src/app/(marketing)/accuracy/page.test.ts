@@ -64,8 +64,8 @@ describe("/accuracy page source", () => {
   });
 
   // Cross-references to the rest of the accountability surface
-  // (/ethics, /sources, /calibration) used to live at the bottom of
-  // this page. They moved to the global <SiteFooter> when the
+  // (/ethics, /calibration) used to live at the bottom of this
+  // page. They moved to the global <SiteFooter> when the
   // (marketing) route group's layout shipped — see
   // src/components/site-footer.tsx for the canonical Trust column.
   // The cross-link assertion now lives in

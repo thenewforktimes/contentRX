@@ -34,6 +34,7 @@ import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { ApiKeyPanel } from "../api-key-panel";
 import { SubscriptionPanel } from "../subscription-panel";
 import { DeleteAccountSection } from "./delete-account-section";
+import { ManageAccountButton } from "./manage-account-button";
 
 export const metadata = {
   title: "Settings. ContentRX",
@@ -111,12 +112,7 @@ function AccountPanel({ email }: { email: string }) {
         your email, password, or two-factor authentication in your
         account profile.
       </p>
-      <Link
-        href="/sign-in/account"
-        className="inline-flex items-center rounded-md border border-line-strong px-3 py-1.5 text-xs font-medium hover:bg-hover"
-      >
-        Manage account
-      </Link>
+      <ManageAccountButton />
     </section>
   );
 }

@@ -13,10 +13,12 @@
  *   9. Return the result + quota metadata
  */
 
+import { createId } from "@paralleldrive/cuid2";
 import { z } from "zod";
 import { publicCheckEnvelope } from "@/lib/api-envelope";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { resolveAuth } from "@/lib/auth";
+import { safeAfter } from "@/lib/safe-after";
 import {
   checkCostPause,
   evaluateAndPauseIfExceeded,
@@ -27,7 +29,7 @@ import {
   findMatchingExample,
   shortCircuitFromExample,
 } from "@/lib/custom-examples";
-import { appUrl as emailAppUrl, sendEmail } from "@/lib/email";
+import { appUrl, sendEmail } from "@/lib/email";
 import { AUDIENCES, CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 import {
   evaluate,
@@ -46,9 +48,10 @@ import {
   detectSensitivePatterns,
   sensitiveDataErrorMessage,
 } from "@/lib/pii-screen";
-import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
+import { currentMonth, monthResetISO, monthlyQuota, type Plan } from "@/lib/quotas";
 import { logSafeError } from "@/lib/safe-error-log";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { SURFACE_SOURCES } from "@/lib/surfaces";
 import {
   applyAddedRules,
   applyDisabledFilter,
@@ -138,7 +141,7 @@ const RequestSchema = z.object({
   // surface-attribution fix PR. Rogue callers now get a 400 instead of
   // polluting analytics. "dashboard" matches the existing terminology in
   // violation_overrides + correction-feedback source enums.
-  source: z.enum(["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"]),
+  source: z.enum(SURFACE_SOURCES),
   // Optional file_path, populated by the GitHub Action only. Upper
   // bound guards against repo paths that could swell the violations
   // table (typical paths are well under this).
@@ -260,36 +263,82 @@ export async function POST(req: Request) {
   // for n > 1).
   const meterDecision = meter(text);
   const checksNeeded = meterDecision.unitsConsumed;
-  const claim = await claimQuotaSlots(auth.user.id, checksNeeded, quota);
+  // Team plans pool a single monthly quota across all members. Scope
+  // the claim/usage row at the team owner so a member's call decrements
+  // the shared count, and the dashboard's per-member read sees the
+  // pooled total. teamScope(auth) returns auth.teamOwnerUserId for
+  // members; auth.user.id for owners and non-team users.
+  const usageScopeUserId = teamScope(auth);
+  const claim = await claimQuotaSlots(usageScopeUserId, checksNeeded, quota);
   if (!claim.granted) {
-    void notifyQuotaExhausted({
-      to: auth.user.email,
-      plan: auth.plan,
-      quota,
-      userId: auth.user.id,
-    });
+    // Only fire the "you've hit your limit" email when the user is
+    // truly at or past the cap. A multi-unit claim (n > 1) that gets
+    // denied because count + n > quota — but count < quota — is a
+    // transient per-call denial, not exhaustion. Telling that user
+    // "you've hit this month's ContentRX limit" is wrong: they still
+    // have remaining capacity, just not enough for THIS request.
+    // The 402 response already carries `checks_required` so the
+    // caller surfaces the right framing inline; the email only fires
+    // when the cap is genuinely closed.
+    //
+    // after() schedules the email send to run after the 402 response
+    // ships, but before Fluid Compute can recycle the function
+    // instance — without it, a fire-and-forget `void` can lose the
+    // email when the runtime tears down between requests. The send
+    // itself is idempotent via Redis dedupe, so a runtime kill
+    // mid-after() at worst delays the alert until the next exhaust.
+    if (claim.count >= quota) {
+      safeAfter(async () => {
+        await notifyQuotaExhausted({
+          to: auth.user.email,
+          plan: auth.plan,
+          quota,
+          userId: auth.user.id,
+        });
+      });
+    }
     return json(
       {
-        error: "Monthly quota exhausted",
+        error: "quota_exhausted",
         quota,
         used: claim.count,
         checks_required: checksNeeded,
         plan: auth.plan,
         upgrade_url: `${appUrl()}/pricing?from=quota`,
         resets_at: monthResetISO(),
+        // Phase 4: surface overage opt-in info on the 402 so customers
+        // know they can flip the switch instead of waiting for reset.
+        // overage_available is false on Free (Free can't opt in) and on
+        // paid plans during a BETA_OVERAGE=false window.
+        overage_available: claim.overageAvailable ?? false,
+        overage_rate_cents: claim.overageRateCents,
+        opt_in_url: claim.optInUrl
+          ? `${appUrl()}${claim.optInUrl}`
+          : undefined,
       },
       { status: 402 },
     );
   }
   const newUsed = claim.count;
   const remainingAfter = Math.max(0, quota - newUsed);
-  if (remainingAfter <= warningThreshold(auth.plan, quota) && remainingAfter > 0) {
-    void notifyQuotaWarning({
-      to: auth.user.email,
-      used: newUsed,
-      quota,
-      plan: auth.plan,
-      userId: auth.user.id,
+  // Threshold-warning emails fire only on the in-quota path; once a
+  // user crosses into overage they're past the cap and the
+  // "approaching limit" framing no longer applies. The 100% email
+  // already fired the first time the cap closed (claim went denied
+  // before the opt-in flipped on).
+  if (
+    !claim.viaOverage &&
+    remainingAfter <= warningThreshold(auth.plan, quota) &&
+    remainingAfter > 0
+  ) {
+    safeAfter(async () => {
+      await notifyQuotaWarning({
+        to: auth.user.email,
+        used: newUsed,
+        quota,
+        plan: auth.plan,
+        userId: auth.user.id,
+      });
     });
   }
 
@@ -472,6 +521,12 @@ export async function POST(req: Request) {
     cacheReadInputTokens: evalResponse.tokens.cache_read_input ?? 0,
     cacheCreationInputTokens: evalResponse.tokens.cache_creation_input ?? 0,
   };
+  // One cuid threaded through both writes so violations.check_event_id
+  // === usage_events.id for this call. The run audit page leftJoin's
+  // on that key to pull text_preview alongside each finding. Without
+  // this — what the schema previously did — the two tables generated
+  // independent cuids and the join always returned NULL.
+  const checkEventId = createId();
   const [logResult, tokenResult, eventResult] = await Promise.allSettled([
     logViolations({
       userId: auth.user.id,
@@ -485,8 +540,9 @@ export async function POST(req: Request) {
       reviewReasonSubtype:
         (result as { review_reason?: string | null }).review_reason ?? null,
       runId: run_id ?? null,
+      checkEventId,
     }),
-    recordTokenUsage(auth.user.id, tokens),
+    recordTokenUsage(usageScopeUserId, tokens),
     // Phase 4 cost-monitor + check-history: one event row per /api/check
     // completion. The cost columns drive /admin/costs + the threshold-
     // evaluation pause logic. The check-history columns drive
@@ -497,6 +553,7 @@ export async function POST(req: Request) {
     // is not aggregation. A future TTL will null text_preview after 90
     // days.
     recordUsageEvent({
+      id: checkEventId,
       userId: auth.user.id,
       segmentType: meterDecision.sizeClass,
       unitsConsumed: meterDecision.unitsConsumed,
@@ -528,28 +585,31 @@ export async function POST(req: Request) {
     // Threshold evaluation runs after the event row lands so the new
     // call's spend is included in the daily/monthly sum. Errors here
     // are non-fatal — the next call's evaluation will catch the same
-    // threshold cross. Don't await the email; the user response
-    // doesn't depend on it.
-    void evaluateAndPauseIfExceeded(auth.user.id)
-      .then((result) => {
+    // threshold cross. Wrapped in after() so Fluid Compute holds the
+    // function instance open long enough for the rollup query + email
+    // to finish; without it, a runtime tear-down between requests
+    // would silently drop the alert.
+    safeAfter(async () => {
+      try {
+        const result = await evaluateAndPauseIfExceeded(auth.user.id);
         if (result?.pausedNow) {
-          void notifyCostPause({
+          await notifyCostPause({
             userEmail: auth.user.email,
             userId: auth.user.id,
             ...result,
           });
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         logSafeError("evaluateAndPauseIfExceeded failed", err);
-      });
+      }
+    });
   }
 
   // Bust the dashboard's edge cache + tag-cached loaders so the usage
   // counter, "This week" panel, and Active-Surfaces row reflect this
   // check on the next render. Scope: this user's usage, this team's
   // violations. See `lib/revalidate.ts` + `lib/cache-tags.ts`.
-  revalidateDashboard({ userId: auth.user.id, teamId: teamIdForLog });
+  revalidateDashboard({ userId: usageScopeUserId, teamId: teamIdForLog });
 
   // Public envelope (schema 2.0.0). `result` is the substrate
   // CheckResult shape returned by the Python engine; we project it
@@ -605,16 +665,6 @@ export async function POST(req: Request) {
   });
 }
 
-function appUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-}
-
-function monthResetISO(): string {
-  const now = new Date();
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  return next.toISOString();
-}
-
 function warningThreshold(_plan: Plan, quota: number): number {
   // 2026-04-27: aligned the email + dashboard at 80% used (= 20%
   // remaining). Robert's call: gentle nudge as the customer approaches
@@ -636,7 +686,7 @@ async function notifyQuotaWarning(args: {
       to: args.to,
       subject: `Heads up. ${Math.max(0, args.quota - args.used)} ContentRX checks left this month`,
       react: QuotaWarningEmail({
-        appUrl: emailAppUrl(),
+        appUrl: appUrl(),
         used: args.used,
         quota: args.quota,
         plan: args.plan,
@@ -659,7 +709,7 @@ async function notifyQuotaExhausted(args: {
       to: args.to,
       subject: "You've hit this month's ContentRX limit",
       react: QuotaExhaustedEmail({
-        appUrl: emailAppUrl(),
+        appUrl: appUrl(),
         quota: args.quota,
         plan: args.plan,
         resetsAt: new Date(monthResetISO()).toLocaleDateString(undefined, {
@@ -721,7 +771,7 @@ async function notifyCostPause(args: {
         dailyThresholdUsd: args.dailyThresholdUsd,
         monthlyThresholdUsd: args.monthlyThresholdUsd,
         trigger,
-        appUrl: emailAppUrl(),
+        appUrl: appUrl(),
       }),
       // The threshold-evaluator's atomic UPDATE guard already de-dupes
       // re-pause attempts, so this won't fire twice for the same

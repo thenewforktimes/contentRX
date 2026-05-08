@@ -18,8 +18,9 @@
  *
  * Upstream contribution: entries with `contributeUpstream: true` are
  * eligible for anonymised review by Robert and potential integration
- * into the core content model (Session 35's `influences` → /sources
- * attribution path). Defaults to false; no assumptions.
+ * into the core content model. The transparency + opt-out commitment
+ * sits on /ethics (Commitment 4, "Sources I have rights to use").
+ * Defaults to false; no assumptions.
  */
 
 import { and, desc, eq, sql } from "drizzle-orm";

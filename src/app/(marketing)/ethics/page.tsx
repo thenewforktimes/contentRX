@@ -1,5 +1,5 @@
 /**
- * /ethics — ContentRX's three load-bearing commitments.
+ * /ethics — ContentRX's four load-bearing commitments.
  *
  * 2026-05-05 rewrite per Robert's audit: when the page first shipped
  * (Session 14) ContentRX agreed to a public-facing taxonomy, and the
@@ -8,10 +8,37 @@
  * customer-not-product). The 2026-04-25 private-taxonomy pivot
  * inverted that framing — we don't publish the taxonomy, we don't
  * crawl at scale, and customers paying for a tool care about
- * outcomes, not robots.txt. Three commitments left, in this order:
+ * outcomes, not robots.txt.
+ *
+ * 2026-05-06 update: /sources retired (ADR 2026-05-06). The
+ * transparency-and-opt-out commitment that page anchored folds in
+ * here as Commitment 4 with a deep-link target (#no-stolen-content)
+ * that the /sources route now 308s into. The slug is preserved so
+ * external bookmarks and the /about inline link still resolve.
+ *
+ * 2026-05-06 (later): renamed Commitment 4 from "No stolen content"
+ * to "Sources I have rights to use." The original framing
+ * presupposed an accusation no one had made; the new title
+ * describes the standard positively (rights to use) rather than
+ * denying its inverse (theft). Slug intentionally not renamed —
+ * external bookmarks.
+ *
+ * 2026-05-06 (later still): trimmed Commitment 4's body to describe
+ * what's actually true today instead of forecasting future state.
+ * Removed (a) the OSS-repository mention — the github_miner is
+ * built but has never run, so the model doesn't actually draw from
+ * those repos yet — and (b) the maintainer opt-out paragraph — post-
+ * anonymization (ADR 2026-05-06-source-name-anonymization), no
+ * project is named in any tracked file, so there's nothing for a
+ * maintainer to find and request the removal of. If/when either
+ * pattern actually exists, the body grows back to fit. Today it
+ * shouldn't promise things that aren't there.
+ *
+ * Four commitments, in this order:
  *   1. Privacy
  *   2. Security
  *   3. Customer, not product
+ *   4. Sources I have rights to use
  *
  * Voice: Robert's first-person voice. Calm, direct, plain. No em
  * dashes. Names the actor. Doesn't blame. Points somewhere.
@@ -19,36 +46,35 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const metadata: Metadata = {
   title: "Ethics. ContentRX",
   description:
-    "How ContentRX handles your work. Three commitments: Privacy, Security, Customer not product.",
+    "How ContentRX handles your work. Four commitments: Privacy, Security, Customer not product, Sources I have rights to use.",
 };
 
 export default function EthicsPage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <header className="mb-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
-          Ethics
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold">
-          How we handle your work
-        </h1>
-        <p className="mt-4 text-sm text-quiet">
-          Three commitments hold the rest of the product together.
-          They&apos;re short on purpose. The deep policy lives at{" "}
-          <Link href="/privacy" className="underline underline-offset-2">
-            /privacy
-          </Link>{" "}
-          and{" "}
-          <Link href="/security" className="underline underline-offset-2">
-            /security
-          </Link>
-          ; this page is the position those policies sit under.
-        </p>
-      </header>
+    <main className="mx-auto max-w-2xl px-6 py-20">
+      <PageHeader
+        eyebrow="Ethics"
+        title="How we handle your work"
+        lede={
+          <p className="text-sm text-quiet">
+            Four commitments hold the rest of the product together.
+            They&apos;re short on purpose. The deep policy lives at{" "}
+            <Link href="/privacy" className="underline underline-offset-2">
+              /privacy
+            </Link>{" "}
+            and{" "}
+            <Link href="/security" className="underline underline-offset-2">
+              /security
+            </Link>
+            ; this page is the position those policies sit under.
+          </p>
+        }
+      />
 
       <Section
         number="1"
@@ -161,9 +187,23 @@ export default function EthicsPage() {
         </p>
       </Section>
 
+      <Section
+        number="4"
+        title="Sources I have rights to use"
+        summary="Open-licensed code, fair-use editorial citation, and original work. The three buckets the model learns from."
+        id="no-stolen-content"
+      >
+        <p>
+          The model draws from two kinds of inputs: principles I&apos;ve
+          taken from published style guides, and content I write
+          myself. Every input has an MIT license, a fair-use standing,
+          or a public-style-guide convention behind it.
+        </p>
+      </Section>
+
       <footer className="mt-16 text-xs text-quiet">
         <p>
-          Last updated 2026-05-05. Source:{" "}
+          Last updated 2026-05-06. Source:{" "}
           <a
             href="https://github.com/thenewforktimes/contentRX/blob/main/src/app/(marketing)/ethics/page.tsx"
             className="underline underline-offset-2"
@@ -181,15 +221,23 @@ function Section({
   number,
   title,
   summary,
+  id,
   children,
 }: {
   number: string;
   title: string;
   summary: string;
+  /** Optional anchor id. When set, the section uses `scroll-mt-16`
+   * so deep links (#no-stolen-content) land below the sticky header
+   * instead of jamming the heading under it. */
+  id?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-8 border-t border-line pt-8 first:border-t-0 first:pt-0">
+    <section
+      id={id}
+      className="mt-8 border-t border-line pt-8 scroll-mt-16 first:border-t-0 first:pt-0"
+    >
       <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
         Commitment {number}
       </p>

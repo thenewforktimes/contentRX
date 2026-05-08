@@ -25,7 +25,8 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Eyebrow } from "@/components/ui/eyebrow";
+import { AuthorBlock } from "@/components/author-block";
+import { PageHeader } from "@/components/ui/page-header";
 import { Section } from "@/components/ui/section";
 
 export const metadata: Metadata = {
@@ -37,22 +38,22 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-20">
-      <header className="mb-12">
-        <Eyebrow>About the model</Eyebrow>
-        <h1 className="mt-3 text-3xl font-semibold">
-          What a content designer sees
-        </h1>
-        <p className="mt-4 text-lg text-default">
-          ContentRX is the content model that a working staff content
-          designer would run on his own UI copy. The standards, the
-          context, the weighting system that says &ldquo;in a
-          destructive confirmation, emphasize the consequence; in an
-          onboarding flow, relax the tone.&rdquo; All of it carries
-          one designer&apos;s judgment calls, attributed and published.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="About the model"
+        title="What a content designer sees"
+        lede={
+          <>
+            ContentRX is the content model that a working staff content
+            designer would run on his own UI copy. The standards, the
+            context, the weighting system that says &ldquo;in a
+            destructive confirmation, emphasize the consequence; in an
+            onboarding flow, relax the tone.&rdquo; All of it carries
+            one designer&apos;s judgment calls, attributed and published.
+          </>
+        }
+      />
 
-      <Section title="What a content designer sees">
+      <Section title="What the model actually reads">
         <p>
           Take an error message that reads:{" "}
           <q>An unexpected error occurred.</q>
@@ -102,11 +103,14 @@ export default function AboutPage() {
           distillation of a live review where I said{" "}
           <q>that button shouldn&apos;t say <code>Submit</code>, it
           should say what happens next.</q> The{" "}
-          <Link href="/sources" className="underline underline-offset-2">
-            /sources
+          <Link
+            href="/ethics#no-stolen-content"
+            className="underline underline-offset-2"
+          >
+            influences I lean on
           </Link>
-          {" "}page lists every style guide and OSS repo the model
-          leaned on. The judgment between them is mine.
+          {" "}sit on /ethics, with the opt-out path. The judgment
+          between them is mine.
         </p>
       </Section>
 
@@ -156,6 +160,13 @@ export default function AboutPage() {
           .
         </p>
       </Section>
+
+      {/* Named-byline closer. The page is "about the model"; the
+          model is one designer's judgment. Closing on the byline
+          binds the claim to the named author. */}
+      <div className="mt-16">
+        <AuthorBlock />
+      </div>
     </main>
   );
 }

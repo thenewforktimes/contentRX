@@ -54,7 +54,7 @@ describe("recordUsageEvent", () => {
     const userId = await seedUser(harness);
     const result = await recordUsageEvent({
       userId,
-      segmentType: "standard",
+      segmentType: "small",
       unitsConsumed: 1,
       inputTokens: 1_000,
       outputTokens: 100,
@@ -70,7 +70,7 @@ describe("recordUsageEvent", () => {
       .where(eq(schema.usageEvents.userId, userId));
     expect(rows).toHaveLength(1);
     expect(rows[0]!.unitsConsumed).toBe(1);
-    expect(rows[0]!.segmentType).toBe("standard");
+    expect(rows[0]!.segmentType).toBe("small");
     expect(rows[0]!.modelId).toBe("claude-haiku-4-5");
     expect(parseFloat(rows[0]!.estimatedCostUsd ?? "0")).toBeCloseTo(
       0.0015,
@@ -82,7 +82,7 @@ describe("recordUsageEvent", () => {
     const userId = await seedUser(harness);
     const result = await recordUsageEvent({
       userId,
-      segmentType: "document",
+      segmentType: "large",
       unitsConsumed: 8,
       inputTokens: 1_000,
       outputTokens: 0,
@@ -104,7 +104,7 @@ describe("evaluateAndPauseIfExceeded", () => {
     const userId = await seedUser(harness);
     await recordUsageEvent({
       userId,
-      segmentType: "standard",
+      segmentType: "small",
       unitsConsumed: 1,
       inputTokens: 1_000,
       outputTokens: 100,
@@ -130,7 +130,7 @@ describe("evaluateAndPauseIfExceeded", () => {
     // 1M input tokens at Haiku × $1/MTok = $1.00, well past $0.01.
     await recordUsageEvent({
       userId,
-      segmentType: "surface",
+      segmentType: "large",
       unitsConsumed: 25,
       inputTokens: 1_000_000,
       outputTokens: 0,
@@ -158,7 +158,7 @@ describe("evaluateAndPauseIfExceeded", () => {
 
     await recordUsageEvent({
       userId,
-      segmentType: "standard",
+      segmentType: "small",
       unitsConsumed: 1,
       inputTokens: 1_000_000,
       outputTokens: 0,
@@ -180,7 +180,7 @@ describe("evaluateAndPauseIfExceeded", () => {
       .where(eq(schema.users.id, userId));
     await recordUsageEvent({
       userId,
-      segmentType: "surface",
+      segmentType: "large",
       unitsConsumed: 25,
       inputTokens: 1_000_000,
       outputTokens: 0,
@@ -242,7 +242,7 @@ describe("dailyCostRollup", () => {
     const userB = await seedUser(harness);
     await recordUsageEvent({
       userId: userA,
-      segmentType: "standard",
+      segmentType: "small",
       unitsConsumed: 1,
       inputTokens: 1_000,
       outputTokens: 100,
@@ -252,7 +252,7 @@ describe("dailyCostRollup", () => {
     });
     await recordUsageEvent({
       userId: userB,
-      segmentType: "document",
+      segmentType: "large",
       unitsConsumed: 8,
       inputTokens: 5_000,
       outputTokens: 500,

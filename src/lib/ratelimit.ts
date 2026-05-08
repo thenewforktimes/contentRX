@@ -56,3 +56,41 @@ export async function checkRateLimit(userId: string): Promise<RatelimitResult> {
   const { success, remaining, reset } = await rl.limit(userId);
   return { success, remaining, reset };
 }
+
+/**
+ * Helper for non-/api/check routes: run the per-user rate limit and
+ * return the standard 429 NextResponse when exceeded, or `null` when
+ * the call may proceed.
+ *
+ * Usage:
+ *
+ *   const rl = await enforceRateLimit(user.id);
+ *   if (rl) return rl;
+ *
+ * 429 response shape mirrors /api/check + /api/suggest-fix:
+ *   { error: "Rate limit exceeded", retry_after_seconds }
+ *   header: retry-after = ceil((reset - now) / 1000)
+ */
+export async function enforceRateLimit(
+  userId: string,
+): Promise<Response | null> {
+  const rl = await checkRateLimit(userId);
+  if (rl.success) return null;
+  const retryAfterSeconds = Math.max(
+    0,
+    Math.ceil((rl.reset - Date.now()) / 1000),
+  );
+  return new Response(
+    JSON.stringify({
+      error: "Rate limit exceeded",
+      retry_after_seconds: retryAfterSeconds,
+    }),
+    {
+      status: 429,
+      headers: {
+        "content-type": "application/json",
+        "retry-after": String(retryAfterSeconds),
+      },
+    },
+  );
+}

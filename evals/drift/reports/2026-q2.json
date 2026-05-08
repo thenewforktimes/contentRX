@@ -1,8 +1,12 @@
 {
   "schema_version": "1.0.0",
   "quarter": "2026-q2",
-  "generated_at": "2026-05-06T01:53:48Z",
+  "generated_at": "2026-05-07T02:28:29Z",
   "measured_ceiling": 0.5744680851063828,
+  "kappa": 0.5744680851063828,
+  "kappa_ci_low": 0.3125634678559101,
+  "kappa_ci_high": 0.8363727023568555,
+  "sample_size": 80,
   "kappa_summary": {
     "kappa": 0.5744680851063828,
     "ci_low": 0.3125634678559101,
@@ -24,72 +28,72 @@
   "pairs_scored": 80,
   "disagreements": [
     {
-      "case_id": "apple-016",
-      "source_file": "apple_eval_cases.json",
+      "case_id": "case-7d9efc2f",
+      "source_file": "src-f83869ee",
       "moment": "browsing_discovery",
       "standard_id": "GRM-01",
       "past_verdict": "fail",
       "current_verdict": "pass"
     },
     {
-      "case_id": "apple-018",
-      "source_file": "apple_eval_cases.json",
+      "case_id": "case-328915de",
+      "source_file": "src-f83869ee",
       "moment": "browsing_discovery",
       "standard_id": null,
       "past_verdict": "pass",
       "current_verdict": "fail"
     },
     {
-      "case_id": "SCREENSHOT dribbble_forms None error_message 3bd869",
-      "source_file": "dribbble_forms_eval_phase2.json",
+      "case_id": "case-e4d9b0a8",
+      "source_file": "src-d25c4747",
       "moment": "error_recovery",
       "standard_id": "CLR-01",
       "past_verdict": "fail",
       "current_verdict": "pass"
     },
     {
-      "case_id": "SCREENSHOT dribbble_forms PRF-10 short_ui_copy 9d5abb",
-      "source_file": "dribbble_forms_eval_phase2.json",
+      "case_id": "case-7cc9b1dc",
+      "source_file": "src-d25c4747",
       "moment": "task_execution",
       "standard_id": "PRF-10",
       "past_verdict": "fail",
       "current_verdict": "pass"
     },
     {
-      "case_id": "dribbble-health-004",
-      "source_file": "dribbble_health_eval_cases.json",
+      "case_id": "case-36d41311",
+      "source_file": "src-a3d43d39",
       "moment": "celebration",
       "standard_id": "GRM-05",
       "past_verdict": "pass",
       "current_verdict": "fail"
     },
     {
-      "case_id": "dribbble-health-005",
-      "source_file": "dribbble_health_eval_cases.json",
+      "case_id": "case-ba2bfa4c",
+      "source_file": "src-a3d43d39",
       "moment": "celebration",
       "standard_id": "CON-02",
       "past_verdict": "pass",
       "current_verdict": "fail"
     },
     {
-      "case_id": "edu-007",
-      "source_file": "edu_app_eval_cases.json",
+      "case_id": "case-c67fb110",
+      "source_file": "src-7dd5cf52",
       "moment": "first_encounter",
       "standard_id": "CON-02",
       "past_verdict": "fail",
       "current_verdict": "pass"
     },
     {
-      "case_id": "edu-011",
-      "source_file": "edu_app_eval_cases.json",
+      "case_id": "case-6edd9477",
+      "source_file": "src-7dd5cf52",
       "moment": "browsing_discovery",
       "standard_id": "CLR-01",
       "past_verdict": "fail",
       "current_verdict": "pass"
     },
     {
-      "case_id": "EXTRACT Mailchimp alt_text 0750d31c",
-      "source_file": "mailchimp_eval_cases.json",
+      "case_id": "case-15b55c87",
+      "source_file": "src-e63bde2a",
       "moment": null,
       "standard_id": "ACC-05",
       "past_verdict": "fail",

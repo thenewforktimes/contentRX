@@ -12,6 +12,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { InferSelectModel } from "drizzle-orm";
+import { SURFACE_SOURCES } from "@/lib/surfaces";
 
 const cuid = () =>
   text("id")
@@ -111,6 +112,15 @@ export const users = pgTable("users", {
     .notNull()
     .default("500.00"),
   costPauseActive: boolean("cost_pause_active").notNull().default(false),
+  // Phase 4 of the post-Phase-1 build: paid-plan customers opt in to
+  // $0.10/check overage. Default is hard-cap (false). When true,
+  // claimQuotaSlots takes Branch C: grant + record overage event for
+  // end-of-month metering to Stripe. Free can't opt in (validated at
+  // the API route — only Pro / Team / Scale users may flip the flag).
+  overageOptInActive: boolean("overage_opt_in_active")
+    .notNull()
+    .default(false),
+  overageOptedInAt: timestamp("overage_opted_in_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -162,12 +172,16 @@ export const usageEvents = pgTable(
       .defaultNow(),
     // Schema 3.0.0 (2026-05-05): the three-tier model collapsed to a
     // length-routed size class. Drizzle's enum is TS-only (no DB CHECK
-    // constraint), so dropping it here is safe — historical rows with
-    // "standard"/"document"/"surface" stay valid; new rows write
-    // "small"/"large". Pre-launch had no paying customers so the
-    // historical rows are test data; no backfill needed.
+    // constraint), so the live row data on prod is unaffected by
+    // narrowing the TS list. The pre-3.0.0 values
+    // ("standard", "document", "surface") stayed in the enum as
+    // tolerance for legacy rows, but pre-launch test data is the only
+    // possible source — no real customer ever wrote one. Drop them
+    // from the TS enum so future writes can't accidentally hit the
+    // deprecated values, and so the dashboard's per-size-class
+    // rendering doesn't have to handle phantom branches.
     segmentType: text("segment_type", {
-      enum: ["small", "large", "standard", "document", "surface"],
+      enum: ["small", "large"],
     }).notNull(),
     unitsConsumed: integer("units_consumed").notNull(),
     inputTokens: integer("input_tokens").notNull().default(0),
@@ -194,9 +208,7 @@ export const usageEvents = pgTable(
     teamId: text("team_id").references(() => users.id, {
       onDelete: "set null",
     }),
-    source: text("source", {
-      enum: ["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"],
-    }),
+    source: text("source", { enum: SURFACE_SOURCES }),
     contentType: text("content_type"),
     moment: text("moment"),
     verdict: text("verdict"),
@@ -355,9 +367,7 @@ export const violations = pgTable(
     standardId: text("standard_id").notNull(),
     severity: text("severity").notNull(),
     textHash: text("text_hash").notNull(),
-    source: text("source", {
-      enum: ["dashboard", "plugin", "cli", "action", "ditto", "lsp", "mcp"],
-    }).notNull(),
+    source: text("source", { enum: SURFACE_SOURCES }).notNull(),
     // Source-file path for violations that originated from CI extraction
     // (GitHub Action runs against a repo). Nullable because plugin and
     // CLI checks have no file context. Powers the "Top files" panel in

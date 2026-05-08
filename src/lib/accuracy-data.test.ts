@@ -45,12 +45,27 @@ describe("buildAccuracySnapshot (committed readiness + drift state)", () => {
     }
   });
 
-  it("reports measured_self_drift as pending until a scored drift report lands", () => {
+  it("reports measured_self_drift honestly: pending until scored, measured after", () => {
     const snap = buildAccuracySnapshot();
-    // No evals/drift/reports/*.json exists in the repo today — the
-    // panel file exists but hasn't been scored. Aggregator must not
-    // coerce to zero or to the ceiling.
-    expect(snap.measured_self_drift.state).toBe("pending_measurement");
+    // The first scored drift report landed 2026-05-07 (PR closing
+    // the drift→accuracy→calibration loop). The aggregator surfaces
+    // whatever the snapshot file says; this test just pins that the
+    // state is honest — never coerced to zero or to the ceiling.
+    if (snap.measured_self_drift.state === "measured") {
+      expect(snap.measured_self_drift.value).toBeGreaterThan(0);
+      expect(snap.measured_self_drift.value).toBeLessThanOrEqual(1);
+      expect(snap.measured_self_drift.value).not.toBe(snap.design_target);
+      expect(snap.measured_self_drift.ci_low).toBeLessThanOrEqual(
+        snap.measured_self_drift.value,
+      );
+      expect(snap.measured_self_drift.ci_high).toBeGreaterThanOrEqual(
+        snap.measured_self_drift.value,
+      );
+      expect(snap.measured_self_drift.sample_size).toBeGreaterThan(0);
+    } else {
+      expect(snap.measured_self_drift.state).toBe("pending_measurement");
+      expect(snap.measured_self_drift.reason).toBeTruthy();
+    }
   });
 
   it("surfaces 43 standards under robo_labels in the current state", () => {

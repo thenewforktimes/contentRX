@@ -31,6 +31,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from .auth import AuthError
+from .display_labels import display_label_for
 from .humanize import humanize_severity, humanize_verdict
 from .client import (
     AuthFailedError,
@@ -103,13 +104,27 @@ async def evaluate_copy(
     # 2026-04-29 §9 we also ship `verdict_label` + per-violation
     # `severity_label` so the LLM can surface the calmer customer-
     # facing copy directly without re-rendering the substrate enum.
+    #
+    # The violation projection below is explicit-pick rather than
+    # spread (`{**v, ...}`). Defense-in-depth: /api/check already
+    # strips substrate, but if a future regression or PUBLIC_TAXONOMY
+    # mode flip leaks substrate fields into `result.violations`, the
+    # spread would have propagated them through the MCP boundary.
+    # The explicit projection forecloses that.
     verdict_label, _ = humanize_verdict(
         result.verdict, finding_count=len(result.violations)
     )
     violations_with_labels: list[dict[str, Any]] = []
     for v in result.violations:
         sev_label, _tone = humanize_severity(v.get("severity", "medium"))
-        violations_with_labels.append({**v, "severity_label": sev_label})
+        violations_with_labels.append({
+            "issue": v.get("issue", ""),
+            "suggestion": v.get("suggestion", ""),
+            "severity": v.get("severity", "medium"),
+            "severity_label": sev_label,
+            "confidence": v.get("confidence"),
+            "category": v.get("category"),
+        })
 
     return {
         "verdict": result.verdict,
@@ -224,15 +239,24 @@ async def evaluate_copy_batch(
                     results.append({"text": text, "error": _typed_error(exc)})
                     continue
 
-                # Same humanize treatment as the single-string path
-                # — see evaluate_copy() above for the rationale.
+                # Same humanize + explicit-projection treatment as the
+                # single-string path — see evaluate_copy() above for
+                # the rationale (defense-in-depth substrate fence,
+                # not just trusting /api/check to strip).
                 v_label, _ = humanize_verdict(
                     result.verdict, finding_count=len(result.violations)
                 )
                 violations_with_labels: list[dict[str, Any]] = []
                 for v in result.violations:
                     s_label, _t = humanize_severity(v.get("severity", "medium"))
-                    violations_with_labels.append({**v, "severity_label": s_label})
+                    violations_with_labels.append({
+                        "issue": v.get("issue", ""),
+                        "suggestion": v.get("suggestion", ""),
+                        "severity": v.get("severity", "medium"),
+                        "severity_label": s_label,
+                        "confidence": v.get("confidence"),
+                        "category": v.get("category"),
+                    })
                 results.append(
                     {
                         "text": text,
@@ -613,14 +637,21 @@ async def team_rule_remove(rule_id: str) -> dict[str, Any]:
 
 
 def _example_as_dict(entry: "CustomExample") -> dict[str, Any]:
-    """Shape a CustomExample dataclass as the MCP tool return dict."""
+    """Shape a CustomExample dataclass as the MCP tool return dict.
+
+    Per ADR 2026-04-25, MCP responses must not surface engine substrate
+    IDs. The substrate `standard_id` is replaced by a customer-facing
+    `display_label` ("Punctuation", "Casing", "Empathy", …). Agents
+    that need to act on the example use the row `id`. User-generated
+    team rules (TEAM-NN) pass through display_label_for unchanged.
+    """
     return {
         "id": entry.id,
         "text": entry.text,
         "verdict": entry.verdict,
         "moment": entry.moment,
         "content_type": entry.content_type,
-        "standard_id": entry.standard_id,
+        "display_label": display_label_for(entry.standard_id),
         "notes": entry.notes,
         "contribute_upstream": entry.contribute_upstream,
         "created_at": entry.created_at,
@@ -629,10 +660,16 @@ def _example_as_dict(entry: "CustomExample") -> dict[str, Any]:
 
 
 def _team_rule_as_dict(rule: "TeamRule") -> dict[str, Any]:
-    """Shape a TeamRule dataclass as the MCP tool return dict."""
+    """Shape a TeamRule dataclass as the MCP tool return dict.
+
+    Per ADR 2026-04-25, the substrate `standard_id` doesn't appear in
+    the response — agents identify rules by `id` (the team_rules row
+    PK) for update / remove tool calls, and read `display_label`
+    when surfacing the rule to the user.
+    """
     return {
         "id": rule.id,
-        "standard_id": rule.standard_id,
+        "display_label": display_label_for(rule.standard_id),
         "action": rule.action,
         "rule_json": rule.rule_json,
         "created_at": rule.created_at,

@@ -9,7 +9,7 @@
  *
  * Column choices:
  *   - Product:  what you can buy / use
- *   - Trust:    accountability surfaces (calibration, sources, ethics)
+ *   - Trust:    accountability surfaces (accuracy, calibration, ethics)
  *               + privacy/security policies
  *   - Company:  about, status, contact
  *
@@ -22,6 +22,7 @@
  */
 
 import Link from "next/link";
+import { Wordmark } from "@/components/wordmark";
 
 const productLinks = [
   { href: "/pricing", label: "Pricing" },
@@ -32,7 +33,6 @@ const productLinks = [
 const trustLinks = [
   { href: "/accuracy", label: "Accuracy" },
   { href: "/calibration", label: "Calibration log" },
-  { href: "/sources", label: "Sources" },
   { href: "/ethics", label: "Ethics" },
   { href: "/privacy", label: "Privacy" },
   { href: "/security", label: "Security" },
@@ -50,7 +50,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <div>
-            <p className="text-sm font-semibold">ContentRX</p>
+            <Wordmark size="sm" link={false} />
             <p className="mt-2 text-xs text-quiet">
               The content model for product copy.
             </p>

@@ -6,6 +6,7 @@ import { getRedis } from "@/lib/redis";
 import { trackEvent } from "@/lib/analytics";
 import { appUrl, sendEmail } from "@/lib/email";
 import { requireEnv } from "@/lib/require-env";
+import { logSafeError } from "@/lib/safe-error-log";
 import { WelcomeEmail } from "@/emails/welcome";
 
 const DEDUPE_PREFIX = "clerk_event:";
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
       // Redis outage shouldn't drop valid webhooks. Fire side effects;
       // the worst case is a duplicate welcome email, which beats no
       // welcome email at all.
-      console.error("Clerk webhook dedupe lookup failed, firing anyway", err);
+      logSafeError("[clerk-webhook] dedupe lookup failed, firing anyway", err);
       return true;
     }
   }
@@ -124,7 +125,6 @@ export async function POST(req: Request) {
           subject: "Welcome to ContentRX",
           react: WelcomeEmail({
             appUrl: base,
-            pluginUrl: "https://www.figma.com/community/plugin/contentrx",
           }),
         }),
         trackEvent("signup", {

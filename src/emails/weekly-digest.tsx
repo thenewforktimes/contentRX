@@ -88,7 +88,7 @@ export function WeeklyDigestEmail({ payload }: { payload: WeeklyDigestPayload })
 
       <Section style={{ marginTop: 24 }}>
         <Link href={payload.dashboardUrl} style={primaryButton}>
-          View override report
+          View rule patterns
         </Link>
       </Section>
     </EmailShell>

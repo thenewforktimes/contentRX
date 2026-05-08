@@ -82,9 +82,10 @@ specific margin.
 
 ## Audience re-test
 
-Audience-first ordering is a hypothesis. The ditto_roadmap eval
-suggested general-audience content concentrates false positives, but
-that read was on 12 cases — way too small to commit. The re-test:
+Audience-first ordering is a hypothesis. An early eval on a small
+panel suggested general-audience content concentrates false
+positives, but that read was on 12 cases — way too small to commit.
+The re-test:
 
 - **Trigger:** 50 annotated general-audience cases.
 - **Keep rule:** `P(general | FP) ≥ 40%` → hypothesis holds; keep

@@ -242,7 +242,7 @@ const STATIC_FAILURE_MODES: FailureMode[] = [
   {
     title: "Pre-measurement: weekly kappa series not yet populated",
     description:
-      "The Session 7 quarterly panel exists (evals/drift/panels) but the blind re-label pass hasn't been scored yet. Per-standard kappa cells will be populated as annotations land. Cells show 'pending' until then — never zero, never a guess.",
+      "The quarterly self-drift panel will be regenerated locally from license-compatible cases (the prior committed manifest was retired in the 2026-05-06 product-extraction cleanup); the blind re-label pass hasn't been scored yet. Per-standard kappa cells will be populated as annotations land. Cells show 'pending' until then — never zero, never a guess.",
     known_since: "2026-04-23",
   },
   {

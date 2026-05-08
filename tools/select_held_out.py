@@ -70,10 +70,10 @@ def load_cases(corpus_dir: Path) -> list[dict[str, Any]]:
     Each returned case is augmented with:
       - `_source_file` — basename of the source file (for traceability)
       - `case_id` synthesized when the source left it null/empty. The
-        synthesized form is `auto:<source_file>:<1-based-index>`. About
-        one-third of eligible cases in the current corpus (wellsfargo,
-        robinhood, medvi) ship without `case_id`; skipping them would
-        drop entire sources from the held-out pool, which breaks the
+        synthesized form is `auto:<source_file>:<1-based-index>`. A
+        portion of eligible cases in some industry-corpus sources
+        ship without `case_id`; skipping them would drop entire
+        sources from the held-out pool, which breaks the
         generalization story. The `auto:` prefix makes it obvious at
         audit time that the ID is synthetic — the corpus should grow
         real `case_id` values over time.

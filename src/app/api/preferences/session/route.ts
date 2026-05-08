@@ -18,12 +18,17 @@ import { desc, eq, isNull, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { envelope } from "@/lib/api-envelope";
 import {
+  detectSensitivePatterns,
+  sensitiveDataErrorMessage,
+} from "@/lib/pii-screen";
+import {
   PAIRS_PER_SESSION,
   selectSessionPairs,
   shouldPrompt,
 } from "@/lib/preferences";
 import { SubmitSessionSchema } from "@/lib/preferences-schemas";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { logSafeError } from "@/lib/safe-error-log";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
@@ -204,6 +209,28 @@ export async function POST(req: Request) {
     );
   }
 
+  // The `note` field accepts free-text from the user. Screen for
+  // credit cards / SSNs / API keys before persisting — same posture
+  // as /api/customer-flag and /api/calibration/copy-event. Reject
+  // the entire batch on any hit so PII never lands in the row,
+  // mirroring the peer-route rejection-not-redaction default.
+  const noteCorpus = parsed.data.responses
+    .map((r) => r.note ?? "")
+    .filter((s) => s.length > 0)
+    .join("\n");
+  if (noteCorpus.length > 0) {
+    const sensitivePatterns = detectSensitivePatterns(noteCorpus);
+    if (sensitivePatterns.length > 0) {
+      return NextResponse.json(
+        {
+          error: sensitiveDataErrorMessage(sensitivePatterns),
+          patterns: sensitivePatterns,
+        },
+        { status: 400 },
+      );
+    }
+  }
+
   const teamId = user.teamOwnerUserId ?? user.id;
 
   const values = parsed.data.responses.map((r) => ({
@@ -226,7 +253,7 @@ export async function POST(req: Request) {
       .returning({ id: schema.preferences.id });
     inserted = rows.length;
   } catch (err) {
-    console.error("POST /api/preferences/session insert failed:", err);
+    logSafeError("[preferences/session] insert failed", err);
     return NextResponse.json(
       { error: "Failed to record preferences." },
       { status: 500 },

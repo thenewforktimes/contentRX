@@ -118,7 +118,7 @@ export default async function AdminReportPreviewPage({
                   ? "Clear the publication-ready sentinel and re-open this report for edits."
                   : "Mark this report ready to publish. Writes a sentinel — commit it alongside the report."
               }
-              className="rounded-md border border-line-strong px-3 py-1 text-xs font-medium text-stone-700 hover:bg-hover dark:text-stone-200"
+              className="rounded-md border border-line-strong px-3 py-1 text-xs font-medium text-default hover:bg-hover"
             >
               {report.reviewed ? "Reopen for review" : "Mark ready to publish"}
             </button>
@@ -126,7 +126,7 @@ export default async function AdminReportPreviewPage({
         </div>
       </header>
 
-      <div className="rounded-lg border border-line bg-white dark:bg-stone-900">
+      <div className="rounded-lg border border-line bg-raised">
         <div className="border-b border-line px-4 py-2 text-[10px] font-semibold uppercase tracking-wide text-quiet">
           Raw contents
         </div>

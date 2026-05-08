@@ -105,11 +105,11 @@ export default function AdminReportsPage() {
             </header>
 
             {entries.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-line-strong bg-white px-4 py-3 text-xs text-quiet dark:bg-stone-900">
+              <p className="rounded-lg border border-dashed border-line-strong bg-raised px-4 py-3 text-xs text-quiet">
                 {info.emptyHint}
               </p>
             ) : (
-              <ul className="divide-y divide-stone-100 rounded-lg border border-line bg-white dark:divide-stone-800 dark:bg-stone-900">
+              <ul className="divide-y divide-line rounded-lg border border-line bg-raised">
                 {entries.map((entry) => (
                   <ReportRow key={entry.filename} entry={entry} />
                 ))}
@@ -170,7 +170,7 @@ function ToggleReviewForm({ entry }: { entry: ReportEntry }) {
       <button
         type="submit"
         title={tooltip}
-        className="rounded-md border border-line-strong px-2 py-0.5 text-[10px] font-medium text-stone-700 hover:bg-hover dark:text-stone-200"
+        className="rounded-md border border-line-strong px-2 py-0.5 text-[10px] font-medium text-default hover:bg-hover"
       >
         {label}
       </button>

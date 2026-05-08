@@ -48,7 +48,7 @@ export default async function MembersPage() {
           Available on the Team plan. Invite teammates to share your
           monthly check limit, custom rules, and custom examples.
         </p>
-        <Link href="/dashboard" className={buttonStyles({ size: "sm" })}>
+        <Link href="/pricing" className={buttonStyles({ size: "sm" })}>
           Upgrade to Team
         </Link>
       </section>

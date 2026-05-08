@@ -14,6 +14,7 @@ import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb, schema } from "@/db";
+import { appUrl } from "@/lib/email";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { getStripe } from "@/lib/stripe";
 
@@ -62,11 +63,4 @@ export async function POST() {
   });
 
   return NextResponse.json({ url: portal.url });
-}
-
-function appUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    "",
-  );
 }

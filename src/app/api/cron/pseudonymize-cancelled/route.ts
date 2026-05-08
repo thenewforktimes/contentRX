@@ -24,6 +24,7 @@ import { NextResponse } from "next/server";
 import { getDb, schema } from "@/db";
 import { requireCronAuth } from "@/lib/cron-auth";
 import { pseudonymizeUser } from "@/lib/pseudonymize";
+import { logSafeError } from "@/lib/safe-error-log";
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 /** Cap per run to keep transactions bounded; cron repeats nightly. */
@@ -103,7 +104,7 @@ export async function POST(req: Request) {
       await pseudonymizeUser(id);
       processed += 1;
     } catch (err) {
-      console.error(`pseudonymize failed for user ${id}`, err);
+      logSafeError(`[pseudonymize-cancelled] pseudonymize failed for user ${id}`, err);
     }
   }
 

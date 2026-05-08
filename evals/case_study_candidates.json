@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-04-24T06:00:00+00:00",
+  "generated_at": "2026-05-07T00:11:38.003549+00:00",
   "source": "external_signal/allow_list.json",
   "top": [
     {
@@ -28,18 +28,6 @@
       }
     },
     {
-      "owner": "mdn",
-      "name": "content",
-      "license": "CC-BY-SA-2.5",
-      "reason": "Mozilla Developer Network \u2014 documentation-first content.",
-      "score": 0.8367,
-      "quality_signals": {
-        "has_content_designer": true,
-        "active_i18n": true,
-        "content_design_blog": true
-      }
-    },
-    {
       "owner": "linear",
       "name": "linear",
       "license": "MIT",
@@ -56,6 +44,18 @@
       "name": "posthog",
       "license": "MIT",
       "reason": "Product-analytics UI with strong content practice.",
+      "score": 0.8165,
+      "quality_signals": {
+        "has_content_designer": true,
+        "active_i18n": false,
+        "content_design_blog": true
+      }
+    },
+    {
+      "owner": "primer",
+      "name": "react",
+      "license": "MIT",
+      "reason": "GitHub's Primer \u2014 content-reviewed component library.",
       "score": 0.8165,
       "quality_signals": {
         "has_content_designer": true,

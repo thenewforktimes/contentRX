@@ -236,9 +236,23 @@ def run_contentrx(
         env=env,
         timeout=120,
     )
-    if result.returncode >= 3:
+    # Exit codes:
+    #   0 = no violations (legitimate clean check)
+    #   1 = violations found (legitimate; CLI returns JSON with the
+    #       violations array)
+    #   2 = argparse / usage error (UNEXPECTED — happened in real life
+    #       when the action's monorepo source passed `--run-id` to a
+    #       PyPI-published CLI that hadn't shipped that flag yet; the
+    #       prior `>= 3` check let exit 2 fall into the JSON-parse path,
+    #       which silently treated the failure as "no violations")
+    #   3+ = auth / API / engine errors (CLI logs to stderr)
+    # Treating any exit code outside {0, 1} as an error catches
+    # argparse failures and any future code the CLI introduces.
+    if result.returncode not in (0, 1):
         sys.stderr.write(
-            f"contentrx CLI error (exit {result.returncode}): {result.stderr}\n"
+            f"contentrx CLI error (exit {result.returncode}). "
+            f"stderr: {result.stderr[:500]}; "
+            f"stdout: {result.stdout[:200]}\n"
         )
         return {
             "result": {
@@ -251,8 +265,14 @@ def run_contentrx(
     try:
         return json.loads(result.stdout)
     except json.JSONDecodeError:
+        # Empty / non-JSON stdout with exit 0 or 1 is also a regression
+        # signal. The CLI's contract is that --json always emits a
+        # parseable response on those exit codes; if it doesn't, surface
+        # loudly instead of attributing as "all clear".
         sys.stderr.write(
-            f"contentrx CLI returned non-JSON output: {result.stdout[:500]}\n"
+            f"contentrx CLI returned non-JSON output (exit "
+            f"{result.returncode}): stdout={result.stdout[:500]!r}, "
+            f"stderr={result.stderr[:300]!r}\n"
         )
         return {
             "result": {
@@ -316,7 +336,21 @@ def main() -> int:
     ]
 
     if not matching:
-        print("ContentRX: no files matched the path filter. Nothing to check.")
+        # Surface enough state to diagnose a future regression cheaply.
+        # The historical "no files matched" message gave no signal on
+        # whether the cause was an empty PR diff, a workspace path
+        # mismatch, a wrong glob, or a missing token.
+        print(
+            "ContentRX: no files matched the path filter. Nothing to check."
+        )
+        print(
+            f"ContentRX-debug: workspace={workspace}, "
+            f"workspace_exists={workspace.exists()}, "
+            f"changed_files={len(files)}, "
+            f"paths_glob={paths_glob!r}, "
+            f"github_token_set={'GITHUB_TOKEN' in os.environ}",
+            file=sys.stderr,
+        )
         _write_output("violations", "0")
         _write_output("passed", "true")
         return 0

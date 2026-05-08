@@ -5,6 +5,17 @@ the annotated industry corpus at `evals/industry/`. The manifest does
 **not** duplicate raw case text — it stores `case_id` + selection
 metadata. The runner looks each case up in its source file at eval time.
 
+**2026-05-06 update.** The previously committed `manifest.json` was
+deleted in the product-extraction cleanup (ADR
+[`2026-05-06-product-extraction-deletion.md`](../../decisions/2026-05-06-product-extraction-deletion.md))
+because every entry's `case_id` and `source_file` named third-party
+brands extracted from public-facing experiences. The manifest itself
+was metadata only — the underlying scraped content already lived in
+the gitignored `evals/industry/` directory — but the public record of
+brand-name eval sourcing was its own exposure surface. Regenerate
+locally from license-compatible cases when the corpus is reseeded; no
+committed manifest until then.
+
 ## What it's for
 
 Two jobs:

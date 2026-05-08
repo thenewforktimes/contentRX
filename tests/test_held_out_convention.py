@@ -35,7 +35,7 @@ class TestTouchesHeldOut:
         assert checker.touches_held_out(["evals/held_out/manifest.json"])
 
     def test_industry_corpus_file(self):
-        assert checker.touches_held_out(["evals/industry/apple_eval_cases.json"])
+        assert checker.touches_held_out(["evals/industry/sample_eval_cases.json"])
 
     def test_industry_dir_prefix(self):
         assert checker.touches_held_out(["evals/industry/nested/deep.json"])

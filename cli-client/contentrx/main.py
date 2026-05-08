@@ -73,7 +73,15 @@ def _api_base_url() -> str:
     for hitting a local dev server on http://localhost. (CLI-M-01 from
     2026-04-22 audit.)
     """
-    raw = os.environ.get("CONTENTRX_API_URL", DEFAULT_API_URL).rstrip("/")
+    # Treat empty string as "not set" so callers that hand-export the
+    # var to "" (e.g., the GitHub Action's docker env when the consumer
+    # doesn't override `api-url`) fall through to the production
+    # default. `os.environ.get(name, default)` only honours `default`
+    # on missing keys, not on present-but-empty values — that's the
+    # exact case the GitHub Action triggers, and 0.2.0 used to silently
+    # paper over because it never validated the URL at all.
+    raw_env = os.environ.get("CONTENTRX_API_URL")
+    raw = (raw_env if raw_env else DEFAULT_API_URL).rstrip("/")
     if raw.startswith("https://"):
         return raw
     if os.environ.get("CONTENTRX_INSECURE_HTTP") == "1":

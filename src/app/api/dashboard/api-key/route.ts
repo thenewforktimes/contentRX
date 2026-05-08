@@ -17,12 +17,16 @@ import {
   generateApiKey,
   hashApiKey,
 } from "@/lib/api-key";
+import { enforceRateLimit } from "@/lib/ratelimit";
 
 export async function POST() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
+
+  const rl = await enforceRateLimit(clerkId);
+  if (rl) return rl;
 
   const db = getDb();
   const [user] = await db
@@ -61,6 +65,9 @@ export async function DELETE() {
   if (!clerkId) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
+
+  const rl = await enforceRateLimit(clerkId);
+  if (rl) return rl;
 
   const db = getDb();
   await db

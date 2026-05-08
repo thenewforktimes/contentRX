@@ -210,10 +210,24 @@ class TestLoadAllowList:
         assert len(repos) == 2
         assert repos[0]["owner"] == "a"
 
-    def test_real_allow_list_has_twenty_repos(self):
-        # The committed allow_list.json should hold 20 repos per plan spec.
+    def test_real_allow_list_has_seventeen_repos(self):
+        # 2026-05-06: pre-merge license audit (ADR
+        # 2026-05-06-sources-page-retired) removed three entries from
+        # the committed allow-list because they fall outside the
+        # MIT/Apache/BSD/CC0/ISC envelope the new /ethics
+        # Commitment 4 ("Sources I have rights to use") commits to:
+        #   - calcom/cal.com    (AGPL-3.0)
+        #   - getsentry/sentry  (BUSL-1.1)
+        #   - mdn/content       (CC-BY-SA-2.5)
+        # No data had been mined from those repos. The remaining 17
+        # are MIT or Apache-2.0.
         repos = gm.load_allow_list(gm.DEFAULT_ALLOW_LIST)
-        assert len(repos) == 20
+        assert len(repos) == 17
+        for r in repos:
+            assert r["license"] in {"MIT", "Apache-2.0"}, (
+                f"{r['owner']}/{r['name']} has license {r['license']}, "
+                "outside the post-2026-05-06 audit envelope"
+            )
 
 
 # ═══════════════════════════════════════════════════════════════════════

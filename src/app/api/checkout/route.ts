@@ -3,7 +3,7 @@
  *
  * Body: { plan: "pro" | "team", interval: "monthly" | "annual", seats?: number }
  *
- * Team plans require seats >= TEAM_MIN_SEATS (3). Pro plans ignore seats
+ * Team plans require seats >= TEAM_MIN_SEATS (1). Pro plans ignore seats
  * (quantity is always 1). The signed-in Clerk user is resolved to a
  * `users` row; if they already have a Stripe Customer ID it's reused so
  * a re-subscription after cancellation stays on the same customer record.
@@ -20,6 +20,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb, schema } from "@/db";
+import { appUrl } from "@/lib/email";
 import { checkRateLimit } from "@/lib/ratelimit";
 import {
   getStripe,
@@ -138,11 +139,4 @@ function resolveQuantity(
   const n = seats ?? TEAM_MIN_SEATS;
   if (n < TEAM_MIN_SEATS) return "invalid";
   return n;
-}
-
-function appUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    "",
-  );
 }

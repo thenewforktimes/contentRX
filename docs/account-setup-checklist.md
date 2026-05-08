@@ -123,13 +123,16 @@ In the Stripe Dashboard → Products:
 
 | Product | Price | Billing | Notes |
 |---|---|---|---|
-| ContentRX Pro Monthly | $24/mo | recurring monthly | One seat |
-| ContentRX Pro Annual | $216/yr ($18/mo equiv) | recurring annually | One seat |
-| ContentRX Team Monthly | $35/seat/mo | recurring monthly, **per seat (quantity)** | Min 3 seats |
-| ContentRX Team Annual | $29/seat/mo billed annually = $348/seat/yr | recurring annually, per seat | Min 3 seats |
+| ContentRX Pro Monthly | $39/mo | recurring monthly | One seat |
+| ContentRX Pro Annual | $379/yr (~20% off list) | recurring annually | One seat |
+| ContentRX Team Monthly | $79/seat/mo | recurring monthly, **per seat (quantity)** | No seat minimum |
+| ContentRX Team Annual | $759/seat/yr | recurring annually, per seat | No seat minimum |
+| ContentRX Scale Monthly | $1,799/mo | recurring monthly, flat | Sales-assisted; no self-serve checkout yet |
+| ContentRX Scale Annual | $17,299/yr | recurring annually, flat | Sales-assisted |
+| ContentRX Overage | $0.10 per unit | metered, sum aggregation | Pre-create per paid sub for Phase 4 |
 
 For each, copy the **Price ID** (starts with `price_…`). You'll need
-all four.
+all seven.
 
 ### 4b. Configure the webhook
 
@@ -171,7 +174,7 @@ covered by step 3.)
    redirect to Stripe Checkout (not error).
 2. Use Stripe's test card `4242 4242 4242 4242` (any future expiry,
    any CVC) — wait, you'll be in live mode, so this won't work.
-   Better test path: complete a real $24 transaction with your own
+   Better test path: complete a real $39 transaction with your own
    card, then refund it from the Stripe dashboard immediately.
 3. After successful checkout: subscription confirmation email arrives
    (Resend), `users.plan` flips to `pro`, `subscriptions` row gets

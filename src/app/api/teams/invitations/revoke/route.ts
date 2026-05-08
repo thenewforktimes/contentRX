@@ -12,6 +12,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { enforceRateLimit } from "@/lib/ratelimit";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { resolveTeamId, revokeInvitation } from "@/lib/team-invitations";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
@@ -26,6 +27,9 @@ export async function POST(req: Request) {
   if (!clerkId) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
+
+  const rl = await enforceRateLimit(clerkId);
+  if (rl) return rl;
 
   const body = await req.json().catch(() => null);
   const parsed = RequestSchema.safeParse(body);

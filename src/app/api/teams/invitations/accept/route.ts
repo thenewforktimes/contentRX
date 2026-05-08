@@ -19,6 +19,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { acceptInvitation } from "@/lib/team-invitations";
 import { appUrl, sendEmail } from "@/lib/email";
+import { enforceRateLimit } from "@/lib/ratelimit";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
@@ -33,6 +34,12 @@ export async function POST(req: Request) {
   if (!clerkId) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
+
+  // Token-guess defense: rate-limit at the per-user bucket so an
+  // attacker can't pelt /accept with random tokens at the same rate
+  // they could query /api/check.
+  const rl = await enforceRateLimit(clerkId);
+  if (rl) return rl;
 
   const body = await req.json().catch(() => null);
   const parsed = RequestSchema.safeParse(body);

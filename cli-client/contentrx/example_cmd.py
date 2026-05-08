@@ -33,6 +33,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from .display_labels import display_label_for
+
 _EXAMPLES_PATH = "/api/team-custom-examples"
 
 
@@ -282,7 +284,10 @@ def _format_entry_oneline(entry: dict[str, Any]) -> str:
     if content_type:
         bits.append(f"type={content_type}")
     if standard_id:
-        bits.append(f"std={standard_id}")
+        # Substrate IDs (GRM-04, ACC-07, …) are private per ADR
+        # 2026-04-25; render the customer-facing display label
+        # instead. Custom rules (TEAM-NN) pass through unchanged.
+        bits.append(f"label={display_label_for(standard_id)}")
     return " · ".join(bits)
 
 

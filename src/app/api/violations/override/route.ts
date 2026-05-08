@@ -5,7 +5,7 @@
  *
  * Body:
  *   {
- *     standard_id: string,                                    // required
+ *     standard_id?: string,                                   // optional — recovered server-side if missing
  *     text: string,                                           // required, hashed server-side
  *     moment?: string,
  *     override_type: "dismiss" | "accept_as_review" | "mark_false_positive",
@@ -13,6 +13,14 @@
  *     source?: "plugin" | "cli" | "action" | "dashboard" | "lsp",  // default "plugin"
  *     violation_id?: string,                                  // optional FK to violations.id
  *   }
+ *
+ * `standard_id` is optional because schema 2.0.0 stripped substrate from
+ * the public Violation envelope — clients like the Figma plugin don't
+ * have one. The handler recovers it server-side by looking up the most
+ * recent matching `violations` row for (userId, textHash) [or
+ * violationId when supplied]. Authenticated clients that DO have it
+ * (CLI, GitHub Action, dashboard, LSP, MCP) keep sending it directly
+ * — recovery is only a fallback.
  *
  * Privacy: only `sha256(text)` persists in `violation_overrides.text_hash`;
  * the raw text is never written. Same contract as `violations.text_hash`.
@@ -24,6 +32,7 @@
  * BUILD_PLAN_v2 Session 11.
  */
 
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { envelope } from "@/lib/api-envelope";
 import { resolveAuth } from "@/lib/auth";
@@ -57,6 +66,11 @@ function isValidStandardId(id: string): boolean {
 }
 
 const RequestSchema = z.object({
+  // Optional: schema 2.0.0 stripped substrate from the public envelope,
+  // so surfaces like the Figma plugin don't have a standard_id to send.
+  // The handler recovers it from the violations table when missing
+  // (see resolveStandardId below). Clients that DO have it (CLI, GH
+  // Action, dashboard, LSP, MCP) keep sending it directly.
   standard_id: z
     .string()
     .min(1)
@@ -64,7 +78,8 @@ const RequestSchema = z.object({
     .refine(isValidStandardId, {
       message:
         "standard_id must be a known engine standard (e.g. ACT-01) or a TEAM-NN custom standard",
-    }),
+    })
+    .optional(),
   // Same 100k cap as /api/check so a malicious body can't blow up the
   // SHA pipeline. Text is hashed and discarded — never persisted.
   text: z.string().min(1).max(100_000),
@@ -200,17 +215,62 @@ export async function POST(req: Request) {
   // override-report reads + violation reads always agree.
   const teamId = teamScope(auth);
 
+  const db = getDb();
+  const computedTextHash = hashText(text);
+
+  // Resolve standard_id. Surfaces with substrate (CLI, GH Action,
+  // dashboard, LSP, MCP) supply it; surfaces without (Figma plugin
+  // since schema 2.0.0) need recovery. We try violation_id first
+  // because it's a direct FK, then fall back to the most recent
+  // (userId, textHash) match. If neither resolves, the override
+  // can't be attributed and we 400 — without a standard, the row
+  // would poison override analytics.
+  let resolvedStandardId = standard_id;
+  if (!resolvedStandardId) {
+    if (violation_id) {
+      const [v] = await db
+        .select({ standardId: schema.violations.standardId })
+        .from(schema.violations)
+        .where(eq(schema.violations.id, violation_id))
+        .limit(1);
+      resolvedStandardId = v?.standardId;
+    }
+    if (!resolvedStandardId) {
+      const [v] = await db
+        .select({ standardId: schema.violations.standardId })
+        .from(schema.violations)
+        .where(
+          and(
+            eq(schema.violations.userId, auth.user.id),
+            eq(schema.violations.textHash, computedTextHash),
+          ),
+        )
+        .orderBy(desc(schema.violations.createdAt))
+        .limit(1);
+      resolvedStandardId = v?.standardId;
+    }
+    if (!resolvedStandardId) {
+      return json(
+        {
+          error:
+            "Could not attribute this override to a specific rule. " +
+            "Try again from a fresh check.",
+        },
+        { status: 400 },
+      );
+    }
+  }
+
   try {
-    const db = getDb();
     const [row] = await db
       .insert(schema.violationOverrides)
       .values({
         teamId,
         userId: auth.user.id,
         violationId: violation_id ?? null,
-        standardId: standard_id,
+        standardId: resolvedStandardId,
         moment: moment ?? null,
-        textHash: hashText(text),
+        textHash: computedTextHash,
         overrideType: override_type,
         overrideReason: override_reason ?? null,
         source,

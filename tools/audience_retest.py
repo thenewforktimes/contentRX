@@ -1,10 +1,10 @@
 """Audience re-test trigger — Session 8 instrumentation.
 
 The queue ordering's outer dimension is `audience`, applied as a
-provisional hypothesis. The ditto_roadmap eval showed five of five
-preprocessor violations in general-audience content were false
-positives — but the sample was 12 cases, 95% CI wide. Session 8
-formalizes a re-test:
+provisional hypothesis. An early eval on a small panel (12 cases)
+showed five of five preprocessor violations in general-audience
+content were false positives — but at that sample size the 95% CI
+is wide. Session 8 formalizes a re-test:
 
   At 50 annotated general-audience cases, recompute the false-positive
   concentration. Keep audience as the outer dimension only if

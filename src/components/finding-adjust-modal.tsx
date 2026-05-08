@@ -212,7 +212,7 @@ export function FindingAdjustModal({
                     onChange={(e) =>
                       setReasonCode(e.target.value as OverrideReasonCode)
                     }
-                    className="mt-1 block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
+                    className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
                   >
                     {VERDICT_REASON_CODES.map((code) => (
                       <option key={code} value={code}>
@@ -233,7 +233,7 @@ export function FindingAdjustModal({
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
                     maxLength={500}
-                    className="mt-1 block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
+                    className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
                     placeholder="Anything else that would help us calibrate?"
                   />
                 </div>
@@ -268,7 +268,7 @@ export function FindingAdjustModal({
                   onChange={(e) => setRewrite(e.target.value)}
                   rows={3}
                   maxLength={100_000}
-                  className="block w-full rounded-md border border-line-strong bg-white px-2 py-1.5 text-sm text-strong dark:bg-stone-900"
+                  className="block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
                   placeholder="Your version"
                 />
               </div>

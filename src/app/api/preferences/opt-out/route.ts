@@ -13,6 +13,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { envelope } from "@/lib/api-envelope";
 import { OptOutRequestSchema } from "@/lib/preferences-schemas";
+import { enforceRateLimit } from "@/lib/ratelimit";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
@@ -36,6 +37,9 @@ export async function POST(req: Request) {
       { status: 401 },
     );
   }
+
+  const rl = await enforceRateLimit(userId);
+  if (rl) return rl;
 
   const body = await req.json().catch(() => ({}));
   const parsed = OptOutRequestSchema.safeParse(body);
@@ -73,6 +77,9 @@ export async function DELETE() {
       { status: 401 },
     );
   }
+
+  const rl = await enforceRateLimit(userId);
+  if (rl) return rl;
 
   const db = getDb();
   await db

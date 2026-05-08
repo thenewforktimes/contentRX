@@ -3645,8 +3645,14 @@ function renderBatchResults(results) {
       if (select) select.disabled = true;
     }
 
+    // Schema 2.0.0: the public Violation envelope doesn't carry
+    // standard_id, so the plugin can't attribute an override to a
+    // specific standard. The /api/violations/override endpoint still
+    // requires it, so the stance-submit path is a no-op for now —
+    // logged silently in the catch below. A follow-up will rework
+    // override telemetry to anchor on (issue + suggestion + textHash)
+    // so this surface tracks again without leaking substrate.
     const body = {
-      standard_id: card.dataset.standardId,
       text: card.dataset.text || "",
       moment: card.dataset.moment || undefined,
       override_type: overrideType,
@@ -4730,7 +4736,7 @@ function renderQuotaBanner(state) {
     title = "Approaching your monthly limit";
     body =
       usage.plan === "free"
-        ? `${remaining} scan${remaining === 1 ? "" : "s"} left this month. Upgrade to Pro for 5,000 scans.`
+        ? `${remaining} scan${remaining === 1 ? "" : "s"} left this month. Upgrade to Pro for 1,000 scans.`
         : `${remaining} scan${remaining === 1 ? "" : "s"} left this month.`;
     cta = usage.plan === "free" ? "Upgrade" : "";
   } else {

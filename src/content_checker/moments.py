@@ -23,29 +23,42 @@ based on the detected moment. Weights are expressed as modifiers:
 
 Initial weights are derived from content design best practices
 articulated in public style guides. Session 16 expanded the citation
-base — the following systems shape the weighting philosophy:
+base; the categories of source the weighting philosophy draws from
+(per ADR 2026-05-06-source-name-anonymization, brand names removed
+from the public corpus + standards library):
 
-    - Mailchimp Content Style Guide — voice + tone + empathy in errors
-    - GOV.UK Style Guide — plain language, active voice, link text
-    - 18F Content Guide — public-facing plain-language standards
-    - Microsoft Writing Style Guide — broad UI + technical copy
-    - Apple HIG — alerts, button labels, permission-request framing
-    - Material Design — button-label specificity, confirmation cadence
-    - Shopify Polaris — empty-state principles, destructive-action copy
-    - Atlassian Design System — voice (human, direct), one-idea-per-sentence
-    - GitHub Primer — accessibility, sentence-case, link patterns
-    - IBM Carbon — technical-audience writing, plain language in legal
-    - USWDS — federal plain language
-    - Google Developer Documentation Style Guide — sentence case, UI text
+    - consumer-marketing platform style guide
+        (voice + tone + empathy in errors)
+    - UK national-government style guide
+        (plain language, active voice, link text)
+    - US federal content guide
+        (public-facing plain-language standards)
+    - enterprise platform writing style guide
+        (broad UI + technical copy)
+    - consumer-OS interface guidelines
+        (alerts, button labels, permission-request framing)
+    - consumer-tech design system
+        (button-label specificity, confirmation cadence)
+    - commerce platform design system
+        (empty-state principles, destructive-action copy)
+    - productivity platform design system
+        (voice — human, direct; one-idea-per-sentence)
+    - developer platform design system
+        (accessibility, sentence-case, link patterns)
+    - enterprise software design system
+        (technical-audience writing, plain language in legal)
+    - US federal design system
+        (federal plain language)
+    - developer documentation style guide
+        (sentence case, UI text)
 
 The per-weight `rationale` strings state WHY the weight exists for
-that moment + standard; where a rationale leans heavily on a single
-system's guidance, the system is named inline. Where the weight
-reflects a shared principle across many systems, the rationale
+that moment + standard. Where a rationale leans on a single source's
+guidance, the source category is named inline. Where the weight
+reflects a shared principle across many sources, the rationale
 describes the principle without repeatedly citing every source.
 See `evals/examples_corpus/` for "this, not that" pairs that
-illustrate these systems' positions, and
-`evals/examples_corpus/disagreement_map.json` for where they differ.
+illustrate these positions.
 
 Human eval annotations continue to calibrate these weights — the
 sources above are the STARTING position, not the final one.

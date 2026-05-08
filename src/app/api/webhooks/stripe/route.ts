@@ -29,6 +29,7 @@ import { appUrl, sendEmail } from "@/lib/email";
 import { monthlyQuota } from "@/lib/quotas";
 import { getRedis } from "@/lib/redis";
 import { requireEnv } from "@/lib/require-env";
+import { logSafeError } from "@/lib/safe-error-log";
 import {
   getStripe,
   isEntitled,
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
   try {
     return await handleStripeWebhook(req);
   } catch (err) {
-    console.error("Stripe webhook handler unhandled error", err);
+    logSafeError("[stripe-webhook] handler unhandled error", err);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -105,7 +106,7 @@ async function handleStripeWebhook(req: Request): Promise<Response> {
       secret,
     );
   } catch (err) {
-    console.error("Stripe webhook signature verification failed", err);
+    logSafeError("[stripe-webhook] signature verification failed", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
@@ -124,7 +125,7 @@ async function handleStripeWebhook(req: Request): Promise<Response> {
     // Redis outage shouldn't block a valid webhook — log and proceed.
     // Worst case: we double-apply an event, which each handler is
     // written to tolerate (upserts, not inserts).
-    console.error("Stripe dedupe lookup failed, proceeding without", err);
+    logSafeError("[stripe-webhook] dedupe lookup failed, proceeding without", err);
   }
 
   try {
@@ -155,7 +156,7 @@ async function handleStripeWebhook(req: Request): Promise<Response> {
         break;
     }
   } catch (err) {
-    console.error(`Stripe webhook handler failed for ${event.type}`, err);
+    logSafeError(`[stripe-webhook] handler failed for ${event.type}`, err);
     // 500 → Stripe retries, which is what we want for transient failures
     // (DB glitch, Stripe API timeout mid-handler). For a permanent
     // failure the retry will exhaust and Stripe will log it.
@@ -311,10 +312,14 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const db = getDb();
 
   // Mark the subscription row canceled so the partial unique index on
-  // active subscriptions stops blocking future upgrades.
+  // active subscriptions stops blocking future upgrades. Stamp
+  // `cancelledAt` so the pseudonymize-cancelled cron has a date to
+  // window against — the 90-day customer-data retention promise (see
+  // decisions/2026-04-28-customer-not-product.md and
+  // src/db/schema.ts:261-265) depends on this column being non-null.
   await db
     .update(schema.subscriptions)
-    .set({ status: "canceled" })
+    .set({ status: "canceled", cancelledAt: new Date() })
     .where(eq(schema.subscriptions.stripeSubId, subscription.id));
 
   if (!userId) return;
@@ -438,9 +443,12 @@ async function upsertSubscription(args: {
     // mid-migration weirdness where a previous sub's deletion event
     // hasn't arrived yet.
     if (entitled) {
+      // Same `cancelledAt` stamp as handleSubscriptionDeleted — the
+      // pseudonymize-cancelled cron filters on this column, so a
+      // canceled-mid-migration row needs a date too.
       await db
         .update(schema.subscriptions)
-        .set({ status: "canceled" })
+        .set({ status: "canceled", cancelledAt: new Date() })
         .where(
           and(
             eq(schema.subscriptions.userId, userId),

@@ -35,7 +35,12 @@ vi.mock("@/db", async () => {
   };
 });
 
-import { claimQuotaSlot, getCurrentUsage, recordTokenUsage } from "./usage";
+import {
+  claimQuotaSlot,
+  claimQuotaSlots,
+  getCurrentUsage,
+  recordTokenUsage,
+} from "./usage";
 import { currentMonth } from "./quotas";
 
 let harness: TestDbHarness;
@@ -136,7 +141,7 @@ describe("claimQuotaSlot", () => {
     expect(first).toEqual({ granted: true, count: 1 });
 
     const second = await claimQuotaSlot(userId, 0);
-    expect(second).toEqual({ granted: false, count: 1 });
+    expect(second).toMatchObject({ granted: false, count: 1 });
   });
 
   it("under N concurrent claims with quota Q, exactly Q succeed (atomicity)", async () => {
@@ -191,6 +196,118 @@ describe("claimQuotaSlot", () => {
 });
 
 // ---------------------------------------------------------------------------
+// claimQuotaSlots — proportional-billing path (schema 3.0.0)
+//
+// /api/check calls claimQuotaSlots(userId, n, quota) where n is the
+// proportional unit count from meter(text). Multi-slot claims are
+// all-or-nothing: a request that needs 3 slots against a 1-remaining
+// user must reject without partial fulfillment, otherwise customers
+// could squeeze cheap multi-unit requests past the cap.
+// ---------------------------------------------------------------------------
+
+describe("claimQuotaSlots", () => {
+  it("grants a 5-slot claim against an empty quota and increments by 5", async () => {
+    const userId = await seedUser(harness);
+    const result = await claimQuotaSlots(userId, 5, 100);
+    expect(result).toEqual({ granted: true, count: 5 });
+    expect(await getCurrentUsage(userId)).toBe(5);
+  });
+
+  it("grants exactly at the boundary (count + n == quota)", async () => {
+    const userId = await seedUser(harness);
+    await claimQuotaSlots(userId, 7, 10); // count = 7
+    const result = await claimQuotaSlots(userId, 3, 10); // count + n = 10
+    expect(result).toEqual({ granted: true, count: 10 });
+  });
+
+  it("rejects all-or-nothing — 3-slot claim against a 2-remaining user", async () => {
+    // Free user with quota=20, count=18, requests 401 chars (3 units).
+    // The atomic guard `count + n <= quota` rejects 18 + 3 = 21 > 20
+    // even though 2 slots are technically free.
+    const userId = await seedUser(harness);
+    await harness.db
+      .insert(schema.usage)
+      .values({ userId, month: currentMonth(), count: 18 });
+
+    const rejected = await claimQuotaSlots(userId, 3, 20);
+    expect(rejected.granted).toBe(false);
+    expect(rejected.count).toBe(18);
+    // Count must NOT have moved — partial fulfillment would be a
+    // privacy / billing leak.
+    expect(await getCurrentUsage(userId)).toBe(18);
+  });
+
+  it("admits a first claim that exactly fills the quota (count=n)", async () => {
+    // A 4000-char input (20 units) against a Free user (quota=20)
+    // who hasn't checked anything yet must succeed exactly. The
+    // single-slot test at line ~127 documents the asymmetry between
+    // the INSERT branch (no WHERE-guard) and the UPDATE branch — the
+    // multi-slot variant inherits that contract. The follow-up claim
+    // here is what proves the cap holds: a 1-unit claim once a 20-
+    // unit row exists must reject.
+    const userId = await seedUser(harness);
+    const ok = await claimQuotaSlots(userId, 20, 20);
+    expect(ok).toEqual({ granted: true, count: 20 });
+
+    const denied = await claimQuotaSlots(userId, 1, 20);
+    expect(denied.granted).toBe(false);
+    expect(denied.count).toBe(20);
+  });
+
+  it("treats n <= 0 as a free pass (defensive — should never happen in prod)", async () => {
+    // /api/check's meter() floors at 1, so n=0 is a callsite bug.
+    // The function fields it without crashing; count stays accurate.
+    const userId = await seedUser(harness);
+    await claimQuotaSlots(userId, 5, 100);
+    expect(await getCurrentUsage(userId)).toBe(5);
+
+    const result = await claimQuotaSlots(userId, 0, 100);
+    expect(result).toEqual({ granted: true, count: 5 });
+    expect(await getCurrentUsage(userId)).toBe(5);
+
+    const negative = await claimQuotaSlots(userId, -3, 100);
+    expect(negative).toEqual({ granted: true, count: 5 });
+    expect(await getCurrentUsage(userId)).toBe(5);
+  });
+
+  it("under N concurrent multi-slot claims, the cap holds atomically", async () => {
+    // Five concurrent claims of 3 units each against a quota of 10.
+    // 10 / 3 = 3 with remainder 1 → exactly 3 should succeed
+    // (consuming 9 slots), and the rest must reject. Crucially: count
+    // never exceeds quota.
+    const userId = await seedUser(harness);
+    const QUOTA = 10;
+    const SLOTS_PER_CLAIM = 3;
+    const ATTEMPTS = 5;
+
+    const results = await Promise.all(
+      Array.from(
+        { length: ATTEMPTS },
+        () => claimQuotaSlots(userId, SLOTS_PER_CLAIM, QUOTA),
+      ),
+    );
+
+    const granted = results.filter((r) => r.granted).length;
+    const rejected = results.filter((r) => !r.granted).length;
+    // Exactly 3 must succeed (3 × 3 = 9 ≤ 10; a 4th would push to 12).
+    expect(granted).toBe(3);
+    expect(rejected).toBe(ATTEMPTS - 3);
+    expect(await getCurrentUsage(userId)).toBe(granted * SLOTS_PER_CLAIM);
+  });
+
+  it("multi-slot and single-slot claims share state on the same usage row", async () => {
+    // A common production pattern: small button-label checks (1 unit)
+    // and long-form doc checks (20 units) hit the same row.
+    const userId = await seedUser(harness);
+    await claimQuotaSlot(userId, 100); // count = 1
+    await claimQuotaSlots(userId, 20, 100); // count = 21
+    await claimQuotaSlot(userId, 100); // count = 22
+
+    expect(await getCurrentUsage(userId)).toBe(22);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // recordTokenUsage
 // ---------------------------------------------------------------------------
 
@@ -238,5 +355,174 @@ describe("recordTokenUsage", () => {
       );
     expect(row?.cacheReadInputTokens).toBe(0);
     expect(row?.cacheCreationInputTokens).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 4 three-branch claim logic
+// ---------------------------------------------------------------------------
+
+describe("claimQuotaSlots — Phase 4 three-branch logic", () => {
+  // BETA_OVERAGE is checked at call time via process.env, so toggling
+  // it inside the test sets the gate for that block. Restore in
+  // afterEach to keep tests independent.
+  let originalBetaFlag: string | undefined;
+  beforeAll(() => {
+    originalBetaFlag = process.env.BETA_OVERAGE;
+  });
+  afterAll(() => {
+    if (originalBetaFlag === undefined) {
+      delete process.env.BETA_OVERAGE;
+    } else {
+      process.env.BETA_OVERAGE = originalBetaFlag;
+    }
+  });
+
+  it("Branch B: free user over quota gets overage_available=false", async () => {
+    process.env.BETA_OVERAGE = "true"; // gate open — but free still rejected
+    const userId = await seedUser(harness, { plan: "free" });
+    await harness.db.insert(schema.usage).values({
+      id: "u-free",
+      userId,
+      month: currentMonth(),
+      count: 10,
+    });
+
+    const result = await claimQuotaSlot(userId, 10);
+    expect(result).toMatchObject({
+      granted: false,
+      count: 10,
+      overageAvailable: false,
+    });
+    expect(result).not.toHaveProperty("optInUrl");
+  });
+
+  it("Branch B: paid user without opt-in gets overage offer info", async () => {
+    process.env.BETA_OVERAGE = "true";
+    const userId = await seedUser(harness, { plan: "pro" });
+    await harness.db.insert(schema.usage).values({
+      id: "u-pro",
+      userId,
+      month: currentMonth(),
+      count: 1000,
+    });
+
+    const result = await claimQuotaSlot(userId, 1000);
+    expect(result).toMatchObject({
+      granted: false,
+      count: 1000,
+      overageAvailable: true,
+      overageRateCents: 10,
+      optInUrl: "/dashboard/settings/overage",
+    });
+  });
+
+  it("Branch C: paid user opted in + BETA_OVERAGE=true grants past the cap and records overage", async () => {
+    process.env.BETA_OVERAGE = "true";
+    const userId = await seedUser(harness, {
+      plan: "pro",
+      overageOptInActive: true,
+    });
+    await harness.db.insert(schema.usage).values({
+      id: "u-pro-c",
+      userId,
+      month: currentMonth(),
+      count: 1000,
+    });
+
+    const result = await claimQuotaSlot(userId, 1000);
+    expect(result).toMatchObject({
+      granted: true,
+      count: 1001,
+      viaOverage: true,
+    });
+
+    // Overage event landed in overage_state.
+    const [overageRow] = await harness.db
+      .select()
+      .from(schema.overageState)
+      .where(
+        and(
+          eq(schema.overageState.userId, userId),
+          eq(schema.overageState.month, currentMonth()),
+        ),
+      );
+    expect(overageRow?.overageChecks).toBe(1);
+    expect(overageRow?.overageUsdCents).toBe(10);
+  });
+
+  it("Branch B (not C): paid user opted in BUT BETA_OVERAGE=false stays denied", async () => {
+    process.env.BETA_OVERAGE = "false";
+    const userId = await seedUser(harness, {
+      plan: "pro",
+      overageOptInActive: true,
+    });
+    await harness.db.insert(schema.usage).values({
+      id: "u-pro-gated",
+      userId,
+      month: currentMonth(),
+      count: 1000,
+    });
+
+    const result = await claimQuotaSlot(userId, 1000);
+    expect(result).toMatchObject({
+      granted: false,
+      count: 1000,
+      overageAvailable: true,
+    });
+
+    // No overage event written.
+    const overageRows = await harness.db
+      .select()
+      .from(schema.overageState)
+      .where(eq(schema.overageState.userId, userId));
+    expect(overageRows).toHaveLength(0);
+  });
+
+  it("Branch C: multi-unit overage accumulates the right cents", async () => {
+    process.env.BETA_OVERAGE = "true";
+    const userId = await seedUser(harness, {
+      plan: "team",
+      overageOptInActive: true,
+    });
+    await harness.db.insert(schema.usage).values({
+      id: "u-team-multi",
+      userId,
+      month: currentMonth(),
+      count: 2000,
+    });
+
+    // First overage burst: 5 units → 50 cents.
+    const r1 = await claimQuotaSlots(userId, 5, 2000);
+    expect(r1).toMatchObject({ granted: true, viaOverage: true });
+
+    // Second overage burst: 3 more → 80 cents total.
+    const r2 = await claimQuotaSlots(userId, 3, 2000);
+    expect(r2).toMatchObject({ granted: true, viaOverage: true });
+
+    const [overageRow] = await harness.db
+      .select()
+      .from(schema.overageState)
+      .where(eq(schema.overageState.userId, userId));
+    expect(overageRow?.overageChecks).toBe(8);
+    expect(overageRow?.overageUsdCents).toBe(80);
+  });
+
+  it("Branch A path is not affected (under-quota grants don't write overage)", async () => {
+    process.env.BETA_OVERAGE = "true";
+    const userId = await seedUser(harness, {
+      plan: "pro",
+      overageOptInActive: true,
+    });
+
+    const result = await claimQuotaSlot(userId, 1000);
+    expect(result).toMatchObject({ granted: true, count: 1 });
+    expect(result).not.toHaveProperty("viaOverage");
+
+    const overageRows = await harness.db
+      .select()
+      .from(schema.overageState)
+      .where(eq(schema.overageState.userId, userId));
+    expect(overageRows).toHaveLength(0);
   });
 });

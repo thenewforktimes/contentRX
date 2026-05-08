@@ -46,7 +46,6 @@ import {
   loadFindingAggregates,
   type FindingPattern,
 } from "@/lib/insight-patterns";
-import { isContentRXAdmin } from "@/lib/graduation";
 import { currentMonth, monthlyQuota, type Plan } from "@/lib/quotas";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { MotionList } from "@/components/motion-list";
@@ -86,11 +85,13 @@ export default async function DashboardPage() {
   }
 
   const plan = user.plan as Plan;
-  const isAdmin = isContentRXAdmin(clerkId);
+  // Founder badge moved to dashboard/layout.tsx — the layout already
+  // does its own isContentRXAdmin check, so the page body no longer
+  // needs to compute it.
   const [seats, used, activeSub, sourceStats, insights, teamRuleCounts] =
     await Promise.all([
       loadSeats(user.id, plan, user.teamOwnerUserId),
-      loadCurrentUsage(user.id),
+      loadCurrentUsage(user.teamOwnerUserId ?? user.id),
       loadActiveSubscription(user.id, user.teamOwnerUserId),
       loadSourceStats(user.id, user.teamOwnerUserId),
       loadWeeklyInsights(user.id, user.teamOwnerUserId),
@@ -149,54 +150,23 @@ export default async function DashboardPage() {
           initialActivity={surfaceActivity}
         />
 
-        <nav
-          aria-label="Dashboard sections"
-          className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm"
-        >
-          <Link
-            href="/dashboard/checks"
-            className="text-default hover:underline"
-          >
-            Check history
-          </Link>
-          <Link
-            href="/dashboard/runs"
-            className="text-default hover:underline"
-          >
-            CI runs
-          </Link>
-          <Link
-            href="/dashboard/overrides"
-            className="text-default hover:underline"
-          >
-            Override report
-          </Link>
-          <Link
-            href="/dashboard/rules"
-            className="text-default hover:underline"
-          >
-            Team rules
-          </Link>
-          {isAdmin && (
-            <Link
-              href="/admin"
-              className="ml-auto rounded-md border border-line-strong px-2 py-0.5 text-xs font-medium text-default hover:bg-hover"
-            >
-              Founder admin →
-            </Link>
-          )}
-        </nav>
-
         {/*
-          Divider between work surfaces (above) and account configuration
-          (below). The hairline puts a literal pause in the page so the
-          eye stops looking for "more work to do" and starts treating
-          the next sections as settings.
+          Section divider between Activity (work surfaces above —
+          try-a-check, usage, insights, active surfaces) and Account
+          (configuration below — subscription, API key, team links).
+          The eyebrow names the boundary so the eye knows the
+          next sections are settings, not more activity. Pairs with
+          the secondary nav strip in dashboard/layout.tsx; sub-page
+          navigation moved up there, freeing this body for two clear
+          scenes: what's happening now, what you might touch monthly.
         */}
-        <div
-          aria-hidden
-          className="my-2 border-t border-line"
-        />
+        <div className="mt-4 flex items-center gap-3" aria-hidden>
+          <hr className="flex-1 border-line" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-quiet">
+            Account
+          </span>
+          <hr className="flex-1 border-line" />
+        </div>
 
         <SubscriptionPanel
           plan={plan}
@@ -262,33 +232,43 @@ function TryACheckPanel({ plan }: { plan: Plan }) {
 // and are imported above. Single source of truth so the loader and the
 // renderer stay in lockstep.
 
+// Customer-likelihood order — the order a typical ICP discovers + adopts
+// the surfaces, not the BUILD_PLAN_v2 surface-primacy order (which is
+// the founder-side architectural ranking). Web app first because it's
+// where the customer is when reading this card. Figma plugin second
+// because content designers are a primary ICP and the plugin is their
+// natural entry. MCP / CLI / GitHub Action are the engineer-side
+// surfaces in approachability order. LSP last as the niche
+// editor-extension surface.
+//
+// `key` matches the source enum on usage_events + violations (see
+// src/lib/surfaces.ts). The `dashboard` key + "Web app" label is the
+// one place enum-vs-label diverges; everywhere else key === lowercase
+// label.
 const SURFACES: ReadonlyArray<{
   key: SurfaceKey;
   label: string;
   installHref: string;
   installLabel: string;
 }> = [
-  // Web app first — it's the surface the user is currently in. The
-  // installHref points back to the Try-a-check form on this same page
-  // so a fresh user gets a clear nudge to run their first check. The
-  // enum value is "dashboard" (matches violation_overrides + correction
-  // tables); the user-facing label is "Web app".
+  // Web app — installHref points back to Try-a-check on this same
+  // page so a fresh user gets a clear nudge to run their first check.
   { key: "dashboard", label: "Web app", installHref: "#try-a-check", installLabel: "Try a check" },
-  { key: "mcp", label: "MCP", installHref: "/install#mcp", installLabel: "Install" },
-  { key: "lsp", label: "LSP", installHref: "/install#lsp", installLabel: "Install" },
-  {
-    key: "action",
-    label: "GitHub Action",
-    installHref: "/install#action",
-    installLabel: "Install",
-  },
   {
     key: "plugin",
     label: "Figma plugin",
     installHref: "/install#figma",
     installLabel: "Install",
   },
+  { key: "mcp", label: "MCP", installHref: "/install#mcp", installLabel: "Install" },
   { key: "cli", label: "CLI", installHref: "/install#cli", installLabel: "Install" },
+  {
+    key: "action",
+    label: "GitHub Action",
+    installHref: "/install#action",
+    installLabel: "Install",
+  },
+  { key: "lsp", label: "LSP", installHref: "/install#lsp", installLabel: "Install" },
 ];
 
 // ActiveSurfacesRow + SurfaceCard + formatRelative were extracted to
@@ -365,7 +345,7 @@ function InsightsPanel({
           )}
           {plan === "team" && insights.overrides >= 5 && (
             <p className="rounded-md border border-accent-caution-border bg-accent-caution-soft px-3 py-2 text-xs text-accent-caution-text">
-              Your team is dismissing findings often. The override report
+              Your team is dismissing findings often. Rule patterns
               breaks down which rules your team disagrees with most.
               Consider tuning them in team rules.
             </p>
@@ -376,7 +356,7 @@ function InsightsPanel({
                 href="/dashboard/overrides"
                 className={buttonStyles({ variant: "secondary", size: "sm" })}
               >
-                View override report
+                View rule patterns
               </Link>
             )}
           </div>
@@ -410,7 +390,7 @@ function PatternLine({ pattern }: { pattern: FindingPattern }) {
     return (
       <>
         Same file flagged most:{" "}
-        <code className="rounded bg-stone-100 px-1 py-0.5 text-xs dark:bg-stone-800">
+        <code className="rounded bg-sunken px-1 py-0.5 text-xs">
           {pattern.filePath}
         </code>{" "}
         (
@@ -455,7 +435,7 @@ function OverridesLink() {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Override report</h2>
+        <h2 className="text-sm font-semibold">Rule patterns</h2>
         <span className="text-xs text-default">Last 30 days</span>
       </header>
       <p className="mb-3 text-sm text-default">
@@ -466,7 +446,7 @@ function OverridesLink() {
         href="/dashboard/overrides"
         className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
-        View override report
+        View rule patterns
       </Link>
     </section>
   );
@@ -631,17 +611,25 @@ async function loadSourceStats(
   const cached = await unstable_cache(
     async (id: string) => {
       const db = getDb();
+      // Query usage_events, not violations. Every successful /api/check
+      // writes one usage_events row regardless of verdict; violations
+      // rows only land when the engine flagged something. A surface
+      // that ran a clean PR (e.g., a GitHub Action seeing "All clear"
+      // on a PR with no findings) needs to count as connected too.
+      // Closes the bug where the GitHub Action card stayed
+      // "Not connected" after a real run because none of its strings
+      // got flagged.
       const rows = (await db
         .select({
-          source: schema.violations.source,
+          source: schema.usageEvents.source,
           count: sql<number>`count(*)::int`,
-          firstAt: sql<Date>`min(${schema.violations.createdAt})`,
-          lastAt: sql<Date>`max(${schema.violations.createdAt})`,
+          firstAt: sql<Date>`min(${schema.usageEvents.createdAt})`,
+          lastAt: sql<Date>`max(${schema.usageEvents.createdAt})`,
         })
-        .from(schema.violations)
-        .where(eq(schema.violations.teamId, id))
-        .groupBy(schema.violations.source)) as Array<{
-        source: string;
+        .from(schema.usageEvents)
+        .where(eq(schema.usageEvents.teamId, id))
+        .groupBy(schema.usageEvents.source)) as Array<{
+        source: string | null;
         count: number;
         firstAt: Date;
         lastAt: Date;
@@ -660,7 +648,7 @@ async function loadSourceStats(
         null;
 
       for (const r of rows) {
-        if (!(r.source in activity)) continue;
+        if (r.source == null || !(r.source in activity)) continue;
         const surface = r.source as SurfaceKey;
         const firstAt =
           r.firstAt instanceof Date ? r.firstAt : new Date(r.firstAt);
@@ -677,6 +665,11 @@ async function loadSourceStats(
       return { activity, recentlyActivated: recentlyActivated?.source ?? null };
     },
     [`loadSourceStats:${teamId}`],
+    // tags.violations is the "after every check" invalidation tag —
+    // /api/check calls revalidateDashboard which fires this regardless
+    // of whether a violation was recorded. So the cache refreshes on
+    // every API call, which is what we want now that the query reads
+    // from usage_events (one row per check, verdict-agnostic).
     { tags: [tags.violations(teamId)], revalidate: 3600 },
   )(teamId);
   // unstable_cache JSON-serializes Dates back to ISO strings on cache

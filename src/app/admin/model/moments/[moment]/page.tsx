@@ -27,7 +27,7 @@ const MODIFIER_TONE: Record<Modifier, string> = {
   relax:
     "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200",
   suppress:
-    "border-stone-200 bg-stone-50 text-stone-700 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300",
+    "border-line bg-sunken text-default",
 };
 
 export const metadata = {

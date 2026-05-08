@@ -142,7 +142,7 @@ export function FlagForReview({
           <div
             ref={dialogRef}
             tabIndex={-1}
-            className="w-full max-w-lg rounded-lg border border-stone-200 bg-white p-6 shadow-xl outline-none dark:border-stone-700 dark:bg-stone-900"
+            className="w-full max-w-lg rounded-lg border border-line bg-raised p-6 shadow-xl outline-none"
           >
             <header className="space-y-2">
               <h2
@@ -158,7 +158,7 @@ export function FlagForReview({
                 to refine the rulesets and improve the model.
               </p>
               {contextLine && (
-                <p className="rounded-md border border-line bg-stone-50 px-3 py-2 text-xs text-default dark:bg-stone-950">
+                <p className="rounded-md border border-line bg-sunken px-3 py-2 text-xs text-default">
                   {contextLine}
                 </p>
               )}
@@ -230,7 +230,7 @@ export function FlagForReview({
                         value={r}
                         checked={reason === r}
                         onChange={() => setReason(r)}
-                        className="accent-stone-700 dark:accent-stone-300"
+                        className="accent-strong"
                       />
                       {REASON_LABEL[r]}
                     </label>
@@ -258,14 +258,14 @@ export function FlagForReview({
 
               <label
                 htmlFor={consentId}
-                className="flex items-start gap-2 rounded border border-stone-200 bg-stone-50 p-3 text-sm text-default dark:border-stone-700 dark:bg-stone-950"
+                className="flex items-start gap-2 rounded border border-line bg-sunken p-3 text-sm text-default"
               >
                 <input
                   id={consentId}
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 accent-stone-700 dark:accent-stone-300"
+                  className="mt-0.5 accent-strong"
                 />
                 <span>
                   I consent to ContentRX seeing this string and using it

@@ -20,6 +20,8 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AuthorBlock } from "@/components/author-block";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   loadPublicAccuracySnapshot,
   type Kappa,
@@ -35,29 +37,29 @@ export default function AccuracyPage() {
   const snap = loadPublicAccuracySnapshot();
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <header className="mb-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
-          Accuracy
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold">
-          How I measure accuracy
-        </h1>
-        <p className="mt-4 text-sm text-quiet">
-          Three numbers describe how ContentRX scores against a fixed
-          bar. They&rsquo;re kept separate on purpose. A single
-          &ldquo;accuracy score&rdquo; would hide the self-drift
-          ceiling and overstate what the system can know about
-          itself. The reporting format (measured numbers, 95%
-          intervals, pending cells named honestly) follows the Model
-          Cards pattern from Mitchell et al., 2019.
-        </p>
-        <p className="mt-3 text-xs text-quiet">
-          {snap.generated_at
-            ? `Snapshot generated ${formatIso(snap.generated_at)}.`
-            : "Snapshot pending. The nightly generator has not run yet."}
-        </p>
-      </header>
+    <main className="mx-auto max-w-4xl px-6 py-20">
+      <PageHeader
+        eyebrow="Accuracy"
+        title="How I measure accuracy"
+        lede={
+          <p className="text-sm text-quiet">
+            Three numbers describe how ContentRX scores against a fixed
+            bar. They&rsquo;re kept separate on purpose. A single
+            &ldquo;accuracy score&rdquo; would hide the self-drift
+            ceiling and overstate what the system can know about
+            itself. The reporting format (measured numbers, 95%
+            intervals, pending cells named honestly) follows the Model
+            Cards pattern from Mitchell et al., 2019.
+          </p>
+        }
+        meta={
+          <>
+            {snap.generated_at
+              ? `Snapshot generated ${formatIso(snap.generated_at)}.`
+              : "Snapshot pending. The nightly generator has not run yet."}
+          </>
+        }
+      />
 
       <section className="grid gap-4 sm:grid-cols-3">
         <MetricBlock
@@ -140,7 +142,14 @@ export default function AccuracyPage() {
         </p>
       </section>
 
-      <footer className="mt-16 text-xs text-quiet">
+      {/* Named-byline. The accuracy methodology is the named-
+          author's claim; the byline is the proof. Same component
+          used on the landing hero and at the bottom of /about. */}
+      <div className="mt-16">
+        <AuthorBlock />
+      </div>
+
+      <footer className="mt-12 text-xs text-quiet">
         <p>
           Public snapshot at{" "}
           <a
@@ -149,8 +158,8 @@ export default function AccuracyPage() {
           >
             reports/accuracy/latest.json
           </a>
-          , generated nightly by the substrate-to-report pipeline. The
-          docs site picks up the file on next deploy. Schema version{" "}
+          , generated nightly by the calibration pipeline. The docs
+          site picks up the file on next deploy. Schema version{" "}
           <code className="font-mono">{snap.schema_version}</code>.
         </p>
       </footer>

@@ -20,11 +20,15 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
+import { humanizeContentType, humanizeMoment } from "@/lib/humanize";
 
 // Includes legacy three-tier values for historical rows that pre-date
 // schema 3.0.0; new rows always write "small" or "large". The label
-// itself is no longer rendered to customers.
-type SegmentType = "small" | "large" | "standard" | "document" | "surface";
+// itself is no longer rendered to customers. The page-level loader
+// coerces legacy rows ("standard" / "document" / "surface") to
+// "large" before they reach this component, so the type can be
+// the narrow post-3.0.0 union.
+type SegmentType = "small" | "large";
 
 interface CheckHistoryRow {
   id: string;
@@ -184,7 +188,7 @@ export function ChecksSearch({
                 className={`rounded-full px-3 py-1 font-medium transition ${
                   active
                     ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
-                    : "bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                    : "bg-sunken text-default hover:bg-hover"
                 }`}
               >
                 {VERDICT_LABEL[v]} · {counts[v || "all"] ?? 0}
@@ -240,9 +244,11 @@ export function ChecksSearch({
               )}
               {(row.contentType || row.moment) && (
                 <p className="mt-1 text-xs text-quiet">
-                  {row.contentType && <span>{row.contentType}</span>}
+                  {row.contentType && (
+                    <span>{humanizeContentType(row.contentType)}</span>
+                  )}
                   {row.contentType && row.moment && <span> · </span>}
-                  {row.moment && <span>{row.moment}</span>}
+                  {row.moment && <span>{humanizeMoment(row.moment)}</span>}
                 </p>
               )}
             </li>

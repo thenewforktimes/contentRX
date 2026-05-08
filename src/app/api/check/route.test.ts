@@ -483,14 +483,14 @@ describe("/api/check — gates", () => {
   it("returns 402 when quota exhausted (does NOT call the engine)", async () => {
     const userId = await seedAuthedUser("free");
     // Pre-fill usage at-or-above the free-tier cap. monthlyQuota("free")
-    // is 20 (re-anchored 2026-04-28); filling to 20 leaves zero room
+    // is 10 (re-anchored 2026-05-07); filling to 10 leaves zero room
     // for any new claim and the route returns 402 before the engine
     // is touched.
     await harness.db.insert(schema.usage).values({
       id: "u-fill",
       userId,
       month: new Date().toISOString().slice(0, 7),
-      count: 20,
+      count: 10,
     });
     cannedEval.current = PASS_RESULT;
 
@@ -498,23 +498,23 @@ describe("/api/check — gates", () => {
     expect(res.status).toBe(402);
     const body = await res.json();
     expect(body.error).toMatch(/quota/i);
-    expect(body.used).toBe(20);
+    expect(body.used).toBe(10);
     expect(body.plan).toBe("free");
   });
 
   it("under concurrent requests at the cap-1 boundary, exactly one succeeds", async () => {
-    // Free-tier monthlyQuota is 20 (src/lib/quotas.ts, re-anchored
-    // 2026-04-28). Pre-fill to cap-1 (19), fire 5 concurrent POSTs;
+    // Free-tier monthlyQuota is 10 (src/lib/quotas.ts, re-anchored
+    // 2026-05-07). Pre-fill to cap-1 (9), fire 5 concurrent POSTs;
     // exactly one returns 200, the rest return 402. Proves the
     // claimQuotaSlots atomic upsert holds end-to-end through the
-    // route handler — not just at the unit-test layer.
+    // route handler, not just at the unit-test layer.
     const userId = await seedAuthedUser("free");
     const month = new Date().toISOString().slice(0, 7);
     await harness.db.insert(schema.usage).values({
       id: "u-boundary",
       userId,
       month,
-      count: 19, // cap is 20
+      count: 9, // cap is 10
     });
     cannedEval.current = PASS_RESULT;
 
@@ -531,7 +531,7 @@ describe("/api/check — gates", () => {
       .select()
       .from(schema.usage)
       .where(eq(schema.usage.userId, userId));
-    expect(row?.count).toBe(20);
+    expect(row?.count).toBe(10);
   });
 });
 

@@ -215,12 +215,18 @@ def render_markdown(log: CalibrationLog) -> str:
             lines.append(f"  - {r}")
     lines.append("")
 
-    # Section 5: Override stream — deferred to the API-backed builder.
+    # Section 5: Override stream. Customer-facing pending phrasing —
+    # the prior copy mentioned "substrate API" and pointed at
+    # /admin/queue, both of which are internal-only references that
+    # leaked onto the public weekly log. ADR 2026-04-25 (private
+    # taxonomy) and docs/copy-vocabulary.md both reserve those terms
+    # for internal surfaces; the public log gets a plain pending line.
     lines.append("## Override stream")
     lines.append("")
     lines.append(
-        "- Override-by-subtype rollups land once the substrate API exposes them. "
-        "Until then refer to `/admin/queue` for the live count."
+        "- No override data this week. Override counts and the "
+        "common-disagreement breakdown will appear here once the "
+        "weekly rollup pipeline lands."
     )
     lines.append("")
 

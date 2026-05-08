@@ -4,13 +4,29 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "contentrx-cli"
-version = "0.4.0"
-description = "Command-line interface for ContentRX — content-design linter for Figma, code, and CI."
+version = "0.4.2"
+description = "Terminal client for ContentRX. Check copy in CI pipelines and locally against content-design standards."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "ContentRX" }]
-keywords = ["content", "linter", "ux-writing", "figma", "accessibility"]
+# Keywords are PyPI's only freeform discovery surface. Anchor them to
+# the post-pivot positioning (ADR 2026-04-25 + the BUILD_PLAN_v2 surface
+# order: MCP, LSP, GitHub Action, CLI, Figma plugin):
+#   - "content-design" is the brand vocabulary; not "ux-writing"
+#   - "linter" + "cli" describe the CLI itself
+#   - "ci" + "github-actions" point at the primary CLI consumer
+#   - "content" stays for broad discovery
+# Removed: "ux-writing" (wrong brand), "figma" (wrong surface for the
+# CLI), "accessibility" (not the primary positioning).
+keywords = [
+  "content-design",
+  "linter",
+  "content",
+  "cli",
+  "ci",
+  "github-actions",
+]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",

@@ -296,3 +296,61 @@ class TestMarkdownRender:
         md = calibration_generator.render_markdown(log)
         assert "Self-drift" in md
         assert "0.910" in md
+
+
+class TestNoInternalVocabularyLeaks:
+    """The calibration log is rendered publicly at /calibration/[week].
+    ADR 2026-04-25 (private taxonomy) and docs/copy-vocabulary.md
+    reserve internal architecture terms ("substrate") and internal
+    routes (`/admin/*`) for the founder-side surfaces only. The
+    generated markdown must not leak either onto the public page.
+
+    A real instance of this leak shipped 2026-05-07: the override-
+    stream pending line read "Override-by-subtype rollups land once
+    the substrate API exposes them. Until then refer to
+    `/admin/queue` for the live count." This test class is the
+    anti-regression."""
+
+    def _all_render_paths(self) -> list[str]:
+        # Exercise both code paths (pending + measured) so the test
+        # catches a leak introduced in either branch.
+        markdowns: list[str] = []
+        for accuracy in (_accuracy_pending(), _accuracy_measured()):
+            log = calibration_generator.build_calibration_log(
+                accuracy=accuracy,
+                prior_accuracy=None,
+                refinement_log_md="",
+                week="2026-18",
+                now=FIXED_NOW,
+            )
+            markdowns.append(calibration_generator.render_markdown(log))
+        return markdowns
+
+    def test_no_substrate_term_in_rendered_markdown(self):
+        for md in self._all_render_paths():
+            assert "substrate" not in md.lower(), (
+                "internal architecture term 'substrate' leaked into "
+                "the public calibration log"
+            )
+
+    def test_no_admin_routes_in_rendered_markdown(self):
+        for md in self._all_render_paths():
+            assert "/admin/" not in md, (
+                "founder-only route '/admin/...' leaked into the "
+                "public calibration log"
+            )
+
+    def test_override_stream_section_renders_customer_safe_pending(self):
+        log = calibration_generator.build_calibration_log(
+            accuracy=_accuracy_measured(),
+            prior_accuracy=None,
+            refinement_log_md="",
+            week="2026-18",
+            now=FIXED_NOW,
+        )
+        md = calibration_generator.render_markdown(log)
+        # Section header is preserved (consistency-of-format rule).
+        assert "## Override stream" in md
+        # Pending line is plain language about future state, not
+        # internal architecture.
+        assert "No override data this week" in md

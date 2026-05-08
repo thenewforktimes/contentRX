@@ -214,8 +214,10 @@ export default async function AdminSuggestionsPage() {
                 key={p.id}
                 className="rounded-md border border-line bg-raised px-3 py-2"
               >
-                <p className="font-mono text-xs text-quiet">
-                  {p.moment} · {p.contentType} · {p.standardId} · ×
+                <p className="text-xs text-quiet">
+                  {humanizeMoment(p.moment)} ·{" "}
+                  {humanizeContentType(p.contentType)} ·{" "}
+                  <code className="font-mono">{p.standardId}</code> · ×
                   {p.sampleSize}
                 </p>
                 <p className="mt-1 text-strong">

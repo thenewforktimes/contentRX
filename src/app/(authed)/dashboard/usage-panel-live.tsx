@@ -114,7 +114,7 @@ export function UsagePanelLive({
           of {quota.toLocaleString()} checks
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-900">
+      <div className="h-2 overflow-hidden rounded-full bg-raised">
         <div
           className={`h-full transition-[width] duration-300 ${barClasses[tone]}`}
           style={{ width: `${usedPct}%` }}

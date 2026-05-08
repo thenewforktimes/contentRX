@@ -27,6 +27,7 @@ import { buttonStyles } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import { CUSTOM_EXAMPLES_CAP_PER_TEAM } from "@/lib/custom-examples";
+import { humanizeContentType, humanizeMoment } from "@/lib/humanize";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { DeleteExampleButton } from "./delete-example-button";
 
@@ -60,7 +61,7 @@ export default async function CustomExamplesPage() {
           short-circuits those strings on every subsequent check
           without running the LLM, without weakening any global rule.
         </p>
-        <Link href="/dashboard" className={buttonStyles({ size: "sm" })}>
+        <Link href="/pricing" className={buttonStyles({ size: "sm" })}>
           Upgrade to Team
         </Link>
       </section>
@@ -128,7 +129,6 @@ export default async function CustomExamplesPage() {
                 <th className="py-2 pr-4">Verdict</th>
                 <th className="py-2 pr-4">Moment</th>
                 <th className="py-2 pr-4">Type</th>
-                <th className="py-2 pr-4">Standard</th>
                 <th className="py-2 pr-4">Contributed</th>
                 <th className="py-2 pr-4">Added</th>
                 <th className="py-2 pr-4" />
@@ -138,7 +138,7 @@ export default async function CustomExamplesPage() {
               {entries.map((e) => (
                 <tr
                   key={e.id}
-                  className="border-b border-stone-100 dark:border-stone-900"
+                  className="border-b border-line"
                 >
                   <td className="max-w-[280px] truncate py-2 pr-4 font-mono text-xs">
                     <span title={e.text}>{e.text}</span>
@@ -153,25 +153,28 @@ export default async function CustomExamplesPage() {
                   </td>
                   <td className="py-2 pr-4 text-xs">
                     {e.moment ? (
-                      <code className="font-mono">{e.moment}</code>
+                      <span>{humanizeMoment(e.moment)}</span>
                     ) : (
                       <span className="text-quiet">any</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 text-xs">
                     {e.contentType ? (
-                      <code className="font-mono">{e.contentType}</code>
+                      <span>{humanizeContentType(e.contentType)}</span>
                     ) : (
                       <span className="text-quiet">any</span>
                     )}
                   </td>
-                  <td className="py-2 pr-4 text-xs">
-                    {e.standardId ? (
-                      <code className="font-mono">{e.standardId}</code>
-                    ) : (
-                      <span className="text-quiet">none</span>
-                    )}
-                  </td>
+                  {/*
+                    Standard column removed per ADR 2026-04-25 — taxonomy
+                    IDs (CC-12, etc.) are private substrate. The
+                    underlying column stays in the schema for the
+                    /api/dashboard/export portability contract and to
+                    keep ingestion via MCP/CLI working; we just don't
+                    render it on the audit surface. Future work: add
+                    a `displayName` column so the entry can label
+                    itself without leaking the ID.
+                  */}
                   <td className="py-2 pr-4 text-xs">
                     {e.contributeUpstream ? (
                       <Pill tone="emerald">Upstream</Pill>

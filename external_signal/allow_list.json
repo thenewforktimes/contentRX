@@ -78,21 +78,6 @@
       }
     },
     {
-      "owner": "calcom",
-      "name": "cal.com",
-      "license": "AGPL-3.0",
-      "content_paths": [
-        "apps/web/public/static/locales",
-        "packages/*"
-      ],
-      "reason": "i18n-first product with translator feedback loop.",
-      "quality_signals": {
-        "has_content_designer": false,
-        "active_i18n": true,
-        "content_design_blog": false
-      }
-    },
-    {
       "owner": "raycast",
       "name": "extensions",
       "license": "MIT",
@@ -103,20 +88,6 @@
       "quality_signals": {
         "has_content_designer": true,
         "active_i18n": false,
-        "content_design_blog": true
-      }
-    },
-    {
-      "owner": "getsentry",
-      "name": "sentry",
-      "license": "BUSL-1.1",
-      "content_paths": [
-        "src/sentry"
-      ],
-      "reason": "Error-UX-heavy product; mature error-copy conventions.",
-      "quality_signals": {
-        "has_content_designer": true,
-        "active_i18n": true,
         "content_design_blog": true
       }
     },
@@ -235,20 +206,6 @@
         "has_content_designer": true,
         "active_i18n": true,
         "content_design_blog": false
-      }
-    },
-    {
-      "owner": "mdn",
-      "name": "content",
-      "license": "CC-BY-SA-2.5",
-      "content_paths": [
-        "files/en-us"
-      ],
-      "reason": "Mozilla Developer Network — documentation-first content.",
-      "quality_signals": {
-        "has_content_designer": true,
-        "active_i18n": true,
-        "content_design_blog": true
       }
     },
     {

@@ -16,6 +16,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { appUrl, sendEmail } from "@/lib/email";
+import { enforceRateLimit } from "@/lib/ratelimit";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { createInvitation, resolveTeamId } from "@/lib/team-invitations";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
@@ -31,6 +32,12 @@ export async function POST(req: Request) {
   if (!clerkId) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
+
+  // Tighter than the standard 60/min: invitations send emails, so
+  // rate-limit at the existing per-user bucket — same bucket /api/check
+  // uses, so a noisy session can't farm both endpoints in parallel.
+  const rl = await enforceRateLimit(clerkId);
+  if (rl) return rl;
 
   const body = await req.json().catch(() => null);
   const parsed = RequestSchema.safeParse(body);

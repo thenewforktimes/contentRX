@@ -104,6 +104,7 @@ export default async function AdminLayout({
             <NavGroup label="Pilots">
               <NavLink href="/admin/pilots">Tracker</NavLink>
               <NavLink href="/admin/costs">Costs</NavLink>
+              <NavLink href="/admin/costs/margin">Margin</NavLink>
             </NavGroup>
 
             <NavGroup label="Reports">

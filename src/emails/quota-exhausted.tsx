@@ -32,13 +32,13 @@ export function QuotaExhaustedEmail({
       </Text>
       {plan === "free" ? (
         <Text>
-          Upgrade to Pro (2,000 checks / month) to keep going right now.
-          Your remaining quota carries over for the rest of the month.
+          Upgrade to Pro (1,000 checks / month) to keep going right now.
+          Your remaining checks carry over for the rest of the month.
         </Text>
       ) : (
         <Text>
-          Your plan resets on the 1st. If you need more checks before then,
-          open the dashboard to manage your subscription.
+          Enable overage at $0.10 per check to keep checking past the
+          cap. We bill it on your next invoice. Disable anytime.
         </Text>
       )}
       <Text style={{ marginTop: 20 }}>
@@ -46,11 +46,11 @@ export function QuotaExhaustedEmail({
           href={
             plan === "free"
               ? `${appUrl}/dashboard?upgrade=pro`
-              : `${appUrl}/dashboard`
+              : `${appUrl}/dashboard/settings/overage`
           }
           style={primaryButton}
         >
-          {plan === "free" ? "Upgrade to Pro" : "Open dashboard"}
+          {plan === "free" ? "Upgrade to Pro" : "Enable overage"}
         </Button>
       </Text>
     </EmailShell>

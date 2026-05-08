@@ -68,10 +68,12 @@ def test_similarity_paraphrase_crosses_default_threshold():
 
 
 def test_attributed_sources_reads_sources_field():
-    assert attributed_sources({"sources": ["Mailchimp", "GOV.UK Style Guide"]}) == {
-        "Mailchimp",
-        "GOV.UK Style Guide",
-    }
+    # Source names are functional descriptors per ADR
+    # 2026-05-06-source-name-anonymization. The tool just compares
+    # strings; the descriptors here are placeholders.
+    assert attributed_sources(
+        {"sources": ["source-cat-A", "source-cat-B"]}
+    ) == {"source-cat-A", "source-cat-B"}
 
 
 def test_attributed_sources_empty_when_missing():
@@ -104,14 +106,14 @@ def test_find_matches_fires_when_paraphrase_lacks_attribution():
     )
     snippets = [
         Snippet(
-            source="Shopify Polaris",
+            source="commerce platform design system",
             text="Start with a verb that describes the specific action.",
         )
     ]
     matches = find_matches(lib, snippets, threshold=DEFAULT_THRESHOLD)
     assert len(matches) == 1
     assert matches[0].standard_id == "TST-01"
-    assert matches[0].source == "Shopify Polaris"
+    assert matches[0].source == "commerce platform design system"
     assert matches[0].ratio >= 0.9
 
 
@@ -122,12 +124,12 @@ def test_find_matches_exempts_already_attributed_sources():
         {
             "id": "TST-01",
             "rule": "Start with a verb that describes the specific action.",
-            "sources": ["Shopify Polaris"],
+            "sources": ["commerce platform design system"],
         }
     )
     snippets = [
         Snippet(
-            source="Shopify Polaris",
+            source="commerce platform design system",
             text="Start with a verb that describes the specific action.",
         )
     ]

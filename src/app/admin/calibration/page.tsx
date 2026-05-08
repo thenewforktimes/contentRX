@@ -125,15 +125,15 @@ export default async function AdminCalibrationPage() {
           Per-standard kappa
         </h2>
         {snapshot.standards.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-line-strong bg-white p-6 text-center text-sm text-quiet dark:bg-stone-900">
+          <p className="rounded-lg border border-dashed border-line-strong bg-raised p-6 text-center text-sm text-quiet">
             No per-standard kappa available yet. Run{" "}
             <code className="font-mono text-xs">tools/graduation_metrics.py</code>{" "}
             and commit{" "}
             <code className="font-mono text-xs">evals/graduation/readiness.json</code>.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-line bg-white dark:bg-stone-900">
-            <table className="min-w-full divide-y divide-stone-200 text-sm dark:divide-stone-800">
+          <div className="overflow-x-auto rounded-lg border border-line bg-raised">
+            <table className="min-w-full divide-y divide-line text-sm">
               <thead className="text-xs uppercase tracking-wide text-quiet">
                 <tr>
                   <th scope="col" className="px-3 py-2 text-left">Standard</th>
@@ -144,7 +144,7 @@ export default async function AdminCalibrationPage() {
                   <th scope="col" className="px-3 py-2 text-right">Prevalence</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
+              <tbody className="divide-y divide-line">
                 {snapshot.standards.map((s) => (
                   <StandardRow
                     key={s.standard_id}
@@ -171,7 +171,7 @@ function KappaCard({
   kappa: Kappa;
 }) {
   return (
-    <article className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
+    <article className="rounded-lg border border-line bg-raised p-4">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
         {label}
       </p>
@@ -205,7 +205,7 @@ function KappaCard({
 
 function DesignTargetCard({ target }: { target: number }) {
   return (
-    <article className="rounded-lg border-2 border-dashed border-line-strong bg-stone-50 p-4 dark:bg-stone-950">
+    <article className="rounded-lg border-2 border-dashed border-line-strong bg-sunken p-4">
       <p className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
         Design target
       </p>
@@ -233,7 +233,7 @@ function ThresholdCard({
   note?: string;
 }) {
   return (
-    <article className="rounded-lg border border-line bg-white p-3 dark:bg-stone-900">
+    <article className="rounded-lg border border-line bg-raised p-3">
       <div className="flex items-baseline justify-between gap-2">
         <span className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
           {label}

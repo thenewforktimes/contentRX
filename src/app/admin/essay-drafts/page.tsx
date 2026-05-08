@@ -97,7 +97,7 @@ export default async function AdminEssayDraftsPage() {
 
       <section
         aria-labelledby="inputs-heading"
-        className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900"
+        className="rounded-lg border border-line bg-raised p-4"
       >
         <h2
           id="inputs-heading"
@@ -182,7 +182,7 @@ export default async function AdminEssayDraftsPage() {
             defaultValue={initialBody}
             spellCheck
             rows={22}
-            className="w-full rounded-lg border border-line-strong bg-white p-4 font-mono text-xs leading-relaxed text-default focus:border-stone-500 focus:outline-none dark:bg-stone-900"
+            className="w-full rounded-lg border border-line-strong bg-raised p-4 font-mono text-xs leading-relaxed text-default focus:border-stone-500 focus:outline-none"
           />
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -218,11 +218,11 @@ export default async function AdminEssayDraftsPage() {
           </p>
         </header>
         {allDrafts.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-line-strong bg-white px-4 py-3 text-xs text-quiet dark:bg-stone-900">
+          <p className="rounded-lg border border-dashed border-line-strong bg-raised px-4 py-3 text-xs text-quiet">
             No drafts yet. The first save creates one.
           </p>
         ) : (
-          <ul className="divide-y divide-stone-100 rounded-lg border border-line bg-white dark:divide-stone-800 dark:bg-stone-900">
+          <ul className="divide-y divide-line rounded-lg border border-line bg-raised">
             {allDrafts.map((entry) => (
               <DraftRow
                 key={entry.filename}

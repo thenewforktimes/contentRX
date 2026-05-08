@@ -2,12 +2,13 @@
 external style-guide snippet without attribution.
 
 Human-eval build plan Session 35. The model leans on public sources
-(Mailchimp, GOV.UK, Apple HIG, …) and attributes them via the
-`sources` field on each standard. This tool catches the failure
-mode where a rule was lightly paraphrased from an external source
-without being added to `sources`, or where the paraphrase is close
-enough that the `influences` metadata should explicitly call out
-the relationship.
+(per ADR 2026-05-06-source-name-anonymization, the corpus carries
+functional descriptors of source category rather than brand names)
+and attributes them via the `sources` field on each standard. This
+tool catches the failure mode where a rule was lightly paraphrased
+from an external source without being added to `sources`, or where
+the paraphrase is close enough that the `influences` metadata should
+explicitly call out the relationship.
 
 Approach:
 

@@ -80,6 +80,20 @@ vi.mock("@/lib/safe-error-log", () => ({
   logSafeError: vi.fn(),
 }));
 
+// Rate-limit pre-check is the first side effect after auth — mock it
+// to a permissive no-op so the test doesn't need real Upstash
+// credentials. The route's behaviour under rate-limit *exceeded* is
+// covered structurally by the helper's own tests (no per-route
+// duplication needed).
+vi.mock("@/lib/ratelimit", () => ({
+  enforceRateLimit: vi.fn(async () => null),
+  checkRateLimit: vi.fn(async () => ({
+    success: true,
+    remaining: 60,
+    reset: Date.now() + 60_000,
+  })),
+}));
+
 import * as clerkServer from "@clerk/nextjs/server";
 import * as stripeLib from "@/lib/stripe";
 import * as pseudonymizeLib from "@/lib/pseudonymize";

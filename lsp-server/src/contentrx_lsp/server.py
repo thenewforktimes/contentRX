@@ -52,6 +52,11 @@ log = logging.getLogger("contentrx-lsp")
 DEBOUNCE_SECONDS = 0.4
 RATE_LIMIT_PER_SECOND = 2
 MAX_STRINGS_PER_DOCUMENT = 50
+# Boundary guards — tree-sitter handles arbitrary input but a 50 MB
+# minified bundle or a binary file pasted into a TSX buffer would
+# stall lint with no benefit. Both cases skip silently.
+MAX_DOCUMENT_BYTES = 1_000_000  # 1 MB
+_BINARY_SNIFF_BYTES = 4096
 
 
 @dataclass
@@ -225,12 +230,27 @@ async def _lint_after_debounce(
     await _lint_document(server, uri, state.text, edit_ts)
 
 
+def _is_binary_blob(source: str) -> bool:
+    """Heuristic: a NUL byte in the leading window means the buffer
+    isn't valid TSX. Tree-sitter would still parse it, but the result
+    is noise and can be slow on degenerate inputs."""
+    return "\x00" in source[:_BINARY_SNIFF_BYTES]
+
+
 async def _lint_document(
     server: ContentRXLanguageServer,
     uri: str,
     source: str,
     edit_ts: float,
 ) -> None:
+    if len(source.encode("utf-8", errors="ignore")) > MAX_DOCUMENT_BYTES:
+        # Oversize file — skip and clear any stale diagnostics so the
+        # editor doesn't hang onto markings from the prior pass.
+        server.publish_diagnostics(uri, [])
+        return
+    if _is_binary_blob(source):
+        server.publish_diagnostics(uri, [])
+        return
     extracted = extract_strings(source)[:MAX_STRINGS_PER_DOCUMENT]
 
     # De-duplicate identical strings — if the same copy appears in 5
@@ -338,11 +358,10 @@ async def _apply_suggestion(
 ) -> None:
     """Call /api/suggest-fix and apply the rewrite as a WorkspaceEdit.
 
-    PR-38 (ADR 2026-04-25) — schema 2.0.0 LSP diagnostics don't carry
-    `standard_id`, so the apply path no longer requires it. The
-    rewriter anchors on `issue` + `current_suggestion` instead. We
-    still need at least ONE of those three to even bother invoking
-    the API; an empty payload would just round-trip the input.
+    Schema 2.0.0 LSP diagnostics don't carry `standard_id`, so the
+    rewriter anchors on `issue` + `current_suggestion` (or `rule` for
+    team-custom rules). We need at least ONE of those to bother
+    invoking the API; an empty payload would just round-trip the input.
     """
     if not args:
         return
@@ -353,8 +372,8 @@ async def _apply_suggestion(
         return
     issue = payload.get("issue") or ""
     current_suggestion = payload.get("current_suggestion") or ""
-    standard_id = payload.get("standard_id") or ""
-    if not (issue or current_suggestion or standard_id):
+    rule = payload.get("rule") or ""
+    if not (issue or current_suggestion or rule):
         server.show_message(
             "ContentRX: nothing to anchor a rewrite on — "
             "no issue or suggestion attached to this diagnostic.",
@@ -396,8 +415,7 @@ async def _apply_suggestion(
     try:
         result = await suggest_fix(
             text=text,
-            standard_id=standard_id or None,
-            rule=payload.get("rule") or None,
+            rule=rule or None,
             issue=issue or None,
             current_suggestion=current_suggestion or None,
         )

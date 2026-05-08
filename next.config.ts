@@ -71,6 +71,17 @@ const nextConfig: NextConfig = {
         destination: "/dashboard/rules",
         permanent: true,
       },
+      {
+        // /sources retired 2026-05-06 (ADR 2026-05-06-sources-page-
+        // retired). The transparency + opt-out commitment that page
+        // anchored folds into /ethics as Commitment 4. Deep-link into
+        // the new section so anyone landing on a /sources bookmark
+        // sees the load-bearing claim and the opt-out mailto without
+        // a second click. 308 because the route is gone for good.
+        source: "/sources",
+        destination: "/ethics#no-stolen-content",
+        permanent: true,
+      },
     ];
   },
 };

@@ -40,6 +40,13 @@ export type CheckSource =
   | "mcp";
 
 export interface RecordUsageEventArgs {
+  /** Optional row id. When the caller wants to wire usage_events.id
+   * to violations.check_event_id (so the run audit page can join
+   * `violations.check_event_id ↔ usage_events.id` and pull
+   * text_preview), they generate one cuid up-front and pass it to
+   * both writers. When omitted, the schema's default cuid is used.
+   * Always supplied from /api/check; not supplied by other callers. */
+  id?: string;
   userId: string;
   /** Schema 3.0.0: the three-tier model collapsed to length-routed
    * `SizeClass` ("small" / "large"). The DB column accepts the old
@@ -101,6 +108,11 @@ export async function recordUsageEvent(
     cacheCreationInputTokens: args.cacheCreationInputTokens,
   });
   await db.insert(schema.usageEvents).values({
+    // Caller-supplied id only when present; schema's `cuid()` default
+    // wins otherwise. /api/check supplies one (and passes the same id
+    // as `checkEventId` to logViolations) so the run audit page can
+    // join the two tables.
+    ...(args.id ? { id: args.id } : {}),
     userId: args.userId,
     segmentType: args.segmentType,
     unitsConsumed: args.unitsConsumed,
@@ -159,24 +171,31 @@ export async function evaluateAndPauseIfExceeded(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
   );
 
-  const [dailyRow] = await db
-    .select({ total: sum(schema.usageEvents.estimatedCostUsd) })
-    .from(schema.usageEvents)
-    .where(
-      and(
-        eq(schema.usageEvents.userId, userId),
-        gte(schema.usageEvents.createdAt, todayStart),
+  // Daily and monthly spend roll-ups are independent — fire them in
+  // parallel. Saves ~50ms on every check's post-response tail (the
+  // function is wrapped in safeAfter at the /api/check call site).
+  // Under sustained throughput, serialising these would back the
+  // cost-pause alert up by the daily query's latency.
+  const [[dailyRow], [monthlyRow]] = await Promise.all([
+    db
+      .select({ total: sum(schema.usageEvents.estimatedCostUsd) })
+      .from(schema.usageEvents)
+      .where(
+        and(
+          eq(schema.usageEvents.userId, userId),
+          gte(schema.usageEvents.createdAt, todayStart),
+        ),
       ),
-    );
-  const [monthlyRow] = await db
-    .select({ total: sum(schema.usageEvents.estimatedCostUsd) })
-    .from(schema.usageEvents)
-    .where(
-      and(
-        eq(schema.usageEvents.userId, userId),
-        gte(schema.usageEvents.createdAt, monthStart),
+    db
+      .select({ total: sum(schema.usageEvents.estimatedCostUsd) })
+      .from(schema.usageEvents)
+      .where(
+        and(
+          eq(schema.usageEvents.userId, userId),
+          gte(schema.usageEvents.createdAt, monthStart),
+        ),
       ),
-    );
+  ]);
 
   const dailySpendUsd = parseFloat(dailyRow?.total ?? "0");
   const monthlySpendUsd = parseFloat(monthlyRow?.total ?? "0");
@@ -201,6 +220,41 @@ export async function evaluateAndPauseIfExceeded(
       )
       .returning({ id: schema.users.id });
     pausedNow = result.length > 0;
+
+    // High-signal observability event when the flag actually flips.
+    // Mirrors `logSafeError` → Sentry for errors; this is the
+    // "important state change" equivalent. The alerting rule is to
+    // page on any cost-pause flip in production. Wrapped in try/catch
+    // because Sentry can be unreachable (init failure, vitest, DSN
+    // missing) and we don't want the threshold path to fail with the
+    // alert hung up.
+    if (pausedNow && typeof window === "undefined") {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const Sentry = require("@sentry/nextjs") as {
+          captureMessage?: (
+            msg: string,
+            ctx?: {
+              level?: string;
+              tags?: Record<string, string>;
+              extra?: Record<string, unknown>;
+            },
+          ) => void;
+        };
+        Sentry.captureMessage?.("cost_pause_active_flipped", {
+          level: "warning",
+          tags: { kind: "cost-pause", userId },
+          extra: {
+            dailySpendUsd,
+            monthlySpendUsd,
+            dailyThresholdUsd,
+            monthlyThresholdUsd,
+          },
+        });
+      } catch {
+        // Sentry unreachable — already logged via the email alert path.
+      }
+    }
   }
 
   return {

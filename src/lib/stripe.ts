@@ -3,26 +3,30 @@
  *
  * Price IDs live in env, not in code, so we can swap between test mode
  * and live mode without redeploying. The plan/interval combinations we
- * sell, anchored to the 2026-04-30 pre-pilot launch pricing
- * (PR #280):
+ * sell, anchored to the 2026-05-07 Phase 1 pricing lock
+ * (_private/pricing-analysis.md):
  *
  *   - Pro Monthly:   $39/mo                       (STRIPE_PRICE_PRO_MONTHLY)
- *   - Pro Annual:    $32/mo billed annually       (STRIPE_PRICE_PRO_ANNUAL)
- *   - Team Monthly:  $69/seat, 5-seat min         (STRIPE_PRICE_TEAM_MONTHLY)
- *   - Team Annual:   $59/seat billed annually     (STRIPE_PRICE_TEAM_ANNUAL)
- *   - Scale:         $1,499/mo flat, annual only  (STRIPE_PRICE_SCALE_ANNUAL,
+ *   - Pro Annual:    $379/yr (20% off)            (STRIPE_PRICE_PRO_ANNUAL)
+ *   - Team Monthly:  $79/seat, no min             (STRIPE_PRICE_TEAM_MONTHLY)
+ *   - Team Annual:   $759/seat/yr (20% off)       (STRIPE_PRICE_TEAM_ANNUAL)
+ *   - Scale Monthly: $1,799/mo flat, 60k checks   (STRIPE_PRICE_SCALE_MONTHLY,
  *                                                   sales-assisted; no
  *                                                   self-serve checkout yet)
+ *   - Scale Annual:  $17,299/yr (20% off)         (STRIPE_PRICE_SCALE_ANNUAL)
+ *   - Overage:       $0.10/unit, metered          (STRIPE_PRICE_OVERAGE,
+ *                                                   pre-created on every
+ *                                                   paid sub for Phase 4)
  *
  * IMPORTANT: the env vars must point at price IDs anchored to the new
  * numbers above. The display copy in subscription-panel.tsx and
- * (marketing)/pricing/page.tsx already states the launch prices —
+ * (marketing)/pricing/page.tsx already states the launch prices, and
  * Stripe must match. To update: create new prices in the Stripe
  * Dashboard at the launch numbers and update STRIPE_PRICE_*_MONTHLY /
  * _ANNUAL env vars in Vercel for production AND preview environments.
  *
  * Everything else (trial policy, promo codes, tax, proration rules) is
- * configured in the Stripe Dashboard — the app stays thin.
+ * configured in the Stripe Dashboard. The app stays thin.
  */
 
 import Stripe from "stripe";
@@ -45,7 +49,11 @@ export function getStripe(): Stripe {
 export type PaidPlan = "pro" | "team";
 export type Interval = "monthly" | "annual";
 
-export const TEAM_MIN_SEATS = 5;
+// Re-export so existing server-side imports (`import { TEAM_MIN_SEATS }
+// from "@/lib/stripe"`) keep working. The canonical definition lives
+// in billing-constants.ts so client components can share it without
+// pulling the Stripe SDK into the browser bundle.
+export { TEAM_MIN_SEATS } from "./billing-constants";
 
 export function priceIdFor(plan: PaidPlan, interval: Interval): string | null {
   const key = (() => {

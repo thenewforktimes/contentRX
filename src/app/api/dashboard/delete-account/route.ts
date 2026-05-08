@@ -37,6 +37,7 @@ import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { logSafeError } from "@/lib/safe-error-log";
 import { pseudonymizeUser } from "@/lib/pseudonymize";
+import { enforceRateLimit } from "@/lib/ratelimit";
 import { getStripe } from "@/lib/stripe";
 
 const REQUIRED_CONFIRMATION = "DELETE";
@@ -53,6 +54,9 @@ export async function POST(req: Request) {
       { status: 401 },
     );
   }
+
+  const rl = await enforceRateLimit(clerkId);
+  if (rl) return rl;
 
   const body = await req.json().catch(() => null);
   const parsed = RequestSchema.safeParse(body);

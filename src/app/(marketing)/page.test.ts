@@ -40,6 +40,13 @@ function visibleCopy(source: string): string {
 describe("landing page (src/app/(marketing)/page.tsx)", () => {
   const source = readSource("src/app/(marketing)/page.tsx");
   const visible = visibleCopy(source);
+  // 2026-05-06 design refresh: the named-author block was extracted
+  // into its own component (`src/components/author-block.tsx`) so
+  // /home and /about share the byline. Tests that previously asserted
+  // on inline page copy now read the component source too.
+  const authorBlockVisible = visibleCopy(
+    readSource("src/components/author-block.tsx"),
+  );
 
   it("leads with the brand promise (staff-level content design review, in every repo)", () => {
     // The hero h1 is the brand promise. If a future edit weakens
@@ -83,36 +90,38 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     // The eyebrow + title hold the section together; if either
     // changes, the section is being meaningfully edited.
     expect(visible).toMatch(/built for your stack/i);
-    expect(visible).toMatch(/easier to buy.{1,4}safer to ship/i);
+    expect(visible).toMatch(/easier to adopt.{1,4}safer to ship/i);
   });
 
-  it("home bio leads with the staff-content-designer claim, not the name", () => {
-    // 2026-05-05: bio reordered to lead with credentialing
-    // ("ContentRX was built by a staff content designer.") before
-    // the name. The claim hooks readers who don't know who Robert
-    // is yet.
-    expect(visible).toMatch(/ContentRX was built by a staff content designer/);
+  it("home byline leads with the staff-content-designer claim", () => {
+    // 2026-05-05: bio reordered to lead with credentialing before
+    // the name. 2026-05-06: the bio moved into <AuthorBlock> so the
+    // structural claim now lives in the component, not inline on the
+    // page. The claim still hooks readers who don't know who Robert
+    // is yet — it just renders through the component.
+    expect(source).toContain("AuthorBlock");
+    expect(authorBlockVisible).toMatch(/staff content designer/i);
   });
 
   it("names the four orgs in the founder credit (Intuit, Meta, Opendoor, PayPal)", () => {
     // The named-expert positioning hinges on the org arc. If a
     // future edit drops one of these, the credibility surface
-    // narrows.
+    // narrows. After 2026-05-06 the arc lives in <AuthorBlock>'s
+    // CAREER_ARC array; the test reads the component source.
     for (const org of ["Intuit", "Meta", "Opendoor", "PayPal"]) {
-      expect(visible).toContain(org);
+      expect(authorBlockVisible).toContain(org);
     }
-    // "Robert Ballard" can wrap across lines in the JSX source —
-    // match across whitespace.
-    expect(visible).toMatch(/Robert\s+Ballard/);
+    // Robert's name lives in the AuthorBlock's display copy.
+    expect(authorBlockVisible).toMatch(/Robert\s+Ballard/);
   });
 
   it("links the public accountability surface from the body copy", () => {
     // /accuracy and /calibration are inline-linked from the
     // "why it works" section. The remaining trust surfaces
-    // (/sources, /ethics, /privacy, /security) live in the
-    // global <SiteFooter>; the body copy doesn't have to carry
-    // every cross-link, but it has to walk the reader to at
-    // least one accountability surface inline.
+    // (/ethics, /privacy, /security) live in the global
+    // <SiteFooter>; the body copy doesn't have to carry every
+    // cross-link, but it has to walk the reader to at least one
+    // accountability surface inline.
     expect(visible).toMatch(/href="\/(accuracy|calibration)"/);
   });
 
@@ -188,9 +197,9 @@ describe("/about page (src/app/(marketing)/about/page.tsx)", () => {
 
   it("inline-links at least one accountability surface from the body copy", () => {
     // The full accountability surface (/accuracy, /calibration,
-    // /sources, /ethics) is reachable from the global <SiteFooter>
-    // shipped with the (marketing) route group's layout. /about can
-    // be lighter on inline cross-refs as a result, but at minimum it
+    // /ethics) is reachable from the global <SiteFooter> shipped
+    // with the (marketing) route group's layout. /about can be
+    // lighter on inline cross-refs as a result, but at minimum it
     // should still walk the reader to /accuracy from the body — the
     // page is "about the model" and the model's measurement is the
     // load-bearing claim.

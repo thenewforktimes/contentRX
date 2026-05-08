@@ -111,7 +111,7 @@ export default async function AdminCaseStudyDetailPage({
         </dl>
       </header>
 
-      <section className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
+      <section className="rounded-lg border border-line bg-raised p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-quiet">
           Verdict distribution
         </h2>
@@ -198,7 +198,7 @@ export default async function AdminCaseStudyDetailPage({
       })}
 
       {detail.summary_md && (
-        <section className="rounded-lg border border-line bg-white p-4 dark:bg-stone-900">
+        <section className="rounded-lg border border-line bg-raised p-4">
           <details>
             <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-quiet">
               Auto-rolled summary
@@ -239,7 +239,7 @@ function ResultsSection({
           {VERDICT_DESCRIPTION[verdict]}
         </p>
       </header>
-      <ul className="divide-y divide-stone-100 rounded-lg border border-line bg-white dark:divide-stone-800 dark:bg-stone-900">
+      <ul className="divide-y divide-line rounded-lg border border-line bg-raised">
         {rows.map((row, i) => (
           <ResultRow key={`${row.input.source_file}:${row.input.line}:${i}`} row={row} />
         ))}

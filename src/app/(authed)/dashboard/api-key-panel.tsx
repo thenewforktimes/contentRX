@@ -149,7 +149,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       {hasKey ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <code className="rounded bg-stone-100 px-2 py-1 font-mono text-xs text-default dark:bg-stone-900">
+            <code className="rounded bg-raised px-2 py-1 font-mono text-xs text-default">
               {prefix}…
             </code>
             {createdAt && (

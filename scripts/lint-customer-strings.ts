@@ -134,6 +134,24 @@ const CHECKS: Check[] = [
     // pre-stripped by the extractor.
     match: regexMatch(/\bViolations?\b/),
   },
+  {
+    id: "no-internal-substrate-vocab",
+    severity: "error",
+    description:
+      'Reserved internal architecture term per ADR 2026-04-25. The customer-facing language for what the model leans on is "calibration log" / "accuracy snapshot" / "refinement log" / "standards" — never "substrate." See docs/copy-vocabulary.md.',
+    // Word-boundary match so "substrate-aware" or "substrate" both
+    // catch, but not random substrings.
+    match: regexMatch(/\bsubstrate\b/i),
+  },
+  {
+    id: "no-internal-admin-route",
+    severity: "error",
+    description:
+      'Founder-only authenticated route. Pointing customers at /admin/* leaks internal admin tooling and gives them dead-end clicks. If the underlying capability needs a customer surface, build the customer surface — don\'t link the admin one.',
+    // Match the path prefix; caller can add specific subpaths
+    // (`/admin/queue`, `/admin/reports`) under the same rule.
+    match: regexMatch(/\/admin\//),
+  },
 
   // ---------------------------------------------------------------------------
   // Warnings (CI emits, doesn't block)

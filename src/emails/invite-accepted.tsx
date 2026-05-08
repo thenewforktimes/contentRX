@@ -16,7 +16,7 @@ export function InviteAcceptedEmail({
       </Heading>
       <Text>
         They can now check content against your team's rules and contribute
-        to your shared monthly quota.
+        to your shared monthly limit.
       </Text>
       <Text style={{ marginTop: 20 }}>
         <Button href={`${appUrl}/dashboard`} style={primaryButton}>

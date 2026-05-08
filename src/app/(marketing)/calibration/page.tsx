@@ -13,6 +13,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/ui/page-header";
 import { listCalibrationLogs } from "@/lib/calibration-loader.server";
 
 export const metadata: Metadata = {
@@ -25,31 +26,32 @@ export default function CalibrationIndexPage() {
   const entries = listCalibrationLogs();
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <header className="mb-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
-          Calibration log
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold">Weekly calibration log</h1>
-        <p className="mt-4 text-sm text-quiet">
-          Every Monday, the substrate-to-report pipeline emits a
-          calibration log entry. Each entry covers the previous week&apos;s
-          measured κ movement, drift signals, override counts, and active
-          taxonomy refinement candidates. The format is templated on
-          purpose: consistency week to week is what makes drift in the
-          writing detectable.
-        </p>
-        <p className="mt-3 text-sm text-quiet">
-          See{" "}
-          <Link href="/accuracy" className="underline underline-offset-2">
-            /accuracy
-          </Link>{" "}
-          for the headline κ numbers.
-        </p>
-      </header>
+    <main className="mx-auto max-w-4xl px-6 py-20">
+      <PageHeader
+        eyebrow="Calibration log"
+        title="Weekly calibration log"
+        lede={
+          <p className="text-sm text-quiet">
+            Every Monday a new calibration log entry is generated. Each
+            entry covers the previous week&apos;s measured κ movement,
+            drift signals, override counts, and active refinement
+            candidates. The format is templated on purpose: consistency
+            week to week is what makes drift in the writing detectable.
+          </p>
+        }
+        meta={
+          <>
+            See{" "}
+            <Link href="/accuracy" className="underline underline-offset-2">
+              /accuracy
+            </Link>{" "}
+            for the headline κ numbers.
+          </>
+        }
+      />
 
       {entries.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-line-strong bg-white px-4 py-6 text-center text-sm text-quiet dark:bg-stone-900">
+        <p className="rounded-lg border border-dashed border-line-strong bg-raised px-4 py-6 text-center text-sm text-quiet">
           No calibration log entries yet. The Monday cron generator
           publishes new entries as they land.
         </p>
@@ -59,7 +61,7 @@ export default function CalibrationIndexPage() {
             <li key={entry.week}>
               <Link
                 href={`/calibration/${entry.week}`}
-                className="block rounded-lg border border-line bg-white p-4 transition hover:border-line-strong dark:bg-stone-900"
+                className="block rounded-lg border border-line bg-raised p-4 transition hover:border-line-strong"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <h2 className="font-mono text-base font-semibold">

@@ -118,7 +118,7 @@ export function LogRefinementButton({ defaults }: { defaults: Defaults }) {
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-md border border-line-strong px-3 py-1 text-xs text-stone-700 hover:bg-hover dark:text-stone-200"
+          className="rounded-md border border-line-strong px-3 py-1 text-xs text-default hover:bg-hover"
         >
           Cancel
         </button>
