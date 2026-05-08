@@ -28,6 +28,7 @@ import { currentMonth, monthlyQuota } from "@/lib/quotas";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { logSafeError } from "@/lib/safe-error-log";
+import { teamScope } from "@/lib/team-scope";
 import { claimQuotaSlot } from "@/lib/usage";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 
@@ -115,9 +116,10 @@ export async function POST(req: Request) {
   }
 
   // Suggest-fix is billed as a scan — it makes an LLM call of similar
-  // cost. Same quota slot contract as /api/check.
+  // cost. Same quota slot contract as /api/check, and the same team
+  // pooling rule (members decrement the shared owner row).
   const quota = monthlyQuota(auth.plan, auth.seats);
-  const slot = await claimQuotaSlot(auth.user.id, quota);
+  const slot = await claimQuotaSlot(teamScope(auth), quota);
   if (!slot.granted) {
     return json(
       {

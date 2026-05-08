@@ -260,7 +260,13 @@ export async function POST(req: Request) {
   // for n > 1).
   const meterDecision = meter(text);
   const checksNeeded = meterDecision.unitsConsumed;
-  const claim = await claimQuotaSlots(auth.user.id, checksNeeded, quota);
+  // Team plans pool a single monthly quota across all members. Scope
+  // the claim/usage row at the team owner so a member's call decrements
+  // the shared count, and the dashboard's per-member read sees the
+  // pooled total. teamScope(auth) returns auth.teamOwnerUserId for
+  // members; auth.user.id for owners and non-team users.
+  const usageScopeUserId = teamScope(auth);
+  const claim = await claimQuotaSlots(usageScopeUserId, checksNeeded, quota);
   if (!claim.granted) {
     void notifyQuotaExhausted({
       to: auth.user.email,
@@ -504,7 +510,7 @@ export async function POST(req: Request) {
         (result as { review_reason?: string | null }).review_reason ?? null,
       runId: run_id ?? null,
     }),
-    recordTokenUsage(auth.user.id, tokens),
+    recordTokenUsage(usageScopeUserId, tokens),
     // Phase 4 cost-monitor + check-history: one event row per /api/check
     // completion. The cost columns drive /admin/costs + the threshold-
     // evaluation pause logic. The check-history columns drive
@@ -567,7 +573,7 @@ export async function POST(req: Request) {
   // counter, "This week" panel, and Active-Surfaces row reflect this
   // check on the next render. Scope: this user's usage, this team's
   // violations. See `lib/revalidate.ts` + `lib/cache-tags.ts`.
-  revalidateDashboard({ userId: auth.user.id, teamId: teamIdForLog });
+  revalidateDashboard({ userId: usageScopeUserId, teamId: teamIdForLog });
 
   // Public envelope (schema 2.0.0). `result` is the substrate
   // CheckResult shape returned by the Python engine; we project it

@@ -90,7 +90,7 @@ export default async function DashboardPage() {
   const [seats, used, activeSub, sourceStats, insights, teamRuleCounts] =
     await Promise.all([
       loadSeats(user.id, plan, user.teamOwnerUserId),
-      loadCurrentUsage(user.id),
+      loadCurrentUsage(user.teamOwnerUserId ?? user.id),
       loadActiveSubscription(user.id, user.teamOwnerUserId),
       loadSourceStats(user.id, user.teamOwnerUserId),
       loadWeeklyInsights(user.id, user.teamOwnerUserId),
