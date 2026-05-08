@@ -59,7 +59,7 @@ export default async function OverridesPage() {
   if (user.plan !== "team") {
     return (
       <section className="flex flex-col items-start gap-3 rounded-lg border border-line p-6">
-        <h1 className="text-lg font-semibold">Override report</h1>
+        <h1 className="text-lg font-semibold">Rule patterns</h1>
         <p className="text-sm text-default">
           Available on the Team plan. Surfaces the rules your team
           disagrees with most so you can disable or tune them in team
@@ -213,10 +213,10 @@ export default async function OverridesPage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
           Last {RANGE_DAYS} days
         </p>
-        <h1 className="mt-2 text-2xl font-semibold">Override report</h1>
+        <h1 className="mt-2 text-2xl font-semibold">Rule patterns</h1>
         <p className="mt-1 text-sm text-default">
           The rules your team dismisses most. Use this to decide which
-          standards to disable or override in your{" "}
+          standards to disable or tune in your{" "}
           <Link
             href="/dashboard/rules"
             className="underline underline-offset-2"

@@ -1,36 +1,40 @@
 /**
- * /dashboard/runs/[run_id] — durable audit log for a single CI run.
+ * /dashboard/runs/[run_id] — durable record of a single Github Action run.
  *
- * Positioning (the load-bearing decision): this page is an **audit
- * log**, not a workflow surface. Customers fix findings in the PR
- * comment the GitHub Action posts (renders the issue text + a diff-
- * fenced suggestion natively in GitHub's review UI — far more
- * actionable than anything we could build here). This page exists for
- * after the PR closes, the comment scrolls past, and the engineer
- * needs to answer "what did ContentRX flag in that run last month?"
+ * Two surfaces, two purposes:
  *
- * The audit-log framing is forced by the privacy contract: the
- * `violations` table stores `text_hash` (sha256), not the original
- * string. So we cannot render the issue text or the suggestion —
- * that data is intentionally not persisted. Pretending to be a
- * "full report" surface would over-promise. We are an audit log:
- * what got flagged, where, when, in what category. For the actionable
- * surface, the customer goes back to the PR comment.
+ * 1. **The PR comment** is the real-time actionable surface. The
+ *    Action posts it with full issue text + a diff-fenced suggestion
+ *    for each finding (rendered natively by GitHub's review UI).
+ *    Engineers act there, in PR-review context.
  *
- * What renders:
- *   - run_id + source surface + time range
- *   - rollups: total findings, files touched, severity breakdown
- *   - per-file list: severity dot + categorized metadata (content
- *     type · moment), grouped by file path
+ * 2. **This dashboard page** is the durable record once the PR
+ *    closes and the action log rolls over. It shows the customer's
+ *    flagged strings (joined from usage_events.text_preview, same
+ *    privacy posture as Check history — the customer's own data
+ *    shown back to them per ADR 2026-04-28) plus the metadata
+ *    needed for compliance / "what got flagged where" review.
  *
- * Privacy contract (ADR 2026-04-25 / schema 3.0.0):
+ * What renders per finding:
+ *   - severity dot
+ *   - text_preview (first 80 chars of the original input, joined
+ *     via violations.check_event_id ↔ usage_events.id)
+ *   - content_type · moment (humanized)
+ * Grouped by file path; per-file finding count badge; top-of-page
+ * rollup (total findings, files, severity breakdown, time range,
+ * source surface).
+ *
+ * Privacy contract (ADR 2026-04-25 / 2026-04-28):
  *   - NEVER renders `standard_id` (substrate, founder-only)
- *   - NEVER renders hashed text (no value to the customer)
- *   - NEVER renders `review_reason_subtype` here — those labels
- *     ("low_confidence_mixed_signals", etc.) are designed for /admin
- *     triage, not customer chrome. Out of context they read as
- *     anxious chatbot voice and violate the calm-voice rule.
- *   - WILL render: severity, content_type, moment, file_path
+ *   - NEVER renders text_hash (no value to customer)
+ *   - NEVER renders review_reason_subtype here (those labels are
+ *     for /admin triage; out of context they leak anxious chatbot
+ *     voice and violate the calm-voice rule).
+ *   - WILL render: text_preview (customer's own data), severity,
+ *     content_type, moment, file_path
+ *   - DOES NOT render the engine's issue text or suggestion —
+ *     those aren't stored on violations rows. The PR comment is
+ *     where those live.
  *
  * Auth: Clerk session. Team members see the team's runs (matched via
  * violations.team_id); solo users see their own (team_id null +
@@ -68,6 +72,11 @@ type ViolationRow = {
   contentType: string;
   severity: string;
   source: string;
+  // Joined from usage_events.text_preview via violations.check_event_id.
+  // First 80 chars of the original input — same data Check history
+  // shows for the same row. Nullable: legacy violations rows without
+  // a checkEventId, or rows whose usage_event was pruned past TTL.
+  textPreview: string | null;
 };
 
 export default async function RunPage({ params }: RunParams) {
@@ -117,8 +126,21 @@ export default async function RunPage({ params }: RunParams) {
         // labels are designed for /admin triage; out of context here
         // they leak anxious chatbot voice. The audit log shows what
         // got flagged, not why the engine wasn't sure.
+        //
+        // text_preview joined via violations.check_event_id ↔
+        // usage_events.id. Same string the customer sees in Check
+        // history for the matching call. Privacy posture: customer's
+        // own input shown back to them is part of the customer-not-
+        // product contract (ADR 2026-04-28). Nullable: legacy
+        // violations without a checkEventId, or usage_event pruned
+        // past TTL.
+        textPreview: schema.usageEvents.textPreview,
       })
       .from(schema.violations)
+      .leftJoin(
+        schema.usageEvents,
+        eq(schema.violations.checkEventId, schema.usageEvents.id),
+      )
       .where(filterClause)
       .orderBy(asc(schema.violations.filePath), asc(schema.violations.createdAt))
       .limit(DISPLAYED_FINDINGS_LIMIT) as Promise<ViolationRow[]>,
@@ -205,18 +227,17 @@ export default async function RunPage({ params }: RunParams) {
       </header>
 
       {/*
-        The audit log shows what got flagged, not the issue text or
-        suggestion (privacy contract: only sha256 is stored). For the
-        actionable view of the findings, the customer goes back to
-        the GitHub Action's PR comment — which renders the issue +
-        a diff-fenced suggestion natively in GitHub's review UI. The
-        callout below makes that division of labor explicit so this
-        page doesn't read like it's missing content.
+        Two surfaces, two purposes — be explicit about it so the page
+        doesn't read like it's missing the content engineers expect.
+        The PR comment is where the issue text + diff-fenced
+        suggestions live; this page is the durable record (with the
+        flagged strings) once the PR closes.
       */}
       <aside className="rounded-md border border-line bg-overlay p-3 text-xs text-default">
-        Audit log only. To act on findings, open the ContentRX comment
-        on the original pull request. It carries the issue text and a
-        diff-fenced suggestion for each one.
+        Strings + flags live here as a durable record. The original
+        GitHub Action comment on the PR carries the issue text and a
+        diff-fenced suggestion for each finding. Open the PR to act on
+        them in GitHub&apos;s review UI.
       </aside>
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -303,8 +324,17 @@ function FileBlock({
             className="flex items-start gap-3 rounded-md bg-overlay p-3 text-sm"
           >
             <SeverityDot severity={it.severity} />
-            <div className="flex-1">
-              <div className="text-default">
+            <div className="flex-1 min-w-0">
+              {it.textPreview && (
+                <p className="truncate font-mono text-xs text-strong">
+                  {it.textPreview}
+                </p>
+              )}
+              <div
+                className={
+                  it.textPreview ? "mt-1 text-xs text-quiet" : "text-default"
+                }
+              >
                 {humanizeContentType(it.contentType)}
                 {it.moment && (
                   <>

@@ -345,7 +345,7 @@ function InsightsPanel({
           )}
           {plan === "team" && insights.overrides >= 5 && (
             <p className="rounded-md border border-accent-caution-border bg-accent-caution-soft px-3 py-2 text-xs text-accent-caution-text">
-              Your team is dismissing findings often. The override report
+              Your team is dismissing findings often. Rule patterns
               breaks down which rules your team disagrees with most.
               Consider tuning them in team rules.
             </p>
@@ -356,7 +356,7 @@ function InsightsPanel({
                 href="/dashboard/overrides"
                 className={buttonStyles({ variant: "secondary", size: "sm" })}
               >
-                View override report
+                View rule patterns
               </Link>
             )}
           </div>
@@ -435,7 +435,7 @@ function OverridesLink() {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Override report</h2>
+        <h2 className="text-sm font-semibold">Rule patterns</h2>
         <span className="text-xs text-default">Last 30 days</span>
       </header>
       <p className="mb-3 text-sm text-default">
@@ -446,7 +446,7 @@ function OverridesLink() {
         href="/dashboard/overrides"
         className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
-        View override report
+        View rule patterns
       </Link>
     </section>
   );

@@ -58,14 +58,27 @@ const TABS: ReadonlyArray<{
   },
   {
     href: "/dashboard/runs",
-    label: "CI runs",
+    label: "Github runs",
     // Match both the index and per-run pages so /dashboard/runs/<id>
-    // keeps the tab highlighted.
+    // keeps the tab highlighted. Earlier label was "CI runs"; renamed
+    // to name the surface explicitly so engineers reach for it from
+    // PR-comment context. "Action" elided for character economy —
+    // anyone who ran the Action knows what they did.
     match: (p) => p.startsWith("/dashboard/runs"),
   },
   {
     href: "/dashboard/overrides",
-    label: "Override report",
+    // Earlier label was "Override report" — internal vocabulary
+    // (`violation_overrides` is the table name). Customers don't
+    // think in terms of "overrides"; they think in terms of "which
+    // rules keep getting dismissed?" The page is a tuning tool, so
+    // "Rule patterns" frames the data correctly without conflating
+    // with the configurative "Team rules" tab next door.
+    //
+    // URL stays /dashboard/overrides for stability — the table name
+    // and route path are internal plumbing; the visible label is
+    // what changes.
+    label: "Rule patterns",
     match: (p) => p.startsWith("/dashboard/overrides"),
   },
   {
