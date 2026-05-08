@@ -183,7 +183,7 @@ function EmptyState() {
   return (
     <section className="rounded-lg border border-dashed border-line-strong bg-overlay p-8 text-sm">
       <h2 className="text-base font-semibold text-strong">
-        No runs yet.
+        No runs yet
       </h2>
       <p className="mt-2 text-default">
         Runs show up here after any of the engine surfaces flag at
