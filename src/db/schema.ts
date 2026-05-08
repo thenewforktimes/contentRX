@@ -111,6 +111,15 @@ export const users = pgTable("users", {
     .notNull()
     .default("500.00"),
   costPauseActive: boolean("cost_pause_active").notNull().default(false),
+  // Phase 4 of the post-Phase-1 build: paid-plan customers opt in to
+  // $0.10/check overage. Default is hard-cap (false). When true,
+  // claimQuotaSlots takes Branch C: grant + record overage event for
+  // end-of-month metering to Stripe. Free can't opt in (validated at
+  // the API route — only Pro / Team / Scale users may flip the flag).
+  overageOptInActive: boolean("overage_opt_in_active")
+    .notNull()
+    .default(false),
+  overageOptedInAt: timestamp("overage_opted_in_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

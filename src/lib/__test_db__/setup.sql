@@ -28,6 +28,8 @@ CREATE TABLE users (
   daily_cost_threshold_usd numeric(10, 2) NOT NULL DEFAULT 50.00,
   monthly_cost_threshold_usd numeric(10, 2) NOT NULL DEFAULT 500.00,
   cost_pause_active boolean NOT NULL DEFAULT false,
+  overage_opt_in_active boolean NOT NULL DEFAULT false,
+  overage_opted_in_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -194,3 +196,21 @@ CREATE INDEX customer_flagged_reviews_user_created_idx
   ON customer_flagged_reviews (user_id, created_at);
 CREATE INDEX customer_flagged_reviews_text_hash_idx
   ON customer_flagged_reviews (text_hash);
+
+-- overage_state ---------------------------------------------------------
+-- Phase 4 of the post-Phase-1 build. Per-user, per-month overage tally.
+-- claimQuotaSlots Branch C upserts here when an opted-in customer's
+-- check pushes past the monthly cap. The end-of-month cron at
+-- /api/cron/stripe-overage-meter reads from here and posts totals to
+-- Stripe Metered Billing.
+CREATE TABLE overage_state (
+  id text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  month text NOT NULL,
+  overage_checks integer NOT NULL DEFAULT 0,
+  overage_usd_cents integer NOT NULL DEFAULT 0,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX overage_state_user_month_idx
+  ON overage_state (user_id, month);

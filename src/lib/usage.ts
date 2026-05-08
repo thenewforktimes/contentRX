@@ -1,19 +1,37 @@
 /**
- * Monthly usage tracking.
+ * Monthly usage tracking + Phase 4 opt-in overage.
  *
- * One row per (user_id, month). `claimQuotaSlot` is the single atomic
- * operation /api/check uses on the hot path: it either reserves one
- * slot below the user's quota or returns null if they're at the cap.
- * No separate "read then write" step, so a burst of concurrent requests
- * can't squeeze past the limit (closes BE-M-04 / Known Limitation #2).
+ * One row per (user_id, month). `claimQuotaSlot(s)` is the single
+ * atomic operation /api/check uses on the hot path: it either
+ * reserves N slots below the user's quota or returns a denial. Burst
+ * concurrency is safe (the upsert + setWhere guard composes the same
+ * way for n > 1).
  *
- * getCurrentUsage stays as a read-only helper for the dashboard — it
- * never claims slots, just reports.
+ * Three branches on the hot path:
+ *   A. Under quota → grant (existing fast-path; one upsert).
+ *   B. Over quota AND no opt-in → deny with overage-offer info.
+ *   C. Over quota AND opt-in active AND BETA_OVERAGE=true → grant
+ *      via overage; second upsert without the setWhere guard
+ *      increments past the cap, and writeOverageEvent records the
+ *      excess to overage_state for end-of-month metering to Stripe.
+ *
+ * BETA_OVERAGE gate: Phase 4 ships behind an env var so Robert can
+ * test the path against his founder account before opening it to all
+ * paid customers. When BETA_OVERAGE !== "true", Branch C falls back
+ * to Branch B even for opted-in users — the toggle in the dashboard
+ * still records intent, but the engine doesn't honor it yet.
  */
 
 import { and, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { currentMonth } from "./quotas";
+
+export const OVERAGE_RATE_CENTS = 10;
+export const OVERAGE_OPT_IN_URL = "/dashboard/settings/overage";
+
+function isBetaOverageEnabled(): boolean {
+  return process.env.BETA_OVERAGE === "true";
+}
 
 export async function getCurrentUsage(userId: string): Promise<number> {
   const db = getDb();
@@ -31,29 +49,37 @@ export async function getCurrentUsage(userId: string): Promise<number> {
 }
 
 export type ClaimResult =
-  | { granted: true; count: number }
-  | { granted: false; count: number };
+  | {
+      granted: true;
+      count: number;
+      /** True iff the claim was satisfied via overage (Branch C). The
+       * caller can surface this to the customer ("you're past your
+       * monthly cap; this check billed at $0.10 via overage"). */
+      viaOverage?: boolean;
+    }
+  | {
+      granted: false;
+      count: number;
+      /** True for paid plans (Pro / Team / Scale) that aren't yet
+       * opted in to overage. Free plans are never overage-eligible. */
+      overageAvailable?: boolean;
+      overageRateCents?: number;
+      optInUrl?: string;
+    };
 
 /**
  * Atomically reserve N evaluation slots for (userId, current month).
  *
- * Returns { granted: true, count } with the new count if the user had
- * room for all N. Returns { granted: false, count } with the current
- * count if the claim would have pushed them over the quota — the caller
- * should return 402 without touching the engine. The check is
- * all-or-nothing: a request that needs 3 checks against a 1-remaining
- * user is denied entirely, never partially fulfilled.
+ * Returns { granted: true, count } when the user had room (Branch A)
+ * or when the user opted in to overage and Branch C extends them past
+ * the cap. Returns { granted: false, count } when the cap is hit
+ * without an active opt-in (Branch B) — the caller surfaces the
+ * overage info to the customer via the 402 response shape.
  *
  * `n` defaults to 1 to match the original `claimQuotaSlot` contract.
  * The proportional-billing path (a single /api/check call charges
- * Math.ceil(text.length / CHARS_PER_CHECK) slots, see route.ts —
- * CHARS_PER_CHECK is currently 3,000) passes n > 1 when the input
- * text spans multiple billing tiers.
- *
- * Implementation: same upsert + setWhere guard pattern as the
- * single-slot version, but the guard becomes `count + n <= quota` and
- * the increment becomes `count + n`. The atomic property is preserved
- * — the entire claim either succeeds or rolls back.
+ * Math.ceil(text.length / UNIT_WINDOW) slots, see metering.ts) passes
+ * n > 1 when the input text spans multiple billing units.
  */
 export async function claimQuotaSlots(
   userId: string,
@@ -62,8 +88,7 @@ export async function claimQuotaSlots(
 ): Promise<ClaimResult> {
   // Defensive: a callsite that computed n=0 (e.g., empty text post-trim)
   // should never reach the API gate, but if it does, treat as a free
-  // pass that doesn't increment. The caller's fall-through behavior
-  // matches the granted=true contract; count stays accurate.
+  // pass that doesn't increment.
   if (n <= 0) {
     const current = await getCurrentUsage(userId);
     return { granted: true, count: current };
@@ -72,7 +97,9 @@ export async function claimQuotaSlots(
   const db = getDb();
   const month = currentMonth();
 
-  const rows = await db
+  // Branch A: atomic upsert with a setWhere guard. Only commits the
+  // +n increment when the user has room for the full claim.
+  const branchA = await db
     .insert(schema.usage)
     .values({ userId, month, count: n })
     .onConflictDoUpdate({
@@ -81,19 +108,77 @@ export async function claimQuotaSlots(
         count: sql`${schema.usage.count} + ${n}`,
         updatedAt: sql`now()`,
       },
-      // All-or-nothing: only commit the +n increment if the user has
-      // room for the full claim. Partial fulfillment is not supported.
       setWhere: sql`${schema.usage.count} + ${n} <= ${quota}`,
     })
     .returning({ count: schema.usage.count });
 
-  if (rows.length === 1) {
-    return { granted: true, count: rows[0].count };
+  if (branchA.length === 1) {
+    return { granted: true, count: branchA[0].count };
   }
 
-  // Guard rejected. Read the current count for the 402 response.
+  // Guard rejected — Branch A path didn't grant. Look up plan + opt-in.
+  const [user] = await db
+    .select({
+      plan: schema.users.plan,
+      overageOptInActive: schema.users.overageOptInActive,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.id, userId))
+    .limit(1);
+
   const current = await getCurrentUsage(userId);
-  return { granted: false, count: current };
+
+  // Free plans are never overage-eligible.
+  if (!user || user.plan === "free") {
+    return {
+      granted: false,
+      count: current,
+      overageAvailable: false,
+    };
+  }
+
+  // Paid plans: Branch C if opted in AND beta gate is open, otherwise
+  // Branch B (deny + offer).
+  if (!user.overageOptInActive || !isBetaOverageEnabled()) {
+    return {
+      granted: false,
+      count: current,
+      overageAvailable: true,
+      overageRateCents: OVERAGE_RATE_CENTS,
+      optInUrl: OVERAGE_OPT_IN_URL,
+    };
+  }
+
+  // Branch C: opted in + gate open. Increment usage past the cap (no
+  // setWhere) and record the excess to overage_state.
+  const branchC = await db
+    .insert(schema.usage)
+    .values({ userId, month, count: n })
+    .onConflictDoUpdate({
+      target: [schema.usage.userId, schema.usage.month],
+      set: {
+        count: sql`${schema.usage.count} + ${n}`,
+        updatedAt: sql`now()`,
+      },
+    })
+    .returning({ count: schema.usage.count });
+
+  if (branchC.length !== 1) {
+    // Should never happen — the upsert without setWhere always commits.
+    // Fall through to deny so the caller surfaces a sane 402 instead
+    // of a 500.
+    return {
+      granted: false,
+      count: current,
+      overageAvailable: true,
+      overageRateCents: OVERAGE_RATE_CENTS,
+      optInUrl: OVERAGE_OPT_IN_URL,
+    };
+  }
+
+  await writeOverageEvent({ userId, units: n, month });
+
+  return { granted: true, count: branchC[0].count, viaOverage: true };
 }
 
 /**
@@ -106,6 +191,41 @@ export async function claimQuotaSlot(
   quota: number,
 ): Promise<ClaimResult> {
   return claimQuotaSlots(userId, 1, quota);
+}
+
+/**
+ * Increment a user's overage tally for the current month. Idempotent
+ * upsert — concurrent calls accumulate correctly via Postgres atomic
+ * +n on the conflict path. Stripe Metered Billing is the source of
+ * truth for billing; this row is a fast local cache so the hot path
+ * doesn't have to round-trip Stripe on every call. The end-of-month
+ * cron at /api/cron/stripe-overage-meter reads from here and posts
+ * the totals to Stripe.
+ */
+async function writeOverageEvent(args: {
+  userId: string;
+  units: number;
+  month: string;
+}): Promise<void> {
+  if (args.units <= 0) return;
+  const db = getDb();
+  const cents = args.units * OVERAGE_RATE_CENTS;
+  await db
+    .insert(schema.overageState)
+    .values({
+      userId: args.userId,
+      month: args.month,
+      overageChecks: args.units,
+      overageUsdCents: cents,
+    })
+    .onConflictDoUpdate({
+      target: [schema.overageState.userId, schema.overageState.month],
+      set: {
+        overageChecks: sql`${schema.overageState.overageChecks} + ${args.units}`,
+        overageUsdCents: sql`${schema.overageState.overageUsdCents} + ${cents}`,
+        updatedAt: sql`now()`,
+      },
+    });
 }
 
 export type TokenIncrement = {

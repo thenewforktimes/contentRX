@@ -141,7 +141,7 @@ describe("claimQuotaSlot", () => {
     expect(first).toEqual({ granted: true, count: 1 });
 
     const second = await claimQuotaSlot(userId, 0);
-    expect(second).toEqual({ granted: false, count: 1 });
+    expect(second).toMatchObject({ granted: false, count: 1 });
   });
 
   it("under N concurrent claims with quota Q, exactly Q succeed (atomicity)", async () => {
@@ -355,5 +355,174 @@ describe("recordTokenUsage", () => {
       );
     expect(row?.cacheReadInputTokens).toBe(0);
     expect(row?.cacheCreationInputTokens).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 4 three-branch claim logic
+// ---------------------------------------------------------------------------
+
+describe("claimQuotaSlots — Phase 4 three-branch logic", () => {
+  // BETA_OVERAGE is checked at call time via process.env, so toggling
+  // it inside the test sets the gate for that block. Restore in
+  // afterEach to keep tests independent.
+  let originalBetaFlag: string | undefined;
+  beforeAll(() => {
+    originalBetaFlag = process.env.BETA_OVERAGE;
+  });
+  afterAll(() => {
+    if (originalBetaFlag === undefined) {
+      delete process.env.BETA_OVERAGE;
+    } else {
+      process.env.BETA_OVERAGE = originalBetaFlag;
+    }
+  });
+
+  it("Branch B: free user over quota gets overage_available=false", async () => {
+    process.env.BETA_OVERAGE = "true"; // gate open — but free still rejected
+    const userId = await seedUser(harness, { plan: "free" });
+    await harness.db.insert(schema.usage).values({
+      id: "u-free",
+      userId,
+      month: currentMonth(),
+      count: 10,
+    });
+
+    const result = await claimQuotaSlot(userId, 10);
+    expect(result).toMatchObject({
+      granted: false,
+      count: 10,
+      overageAvailable: false,
+    });
+    expect(result).not.toHaveProperty("optInUrl");
+  });
+
+  it("Branch B: paid user without opt-in gets overage offer info", async () => {
+    process.env.BETA_OVERAGE = "true";
+    const userId = await seedUser(harness, { plan: "pro" });
+    await harness.db.insert(schema.usage).values({
+      id: "u-pro",
+      userId,
+      month: currentMonth(),
+      count: 1000,
+    });
+
+    const result = await claimQuotaSlot(userId, 1000);
+    expect(result).toMatchObject({
+      granted: false,
+      count: 1000,
+      overageAvailable: true,
+      overageRateCents: 10,
+      optInUrl: "/dashboard/settings/overage",
+    });
+  });
+
+  it("Branch C: paid user opted in + BETA_OVERAGE=true grants past the cap and records overage", async () => {
+    process.env.BETA_OVERAGE = "true";
+    const userId = await seedUser(harness, {
+      plan: "pro",
+      overageOptInActive: true,
+    });
+    await harness.db.insert(schema.usage).values({
+      id: "u-pro-c",
+      userId,
+      month: currentMonth(),
+      count: 1000,
+    });
+
+    const result = await claimQuotaSlot(userId, 1000);
+    expect(result).toMatchObject({
+      granted: true,
+      count: 1001,
+      viaOverage: true,
+    });
+
+    // Overage event landed in overage_state.
+    const [overageRow] = await harness.db
+      .select()
+      .from(schema.overageState)
+      .where(
+        and(
+          eq(schema.overageState.userId, userId),
+          eq(schema.overageState.month, currentMonth()),
+        ),
+      );
+    expect(overageRow?.overageChecks).toBe(1);
+    expect(overageRow?.overageUsdCents).toBe(10);
+  });
+
+  it("Branch B (not C): paid user opted in BUT BETA_OVERAGE=false stays denied", async () => {
+    process.env.BETA_OVERAGE = "false";
+    const userId = await seedUser(harness, {
+      plan: "pro",
+      overageOptInActive: true,
+    });
+    await harness.db.insert(schema.usage).values({
+      id: "u-pro-gated",
+      userId,
+      month: currentMonth(),
+      count: 1000,
+    });
+
+    const result = await claimQuotaSlot(userId, 1000);
+    expect(result).toMatchObject({
+      granted: false,
+      count: 1000,
+      overageAvailable: true,
+    });
+
+    // No overage event written.
+    const overageRows = await harness.db
+      .select()
+      .from(schema.overageState)
+      .where(eq(schema.overageState.userId, userId));
+    expect(overageRows).toHaveLength(0);
+  });
+
+  it("Branch C: multi-unit overage accumulates the right cents", async () => {
+    process.env.BETA_OVERAGE = "true";
+    const userId = await seedUser(harness, {
+      plan: "team",
+      overageOptInActive: true,
+    });
+    await harness.db.insert(schema.usage).values({
+      id: "u-team-multi",
+      userId,
+      month: currentMonth(),
+      count: 2000,
+    });
+
+    // First overage burst: 5 units → 50 cents.
+    const r1 = await claimQuotaSlots(userId, 5, 2000);
+    expect(r1).toMatchObject({ granted: true, viaOverage: true });
+
+    // Second overage burst: 3 more → 80 cents total.
+    const r2 = await claimQuotaSlots(userId, 3, 2000);
+    expect(r2).toMatchObject({ granted: true, viaOverage: true });
+
+    const [overageRow] = await harness.db
+      .select()
+      .from(schema.overageState)
+      .where(eq(schema.overageState.userId, userId));
+    expect(overageRow?.overageChecks).toBe(8);
+    expect(overageRow?.overageUsdCents).toBe(80);
+  });
+
+  it("Branch A path is not affected (under-quota grants don't write overage)", async () => {
+    process.env.BETA_OVERAGE = "true";
+    const userId = await seedUser(harness, {
+      plan: "pro",
+      overageOptInActive: true,
+    });
+
+    const result = await claimQuotaSlot(userId, 1000);
+    expect(result).toMatchObject({ granted: true, count: 1 });
+    expect(result).not.toHaveProperty("viaOverage");
+
+    const overageRows = await harness.db
+      .select()
+      .from(schema.overageState)
+      .where(eq(schema.overageState.userId, userId));
+    expect(overageRows).toHaveLength(0);
   });
 });
