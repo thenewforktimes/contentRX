@@ -78,59 +78,67 @@ const TABS: ReadonlyArray<{
 export function FolderTabs() {
   const pathname = usePathname();
   return (
-    <nav
-      aria-label="Dashboard sections"
-      // -mb-px lets the active tab's bottom edge overlap the folder
-      // body's top border by 1px, so the seam disappears. The relative
-      // wrapper + z-10 on the active tab ensures the active tab paints
-      // above the folder body's border.
-      className="-mb-px flex gap-1 overflow-x-auto px-1 pt-2"
-    >
-      {TABS.map((tab) => {
-        const isActive = tab.match(pathname);
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            aria-current={isActive ? "page" : undefined}
-            className={
-              isActive
-                ? // Active tab — merges with the folder body. Note no
-                  // bottom border (the body's top border is what the
-                  // eye sees, and the active tab's -mb-px lap covers
-                  // it directly behind the tab).
-                  "relative z-10 whitespace-nowrap rounded-t-md border border-line border-b-transparent bg-raised px-4 py-2.5 text-sm font-medium text-strong"
-                : // Inactive tab — recessed. bg-canvas is the page
-                  // background, so the tab "blends back" into the
-                  // page surface. On hover it lifts to the same
-                  // surface as the folder body.
-                  "whitespace-nowrap rounded-t-md border border-line bg-canvas px-4 py-2.5 text-sm text-default hover:bg-raised hover:text-strong"
-            }
-          >
-            {tab.label}
-          </Link>
-        );
-      })}
-    </nav>
+    // The nav wrapper owns the horizontal "shelf line" (border-b)
+    // that runs across the full width below the tabs. Tabs sit on
+    // top of that line:
+    //   - inactive tabs: top + side borders only; bottom edge ends
+    //     exactly at the shelf line (the line is the inactive tab's
+    //     "floor")
+    //   - active tab: same borders + `-mb-px` overlap so its
+    //     bg-raised paints OVER the shelf line, hiding it directly
+    //     beneath the active tab. The body below has no top border,
+    //     so the active tab's bg-raised flows seamlessly into the
+    //     body's bg-raised.
+    //
+    // This was redesigned from an earlier attempt that used
+    // border-b-transparent on the active tab — that left the body's
+    // top border visible right under the active tab, breaking the
+    // merge. The shelf-line model keeps the line where it should be
+    // (between inactive tabs and the body) and removes it where it
+    // shouldn't be (under the active tab).
+    <div className="border-b border-line">
+      <nav
+        aria-label="Dashboard sections"
+        className="flex gap-1 overflow-x-auto pt-2"
+      >
+        {TABS.map((tab) => {
+          const isActive = tab.match(pathname);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              aria-current={isActive ? "page" : undefined}
+              className={
+                isActive
+                  ? "relative z-10 -mb-px whitespace-nowrap rounded-t-md border-x border-t border-line bg-raised px-4 py-2.5 text-sm font-medium text-strong"
+                  : "whitespace-nowrap rounded-t-md border-x border-t border-line bg-canvas px-4 py-2.5 text-sm text-default hover:bg-raised hover:text-strong"
+              }
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
 
 /**
  * The folder body — pairs with `<FolderTabs />`. Renders the
- * surrounding container that the active tab visually merges into.
+ * surrounding container that hangs off the bottom of the tabs' shelf
+ * line.
  *
- * Two structural notes:
- *   - `rounded-tl-none` so the top-left corner is square; the active
- *     "Overview" tab sits there. If the active tab is anywhere else,
- *     visually the seam still lands cleanly because every tab has the
- *     same height and the body's top border runs the full width
- *     behind the inactive tabs.
- *   - The body sets its own bg-raised so the active tab's matching
- *     bg-raised reads as a continuous surface.
+ * Borders intentionally only on left + right + bottom. The TOP edge
+ * is handled by FolderTabs' shelf line (`border-b border-line` on
+ * the nav wrapper). The bg-raised vs page bg-canvas surface
+ * difference is what visually distinguishes the body's top edge from
+ * the page above. The active tab's -mb-px overlap hides the shelf
+ * line directly beneath itself; everywhere else the shelf line is
+ * visible, completing the body's top boundary.
  */
 export function FolderBody({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg rounded-tl-none border border-line bg-raised p-6 sm:p-8">
+    <div className="rounded-b-lg border-x border-b border-line bg-raised p-6 sm:p-8">
       {children}
     </div>
   );
