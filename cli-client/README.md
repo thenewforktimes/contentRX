@@ -266,4 +266,4 @@ Tests mock the HTTP layer so they run offline without an API key.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+In-monorepo source: [Functional Source License, FSL-1.1-MIT](../LICENSE) (auto-converts to MIT after the FSL grant period). The published `contentrx-cli` package on PyPI ships under MIT. See [LICENSE](./LICENSE).

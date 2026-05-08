@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Babel-based UI-copy extractor for the ContentRX GitHub Action.",
-  "license": "MIT",
+  "license": "FSL-1.1-MIT",
   "bin": {
     "contentrx-extract": "./extract.mjs"
   },

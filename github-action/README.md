@@ -210,4 +210,4 @@ for e in extract_strings(Path('some/file.tsx')):
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+In-monorepo source: [Functional Source License, FSL-1.1-MIT](../LICENSE) (auto-converts to MIT after the FSL grant period). When this directory splits to the standalone `contentrx-action` repo for the Marketplace, that repo ships under MIT. See [LICENSE](./LICENSE).

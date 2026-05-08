@@ -95,8 +95,8 @@ Schema 2.0.0 envelope. The taxonomy is intentionally private — rule
 citations, internal IDs, and reasoning chains stay server-side. The
 public surface is the violation itself plus a concrete suggestion.
 
-Counts against your monthly quota (Free: 25, Pro: 5,000, Team:
-5,000 × seats).
+Counts against your monthly quota (Free: 10, Pro: 1,000, Team:
+2,000 × seats, Scale: 60,000).
 
 #### `evaluate_copy_batch` — multiple strings in one call
 
