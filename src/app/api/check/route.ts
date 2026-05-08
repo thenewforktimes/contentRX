@@ -269,20 +269,32 @@ export async function POST(req: Request) {
   const usageScopeUserId = teamScope(auth);
   const claim = await claimQuotaSlots(usageScopeUserId, checksNeeded, quota);
   if (!claim.granted) {
+    // Only fire the "you've hit your limit" email when the user is
+    // truly at or past the cap. A multi-unit claim (n > 1) that gets
+    // denied because count + n > quota — but count < quota — is a
+    // transient per-call denial, not exhaustion. Telling that user
+    // "you've hit this month's ContentRX limit" is wrong: they still
+    // have remaining capacity, just not enough for THIS request.
+    // The 402 response already carries `checks_required` so the
+    // caller surfaces the right framing inline; the email only fires
+    // when the cap is genuinely closed.
+    //
     // after() schedules the email send to run after the 402 response
     // ships, but before Fluid Compute can recycle the function
     // instance — without it, a fire-and-forget `void` can lose the
     // email when the runtime tears down between requests. The send
     // itself is idempotent via Redis dedupe, so a runtime kill
     // mid-after() at worst delays the alert until the next exhaust.
-    safeAfter(async () => {
-      await notifyQuotaExhausted({
-        to: auth.user.email,
-        plan: auth.plan,
-        quota,
-        userId: auth.user.id,
+    if (claim.count >= quota) {
+      safeAfter(async () => {
+        await notifyQuotaExhausted({
+          to: auth.user.email,
+          plan: auth.plan,
+          quota,
+          userId: auth.user.id,
+        });
       });
-    });
+    }
     return json(
       {
         error: "quota_exhausted",
