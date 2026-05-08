@@ -432,32 +432,36 @@ export async function acceptInvitation(args: {
     .where(eq(schema.users.id, invitation.teamOwnerUserId))
     .limit(1)) as Array<{ email: string }>;
 
-  // Insert team_members row; mark invitation accepted; update user's
-  // teamOwnerUserId. These three writes are independent rows so the
-  // semantic atomicity isn't strictly required for correctness — the
-  // single row insert into team_members is the operative gate. The
-  // other two are post-hoc bookkeeping and either re-running them is
-  // idempotent enough or the route can retry.
-  await db.insert(schema.teamMembers).values({
-    teamOwnerUserId: invitation.teamOwnerUserId,
-    memberUserId: args.acceptingUserId,
-    role: "member",
-    invitedAt: invitation.createdAt,
-    acceptedAt: new Date(),
+  // Three writes — team_members INSERT + team_invitations UPDATE +
+  // users UPDATE — must commit atomically. A partial commit (process
+  // crash between rows) leaves the user as "a team member without
+  // teamOwnerUserId set on their users row" — the dashboard's team
+  // panel sees them, but /api/check treats them as Free because the
+  // plan + teamOwnerUserId fields didn't update. Re-accepting the
+  // invite would also fail with a unique-constraint violation on
+  // team_members. Wrap all three in a transaction; they commit
+  // together or roll back together.
+  const acceptedAt = new Date();
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.teamMembers).values({
+      teamOwnerUserId: invitation.teamOwnerUserId,
+      memberUserId: args.acceptingUserId,
+      role: "member",
+      invitedAt: invitation.createdAt,
+      acceptedAt,
+    });
+    await tx
+      .update(schema.teamInvitations)
+      .set({
+        acceptedAt,
+        acceptedByMemberUserId: args.acceptingUserId,
+      })
+      .where(eq(schema.teamInvitations.id, invitation.id));
+    await tx
+      .update(schema.users)
+      .set({ teamOwnerUserId: invitation.teamOwnerUserId, plan: "team" })
+      .where(eq(schema.users.id, args.acceptingUserId));
   });
-
-  await db
-    .update(schema.teamInvitations)
-    .set({
-      acceptedAt: new Date(),
-      acceptedByMemberUserId: args.acceptingUserId,
-    })
-    .where(eq(schema.teamInvitations.id, invitation.id));
-
-  await db
-    .update(schema.users)
-    .set({ teamOwnerUserId: invitation.teamOwnerUserId, plan: "team" })
-    .where(eq(schema.users.id, args.acceptingUserId));
 
   return {
     ok: true,

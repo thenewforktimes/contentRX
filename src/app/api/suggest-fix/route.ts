@@ -136,8 +136,10 @@ export async function POST(req: Request) {
     const response = await suggestFix(params);
     // Suggest-fix consumes a quota slot — invalidate the dashboard
     // cache so the counter / remaining display catch up on the
-    // next render.
-    revalidateDashboard();
+    // next render. Scope the userId at teamScope(auth) so a member's
+    // call invalidates the team-owner usage row that loadCurrentUsage
+    // reads (matches the team-pooling fix in /api/check, PR #403).
+    revalidateDashboard({ userId: teamScope(auth) });
     return json(
       envelope({
         result: response.result,

@@ -149,7 +149,7 @@ export async function POST(req: Request) {
         ruleJson: parsed.data.rule_json,
       })
       .returning();
-    revalidateDashboard();
+    revalidateDashboard({ teamId: teamOwnerUserId });
     return NextResponse.json(envelope({ rule: row }), { status: 201 });
   }
 
@@ -179,7 +179,7 @@ export async function POST(req: Request) {
         set: { updatedAt: new Date() },
       })
       .returning();
-    revalidateDashboard();
+    revalidateDashboard({ teamId: teamOwnerUserId });
     return NextResponse.json(envelope({ rule: row }), { status: 201 });
   }
 
@@ -201,6 +201,6 @@ export async function POST(req: Request) {
       set: { ruleJson: parsed.data.rule_json, updatedAt: new Date() },
     })
     .returning();
-  revalidateDashboard();
+  revalidateDashboard({ teamId: teamOwnerUserId });
   return NextResponse.json(envelope({ rule: row }), { status: 201 });
 }

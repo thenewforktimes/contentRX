@@ -121,7 +121,7 @@ export async function PATCH(req: Request, context: RouteContext) {
     .where(eq(schema.teamRules.id, id))
     .returning();
 
-  revalidateDashboard();
+  revalidateDashboard({ teamId: auth.user.id });
   return NextResponse.json(envelope({ rule: row }));
 }
 
@@ -153,6 +153,6 @@ export async function DELETE(req: Request, context: RouteContext) {
   }
 
   await db.delete(schema.teamRules).where(eq(schema.teamRules.id, id));
-  revalidateDashboard();
+  revalidateDashboard({ teamId: auth.user.id });
   return NextResponse.json(envelope({ ok: true }));
 }
