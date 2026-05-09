@@ -1917,10 +1917,13 @@ function checkPrf03TrailingPeriod(text, contentType) {
   }
   const stripped = text.trimEnd();
   if (stripped.endsWith(".") && !stripped.endsWith("...")) {
+    // The suggestion is the corrected string itself (period removed),
+    // not prose advice. Mirrors Python preprocess.py per the
+    // 2026-05-08 design pass.
     return {
       standardId: "PRF-03", outcome: "violation",
       issue: `Trailing period on a ${contentType.replace(/_/g, " ")}.`,
-      suggestion: "Remove the period. Headings, buttons, and labels don't need terminal punctuation.",
+      suggestion: stripped.slice(0, -1),
     };
   }
   return { standardId: "PRF-03", outcome: "pass" };
@@ -1979,10 +1982,13 @@ function checkPrf05MissingSpaceAfterPunctuation(text) {
 
 function checkPrf06LeadingTrailingWhitespace(text) {
   if (text !== text.trim()) {
+    // Suggestion is the trimmed string; renderer shows a real diff
+    // highlighting where the whitespace sits. Mirrors Python
+    // preprocess.py per the 2026-05-08 design pass.
     return {
       standardId: "PRF-06", outcome: "violation",
       issue: "Leading or trailing whitespace.",
-      suggestion: "Remove spaces, tabs, or newlines from the beginning and end of the string.",
+      suggestion: text.trim(),
     };
   }
   return { standardId: "PRF-06", outcome: "pass" };

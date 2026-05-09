@@ -781,11 +781,15 @@ def check_prf03_trailing_period_on_headings(
 
     stripped = text.rstrip()
     if stripped.endswith(".") and not stripped.endswith("..."):
+        # The suggestion is the corrected string itself (period removed),
+        # not prose advice. Renderers that show before/after diffs can
+        # visualize the change directly; renderers that show plain text
+        # display a clean fixed version. See the 2026-05-08 design pass.
         return PreprocessResult(
             standard_id="PRF-03",
             outcome=Outcome.VIOLATION,
             issue=f"Trailing period on a {content_type.replace('_', ' ')}.",
-            suggestion="Remove the period. Headings, buttons, and labels don't need terminal punctuation.",
+            suggestion=stripped[:-1],
         )
     return PreprocessResult(standard_id="PRF-03", outcome=Outcome.PASS)
 
@@ -852,11 +856,14 @@ def check_prf05_missing_space_after_punctuation(text: str) -> PreprocessResult:
 def check_prf06_leading_trailing_whitespace(text: str) -> PreprocessResult:
     """PRF-06: Flag leading or trailing whitespace in UI copy."""
     if text != text.strip():
+        # The suggestion is the trimmed string itself, so the renderer
+        # can show a real before/after diff highlighting where the
+        # whitespace sits. See the 2026-05-08 design pass.
         return PreprocessResult(
             standard_id="PRF-06",
             outcome=Outcome.VIOLATION,
             issue="Leading or trailing whitespace.",
-            suggestion="Remove spaces, tabs, or newlines from the beginning and end of the string.",
+            suggestion=text.strip(),
         )
     return PreprocessResult(standard_id="PRF-06", outcome=Outcome.PASS)
 
