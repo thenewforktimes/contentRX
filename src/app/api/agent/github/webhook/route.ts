@@ -44,9 +44,16 @@ type InstallationPayload = {
 };
 
 export async function POST(req: Request) {
+  // Internal-API responses on a server-to-server webhook surface.
+  // GitHub is the only caller that reads these; no human ever sees
+  // them. We use snake_case error codes (rather than English
+  // sentences) for the same reason every well-behaved webhook does:
+  // the consumer logs the code, the developer reads the code, no
+  // one expects "Try again. If it keeps happening, email
+  // hello@contentrx.io." in a webhook delivery log.
   if (!isGithubAppConfigured()) {
     return NextResponse.json(
-      { error: "GitHub App not configured" },
+      { code: "github_app_not_configured" },
       { status: 503 },
     );
   }
@@ -55,7 +62,7 @@ export async function POST(req: Request) {
   const signature = req.headers.get("x-hub-signature-256");
   if (!verifyWebhookSignature(rawBody, signature)) {
     return NextResponse.json(
-      { error: "Invalid signature" },
+      { code: "signature_verification_failed" },
       { status: 401 },
     );
   }
@@ -65,7 +72,7 @@ export async function POST(req: Request) {
     payload = JSON.parse(rawBody) as InstallationPayload;
   } catch {
     return NextResponse.json(
-      { error: "Invalid JSON" },
+      { code: "malformed_request_body" },
       { status: 400 },
     );
   }
@@ -147,7 +154,7 @@ export async function POST(req: Request) {
   } catch (err) {
     logSafeError("[/api/agent/github/webhook]", err);
     return NextResponse.json(
-      { error: "Webhook handler failed" },
+      { code: "webhook_handler_error" },
       { status: 500 },
     );
   }
