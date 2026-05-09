@@ -34,6 +34,7 @@ import {
   humanizeSeverity,
   humanizeVerdict,
 } from "@/lib/humanize";
+import { shouldShowMarketingBanner } from "@/lib/marketing-copy-detect";
 import { wordDiff, type DiffToken } from "@/lib/text-diff";
 import {
   dispatchCheckCompleted,
@@ -215,8 +216,14 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           id="explain-text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          rows={4}
-          placeholder="Try pasting a button label, an error message, or a paragraph from your latest PR"
+          // F2 (2026-05-09): textarea sized for long-form by default.
+          // Short UI strings still fit the 10-row box without feeling
+          // empty; product update emails, security advisories, and
+          // internal announcements get a paste target that invites
+          // the use case instead of nudging the user toward a smaller
+          // string.
+          rows={10}
+          placeholder="Paste a button label, an error message, a product update email, a security advisory, or any draft announcement. Up to 50,000 characters."
           className={`w-full rounded-md border bg-raised px-3 py-2 font-mono text-sm text-strong focus:outline-none focus:ring-1 ${
             overLimit
               ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"
@@ -267,6 +274,12 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
       </section>
 
       {error && <ErrorBlock error={error} />}
+
+      {response &&
+        shouldShowMarketingBanner(
+          response.submittedText,
+          response.moment,
+        ) && <MarketingCopyBanner />}
 
       {response &&
         (isLargeInput(response.submittedText) ? (
@@ -1015,6 +1028,28 @@ function ViewOriginalDisclosure({ original }: { original: string }) {
         </pre>
       </div>
     </details>
+  );
+}
+
+/**
+ * MarketingCopyBanner — the calibration hedge for paste-mode (Phase
+ * F2, 2026-05-09 roadmap). Shows up above the result block when the
+ * input looks marketing-shaped, so the reader frames the flag list
+ * as expected-noise rather than engine error. Wording is locked by
+ * the roadmap; copy verbatim.
+ */
+function MarketingCopyBanner() {
+  return (
+    <div
+      role="note"
+      className="rounded-md border border-accent-info-border bg-accent-info-soft p-4"
+    >
+      <p className="text-sm text-accent-info-text">
+        This looks like persuasive marketing copy. ContentRX is
+        calibrated for product and internal writing; expect more
+        &lsquo;worth a look&rsquo; flags than usual.
+      </p>
+    </div>
   );
 }
 
