@@ -3940,8 +3940,34 @@ function renderNodeCard(result) {
   // removed in 2.0.0 because they keyed on standard_id; see
   // `decisions/2026-04-25-private-taxonomy-pivot.md`. They will return
   // when /admin (Phase B) ships an opaque-token override flow.
-  const surfacedAt = Date.now();
+  //
+  // Dedup pass (2026-05-08 design walkthrough): when the preprocessor
+  // and the LLM both flag the same finding on the same node — same
+  // issue text, same suggestion — render only one card. Prefer the
+  // preprocessor result (deterministic, faster, identical to LLM
+  // when they agree on whitespace / numerals / period rules). Two
+  // identical cards is screen bloat with no extra information.
+  const dedupedViolations = [];
+  const seenKey = new Map();
   for (const v of result.violations) {
+    const key = `${v.issue || ""}|${v.suggestion || ""}`;
+    const existing = seenKey.get(key);
+    if (!existing) {
+      seenKey.set(key, v);
+      dedupedViolations.push(v);
+    } else if (v.source === "preprocessor" && existing.source !== "preprocessor") {
+      // Swap in the preprocessor copy if a non-preprocessor version
+      // got there first (preserves "Instant" badge over "AI" badge
+      // when both fired on the same finding).
+      const idx = dedupedViolations.indexOf(existing);
+      if (idx !== -1) dedupedViolations[idx] = v;
+      seenKey.set(key, v);
+    }
+    // Otherwise: drop the duplicate; first-seen + preprocessor-preferred wins.
+  }
+
+  const surfacedAt = Date.now();
+  for (const v of dedupedViolations) {
     const sourceBadge = v.source === "preprocessor"
       ? `<span class="source-badge source-badge-instant">&#9889; Instant</span>`
       : `<span class="source-badge source-badge-ai">&#10024; AI</span>`;
