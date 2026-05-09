@@ -87,8 +87,14 @@ export function AgentPreviewIsland() {
           role="alert"
           className="rounded-md border border-accent-caution-border bg-accent-caution-soft p-4 text-sm text-accent-caution-text"
         >
-          <p className="font-semibold">Couldn&apos;t render the preview</p>
-          <p className="mt-1">{state.message}</p>
+          {/* The body's `state.message` is the full recovery string,
+              shaped per docs/copy-vocabulary.md ("Couldn't [verb the
+              object]. Try again. If it keeps happening, email
+              hello@contentrx.io."). Dropped the bold heading the
+              engine flagged as recovery-less in isolation: the
+              dynamic message carries both the framing and the next
+              step in one sentence. */}
+          <p>{state.message}</p>
         </div>
       )}
 
