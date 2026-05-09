@@ -20,7 +20,7 @@
  * and ship the customer-facing PR-comment digest; V1 is admin-only.
  */
 
-import { and, desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import {
   digestHeaderVariant,
@@ -50,10 +50,20 @@ export type CustomizationSignal = {
 };
 
 /** The persisted payload shape. Lives in `agent_runs.payload` as
- * JSONB. The shape is internal to V1; G3 will define the customer-
- * facing rendering separately from this storage shape. */
+ * JSONB. The renderer at src/lib/agent/render-digest.ts consumes this
+ * shape; the digest output format is defined separately so a future
+ * digest revision doesn't require backfilling old payloads.
+ *
+ * Schema versions:
+ *   v1 (G1): teamId, runAt, windowDays, totalFlags, headerVariant,
+ *            patterns, topPatterns, isolatedFlags, customization.
+ *   v2 (G4): adds `agreedOverridesByStandardId` so the digest can
+ *            render warmed-up citations ("your team has accepted
+ *            this pattern's rewrites N times") without re-querying
+ *            the DB at render time.
+ */
 export type AgentRunPayload = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   teamId: string;
   runAt: string; // ISO
   windowDays: number;
@@ -63,6 +73,12 @@ export type AgentRunPayload = {
   topPatterns: Pattern[];
   isolatedFlags: Pattern[];
   customization: CustomizationSignal;
+  /** Per-standard count of "agree" overrides in the window. Used by
+   * the digest's warmed-up citations: when a standard fires N times
+   * in the cluster AND the team has agreed M times historically, the
+   * citation cites the agreement count. Optional for forward-compat
+   * with v1 payload rows already in the agent_runs table. */
+  agreedOverridesByStandardId?: Record<string, number>;
 };
 
 /**
@@ -110,25 +126,44 @@ export async function buildAgentRunPayload(
   // (zero overrides, zero rules, zero examples) produces a payload
   // with `customization: {0, 0, 0}` and the digest opener falls back
   // to the cold-start variant in G4.
-  const [overrideRows, customExampleRows, teamRuleRows] = await Promise.all([
-    db
-      .select({ id: schema.violationOverrides.id })
-      .from(schema.violationOverrides)
-      .where(
-        and(
-          eq(schema.violationOverrides.teamId, teamId),
-          gte(schema.violationOverrides.createdAt, windowStart),
+  const [overrideRows, agreedByStandard, customExampleRows, teamRuleRows] =
+    await Promise.all([
+      db
+        .select({ id: schema.violationOverrides.id })
+        .from(schema.violationOverrides)
+        .where(
+          and(
+            eq(schema.violationOverrides.teamId, teamId),
+            gte(schema.violationOverrides.createdAt, windowStart),
+          ),
         ),
-      ),
-    db
-      .select({ id: schema.teamCustomExamples.id })
-      .from(schema.teamCustomExamples)
-      .where(eq(schema.teamCustomExamples.teamOwnerUserId, teamId)),
-    db
-      .select({ id: schema.teamRules.id })
-      .from(schema.teamRules)
-      .where(eq(schema.teamRules.teamOwnerUserId, teamId)),
-  ]);
+      // Per-standard tally of "agree" stances in the window — feeds
+      // the warmed-up citation in G4. A team that has accepted a
+      // pattern's rewrites repeatedly is the trust signal the digest
+      // cites; this row aggregates the count by standard.
+      db
+        .select({
+          standardId: schema.violationOverrides.standardId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(schema.violationOverrides)
+        .where(
+          and(
+            eq(schema.violationOverrides.teamId, teamId),
+            eq(schema.violationOverrides.overrideStance, "agree"),
+            gte(schema.violationOverrides.createdAt, windowStart),
+          ),
+        )
+        .groupBy(schema.violationOverrides.standardId),
+      db
+        .select({ id: schema.teamCustomExamples.id })
+        .from(schema.teamCustomExamples)
+        .where(eq(schema.teamCustomExamples.teamOwnerUserId, teamId)),
+      db
+        .select({ id: schema.teamRules.id })
+        .from(schema.teamRules)
+        .where(eq(schema.teamRules.teamOwnerUserId, teamId)),
+    ]);
 
   const customization: CustomizationSignal = {
     overrideCount: overrideRows.length,
@@ -136,8 +171,13 @@ export async function buildAgentRunPayload(
     teamRuleCount: teamRuleRows.length,
   };
 
+  const agreedOverridesByStandardId: Record<string, number> = {};
+  for (const row of agreedByStandard) {
+    agreedOverridesByStandardId[row.standardId] = row.count;
+  }
+
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     teamId,
     runAt: now.toISOString(),
     windowDays,
@@ -149,6 +189,7 @@ export async function buildAgentRunPayload(
     customization: {
       ...customization,
     },
+    agreedOverridesByStandardId,
   };
 }
 
