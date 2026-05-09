@@ -1337,6 +1337,45 @@ export const customerFlaggedReviews = pgTable(
   ],
 ).enableRLS();
 
+// Weekly review agent — Phase G1 of the 2026-05-09 roadmap.
+//
+// Captures one row per agent run. Agent V1 is read-only: it reads the
+// team's flag history (the `violations` table), groups by pattern
+// (deterministic, no LLM — see src/lib/agent/pattern-grouping.ts),
+// and persists the resulting payload here for review at
+// `/admin/agent-runs`. Zero LLM calls per run, zero checks consumed.
+//
+// `payload` carries the full run output (patterns, isolated flags,
+// header variant, timing). JSONB so the founder can browse the
+// structure in /admin without bloating the schema with per-run
+// columns. Top-level summary columns (total_flags, header_variant)
+// duplicate fields inside the payload but exist for index-friendly
+// queries on the admin list page.
+export const agentRuns = pgTable(
+  "agent_runs",
+  {
+    id: cuid(),
+    teamId: text("team_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    runAt: timestamp("run_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Window the agent looked at, in days. V1 uses 30; the cron
+    // schedule is weekly but the read window is monthly to ensure
+    // patterns surface even when a team's checking cadence is bursty.
+    windowDays: integer("window_days").notNull(),
+    // Cached top-level summary fields for the admin list view's index.
+    totalFlags: integer("total_flags").notNull(),
+    headerVariant: text("header_variant").notNull(),
+    payload: jsonb("payload").notNull(),
+  },
+  (t) => [
+    index("agent_runs_team_run_at_idx").on(t.teamId, t.runAt),
+    index("agent_runs_run_at_idx").on(t.runAt),
+  ],
+).enableRLS();
+
 export type User = InferSelectModel<typeof users>;
 export type Usage = InferSelectModel<typeof usage>;
 export type UsageEvent = InferSelectModel<typeof usageEvents>;
@@ -1359,3 +1398,4 @@ export type OverageState = InferSelectModel<typeof overageState>;
 export type CustomerFlaggedReview = InferSelectModel<
   typeof customerFlaggedReviews
 >;
+export type AgentRun = InferSelectModel<typeof agentRuns>;

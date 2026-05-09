@@ -163,6 +163,38 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     const matches = visible.match(/\{[^}]*\b(TBD|TODO|placeholder|fill in|bio)[^}]*\}/gi);
     expect(matches ?? []).toEqual([]);
   });
+
+  it("lands the long-form audience with a second tagline line (F1)", () => {
+    // Phase F (2026-05-09 roadmap update) adds a second tagline line
+    // beneath the H1 to land the long-form-writing audience without
+    // diluting the core staff-level position. The line is
+    // load-bearing for the long-form-positioning workstream — if a
+    // future edit drops it, /writes loses its inbound from the hero.
+    expect(visible).toMatch(
+      /longer-form writing your team sends to itself/i,
+    );
+  });
+
+  it("renders the use-case toggle showing breadth of writing kinds (F1)", () => {
+    // The use-case toggle proves the "same engine, every kind of
+    // writing" claim. Structural pin: the component is imported and
+    // rendered. The component's own source carries the specific
+    // example labels.
+    expect(source).toContain("UseCaseToggle");
+    const toggleSource = readSource("src/components/use-case-toggle.tsx");
+    const toggleVisible = visibleCopy(toggleSource);
+    for (const label of [
+      "Button label",
+      "Error message",
+      "Product update email",
+      "Security disclosure",
+    ]) {
+      expect(toggleVisible).toContain(label);
+    }
+    // Substrate-clean: no engine substrate IDs ever leak to the
+    // landing page. The toggle uses customer-facing labels only.
+    expect(toggleVisible).not.toMatch(/standard_id|rule_version/);
+  });
 });
 
 describe("/about page (src/app/(marketing)/about/page.tsx)", () => {

@@ -51,6 +51,7 @@ import { IntegrationRow } from "@/components/integration-row";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
+import { UseCaseToggle } from "@/components/use-case-toggle";
 import { Wordmark } from "@/components/wordmark";
 
 export const metadata: Metadata = {
@@ -71,6 +72,9 @@ export default function Home() {
           <h1 className="mt-8 text-4xl font-semibold tracking-tight text-strong sm:text-5xl lg:text-6xl">
             Staff-level content design review in every repo
           </h1>
+          <p className="mt-4 text-xl font-medium text-default sm:text-2xl">
+            And on the longer-form writing your team sends to itself.
+          </p>
           <p className="mt-6 text-lg text-default sm:text-xl">
             ContentRX reviews your strings with the judgment of a staff
             content designer, before you ship. Verdict, suggestion,
@@ -98,6 +102,16 @@ export default function Home() {
       </header>
 
       <IntegrationRow />
+
+      {/* Use-case toggle. Sits between the integration row ("here's
+          where it runs") and the author block ("here's who built it")
+          to answer the question those two surfaces leave open: what
+          kind of writing does it actually handle? Two short-form
+          examples, two long-form. The toggle is interactive client
+          state; the copy is static. */}
+      <div className="mt-20">
+        <UseCaseToggle />
+      </div>
 
       {/* Author up. The named-byline block sits high so the moat
           lands before the feature copy. */}

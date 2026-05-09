@@ -30,18 +30,20 @@ export default async function ExplainPage() {
     <main className="mx-auto max-w-3xl px-6 py-12">
       <header className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
-          Live demo
+          Paste-mode review
         </p>
-        <h1 className="mt-2 text-2xl font-semibold">Explain a verdict</h1>
+        <h1 className="mt-2 text-2xl font-semibold">
+          Check a string. Or a draft.
+        </h1>
         <p className="mt-3 text-sm text-default">
-          Paste a button label, error message, or paragraph. The
-          evaluator surfaces the detected moment first, then returns a
-          three-state verdict plus the full rationale chain: moment
-          detected, standards applied, confidence at every hop.
-          Misdetections route back to the review queue with one click.
+          Paste a button label, an error message, a product update
+          email, a security advisory, or any draft announcement.
+          ContentRX returns the document-level diagnostic, a clean
+          rewrite, and the categorized flags. Same engine, same
+          content-design judgment, regardless of length.
         </p>
         <p className="mt-3 text-xs text-quiet">
-          Each check counts against your{" "}
+          Up to 50,000 characters. Each check counts against your{" "}
           <Link href="/dashboard" className="underline underline-offset-2">
             monthly limit
           </Link>
