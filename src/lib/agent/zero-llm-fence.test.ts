@@ -30,9 +30,16 @@ import { describe, expect, it } from "vitest";
 const ROOT = path.resolve(__dirname, "..", "..", "..");
 
 const RUNTIME_FILES: readonly string[] = [
+  // G1 runtime files (Phase G1, day 3).
   "src/lib/agent/run-agent.ts",
   "src/lib/agent/pattern-grouping.ts",
   "src/app/api/cron/agent-run/route.ts",
+  // G3+G4+G5 runtime files (Phase G day 4) — the digest renderer
+  // and the live preview API. Both must stay LLM-free for the V1
+  // trust math to hold; the digest is rendered from the team's
+  // existing flag history alone, no LLM ever in the path.
+  "src/lib/agent/render-digest.ts",
+  "src/app/api/agent/preview/route.ts",
 ];
 
 const FORBIDDEN_PATTERNS: readonly RegExp[] = [
