@@ -36,7 +36,7 @@ surfaces (MCP server, LSP server) land in BUILD_PLAN_v2 phases 1 and 5.
    editor extensions in `editor-extensions/` (VS Code etc.)
 8. **Docs site** — `docs-site/` (in-tree today, target deploy target is
    `docs.contentrx.app` — but the public surface is now `/accuracy`,
-   `/calibration`, `/essays`, `/reports`, NOT a public taxonomy.
+   `/calibration`, `/reports`, NOT a public taxonomy.
    See [decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md).)
 
 The Next.js app imports the Python engine at runtime via a Vercel Python
@@ -64,7 +64,6 @@ The public surface — what customers and prospects actually see — is:
   kappa with 95% CI, target ceiling stated separately. Generated nightly.
 - `/calibration` — weekly calibration log entries (kappa movement, drift
   signals, override count, refinement-log activity). Generated automatically.
-- `/essays` — monthly named-expert essays in Robert's voice. Hand-written.
 - `/reports` — quarterly accuracy reports. Generated scaffold, hand-edited
   narrative.
 
@@ -126,7 +125,7 @@ under `/admin` redirects unauthenticated or non-founder requests to `/`.
 Pages: `/admin/model` (browsable taxonomy), `/admin/calibration` (kappa
 over time), `/admin/refinement-log` (refinement candidates UI),
 `/admin/queue` (review queue with subtype filters), `/admin/reports`
-(preview-before-publish gate), `/admin/essay-drafts` (cold-start scaffold).
+(preview-before-publish gate).
 Single-user by design — no multi-tenancy, no admin-of-admins recursion.
 
 **Auth model — pages vs APIs.** The Clerk layout auth above gates

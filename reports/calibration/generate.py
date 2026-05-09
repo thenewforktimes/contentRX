@@ -22,8 +22,7 @@ its own PR.
 
 Output schema is templated for consistency-of-format across weeks,
 because that is what makes drift-in-the-writing detectable. The
-narrative tone is intentionally machine-flat; the founder writes the
-voice in essays (Phase B7) anchored against this file.
+narrative tone is intentionally machine-flat.
 """
 
 from __future__ import annotations

@@ -110,7 +110,6 @@ export default async function AdminLayout({
             <NavGroup label="Reports">
               <NavLink href="/admin/reports">Reports</NavLink>
               <NavLink href="/admin/case-studies">Case studies</NavLink>
-              <NavLink href="/admin/essay-drafts">Essay drafts</NavLink>
             </NavGroup>
           </nav>
         </aside>
