@@ -1,5 +1,5 @@
 {
-  "name": "Content standards checker",
+  "name": "ContentRX",
   "id": "content-standards-checker",
   "api": "1.0.0",
   "main": "code.js",
