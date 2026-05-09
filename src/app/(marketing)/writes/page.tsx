@@ -1,10 +1,10 @@
 /**
- * /writes — long-form gallery scaffold (Phase F3a, 2026-05-09 roadmap).
+ * /writes — long-form gallery (Phase F, 2026-05-09 roadmap).
  *
- * Three examples on day 1 (product update, security advisory, internal
- * announcement). F3b lands the next three (all-hands email, incident
- * status comm, policy notice). The data array below is the seam — F3b
- * appends, doesn't restructure.
+ * Six examples in two groups:
+ *
+ *   F3a (day 1): product update, security advisory, internal announcement
+ *   F3b (day 2): all-hands pre-read, incident update, policy notice
  *
  * Each example renders the writer's draft, the engine's flags, and the
  * suggested rewrite. Substrate-clean (ADR 2026-04-25): customer-facing
@@ -169,6 +169,129 @@ const EXAMPLES: readonly Example[] = [
     rewrite:
       "Hey everyone, the all hands moved to next Wednesday at 10am. We'll cover Q2 priorities and the reorg, with 15 minutes at the end for questions. Plan to come; if you can't, the recording lands in #all-hands by EOD Thursday. Drop questions in the thread.",
   },
+  {
+    id: "all-hands-pre-read",
+    label: "All-hands pre-read",
+    momentLabel: "Team notification",
+    contentTypeLabel: "Long-form",
+    intro:
+      "An email kicking off the next all-hands. Sets the agenda, the format, and what to bring. The all-hands itself is the meeting; this email is the pre-read.",
+    inputText:
+      "Hi team! Just wanted to give you all a comprehensive heads-up on next week's all-hands meeting. We have an incredibly exciting agenda lined up, including a deep-dive into Q1 performance, some exciting strategic initiatives, and updates on the recent organizational changes. We'd really appreciate it if everyone could make every effort to attend in person, as we believe face-to-face engagement maximizes value creation across the organization. Please don't hesitate to reach out if you have any questions or concerns!",
+    flags: [
+      {
+        category: "Plain language",
+        severity: "medium",
+        severityLabel: "Worth adjusting",
+        issue:
+          "'Comprehensive heads-up', 'deep-dive', 'strategic initiatives', 'maximizes value creation across the organization'. The corporate stack hides the actual agenda.",
+        suggestion:
+          "Replace with the agenda. The reader is opening a pre-read; tell them what they'll cover.",
+      },
+      {
+        category: "Voice & tone",
+        severity: "medium",
+        severityLabel: "Worth adjusting",
+        issue:
+          "'We'd really appreciate it if everyone could make every effort' is hedged politeness. It signals the writer expects pushback on the ask.",
+        suggestion:
+          "Just ask. 'Plan to come in person' carries the same request without the hedging.",
+      },
+      {
+        category: "Active voice",
+        severity: "low",
+        severityLabel: "Quick polish",
+        issue:
+          "'Maximizes value creation across the organization' hides who creates the value. Name the people.",
+        suggestion:
+          "'In-person meetings give the team a real conversation about strategy.' carries the actor.",
+      },
+    ],
+    rewrite:
+      "Subject: Next Wednesday's all-hands. Pre-read.\n\nHey team. Next Wednesday at 10am Pacific. Three blocks: Q1 numbers (15 min), the reorg in detail (20 min), what's next (10 min). The last 15 minutes are open for questions. In-person is better but the recording lands in #all-hands by EOD Wednesday. Drop questions in the thread before then; we'll batch them into the Q&A block.",
+  },
+  {
+    id: "incident-update",
+    label: "Incident update",
+    momentLabel: "Outage update",
+    contentTypeLabel: "Long-form",
+    intro:
+      "A status update during an active incident. The audience is anxious and the fact set is changing. Specifics build trust; vagueness corrodes it.",
+    inputText:
+      "We are currently experiencing some intermittent issues with our platform that may be affecting some users. Our engineering team is working diligently to investigate and resolve the situation as quickly as possible. We sincerely apologize for any inconvenience this may be causing and appreciate your patience as we work to restore full service. We will provide additional updates as more information becomes available.",
+    flags: [
+      {
+        category: "Voice & tone",
+        severity: "high",
+        severityLabel: "Worth adjusting",
+        issue:
+          "'Intermittent issues' / 'may be affecting' is the worst register for an incident comm. Vague language reads as the writer not knowing what's wrong, which reads as the team not being on it.",
+        suggestion:
+          "Name the failure mode and the affected scope. 'Dashboard checks return 500 for ~40% of requests' beats 'intermittent issues' on every dimension.",
+      },
+      {
+        category: "Plain language",
+        severity: "medium",
+        severityLabel: "Worth adjusting",
+        issue:
+          "'Working diligently' and 'sincerely apologize for any inconvenience' are filler. Specifics build trust during outages, not apology.",
+        suggestion:
+          "Replace with the actions in flight. 'Reduced rate limits, scaling the function pool, watching error rate.'",
+      },
+      {
+        category: "Voice & tone",
+        severity: "medium",
+        severityLabel: "Worth adjusting",
+        issue:
+          "'We will provide additional updates as more information becomes available' leaves the reader hanging. The reader needs a cadence.",
+        suggestion:
+          "Promise a time. 'Next update at 3:30 PM Pacific.'",
+      },
+    ],
+    rewrite:
+      "3:00 PM Pacific. Dashboard checks are returning 500 for ~40% of requests. The Python engine itself is healthy; the API gateway is dropping connections to the function pool under load. Mitigation in flight: we lowered the per-IP rate limit and are scaling the pool. Customers on the Free plan are most affected. Next update at 3:30 PM Pacific. Status page: status.contentrx.io.",
+  },
+  {
+    id: "policy-notice",
+    label: "Policy notice",
+    momentLabel: "Compliance disclosure",
+    contentTypeLabel: "Long-form",
+    intro:
+      "A change to terms, privacy, billing, or company policy. Compliance puts the bar high; readers skim, so the headline has to do the work.",
+    inputText:
+      "Important Update Regarding Our Terms of Service\n\nDear valued customer, we are writing to inform you that we have made some important changes to our Terms of Service. These updates are designed to enhance our ability to provide you with the best possible service while ensuring compliance with various regulatory requirements. The new terms will go into effect on June 1st, 2026. We encourage you to review the updated terms at your earliest convenience. Please don't hesitate to contact us if you have any questions or concerns regarding these changes.",
+    flags: [
+      {
+        category: "Voice & tone",
+        severity: "high",
+        severityLabel: "Worth adjusting",
+        issue:
+          "'Important Update Regarding Our Terms of Service' buries the news. The reader skims; the subject line has to name what changed.",
+        suggestion:
+          "Lead with the change, not the framing. 'Two changes to our terms, effective June 1.'",
+      },
+      {
+        category: "Plain language",
+        severity: "high",
+        severityLabel: "Worth adjusting",
+        issue:
+          "'Designed to enhance our ability to provide you with the best possible service while ensuring compliance with various regulatory requirements' tells the reader nothing. Compliance copy is the place where vague is least defensible.",
+        suggestion:
+          "Name the changes by number, with one sentence each.",
+      },
+      {
+        category: "Voice & tone",
+        severity: "low",
+        severityLabel: "Quick polish",
+        issue:
+          "'Dear valued customer' is corporate cold-open. The mismatch between this register and the rest of the product reads as outsourced.",
+        suggestion:
+          "'Hi' or first-name from the team. The customer can tell the difference.",
+      },
+    ],
+    rewrite:
+      "Subject: Two changes to our terms, effective June 1\n\nHi everyone. We're updating two things in our Terms of Service on June 1, 2026.\n\n1. Data residency. We'll process customer strings in US-East and EU-West regions only. Today's terms named US-East alone.\n2. Subprocessor list. We added Vercel (our deployment host since launch) to the explicit list.\n\nNeither change affects how your team uses ContentRX. The full diff is at /privacy/terms-changes-2026-06. Reply if anything needs clarifying.",
+  },
 ] as const;
 
 export default function WritesPage() {
@@ -180,6 +303,7 @@ export default function WritesPage() {
         lede={
           <>
             Product updates. Security advisories. Internal announcements.
+            All-hands pre-reads. Incident updates. Policy notices.
             ContentRX reviews the writing that lands in the inbox, the
             channel, and the all-hands deck. Same engine, same
             content-design judgment, on the longer-form writing your
@@ -188,7 +312,7 @@ export default function WritesPage() {
         }
         meta={
           <>
-            Three examples below. Each shows the writer&apos;s draft, the
+            Six examples below. Each shows the writer&apos;s draft, the
             content model&apos;s flags, and the suggested rewrite. The
             engine is calibrated for product and internal writing; for
             persuasive marketing copy expect more &lsquo;worth a look&rsquo;

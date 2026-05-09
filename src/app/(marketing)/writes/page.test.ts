@@ -35,15 +35,35 @@ describe("/writes (src/app/(marketing)/writes/page.tsx)", () => {
     );
   });
 
-  it("renders the three day-1 example labels", () => {
-    // The three F3a labels are load-bearing; F3b appends three more
-    // (all-hands email, incident status comm, policy notice). Tests
-    // pin the F3a set so the day-1 ship can't lose one of its
-    // examples without the test failing.
+  it("renders all six gallery example labels", () => {
+    // F3a labels (day 1): product update, security advisory, internal
+    // announcement. F3b labels (day 2): all-hands pre-read, incident
+    // update, policy notice. The gallery is "complete" when all six
+    // land — losing one is the regression to catch.
     for (const label of [
       "Product update",
       "Security advisory",
       "Internal announcement",
+      "All-hands pre-read",
+      "Incident update",
+      "Policy notice",
+    ]) {
+      expect(visible).toContain(label);
+    }
+  });
+
+  it("lede mentions every kind of writing the gallery covers", () => {
+    // The lede is the one-sentence promise of the page. If a future
+    // edit adds an example without naming it in the lede, readers
+    // won't know what kind of writing the page covers without
+    // scrolling. Pin the lede / use-case names together.
+    for (const label of [
+      "Product updates",
+      "Security advisories",
+      "Internal announcements",
+      "All-hands pre-reads",
+      "Incident updates",
+      "Policy notices",
     ]) {
       expect(visible).toContain(label);
     }
