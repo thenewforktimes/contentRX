@@ -38,7 +38,7 @@ export default function InstallPage() {
           <>
             Content-standards enforcement is moving upstream into the
             generation layer. Install ContentRX where your team actually
-            writes product copy (in the IDE, on the command line, in
+            writes product content (in the IDE, on the command line, in
             pull requests) with the Figma plugin alongside for the
             strings that arrive through design.
           </>
@@ -134,7 +134,7 @@ export CONTENTRX_API_KEY=cx_...
 # Point your editor's LSP client at \`contentrx-lsp\` (stdio)`}
         </Code>
         <p className="mt-3 text-sm text-quiet">
-          Scope: JSX / TSX text children + copy attributes
+          Scope: JSX / TSX text children + text attributes
           (<code>alt</code>, <code>aria-label</code>,{" "}
           <code>placeholder</code>, <code>title</code>,{" "}
           <code>tooltip</code>, <code>label</code>). Random string

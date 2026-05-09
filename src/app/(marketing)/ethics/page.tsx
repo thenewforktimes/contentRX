@@ -87,7 +87,7 @@ export default function EthicsPage() {
           doesn&apos;t persist. What we retain in our database is a
           sha256 hash, the verdict, the severity, the content type,
           and which surface called us. That&apos;s the entire list.
-          We can&apos;t reconstruct your copy from what we keep.
+          We can&apos;t reconstruct your writing from what we keep.
         </p>
         <p className="mt-3">
           A pre-screen on every public route refuses obvious

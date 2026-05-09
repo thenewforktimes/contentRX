@@ -132,7 +132,7 @@ export default function Home() {
         </div>
       </section>
 
-      <Section eyebrow="Where it runs" title="Where you ship copy.">
+      <Section eyebrow="Where it runs" title="Where you ship content.">
         <ul className="mt-1 ml-5 list-disc space-y-2">
           <li>
             <strong>MCP server</strong> for Claude Code, Cursor, and
@@ -258,7 +258,7 @@ export default function Home() {
               Integrations.
             </p>
             <p className="mt-2 text-sm text-default">
-              We meet copy where it&apos;s being written. MCP for
+              We meet content where it&apos;s being written. MCP for
               Claude Code, CLI for the terminal, GitHub Action for
               pull requests, LSP for editors, the Figma plugin for
               design-time. Same verdict on every surface.{" "}
@@ -313,7 +313,7 @@ export default function Home() {
             <p className="mt-2 text-sm text-default">
               Stop chasing voice docs and ruleset PDFs. ContentRX
               holds the standards, watches the context, and applies
-              them where you&apos;re shipping copy.
+              them where you&apos;re shipping content.
             </p>
           </li>
           <li className="rounded-lg border border-line bg-raised p-5">

@@ -44,7 +44,7 @@ export default function AboutPage() {
         lede={
           <>
             ContentRX is the content model that a working staff content
-            designer would run on his own UI copy. The standards, the
+            designer would run on his own UI writing. The standards, the
             context, the weighting system that says &ldquo;in a
             destructive confirmation, emphasize the consequence; in an
             onboarding flow, relax the tone.&rdquo; All of it carries
@@ -95,7 +95,7 @@ export default function AboutPage() {
         <p>
           The rules you can look up in any style guide. The judgment
           calls about <em>whether a modal needed to exist at all</em>{" "}
-          get built over a career of reviewing copy, and they&apos;re
+          get built over a career of reviewing writing, and they&apos;re
           what the model encodes.
         </p>
         <p className="mt-3">

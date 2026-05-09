@@ -1,4 +1,4 @@
-"""ContentRX engine — the content model for product copy.
+"""ContentRX engine — the content model for product writing.
 
 Usage:
     from content_checker import check, check_unfiltered, check_batch
