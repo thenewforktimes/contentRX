@@ -8,5 +8,11 @@
       "includeFiles": "src/content_checker/**",
       "maxDuration": 300
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/agent-run",
+      "schedule": "0 13 * * 1"
+    }
+  ]
 }
