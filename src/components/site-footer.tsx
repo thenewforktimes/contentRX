@@ -52,7 +52,7 @@ export function SiteFooter() {
           <div>
             <Wordmark size="sm" link={false} />
             <p className="mt-2 text-xs text-quiet">
-              The content model for product copy.
+              The content model for product writing.
             </p>
           </div>
           <FooterColumn title="Product" links={productLinks} />

@@ -396,6 +396,15 @@ Rules of thumb, not strings.
   "billing unit" or "metering unit" never surface on a customer-
   facing read. /admin pages keep the raw `unit` jargon — that surface
   is founder-only.
+- **Content / writing, not copy.** Customers see *"content"* or
+  *"writing,"* never *"copy"* as a noun for written words. The
+  tagline is *"The content model for product writing."* Examples:
+  *"product writing"* not *"product copy"*; *"reviewing writing"*
+  not *"reviewing copy"*; *"your writing"* not *"your copy."*
+  Reserve "copy" for the verb form only (`copyToClipboard`, "copy
+  this string"). The ban applies to every customer surface (web app,
+  marketing pages, emails, plugin UI, CLI, MCP, LSP, GitHub Action).
+  Founder-only `/admin` pages can keep raw jargon as elsewhere.
 - **Punctuation instead of em dashes.** When you reach for an em dash,
   reach for a period, a comma, a colon, parens, or a sentence break.
   Almost always one of those works. The em dash reads as

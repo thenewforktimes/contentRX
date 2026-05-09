@@ -143,7 +143,7 @@ export function EmailShell({
             }}
           />
           <Text style={footer}>
-            ContentRX. The content model for product copy.
+            ContentRX. The content model for product writing.
           </Text>
         </Section>
       </Body>

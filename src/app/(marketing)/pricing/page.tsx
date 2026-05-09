@@ -42,7 +42,7 @@ export default function PricingPage() {
         className="max-w-3xl"
         eyebrow="Pricing"
         scale="display"
-        title="A staff content designer's verdict on every string you ship."
+        title="Staff-level content design review on every string you ship."
         lede={
           <>
             Free for evaluation. $39/month to use it daily. $79/seat
@@ -62,7 +62,7 @@ export default function PricingPage() {
           price="$0"
           quota="10 checks per month"
           features={[
-            "Short copy and long-form review",
+            "Short and long-form review",
             "Every standard, every surface",
           ]}
           cta={{ href: "/sign-up", label: "Start free" }}
@@ -73,9 +73,8 @@ export default function PricingPage() {
           priceSubnote="$379/year (save 20%)"
           quota="1,000 checks per month"
           features={[
-            "Everything in Free",
             "Built for daily use",
-            "Free trial included",
+            "For engineers, product managers, and independent designers",
           ]}
           overageNote="Hard cap by default. Opt in to $0.10/check overage from your dashboard."
           cta={{ href: "/sign-up", label: "Start free trial" }}
@@ -90,7 +89,6 @@ export default function PricingPage() {
           features={[
             "Everything in Pro",
             "Rule sharing across the team",
-            "Custom examples",
             "Member management with pooled checks",
           ]}
           overageNote="Hard cap by default. Opt in to $0.10/check overage from your dashboard."
