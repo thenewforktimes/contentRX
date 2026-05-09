@@ -1,12 +1,13 @@
 {
   "name": "ContentRX",
-  "id": "content-standards-checker",
+  "id": "1634785869149019073",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
   "capabilities": [],
   "enableProposedApi": false,
   "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
   "networkAccess": {
     "allowedDomains": ["https://contentrx.io", "https://content-rx.vercel.app"]
   }

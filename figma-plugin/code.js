@@ -170,9 +170,14 @@ figma.ui.onmessage = async (msg) => {
     // toast is visually distinct.
     // -----------------------------------------------------------------------
     case "focus-node": {
+      // Plugin is published with documentAccess: dynamic-page (Figma
+      // auto-applies this on publication). Sync figma.getNodeById is
+      // disallowed in that mode — must use the async lookup so Figma
+      // can lazily load the node's page if needed. The outer onmessage
+      // handler is already async, so awaiting here is safe.
       let node = null;
       try {
-        node = figma.getNodeById(msg.nodeId);
+        node = await figma.getNodeByIdAsync(msg.nodeId);
       } catch (err) {
         const message = `Couldn't open layer: ${(err && err.message) || err}`;
         figma.notify(message, { error: true });
