@@ -109,8 +109,8 @@ export default function PricingPage() {
           quota="60,000 checks per month, pooled"
           features={[
             "Everything in Team",
-            "10 seats, one pooled budget",
-            "For design-system orgs and content teams",
+            "Triple the checks of 10 Team seats",
+            "10-seat cap, one flat invoice",
           ]}
           overageNote="Hard cap by default. Opt in to $0.10/check overage from your dashboard."
           cta={{
