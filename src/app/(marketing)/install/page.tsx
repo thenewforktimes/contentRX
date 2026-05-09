@@ -40,7 +40,12 @@ export default function InstallPage() {
             generation layer. Install ContentRX where your team actually
             writes product content (in the IDE, on the command line, in
             pull requests) with the Figma plugin alongside for the
-            strings that arrive through design.
+            strings that arrive through design. Or skip the install
+            and{" "}
+            <Link href="/dashboard/explain" className="underline underline-offset-2">
+              paste a draft in the dashboard
+            </Link>
+            .
           </>
         }
         meta={
@@ -60,6 +65,7 @@ export default function InstallPage() {
         }
       >
         <nav className="mt-6 flex flex-wrap gap-2 text-sm">
+          <SurfaceChip href="#paste" label="Dashboard" tagline="no install" />
           <SurfaceChip href="#mcp" label="MCP" tagline="Claude Code · Cursor" />
           <SurfaceChip href="#lsp" label="LSP" tagline="VS Code · Cursor · Zed" />
           <SurfaceChip href="#cli" label="CLI" tagline="contentrx" />
@@ -67,6 +73,35 @@ export default function InstallPage() {
           <SurfaceChip href="#figma" label="Figma plugin" tagline="design-time" />
         </nav>
       </PageHeader>
+
+      <Section
+        id="paste"
+        eyebrow="No install"
+        title="Dashboard paste mode. Sign in, paste, get the review"
+      >
+        <p>
+          The dashboard&apos;s paste-mode surface handles the same
+          engine the install surfaces use, with no install. Paste a
+          button label, an error message, a product update email, a
+          security advisory, or any draft announcement up to 50,000
+          characters. ContentRX returns the document-level
+          diagnostic, a clean rewrite, and the categorized flags.
+        </p>
+        <p className="mt-3">
+          Try it now:
+        </p>
+        <Code>{`# 1. Sign in or sign up at contentrx.io
+# 2. Open /dashboard/explain
+# 3. Paste a draft and click Check`}</Code>
+        <p className="mt-3 text-sm text-quiet">
+          The paste flow is calibrated for product and internal
+          writing; for persuasive marketing copy expect more
+          &lsquo;worth a look&rsquo; flags than usual. The five
+          install surfaces below cover the same engine for teams
+          that want it wired into their editor, terminal, pull
+          request, or design tool.
+        </p>
+      </Section>
 
       <Section
         id="mcp"

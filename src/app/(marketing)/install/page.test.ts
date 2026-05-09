@@ -70,4 +70,20 @@ describe("/install page source", () => {
   it("does not link to the private /model surface", () => {
     expect(visible).not.toMatch(/href=["']\/model/);
   });
+
+  it("surfaces the dashboard paste flow before the install surfaces (F5)", () => {
+    // Phase F5 (2026-05-09 roadmap) lands the dashboard paste flow
+    // alongside the developer surfaces. Order pin: paste section
+    // sits above MCP so the no-install path is the first thing a
+    // founder/PM/ops buyer sees.
+    const pasteIdx = visible.indexOf('id="paste"');
+    const mcpIdx = visible.indexOf('id="mcp"');
+    expect(pasteIdx).toBeGreaterThan(-1);
+    expect(pasteIdx).toBeLessThan(mcpIdx);
+    // The section's anchor links to /dashboard/explain (the paste-
+    // mode surface) and the chip nav adds a Dashboard chip pointing
+    // at the new section.
+    expect(visible).toContain('href="/dashboard/explain"');
+    expect(visible).toMatch(/Dashboard paste mode/i);
+  });
 });

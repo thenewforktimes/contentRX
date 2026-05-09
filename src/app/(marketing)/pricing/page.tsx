@@ -144,6 +144,24 @@ export default function PricingPage() {
             }
           />
           <Faq
+            q="What kind of writing does this handle?"
+            a={
+              <>
+                Short-form UI strings (button labels, error messages,
+                tooltips) and long-form internal writing (product
+                update emails, security advisories, all-hands
+                pre-reads, policy notices). The engine is calibrated
+                for product and internal writing; for persuasive
+                marketing copy expect more &lsquo;worth a look&rsquo;
+                flags than usual.{" "}
+                <Link href="/writes" className="underline underline-offset-2">
+                  See six worked examples
+                </Link>
+                .
+              </>
+            }
+          />
+          <Faq
             q="What if I hit my limit on Pro?"
             a={
               <>

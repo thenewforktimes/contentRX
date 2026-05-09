@@ -8,6 +8,26 @@ The PyPI history for this package skipped 0.5.0 and 0.6.0 — those version
 numbers were bumped in source but never published. The published progression
 is `0.2.0 → 0.3.0 → 0.4.0 → 0.7.0 → 0.8.0 → 0.9.0`.
 
+## [Unreleased]
+
+Adds the long-form review prompt for team communications. Phase F4
+of the 2026-05-09 roadmap; the second prompt the package ships, after
+`review_ui_copy`. Same `evaluate_copy` tool underneath; different
+framing for the LLM client.
+
+### Added
+- `review_team_communication` MCP prompt. Verb-first description
+  under 120 chars. Single-call workflow: instructs the LLM to call
+  `evaluate_copy` once on the entire draft (the engine routes inputs
+  over 200 chars to the document-tier review server-side). Renders
+  flags grouped by content-design category (Plain language, Voice &
+  tone, Active voice, Inclusive language, Big picture, …) plus the
+  highest-leverage edit. Carries the marketing-copy calibration note
+  matching the dashboard paste-mode banner.
+- `build_review_team_communication_prompt(draft?)` builder with the
+  same shape as `build_review_ui_copy_prompt(focus?)`: optional
+  inline draft, falls back to "use what's in context" otherwise.
+
 ## [0.9.0] — 2026-05-05
 
 Adds team-rule CRUD over MCP. Closes the agent-authored-rules gap

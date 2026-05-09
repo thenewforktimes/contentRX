@@ -16,9 +16,13 @@ Tools:
     disable / override / add rules that govern whole patterns of
     strings instead of single entries
 
-Prompt:
+Prompts:
   - review_ui_copy(focus?) — multi-step workflow that walks a file or
     diff calling the tools above and summarises violations by severity
+  - review_team_communication(draft?) — single-call workflow for long-
+    form team writing (announcements, security disclosures, all-hands
+    pre-reads, policy notices). Calls evaluate_copy once on the whole
+    draft and summarises flags by category
 
 All tools require `CONTENTRX_API_KEY`. The taxonomy is private per ADR
 2026-04-25 — no surface here renders standard IDs or rule text.
@@ -42,7 +46,10 @@ from .client import (
     TeamRule,
     open_client,
 )
-from .prompts import build_review_ui_copy_prompt
+from .prompts import (
+    build_review_team_communication_prompt,
+    build_review_ui_copy_prompt,
+)
 
 mcp = FastMCP("contentrx")
 
@@ -698,6 +705,32 @@ def review_ui_copy(focus: str | None = None) -> str:
             file/diff currently in context.
     """
     return build_review_ui_copy_prompt(focus)
+
+
+@mcp.prompt(
+    # Roadmap (Phase F4) locks this description: verb-first, under
+    # 120 chars. Length: 117 chars. Don't expand without confirming
+    # the limit still holds — it's the surface that decides whether
+    # an LLM client picks this prompt over a generic ask.
+    description=(
+        "Review a long-form team communication. Returns flags grouped "
+        "by content-design category plus the highest-leverage edit."
+    ),
+)
+def review_team_communication(draft: str | None = None) -> str:
+    """Build the long-form review workflow (Phase F4).
+
+    Different framing from review_ui_copy: same evaluate_copy tool
+    underneath, single call instead of per-string iteration. The
+    engine routes inputs over 200 chars to the document-tier review
+    server-side, so the LLM hands the entire draft over and renders
+    the structured response.
+
+    Args:
+        draft: Optional draft text or file pointer. When omitted, the
+            LLM is told to use the file/message currently in context.
+    """
+    return build_review_team_communication_prompt(draft)
 
 
 # ---------------------------------------------------------------------------
