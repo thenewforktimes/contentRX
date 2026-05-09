@@ -582,29 +582,13 @@
   /* Human-eval build plan Session 3 — three-button stance UI.
    *
    * Replaces the single "Dismiss" button per-violation with a stance
-   * triad (Agree / Disagree / Ship anyway) plus a collapsed-by-default
-   * rationale disclosure. Submission happens on the first stance click
-   * and captures `time_to_action_ms` + `rationale_expanded` for the
-   * four-quadrant behavior model.
+   * triad (Agree / Disagree / Ship anyway). Submission happens on the
+   * first stance click and captures `time_to_action_ms` for the
+   * four-quadrant behavior model. The rationale-disclosure styles
+   * (`.btn-expand-rationale` / `.rationale-body`) were removed in the
+   * 2026-05-08 design pass — issue + suggestion now render inline on
+   * every finding, no click-to-expand.
    */
-  .btn-expand-rationale {
-    display: inline-block;
-    margin-top: 4px;
-    font-size: 10px;
-    font-weight: 500;
-    padding: 2px 0;
-    border: none;
-    background: transparent;
-    color: var(--figma-color-text-brand, #4a7cff);
-    cursor: pointer;
-    text-align: left;
-  }
-  .btn-expand-rationale:hover {
-    text-decoration: underline;
-  }
-  .rationale-body {
-    margin-top: 4px;
-  }
 
   /* `.rationale-chain` rules removed in audit-deferred PR-D. The
    * renderRationaleChain function was dead code post-pivot; deleting
@@ -984,7 +968,7 @@
 <!-- ================================================================== -->
 <div id="screen-main" class="screen">
   <h2>Content standards checker</h2>
-  <p>Scan text layers against 47 content standards. Mechanical issues are caught instantly; nuanced rules are evaluated by AI.</p>
+  <p>Scan text layers against 47 content standards. Mechanical issues are caught instantly; nuanced rules are evaluated by ContentRX.</p>
 
   <div id="quota-banner" class="quota-banner" role="alert" aria-live="polite" style="display:none;"></div>
 
@@ -3312,7 +3296,7 @@ function renderMomentBanner(result) {
     .map((m) => {
       const c = MOMENT_WEIGHT_COUNTS[m];
       const suffix = c && c.total > 0 ? ` (${c.total})` : "";
-      return `<option value="${m}">${m}${suffix}</option>`;
+      return `<option value="${m}">${humanizeMoment(m)}${suffix}</option>`;
     })
     .join("");
 
@@ -3326,12 +3310,12 @@ function renderMomentBanner(result) {
       ${situationChip}
     </div>
     <div class="moment-banner-body">
-      I noticed this looks like <code>${escapeHtml(moment)}</code>.
+      I noticed this looks like <strong>${escapeHtml(humanizeMoment(moment).toLowerCase())}</strong>.
     </div>
     ${countsLine}
     ${canCorrect ? `
     <div class="moment-banner-actions">
-      <button type="button" class="btn-moment-correct btn-moment-correct-toggle">Not ${escapeHtml(moment)}?</button>
+      <button type="button" class="btn-moment-correct btn-moment-correct-toggle">Not ${escapeHtml(humanizeMoment(moment).toLowerCase())}?</button>
       <div class="moment-correct-form" hidden>
         <select class="moment-correct-picker" aria-label="Correct context">
           <option value="">Pick a context…</option>
@@ -3581,32 +3565,13 @@ function renderBatchResults(results) {
     });
   });
 
-  // Human-eval build plan Session 3 — rationale expand + stance submit.
-  //
-  // Expand/collapse toggles the rationale body on the card and records
-  // `rationaleExpanded=true` so the downstream behavior-quadrant
-  // derivation can distinguish pattern_match_accept (fast + not
-  // expanded) from informed_accept (expanded before agreeing).
-  area.querySelectorAll(".btn-expand-rationale").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const card = btn.closest(".violation-card");
-      const body = card && card.querySelector(".rationale-body");
-      if (!card || !body) return;
-      const expanded = card.dataset.rationaleExpanded === "true";
-      if (expanded) {
-        body.setAttribute("hidden", "");
-        card.dataset.rationaleExpanded = "false";
-        btn.setAttribute("aria-expanded", "false");
-        btn.textContent = "Why this was flagged";
-      } else {
-        body.removeAttribute("hidden");
-        card.dataset.rationaleExpanded = "true";
-        btn.setAttribute("aria-expanded", "true");
-        btn.textContent = "Hide rationale";
-      }
-    });
-  });
+  // The Session-3 rationale-expand handler was removed in the
+  // 2026-05-08 design pass — the rationale (issue) and the
+  // recommendation (suggestion) both render inline on every finding
+  // now, so there's no expand/collapse to wire up. The
+  // data-rationale-expanded attribute stays "true" so the override-
+  // telemetry behavior-quadrant derivation (informed_accept vs
+  // pattern_match_accept) keeps reading the same shape.
 
   // Stance buttons — Agree / Disagree / Ship anyway.
   //
@@ -3632,7 +3597,11 @@ function renderBatchResults(results) {
 
     const surfacedAt = Number(card.dataset.surfacedAt) || Date.now();
     const timeToActionMs = Math.max(0, Date.now() - surfacedAt);
-    const rationaleExpanded = card.dataset.rationaleExpanded === "true";
+    // Rationale is always visible on every finding now (2026-05-08
+    // design pass dropped the click-to-expand). Telemetry still
+    // emits the field for downstream-consumer compat; the data
+    // attribute reads "true" for the same reason.
+    const rationaleExpanded = true;
 
     // Lock UI state on all stance buttons; highlight the chosen one.
     card.querySelectorAll(".btn-stance").forEach(other => {
@@ -3913,30 +3882,32 @@ function renderNodeCard(result) {
   html += `<div class="checked-text">"${escapeHtml(result.text)}"</div>`;
 
   // Per the cross-surface copy audit: when the verdict is
-  // review_recommended, surface the reason in plain language so the
-  // customer knows WHY this is "Worth a look" rather than just
-  // "something looks off." The substrate review_reason enum stays on
-  // the result object for filter/analytics; we render the humanized
-  // form only.
-  if (isReview && result.reviewReason) {
+  // review_recommended, only surface a reason that adds information.
+  // Uncertainty-shaped reasons ("Hard to tell what kind of copy this
+  // is", "We weren't fully sure about this one") stack perception
+  // against the engine without telling the customer anything they
+  // can act on, so we suppress them and let the verdict pill carry
+  // the signal alone. See REVIEW_REASON_INFORMATIVE.
+  if (isReview && result.reviewReason && REVIEW_REASON_INFORMATIVE.has(result.reviewReason)) {
     const reasonText = humanizeReviewReason(result.reviewReason);
     if (reasonText) {
       html += `<p class="review-reason">${escapeHtml(reasonText)}</p>`;
     }
   }
 
-  // Content type badge
-  html += `<span class="content-type-badge">${escapeHtml(result.contentType)}</span>`;
+  // Content type badge — human-readable label, not the raw enum.
+  // The enum (ui_label, short_ui_copy, …) stays on the result object
+  // for filter/analytics; render boundary humanizes.
+  html += `<span class="content-type-badge">${escapeHtml(humanizeContentType(result.contentType))}</span>`;
 
   // Human-eval build plan Session 22 — "Moment detected" banner. Shown
   // whenever the API detected a non-default moment. Replaces the
   // prior moment-badge. Default is browsing_discovery → fallback to a
-  // small badge so users still see the detected moment.
+  // small badge so users still see the detected moment (humanized).
   if (result.moment && result.moment !== "browsing_discovery") {
     html += renderMomentBanner(result);
   } else if (result.moment) {
-    const momentLabel = result.moment.replace(/_/g, " ");
-    html += `<span class="moment-badge">${escapeHtml(momentLabel)}</span>`;
+    html += `<span class="moment-badge">${escapeHtml(humanizeMoment(result.moment))}</span>`;
   }
 
   // Human-eval build plan Session 30 PR B — "Team custom example"
@@ -3969,8 +3940,34 @@ function renderNodeCard(result) {
   // removed in 2.0.0 because they keyed on standard_id; see
   // `decisions/2026-04-25-private-taxonomy-pivot.md`. They will return
   // when /admin (Phase B) ships an opaque-token override flow.
-  const surfacedAt = Date.now();
+  //
+  // Dedup pass (2026-05-08 design walkthrough): when the preprocessor
+  // and the LLM both flag the same finding on the same node — same
+  // issue text, same suggestion — render only one card. Prefer the
+  // preprocessor result (deterministic, faster, identical to LLM
+  // when they agree on whitespace / numerals / period rules). Two
+  // identical cards is screen bloat with no extra information.
+  const dedupedViolations = [];
+  const seenKey = new Map();
   for (const v of result.violations) {
+    const key = `${v.issue || ""}|${v.suggestion || ""}`;
+    const existing = seenKey.get(key);
+    if (!existing) {
+      seenKey.set(key, v);
+      dedupedViolations.push(v);
+    } else if (v.source === "preprocessor" && existing.source !== "preprocessor") {
+      // Swap in the preprocessor copy if a non-preprocessor version
+      // got there first (preserves "Instant" badge over "AI" badge
+      // when both fired on the same finding).
+      const idx = dedupedViolations.indexOf(existing);
+      if (idx !== -1) dedupedViolations[idx] = v;
+      seenKey.set(key, v);
+    }
+    // Otherwise: drop the duplicate; first-seen + preprocessor-preferred wins.
+  }
+
+  const surfacedAt = Date.now();
+  for (const v of dedupedViolations) {
     const sourceBadge = v.source === "preprocessor"
       ? `<span class="source-badge source-badge-instant">&#9889; Instant</span>`
       : `<span class="source-badge source-badge-ai">&#10024; AI</span>`;
@@ -3988,7 +3985,11 @@ function renderNodeCard(result) {
     // PR-35 — render the suggestion as a stacked before/after diff
     // when we have both. Falls back to the plain "Suggestion" line
     // when the original text isn't on the result (older code paths).
-    const rationaleBody = enrichedSuggestion
+    // Per the 2026-05-08 design pass: the rationale (issue) and the
+    // recommendation (suggestion) both render inline on every finding,
+    // no click-to-expand, so the customer sees BOTH our reasoning AND
+    // our fix in plain English without an extra interaction.
+    const suggestionBlock = enrichedSuggestion
       ? (result.text
           ? `<div class="suggestion-label">Suggested change</div>
              ${renderDiffBlock(result.text, enrichedSuggestion)}`
@@ -3996,17 +3997,18 @@ function renderNodeCard(result) {
              <div class="suggestion">${escapeHtml(enrichedSuggestion)}</div>`)
       : "";
 
+    // data-rationale-expanded stays "true" for downstream override-
+    // telemetry compat (the field used to distinguish informed_accept
+    // from pattern_match_accept in the behavior-quadrant derivation).
+    // Rationale is always visible now, so the literal "true" is honest.
     html += `<div class="violation-card"
                   data-text="${escapeHtml(result.text || "")}"
                   data-suggested-text="${escapeHtml(enrichedSuggestion || "")}"
                   data-surfaced-at="${surfacedAt}"
-                  data-rationale-expanded="false">
+                  data-rationale-expanded="true">
       <div class="violation-header">${severityBadge} ${sourceBadge}</div>
       <div class="issue">${escapeHtml(v.issue)}</div>
-      ${rationaleBody ? `<button class="btn-expand-rationale" type="button" aria-expanded="false">
-        Why this was flagged
-      </button>
-      <div class="rationale-body" hidden>${rationaleBody}</div>` : ""}
+      ${suggestionBlock}
     </div>`;
   }
 
@@ -4091,11 +4093,83 @@ const REVIEW_REASON_LABELS = {
   high_confidence_mixed_signals: "Confident, but signals are mixed",
 };
 
+// Reasons that genuinely add information. Everything else is
+// uncertainty-shaped ("we're not sure why") and we suppress its
+// explanation to avoid stacking perception against the engine when
+// we don't have a useful thing to say.
+const REVIEW_REASON_INFORMATIVE = new Set([
+  "standards_conflict",
+  "novel_pattern",
+]);
+
 function humanizeReviewReason(value) {
   if (!value) return "";
   if (REVIEW_REASON_LABELS[value]) return REVIEW_REASON_LABELS[value];
   const spaced = String(value).replace(/_/g, " ").trim();
   return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : "";
+}
+
+// Mirrors of CONTENT_TYPE_LABELS / MOMENT_LABELS in src/lib/humanize.ts.
+// Same drift-risk profile: small enum, updates rarely, plugin sandbox
+// can't import from src/. The label maps are a superset of what the
+// web app renders because the plugin's contentType + moment classifiers
+// emit a wider vocabulary (button_cta, long_form_copy, wayfinding, …).
+const CONTENT_TYPE_LABELS = {
+  ui_label: "UI label",
+  short_ui_copy: "Short UI copy",
+  long_form_copy: "Long-form copy",
+  button_cta: "Button or CTA",
+  button: "Button",
+  link: "Link",
+  heading: "Heading",
+  body_paragraph: "Body paragraph",
+  toast: "Toast",
+  tooltip: "Tooltip",
+  tooltip_microcopy: "Tooltip",
+  form_label: "Form label",
+  placeholder: "Placeholder",
+  alt_text: "Alt text",
+  empty_state_text: "Empty state",
+  error_message: "Error message",
+  section_header: "Section header",
+  confirmation: "Confirmation",
+};
+
+const MOMENT_LABELS = {
+  error_state: "Error state",
+  empty_state: "Empty state",
+  destructive_confirmation: "Destructive confirmation",
+  destructive_action: "Destructive action",
+  permissions_request: "Permissions request",
+  onboarding: "Onboarding",
+  first_encounter: "First encounter",
+  loading: "Loading state",
+  success: "Success message",
+  warning: "Warning",
+  notification: "Notification",
+  compliance_disclosure: "Compliance disclosure",
+  navigation: "Navigation",
+  marketing: "Marketing",
+  browsing_discovery: "Browsing & discovery",
+  task_execution: "Task execution",
+  error_recovery: "Error recovery",
+  wayfinding: "Wayfinding",
+  confirmation: "Confirmation",
+};
+
+function humanizeFromMap(value, map) {
+  if (!value) return "";
+  if (map[value]) return map[value];
+  const spaced = String(value).replace(/_/g, " ").trim();
+  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : "";
+}
+
+function humanizeContentType(value) {
+  return humanizeFromMap(value, CONTENT_TYPE_LABELS);
+}
+
+function humanizeMoment(value) {
+  return humanizeFromMap(value, MOMENT_LABELS);
 }
 
 
@@ -4161,13 +4235,13 @@ function updateProgress(data) {
       status.textContent = data.instantViolations > 0
         ? `Instant checks: ${data.instantViolations} issue${data.instantViolations !== 1 ? "s" : ""} caught`
         : "Instant checks complete. No mechanical issues.";
-      detail.textContent = `Evaluating ${data.total} strings with AI...`;
+      detail.textContent = `Evaluating ${data.total} string${data.total !== 1 ? "s" : ""}…`;
       break;
 
     case "evaluating":
       const pct = 15 + Math.round((data.current / data.total) * 80);
       setProgressBar(fill, pct);
-      status.textContent = `AI evaluation: ${data.current} of ${data.total} layer${data.total !== 1 ? "s" : ""}...`;
+      status.textContent = `${data.current} of ${data.total} layer${data.total !== 1 ? "s" : ""}…`;
       detail.textContent = "This could take a few seconds or a couple minutes.";
       break;
 
@@ -4646,7 +4720,7 @@ async function executeBatchScan(nodes) {
 
   showScreen("scanning");
   document.getElementById("scan-title").textContent =
-    `Scanning ${nodes.length} text layer${nodes.length !== 1 ? "s" : ""}...`;
+    "ContentRX is running your checks";
 
   try {
     const outcome = await runBatchScan(nodes, updateProgress);
