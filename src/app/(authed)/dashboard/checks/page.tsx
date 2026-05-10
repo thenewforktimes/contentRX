@@ -3,15 +3,16 @@
  *
  * Lists every check the user (or their team owner pivot) has run,
  * most-recent-first. Searchable server-side via ILIKE across the
- * preview text + content_type + moment + source fields, so a vague
- * memory of the original copy ("I think it went something like
- * 'The best place to sell collectibles'") finds matches across the
- * customer's entire history — not just the most-recent-100 client-
- * side window the page used to show.
+ * preview text + content_type + moment + source fields.
  *
  * URL-driven state:
  *   - ?q=<text>        substring match
  *   - ?verdict=<one>   filter to a single verdict
+ *   - ?source=<one>    filter to a single surface (dashboard|plugin|cli|action|lsp|mcp)
+ *   - ?filter=flagged  scope to checks the signed-in user shared via Flag for Review
+ *   - ?range=<one>     day | week | month | 30d | all  (named time-window)
+ *   - ?from=<iso>      custom start (inclusive)
+ *   - ?to=<iso>        custom end (exclusive)
  *   - ?page=<n>        1-indexed pagination
  *
  * Privacy: text_preview is the customer's own input, retained for
@@ -24,8 +25,12 @@ import {
   and,
   desc,
   eq,
+  exists,
+  gte,
   ilike,
+  inArray,
   isNull,
+  lt,
   or,
   sql,
   type SQL,
@@ -35,19 +40,16 @@ import { redirect } from "next/navigation";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { getDb, schema } from "@/db";
 import { humanizeVerdict } from "@/lib/humanize";
+import { SURFACE_SOURCES, type SurfaceSource } from "@/lib/surfaces";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { ChecksSearch } from "./checks-search";
 
 const PAGE_SIZE = 100;
 
-interface CheckHistoryRow {
+export interface CheckHistoryRow {
   id: string;
   createdAt: string;
   source: string | null;
-  // Schema 3.0.0 collapsed the three-tier model (standard / document /
-  // surface) into length-routed sizing. Legacy rows from pre-launch
-  // test data may still carry the old values; the renderer handles
-  // them by falling back to the small/large branch via humanizeSize.
   segmentType: "small" | "large";
   unitsConsumed: number;
   verdict: string | null;
@@ -56,17 +58,63 @@ interface CheckHistoryRow {
   contentType: string | null;
   moment: string | null;
   textPreview: string | null;
+  textHash: string | null;
+  /** True when the signed-in user has flagged this exact text via
+   * Flag for Review (customer_flagged_reviews row exists for the
+   * same user_id + text_hash). */
+  flagged: boolean;
+  /** When flagged, the customer_flagged_reviews.id so the row's
+   * Revoke action can call DELETE /api/customer-flag/[id]. */
+  flagId: string | null;
 }
 
 interface PageProps {
   searchParams: Promise<{
     q?: string;
     verdict?: string;
+    source?: string;
+    filter?: string;
+    range?: string;
+    from?: string;
+    to?: string;
     page?: string;
   }>;
 }
 
 const VALID_VERDICTS = new Set(["violation", "review_recommended", "pass"]);
+const SURFACE_SET = new Set<string>(SURFACE_SOURCES);
+
+export type DateRange = "day" | "week" | "month" | "30d" | "all";
+const RANGE_KEYS: DateRange[] = ["day", "week", "month", "30d", "all"];
+const RANGE_DEFAULT: DateRange = "30d";
+
+function rangeWindow(range: DateRange): { from: Date | null; to: Date | null } {
+  const now = new Date();
+  switch (range) {
+    case "day": {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      return { from: start, to: null };
+    }
+    case "week": {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 7);
+      return { from: start, to: null };
+    }
+    case "month": {
+      const start = new Date(now);
+      start.setMonth(start.getMonth() - 1);
+      return { from: start, to: null };
+    }
+    case "30d": {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 30);
+      return { from: start, to: null };
+    }
+    case "all":
+      return { from: null, to: null };
+  }
+}
 
 export default async function DashboardChecksPage({ searchParams }: PageProps) {
   const { userId: clerkId } = await auth();
@@ -88,6 +136,20 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
   const verdictFilter = VALID_VERDICTS.has(params.verdict ?? "")
     ? (params.verdict as string)
     : "";
+  const sourceFilter = SURFACE_SET.has(params.source ?? "")
+    ? (params.source as SurfaceSource)
+    : "";
+  const flaggedOnly = params.filter === "flagged";
+  const range: DateRange =
+    RANGE_KEYS.includes((params.range ?? "") as DateRange)
+      ? (params.range as DateRange)
+      : RANGE_DEFAULT;
+  const customFrom = parseIsoDate(params.from);
+  const customTo = parseIsoDate(params.to);
+  const { from, to } =
+    customFrom || customTo
+      ? { from: customFrom, to: customTo }
+      : rangeWindow(range);
   const page = clampPage(params.page);
 
   const ownerId = user.teamOwnerUserId ?? user.id;
@@ -121,6 +183,40 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
     conditions.push(eq(schema.usageEvents.verdict, verdictFilter));
   }
 
+  if (sourceFilter) {
+    conditions.push(eq(schema.usageEvents.source, sourceFilter));
+  }
+
+  if (from) {
+    conditions.push(gte(schema.usageEvents.createdAt, from));
+  }
+  if (to) {
+    conditions.push(lt(schema.usageEvents.createdAt, to));
+  }
+
+  if (flaggedOnly) {
+    // Scope to checks the signed-in user has flagged. Matching is by
+    // text_hash, not row id — the same string flagged multiple times
+    // is one consent record. User-scoped (not team-scoped) per the
+    // consent contract.
+    conditions.push(
+      exists(
+        db
+          .select({ one: sql<number>`1` })
+          .from(schema.customerFlaggedReviews)
+          .where(
+            and(
+              eq(schema.customerFlaggedReviews.userId, user.id),
+              eq(
+                schema.customerFlaggedReviews.textHash,
+                schema.usageEvents.textHash,
+              ),
+            ),
+          ),
+      ),
+    );
+  }
+
   // Query LIMIT+1 to detect "there's a next page" without an exact count.
   const offset = (page - 1) * PAGE_SIZE;
   const rows = await db
@@ -136,6 +232,7 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
       contentType: schema.usageEvents.contentType,
       moment: schema.usageEvents.moment,
       textPreview: schema.usageEvents.textPreview,
+      textHash: schema.usageEvents.textHash,
     })
     .from(schema.usageEvents)
     .where(and(...conditions))
@@ -146,19 +243,52 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
   const hasMore = rows.length > PAGE_SIZE;
   const visibleRows = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
 
-  // Counts per verdict for the filter pills. Scoped to the same
-  // team scope but ignores the q + verdict filters so the pills always
-  // show the totals (so a customer can see "10 findings, 4 worth a
-  // look" while filtered to one). Cheap because of the team_created
-  // index on usage_events.
+  // Pull the customer_flagged_reviews ids that match any visible row's
+  // text_hash. One query (IN clause) regardless of row count. User-
+  // scoped — only the signed-in user sees their own flag status.
+  const visibleHashes = Array.from(
+    new Set(
+      visibleRows
+        .map((r) => r.textHash)
+        .filter((h): h is string => typeof h === "string" && h.length > 0),
+    ),
+  );
+  const flagRows =
+    visibleHashes.length > 0
+      ? await db
+          .select({
+            id: schema.customerFlaggedReviews.id,
+            textHash: schema.customerFlaggedReviews.textHash,
+          })
+          .from(schema.customerFlaggedReviews)
+          .where(
+            and(
+              eq(schema.customerFlaggedReviews.userId, user.id),
+              inArray(schema.customerFlaggedReviews.textHash, visibleHashes),
+            ),
+          )
+      : [];
+  const flagByHash = new Map<string, string>();
+  for (const f of flagRows) {
+    flagByHash.set(f.textHash, f.id);
+  }
+
+  // Counts for the filter pills. Scoped to team + time-window only —
+  // ignores q + verdict + source + flagged so the pills always show
+  // the totals within the chosen time window.
+  const countConditions: SQL[] = [teamScopeClause as SQL];
+  if (from) countConditions.push(gte(schema.usageEvents.createdAt, from));
+  if (to) countConditions.push(lt(schema.usageEvents.createdAt, to));
+
   const verdictCountRows = await db
     .select({
       verdict: schema.usageEvents.verdict,
       count: sql<number>`count(*)::int`,
     })
     .from(schema.usageEvents)
-    .where(teamScopeClause)
+    .where(and(...countConditions))
     .groupBy(schema.usageEvents.verdict);
+
   const counts: Record<string, number> = {
     all: 0,
     violation: 0,
@@ -171,18 +301,44 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
     if (r.verdict && r.verdict in counts) counts[r.verdict] += n;
   }
 
+  // Count of distinct flagged checks (user-scoped) within the window.
+  // Powers the "Shared for review" pill count + the stats strip.
+  const flaggedCountRows = await db
+    .select({ count: sql<number>`count(distinct ${schema.customerFlaggedReviews.textHash})::int` })
+    .from(schema.customerFlaggedReviews)
+    .where(
+      and(
+        eq(schema.customerFlaggedReviews.userId, user.id),
+        from
+          ? gte(schema.customerFlaggedReviews.consentRecordedAt, from)
+          : (sql`true` as SQL),
+        to
+          ? lt(schema.customerFlaggedReviews.consentRecordedAt, to)
+          : (sql`true` as SQL),
+      ),
+    );
+  const flaggedCount = Number(flaggedCountRows[0]?.count ?? 0);
+
+  // Distinct surfaces in the window — drives the stats strip and the
+  // source-filter dropdown's option list.
+  const sourceRows = await db
+    .selectDistinct({ source: schema.usageEvents.source })
+    .from(schema.usageEvents)
+    .where(and(...countConditions));
+  const sourcesPresent: string[] = sourceRows
+    .map((r) => r.source)
+    .filter((s): s is NonNullable<typeof s> => s !== null && s.length > 0);
+
   const history: CheckHistoryRow[] = visibleRows.map((r) => {
     const { label } = humanizeVerdict(
       r.verdict ?? "pass",
       r.violationCount ?? 0,
     );
+    const flagId = r.textHash ? flagByHash.get(r.textHash) ?? null : null;
     return {
       id: r.id,
       createdAt: r.createdAt.toISOString(),
       source: r.source,
-      // Pre-3.0.0 rows carry stale enum values; coerce to "large" so
-      // the renderer's small/large branch covers them. New writes
-      // always land "small" or "large" (per src/lib/metering.ts).
       segmentType: (r.segmentType === "small" ? "small" : "large") as
         | "small"
         | "large",
@@ -193,6 +349,9 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
       contentType: r.contentType,
       moment: r.moment,
       textPreview: r.textPreview,
+      textHash: r.textHash,
+      flagged: flagId !== null,
+      flagId,
     };
   });
 
@@ -208,29 +367,28 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
         <Eyebrow>Check history</Eyebrow>
         <h1 className="mt-2 text-2xl font-semibold">Recent checks</h1>
         <p className="mt-1 text-sm text-default">
-          Search across every check your team has run. Try a phrase you
-          remember writing. Even a few words will find it.
+          Every check from every surface lands here. Filter by time
+          window, verdict, or source. Flag any check for review with
+          one click. The Flag CTA on a row is the same one that fires
+          from the paste panel.
         </p>
       </header>
 
-      {counts.all === 0 ? (
-        <section className="rounded-lg border border-line p-6 text-sm text-default">
-          No checks yet. Run one from the dashboard&apos;s{" "}
-          <Link href="/dashboard" className="underline underline-offset-2">
-            Try a check
-          </Link>{" "}
-          panel and it&apos;ll appear here.
-        </section>
-      ) : (
-        <ChecksSearch
-          rows={history}
-          query={q}
-          verdict={verdictFilter}
-          page={page}
-          hasMore={hasMore}
-          counts={counts}
-        />
-      )}
+      <ChecksSearch
+        rows={history}
+        query={q}
+        verdict={verdictFilter}
+        source={sourceFilter}
+        flaggedOnly={flaggedOnly}
+        range={range}
+        customFrom={customFrom ? customFrom.toISOString().slice(0, 10) : ""}
+        customTo={customTo ? customTo.toISOString().slice(0, 10) : ""}
+        page={page}
+        hasMore={hasMore}
+        counts={counts}
+        flaggedCount={flaggedCount}
+        sourcesPresent={sourcesPresent}
+      />
     </div>
   );
 }
@@ -239,9 +397,16 @@ function clampPage(raw: string | undefined): number {
   if (!raw) return 1;
   const n = parseInt(raw, 10);
   if (Number.isNaN(n) || n < 1) return 1;
-  // Defensive cap — 1000 pages × 100 = 100k checks, well past any
-  // realistic team's volume. Anyone hitting this is misusing the
-  // pagination URL.
   if (n > 1000) return 1000;
   return n;
+}
+
+function parseIsoDate(raw: string | undefined): Date | null {
+  if (!raw) return null;
+  // Accept YYYY-MM-DD only. Anything richer (timestamps, timezones) is
+  // out of scope for the date-picker UI.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+  const d = new Date(`${raw}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
 }

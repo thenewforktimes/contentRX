@@ -36,6 +36,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Labels are intentionally short. Folder-tabs work for ~6 labels at
+// typical viewport widths. Past that, switch to a different nav
+// metaphor (left sidebar). Today's 7-tab strip fits without
+// horizontal scroll when each label stays under 9 characters or so.
 const TABS: ReadonlyArray<{
   href: string;
   label: string;
@@ -53,17 +57,17 @@ const TABS: ReadonlyArray<{
   },
   {
     href: "/dashboard/checks",
-    label: "Check history",
+    label: "History",
     match: (p) => p.startsWith("/dashboard/checks"),
   },
   {
     href: "/dashboard/runs",
-    label: "Github runs",
+    label: "Runs",
     // Match both the index and per-run pages so /dashboard/runs/<id>
-    // keeps the tab highlighted. Earlier label was "CI runs"; renamed
-    // to name the surface explicitly so engineers reach for it from
-    // PR-comment context. "Action" elided for character economy —
-    // anyone who ran the Action knows what they did.
+    // keeps the tab highlighted. Earlier "Github runs" / "CI runs"
+    // labels widened the tab strip; the short form works alongside
+    // the source filter on History which is the canonical browse
+    // surface for action-source runs now.
     match: (p) => p.startsWith("/dashboard/runs"),
   },
   {
@@ -71,25 +75,22 @@ const TABS: ReadonlyArray<{
     // Earlier label was "Override report" — internal vocabulary
     // (`violation_overrides` is the table name). Customers don't
     // think in terms of "overrides"; they think in terms of "which
-    // rules keep getting dismissed?" The page is a tuning tool, so
-    // "Rule patterns" frames the data correctly without conflating
-    // with the configurative "Team rules" tab next door.
-    //
-    // URL stays /dashboard/overrides for stability — the table name
-    // and route path are internal plumbing; the visible label is
-    // what changes.
-    label: "Rule patterns",
+    // rules keep getting dismissed?" "Patterns" reads as an analytics
+    // surface (which it is). URL stays /dashboard/overrides for
+    // stability — the table name and route path are internal
+    // plumbing; the visible label is what changes.
+    label: "Patterns",
     match: (p) => p.startsWith("/dashboard/overrides"),
   },
   {
     href: "/dashboard/rules",
-    label: "Team rules",
+    label: "Rules",
     match: (p) => p.startsWith("/dashboard/rules"),
   },
   {
     // Phase G3 — the weekly review agent install + preview surface.
     href: "/dashboard/agent",
-    label: "Weekly agent",
+    label: "Agent",
     match: (p) => p.startsWith("/dashboard/agent"),
   },
   {
@@ -98,7 +99,7 @@ const TABS: ReadonlyArray<{
     // the revocation path. Visible to all plans (the consent contract
     // applies to every paying customer).
     href: "/dashboard/shared",
-    label: "Shared checks",
+    label: "Shared",
     match: (p) => p.startsWith("/dashboard/shared"),
   },
 ];
