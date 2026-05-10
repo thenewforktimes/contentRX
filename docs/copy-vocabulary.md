@@ -19,7 +19,7 @@ The product's value is **informed content-design judgment**. That's
 Robert's role, baked into the model. Every string we ship has to feel
 like that judgment showed up.
 
-### Five rules
+### Six rules
 
 1. **Declarative, not suggestive.** Say what's wrong, not what *might
    be* wrong. "This error blames the user," not "consider whether the
@@ -39,6 +39,11 @@ like that judgment showed up.
 5. **Use plain words.** *Use* not *utilize*. *Help* not *facilitate*.
    *Improve* not *optimize*. The full prohibited list is in
    [Prohibited terms](#prohibited-terms) below.
+6. **Use singular *they*. Never gendered.** ContentRX-authored copy
+   never uses *he / she / his / her / him*. Default and override are
+   both the singular *they*. Customer source material is the
+   exception. When the engine reviews a customer's string, it
+   doesn't auto-replace pronouns. Their content is theirs.
 
 ## Tone
 
@@ -283,6 +288,10 @@ most affected by it. Always rewrite.
 | tone-deaf | out of touch, unaware |
 
 ### Pronoun guidelines (severity: warning)
+
+Engine-side guidance for flagging customer strings. ContentRX-authored
+copy follows Voice rule 6 (no gendered pronouns, ever) and is held to
+a stricter standard than what the engine flags in customer content.
 
 Default to the singular *they*. *He / she* and *his / her* are
 exclusionary in product copy where the audience isn't known.

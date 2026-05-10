@@ -38,7 +38,7 @@ import { Section } from "@/components/ui/section";
 export const metadata: Metadata = {
   title: "About the model. ContentRX",
   description:
-    "ContentRX is the tool I wish I had when I needed it. The content model a working staff content designer would run on his own writing.",
+    "ContentRX is the tool I wish I had when I needed it. The content model a working staff content designer would run on their own writing.",
 };
 
 export default function AboutPage() {
@@ -50,7 +50,7 @@ export default function AboutPage() {
         lede={
           <p>
             ContentRX is the content model a working staff content
-            designer would run on his own writing. The standards, the
+            designer would run on their own writing. The standards, the
             context, the weighting system. All of it carries one designer&apos;s judgment calls.
           </p>
         }
