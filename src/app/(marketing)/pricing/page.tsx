@@ -213,19 +213,19 @@ export default function PricingPage() {
                 Yes. Each plan has a monthly check limit.
                 <ul className="mt-2 space-y-1">
                   <li>
-                    <span className="font-medium text-strong">Free.</span>{" "}
+                    <span className="font-medium text-strong">Free</span>,
                     10 checks.
                   </li>
                   <li>
-                    <span className="font-medium text-strong">Pro.</span>{" "}
+                    <span className="font-medium text-strong">Pro</span>,
                     1,000 checks.
                   </li>
                   <li>
-                    <span className="font-medium text-strong">Team.</span>{" "}
+                    <span className="font-medium text-strong">Team</span>,
                     2,000 checks per seat, pooled.
                   </li>
                   <li>
-                    <span className="font-medium text-strong">Scale.</span>{" "}
+                    <span className="font-medium text-strong">Scale</span>,
                     60,000 checks pooled, 10-seat cap.
                   </li>
                 </ul>
