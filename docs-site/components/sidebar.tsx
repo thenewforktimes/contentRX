@@ -25,14 +25,6 @@ export function Sidebar() {
             Guides
           </Link>
         </li>
-        <li>
-          <Link
-            href="/case-studies"
-            className="block rounded px-2 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-900"
-          >
-            Case studies
-          </Link>
-        </li>
       </ul>
       <ul className="space-y-1 border-t border-neutral-200 pt-4 dark:border-neutral-800">
         <li>

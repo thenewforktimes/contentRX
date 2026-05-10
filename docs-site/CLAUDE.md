@@ -8,8 +8,7 @@ monorepo so the build can co-evolve with the engine.
 ## What's locked
 
 - Next.js 15 App Router, TypeScript, Tailwind v4.
-- `@next/mdx` for long-form pages (whitepaper, contributing, guides,
-  case studies).
+- `@next/mdx` for long-form pages (whitepaper, contributing, guides).
 - No Nextra. No client state. Every page is a Server Component.
 - **Public taxonomy is not part of this site.** Per ADR
   `decisions/2026-04-25-private-taxonomy-pivot.md`, the 47 standards,
@@ -27,9 +26,6 @@ monorepo so the build can co-evolve with the engine.
   posture (no "open the standards-library JSON" instructions).
 - `app/guides/*` — public hand-written guides (error messages, Figma
   design review, Next.js + shadcn buttons, custom examples).
-- `app/case-studies/page.tsx` + `lib/case-studies.ts` — typed
-  registry; each case study lands as a single MDX file under
-  `app/case-studies/<slug>/page.mdx` plus a registry entry.
 
 ## Public-credibility surfaces
 
