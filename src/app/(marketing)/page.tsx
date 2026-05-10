@@ -48,10 +48,10 @@ import { AuthorBlock } from "@/components/author-block";
 import { HeroVerdictMock } from "@/components/hero-verdict-mock";
 import { HowItWorksDiagram } from "@/components/how-it-works-diagram";
 import { IntegrationRow } from "@/components/integration-row";
+import { SurfacesGrid } from "@/components/surfaces-grid";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
-import { UseCaseToggle } from "@/components/use-case-toggle";
 import { Wordmark } from "@/components/wordmark";
 
 export const metadata: Metadata = {
@@ -99,18 +99,13 @@ export default function Home() {
 
       <IntegrationRow />
 
-      {/* Use-case toggle. Sits between the integration row ("here's
-          where it runs") and the author block ("here's who built it")
-          to answer the question those two surfaces leave open: what
-          kind of writing does it actually handle? Two short-form
-          examples, two long-form. The toggle is interactive client
-          state; the copy is static. */}
-      <div className="mt-20">
-        <UseCaseToggle />
-      </div>
-
       {/* Author up. The named-byline block sits high so the moat
-          lands before the feature copy. */}
+          lands before the feature copy.
+          2026-05-09: the UseCaseToggle that briefly sat between
+          IntegrationRow and AuthorBlock got cut. /writes is the
+          dedicated long-form proof page; the IntegrationRow chips
+          already prove breadth-of-surface; the toggle was a third
+          breadth-statement that hurt the page's pacing. */}
       <div className="mt-20">
         <AuthorBlock />
       </div>
@@ -142,69 +137,13 @@ export default function Home() {
         </div>
       </section>
 
-      <Section eyebrow="Where it runs" title="Where you ship content.">
-        <ul className="mt-1 ml-5 list-disc space-y-2">
-          <li>
-            <strong>MCP server</strong> for Claude Code, Cursor, and
-            any MCP client. Inline review during generation, not
-            after.{" "}
-            <Link
-              href="/install#mcp"
-              className="underline underline-offset-2"
-            >
-              Install
-            </Link>
-            .
-          </li>
-          <li>
-            <strong>CLI</strong> for the terminal and CI. Spot-check
-            a string, batch a file, or hook it into pre-commit. One
-            install, zero dependencies.{" "}
-            <Link
-              href="/install#cli"
-              className="underline underline-offset-2"
-            >
-              Install
-            </Link>
-            .
-          </li>
-          <li>
-            <strong>GitHub Action</strong> that evaluates strings
-            touched in a pull request. <code>fail-on: review</code>{" "}
-            gates merge on findings flagged for review.{" "}
-            <Link
-              href="/install#action"
-              className="underline underline-offset-2"
-            >
-              Install
-            </Link>
-            .
-          </li>
-          <li>
-            <strong>LSP</strong> for VS Code, Zed, and any LSP
-            editor. Findings as diagnostics, inline.{" "}
-            <Link
-              href="/install#lsp"
-              className="underline underline-offset-2"
-            >
-              Install
-            </Link>
-            .
-          </li>
-          <li>
-            <strong>Figma plugin</strong> for design-time review.
-            Per-string findings with context banners and rationale
-            chains.{" "}
-            <Link
-              href="/install#figma"
-              className="underline underline-offset-2"
-            >
-              Install
-            </Link>
-            .
-          </li>
-        </ul>
-      </Section>
+      {/* Where it runs — a 2x3 card grid replacing the prior bullet
+          list (2026-05-09 design pass). The bullet list read as docs
+          directly under the heavy dot-grid panel of How-it-works;
+          the card grid carries the same content with a marketing
+          register that earns its place. Surface order matches the
+          chip-nav order on /install. */}
+      <SurfacesGrid />
 
       <Section
         eyebrow="Built for your stack"
