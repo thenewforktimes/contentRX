@@ -120,7 +120,8 @@ export default async function SharedStringsPage() {
           </a>
           {" "}
           with the rough timing and source surface. ContentRX deletes
-          the row and any downstream substrate it produced.
+          the row and any record that string produced in the
+          calibration log.
         </p>
       </header>
 
