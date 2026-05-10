@@ -19,11 +19,17 @@
  * /install:
  *   1. Dashboard (no install — first because it's the
  *      lowest-friction try)
- *   2. MCP server
- *   3. LSP
+ *   2. MCP server (engineering ICP, ships today)
+ *   3. GitHub Action (high CI usage; Marketplace coming soon)
  *   4. CLI
- *   5. GitHub Action
- *   6. Figma plugin
+ *   5. LSP (IDE-resident, somewhat redundant with MCP)
+ *   6. Figma plugin (coming soon)
+ *
+ * 2026-05-11: GitHub Action moved up (was 5th); LSP moved down
+ * (was 3rd). Rationale: every team that uses MCP probably already
+ * has the IDE story covered; the GitHub Action is what gates merge
+ * on every PR, so its slot ranking lifts. Figma stays at the foot
+ * for now — flip up when Community publication clears.
  *
  * The card surface uses bg-raised + border-line — the default Card
  * primitive treatment — to keep the visual rhythm consistent with
@@ -69,11 +75,16 @@ const SURFACES: readonly Surface[] = [
     ctaLabel: "Install",
   },
   {
-    name: "LSP server",
-    href: "/install#lsp",
-    Glyph: VsCodeIcon,
-    description:
-      "Findings as diagnostics in VS Code, Cursor, Zed, or any LSP editor. Right-click to rewrite in place.",
+    name: "GitHub Action",
+    href: "/install#action",
+    Glyph: GitHubIcon,
+    description: (
+      <>
+        Evaluates strings touched in a pull request.{" "}
+        <code className="font-mono text-xs">fail-on: review</code>{" "}
+        gates merge on findings flagged for review.
+      </>
+    ),
     ctaLabel: "Install",
   },
   {
@@ -85,16 +96,11 @@ const SURFACES: readonly Surface[] = [
     ctaLabel: "Install",
   },
   {
-    name: "GitHub Action",
-    href: "/install#action",
-    Glyph: GitHubIcon,
-    description: (
-      <>
-        Evaluates strings touched in a pull request.{" "}
-        <code className="font-mono text-xs">fail-on: review</code>{" "}
-        gates merge on findings flagged for review.
-      </>
-    ),
+    name: "LSP server",
+    href: "/install#lsp",
+    Glyph: VsCodeIcon,
+    description:
+      "Findings as diagnostics in VS Code, Cursor, Zed, or any LSP editor. Right-click to rewrite in place.",
     ctaLabel: "Install",
   },
   {
