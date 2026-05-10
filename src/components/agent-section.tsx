@@ -158,7 +158,7 @@ function DigestMock() {
             aria-hidden
           />
           <p className="text-default">
-            <span className="font-semibold text-strong">Action verbs.</span>{" "}
+            <span className="font-semibold text-strong">Action verbs:</span>{" "}
             12 strings used &lsquo;Submit&rsquo; on a destructive
             action this week.
           </p>
@@ -170,7 +170,7 @@ function DigestMock() {
           />
           <p className="text-default">
             <span className="font-semibold text-strong">
-              Plain language.
+              Plain language:
             </span>{" "}
             7 strings reached for &lsquo;utilize&rsquo; or
             &lsquo;leverage&rsquo;.
@@ -183,7 +183,7 @@ function DigestMock() {
           />
           <p className="text-default">
             <span className="font-semibold text-strong">
-              Accessibility.
+              Accessibility:
             </span>{" "}
             4 link strings still read &lsquo;click here&rsquo;.
           </p>
