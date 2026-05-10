@@ -312,8 +312,9 @@ export default function WritesPage() {
         }
         meta={
           <>
-            Six examples below. Each shows the writer&apos;s draft, the
-            content model&apos;s flags, and the suggested rewrite. The
+            Six examples below. Each shows what the writer started
+            with, the content model&apos;s flags, and the suggested
+            rewrite. The
             engine is calibrated for product and internal writing; for
             persuasive marketing copy expect more &lsquo;worth a look&rsquo;
             flags than usual.
@@ -345,7 +346,7 @@ function ExampleCard({ example }: { example: Example }) {
 
       <div className="mt-6 rounded-lg border border-line bg-canvas p-5">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
-          The draft
+          What you wrote
         </p>
         <p className="mt-2 whitespace-pre-line text-sm text-strong">
           {example.inputText}

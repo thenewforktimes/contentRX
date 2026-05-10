@@ -33,17 +33,18 @@ export default async function ExplainPage() {
           Paste-mode review
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
-          Check a string. Or a draft.
+          Check a string. Or long-form writing.
         </h1>
         <p className="mt-3 text-sm text-default">
           Paste a button label, an error message, a product update
-          email, a security advisory, or any draft announcement.
-          ContentRX returns the document-level diagnostic, a clean
-          rewrite, and the categorized flags. Same engine, same
-          content-design judgment, regardless of length.
+          email, a security advisory, or any long-form writing your
+          team is shipping. ContentRX returns the document-level
+          diagnostic, a clean rewrite, and the categorized flags.
+          Same engine, same content-design judgment, regardless of
+          length.
         </p>
         <p className="mt-3 text-xs text-quiet">
-          Up to 50,000 characters. Each check counts against your{" "}
+          Each check counts against your{" "}
           <Link href="/dashboard" className="underline underline-offset-2">
             monthly limit
           </Link>

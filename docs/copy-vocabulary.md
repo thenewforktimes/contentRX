@@ -385,9 +385,27 @@ Rules of thumb, not strings.
 - **Numbers.** *"1,000 checks per month"*, not *"1000 checks/mo"*.
   Comma separator on thousands. The numbers customers see most: 10
   (free monthly limit), 1,000 (Pro monthly limit), 2,000/seat (Team),
-  60,000 (Scale monthly limit), 200 (characters per check), 50,000
-  (max characters per call). Match these in copy or you're
-  contradicting another surface.
+  60,000 (Scale monthly limit), 200 (characters per check). Match
+  these in copy or you're contradicting another surface.
+
+  **The 50,000-character ceiling is technical, not a customer-facing
+  claim.** `MAX_INPUT_CHARS = 50_000` in `src/lib/metering.ts` is the
+  zod-enforced upper bound the API rejects past, but engine output
+  quality at the upper end of that range hasn't been validated. As of
+  2026-05-09 customer copy doesn't promise it works at 50K — it just
+  says "long-form writing." Re-introduce a specific number on
+  customer surfaces only after the validation pass picks one we can
+  honestly claim.
+
+- **"Long-form writing," not "draft."** Customers see *"long-form
+  writing"* (the brand-voice phrase for a paragraph or paragraph
+  cluster the customer hands the engine). *"Draft"* as a synonym for
+  long-form writing reads as weird in the brand voice — *"paste a
+  draft"* is verb-y, *"any draft announcement"* is noun-y, neither
+  beats the plainer *"long-form writing"*. The one carve-out:
+  **"draft pull request"** stays — that's GitHub's product idiom
+  (used on `/dashboard/agent` and the homepage agent section), and
+  customers know the term in that context.
 - **Checks, not units.** *"1 check per 200 characters"*, never *"1
   unit per 200 characters"*. The wire format (schema 3.0.0) carries
   `units_consumed` for backward compatibility, but customers only

@@ -223,7 +223,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           // the use case instead of nudging the user toward a smaller
           // string.
           rows={10}
-          placeholder="Paste a button label, an error message, a product update email, a security advisory, or any draft announcement. Up to 50,000 characters."
+          placeholder="Paste a button label, an error message, a product update email, a security advisory, or any long-form writing your team is shipping."
           className={`w-full rounded-md border bg-raised px-3 py-2 font-mono text-sm text-strong focus:outline-none focus:ring-1 ${
             overLimit
               ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"

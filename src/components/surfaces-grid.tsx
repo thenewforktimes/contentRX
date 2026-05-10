@@ -57,7 +57,7 @@ const SURFACES: readonly Surface[] = [
     href: "/dashboard/explain",
     Glyph: PasteModeIcon,
     description:
-      "Sign in, paste a string or a 50,000-character draft, get the document-level diagnostic and a clean rewrite. No install.",
+      "Sign in, paste a string or long-form writing, get the document-level diagnostic and a clean rewrite. No install.",
     ctaLabel: "Open the dashboard",
   },
   {
@@ -65,7 +65,7 @@ const SURFACES: readonly Surface[] = [
     href: "/install#mcp",
     Glyph: McpIcon,
     description:
-      "Inline review during generation in Claude Code, Cursor, or any MCP client. The flag lands in the same conversation as the draft.",
+      "Inline review during generation in Claude Code, Cursor, or any MCP client. The flag lands in the same conversation as the writing.",
     ctaLabel: "Install",
   },
   {

@@ -66,9 +66,14 @@ describe("explain/page.tsx (F2 paste-mode header)", () => {
   it("invites long-form pasting in the page header", () => {
     // JSX wraps lines mid-phrase; the regexes allow whitespace
     // between words so a future re-wrap doesn't drop the assertion.
+    //
+    // 2026-05-09 vocab pass: dropped "announcement" from the lede
+    // (the word read narrow; "long-form writing your team is
+    // shipping" covers the same range without scoping). Pinning
+    // "long-form writing" as the structural beat instead.
     expect(source).toMatch(/product\s+update\s+email/i);
     expect(source).toMatch(/security\s+advisory/i);
-    expect(source).toMatch(/announcement/i);
+    expect(source).toMatch(/long-form\s+writing/i);
   });
 
   it("calls out the document-level outputs that long-form unlocks", () => {

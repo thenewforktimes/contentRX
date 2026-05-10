@@ -43,7 +43,7 @@ export default function InstallPage() {
             strings that arrive through design. Or skip the install
             and{" "}
             <Link href="/dashboard/explain" className="underline underline-offset-2">
-              paste a draft in the dashboard
+              paste your writing in the dashboard
             </Link>
             .
           </>
@@ -83,16 +83,16 @@ export default function InstallPage() {
           The dashboard&apos;s paste-mode surface handles the same
           engine the install surfaces use, with no install. Paste a
           button label, an error message, a product update email, a
-          security advisory, or any draft announcement up to 50,000
-          characters. ContentRX returns the document-level
-          diagnostic, a clean rewrite, and the categorized flags.
+          security advisory, or any long-form writing your team is
+          shipping. ContentRX returns the document-level diagnostic,
+          a clean rewrite, and the categorized flags.
         </p>
         <p className="mt-3">
           Try it now:
         </p>
         <Code>{`# 1. Sign in or sign up at contentrx.io
 # 2. Open /dashboard/explain
-# 3. Paste a draft and click Check`}</Code>
+# 3. Paste your writing and click Check`}</Code>
         <p className="mt-3 text-sm text-quiet">
           The paste flow is calibrated for product and internal
           writing; for persuasive marketing copy expect more

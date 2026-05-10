@@ -29,9 +29,9 @@ envelope (issue, suggestion, severity, confidence) that ships to
 six surfaces:
 
 - **Dashboard paste mode**: paste a button label, an error message,
-  a product update email, or a security advisory. Up to 50,000
-  characters. Get the document-level diagnostic, a clean rewrite,
-  and the categorized flags.
+  a product update email, a security advisory, or any long-form
+  writing your team is shipping. Get the document-level diagnostic,
+  a clean rewrite, and the categorized flags.
 - **MCP server**: `uvx contentrx-mcp`. Inline review during
   generation in Claude Code, Cursor, or any MCP client.
 - **LSP server**: yellow squiggles in any LSP editor. Right-click
