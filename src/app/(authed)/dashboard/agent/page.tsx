@@ -250,7 +250,7 @@ function ConnectCard({
         shape your team uses for Dependabot or Renovate.
       </p>
       <p className="text-sm text-quiet">
-        Read-only. The agent never edits your strings. The PR is
+        Read-only. The agent never edits your checks. The PR is
         always opened as a draft so it sits dormant until you decide
         to engage with it.
       </p>

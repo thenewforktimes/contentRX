@@ -88,7 +88,7 @@ function DigestMock() {
             Action verbs
           </Pill>
           <p className="text-default">
-            12 strings used &lsquo;Submit&rsquo;.
+            12 checks used &lsquo;Submit&rsquo;.
           </p>
         </li>
         <li className="flex items-center gap-2">

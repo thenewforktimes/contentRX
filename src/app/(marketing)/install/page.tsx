@@ -128,8 +128,8 @@ uvx contentrx-mcp`}
       >
         <p>
           Drop a YAML into{" "}
-          <code>.github/workflows/</code>. ContentRX evaluates
-          strings touched in every pull request.
+          <code>.github/workflows/</code>. ContentRX evaluates the
+          checks touched in every pull request.
         </p>
         <p className="mt-3 text-sm text-quiet">
           Marketplace listing coming soon. The snippet below is the
@@ -211,7 +211,7 @@ export CONTENTRX_API_KEY=cx_...
           <code>alt</code>, <code>aria-label</code>,{" "}
           <code>placeholder</code>, <code>title</code>,{" "}
           <code>tooltip</code>, and <code>label</code> attributes.
-          Random string literals stay unflagged. Source:{" "}
+          Random source-code literals stay unflagged. Source:{" "}
           <a
             href="https://github.com/thenewforktimes/contentRX/tree/main/lsp-server"
             className="underline underline-offset-2"
@@ -228,8 +228,8 @@ export CONTENTRX_API_KEY=cx_...
         pill={<Pill tone="neutral">Coming soon</Pill>}
       >
         <p>
-          Catch strings at design time, before they land in code.
-          Per-string verdicts and a stance on every finding.
+          Catch checks at design time, before they land in code.
+          Per-check verdicts and a stance on every finding.
         </p>
         <p className="mt-3 text-sm text-quiet">
           Figma Community publication is in review. We&apos;ll

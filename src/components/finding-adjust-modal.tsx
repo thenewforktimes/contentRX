@@ -132,9 +132,9 @@ export function FindingAdjustModal({
           </h2>
           <p className="mt-1 text-sm text-default">
             Record that this finding doesn&apos;t apply to your team&apos;s
-            context. ContentRX stores a hash of the string for your
+            context. ContentRX stores a hash of the check for your
             private dashboard. Nothing here is shared. To share the
-            string for calibration, use Flag for Review on the finding.
+            check for calibration, use Flag for Review on the finding.
           </p>
         </header>
 

@@ -118,7 +118,7 @@ export default function AccuracyPage() {
       <section className="mt-10 rounded-lg border border-line-strong bg-overlay p-6">
         <h2 className="text-lg font-semibold">How I measure</h2>
         <p className="mt-2 text-sm text-quiet">
-          Each weekday the engine evaluates strings against the
+          Each weekday the engine evaluates checks against the
           standards library and the held-out cases I&rsquo;ve blind-
           labelled. The system κ is how often the engine and I agree
           on the same input. The self-drift κ is how often I agree

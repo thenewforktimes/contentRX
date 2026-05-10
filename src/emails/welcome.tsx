@@ -21,7 +21,7 @@ export function WelcomeEmail({
       <Text>Three ways to start:</Text>
       <Text>
         First, <Link href={`${appUrl}/install#mcp`}>install the MCP server</Link>{" "}
-        for Claude Code or Cursor and check a string in 30 seconds.
+        for Claude Code or Cursor and run a check in 30 seconds.
         <br />
         Then, <Link href={`${appUrl}/dashboard`}>open your dashboard</Link> to
         grab an API key for the CLI or GitHub Action.

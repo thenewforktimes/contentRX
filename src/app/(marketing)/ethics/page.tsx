@@ -67,7 +67,7 @@ export default function EthicsPage() {
         summary="Your text is reviewed, returned, and gone. The hash is what ContentRX keeps."
       >
         <p>
-          Send a string to ContentRX. The engine evaluates it. The
+          Send a check to ContentRX. The engine evaluates it. The
           verdict comes back. The plaintext doesn&apos;t persist.
           ContentRX retains a sha256 hash, the verdict, the severity,
           the content type, and the surface that called. That&apos;s
@@ -130,7 +130,7 @@ export default function EthicsPage() {
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            ContentRX does not sell your strings. Not hashed. Not
+            ContentRX does not sell your checks. Not hashed. Not
             anonymised. Not to data brokers, advertisers, or anyone
             else. There is no third-party broker contract. There
             will not be one.
@@ -143,12 +143,11 @@ export default function EthicsPage() {
           </li>
           <li>
             ContentRX does not train a model on your content. Yours,
-            ours, Anthropic&apos;s, anyone&apos;s. A customer string
+            ours, Anthropic&apos;s, anyone&apos;s. A customer check
             joins the calibration corpus only when you share it via
-            Flag for Review. One path. One consent modal per string.
-            Available to every paying customer. Revoke any time by
-            email. The strings you have shared live on your dashboard
-            at{" "}
+            Flag for Review. One path. One consent modal per check.
+            Available to every paying customer. Revoke any time from
+            the dashboard. The checks you have shared live at{" "}
             <Link
               href="/dashboard/shared"
               className="underline underline-offset-2"

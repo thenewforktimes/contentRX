@@ -94,11 +94,11 @@ const TABS: ReadonlyArray<{
   },
   {
     // Per ADR 2026-05-11 the explicit-share calibration surface. Lists
-    // every string the customer has shared via Flag for Review, plus
+    // every check the customer has shared via Flag for Review, plus
     // the revocation path. Visible to all plans (the consent contract
     // applies to every paying customer).
     href: "/dashboard/shared",
-    label: "Shared strings",
+    label: "Shared checks",
     match: (p) => p.startsWith("/dashboard/shared"),
   },
 ];

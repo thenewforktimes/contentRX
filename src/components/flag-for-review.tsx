@@ -3,13 +3,13 @@
 /**
  * Flag-for-Review button + consent modal.
  *
- * Per ADR 2026-05-11 this is the only path by which a customer string
+ * Per ADR 2026-05-11 this is the only path by which a customer check
  * enters ContentRX's calibration corpus. The customer taps Flag for
  * Review on a check result; the modal captures (1) what they think is
  * off, (2) optional note, (3) required consent. On submit, POSTs to
  * /api/customer-flag and the row lands in /admin/customer-flags for
- * triage. The customer can revoke a shared string by emailing
- * privacy@contentrx.io.
+ * triage. The customer can revoke a shared check from
+ * /dashboard/shared (the RevokeButton there calls DELETE /api/customer-flag/[id]).
  *
  * Consent contract:
  *   - The consent box is never pre-checked. The submit button stays
@@ -96,7 +96,7 @@ export function FlagForReview({
   if (status === "submitted") {
     return (
       <p className="text-xs text-emerald-700 dark:text-emerald-400">
-        Shared. Visible to you on the Shared strings tab.
+        Shared. Visible to you on the Shared checks tab.
       </p>
     );
   }
@@ -153,34 +153,31 @@ export function FlagForReview({
                 id={`${consentId}-title`}
                 className="text-lg font-semibold text-strong"
               >
-                Share this string with ContentRX
+                Share this check with ContentRX
               </h2>
               <p className="text-sm text-default">
                 Sharing means ContentRX stores the plaintext of this
-                string and uses it to calibrate the engine so future
+                check and uses it to calibrate the engine so future
                 suggestions improve.
               </p>
               <p className="text-sm text-default">
-                <strong>What gets stored</strong>. This exact string,
+                <strong>What gets stored</strong>. This exact check,
                 the finding it produced, the time you shared it, and
                 the content type. Nothing else from this session.
               </p>
               <p className="text-sm text-default">
                 <strong>What ContentRX does with it</strong>. A content
-                designer reviews shared strings by hand. Patterns
-                inform how the engine reasons. Your string is not sold
-                or given to any third party.
+                designer reviews shared checks by hand. Patterns inform
+                how the engine reasons. Your check is not sold or given
+                to any third party.
               </p>
               <p className="text-sm text-default">
-                <strong>How to revoke</strong>. Email{" "}
-                <a
-                  href="mailto:privacy@contentrx.io"
-                  className="font-medium text-strong underline underline-offset-2"
-                >
-                  privacy@contentrx.io
-                </a>
-                {" "}with rough timing and ContentRX deletes the string.
-                You can revoke any time.
+                <strong>How to revoke</strong>. Open the{" "}
+                <span className="font-medium text-strong">Shared checks</span>
+                {" "}tab on your dashboard and tap{" "}
+                <span className="font-medium text-strong">Remove this check</span>
+                . ContentRX deletes the row and any record it produced
+                in the calibration log.
               </p>
               {contextLine && (
                 <p className="rounded-md border border-line bg-sunken px-3 py-2 text-xs text-default">
@@ -293,7 +290,7 @@ export function FlagForReview({
                   className="mt-0.5 accent-strong"
                 />
                 <span>
-                  Share this string with ContentRX and consent to its
+                  Share this check with ContentRX and consent to its
                   use for engine calibration.
                 </span>
               </label>

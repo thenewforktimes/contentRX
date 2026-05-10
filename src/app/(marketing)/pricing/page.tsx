@@ -58,7 +58,7 @@ export default function PricingPage() {
         className="max-w-3xl"
         eyebrow="Pricing"
         scale="display"
-        title="Staff-level content design review on every string you ship."
+        title="Staff-level content design review on every check you ship."
         lede={
           <>
             Free for evaluation. $39/month to use it daily. $79/seat
@@ -174,7 +174,7 @@ export default function PricingPage() {
             q="What kind of writing does ContentRX handle?"
             a={
               <>
-                Short-form UI strings (button labels, error messages,
+                Short-form UI copy (button labels, error messages,
                 tooltips) and long-form internal writing (product
                 update emails, security advisories, all-hands
                 pre-reads, policy notices). The engine is calibrated

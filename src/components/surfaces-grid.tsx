@@ -80,7 +80,7 @@ const SURFACES: readonly Surface[] = [
     Glyph: GitHubIcon,
     description: (
       <>
-        Evaluates strings touched in a pull request.{" "}
+        Evaluates the checks touched in a pull request.{" "}
         <code className="font-mono text-xs">fail-on: review</code>{" "}
         gates merge on findings flagged for review.
       </>

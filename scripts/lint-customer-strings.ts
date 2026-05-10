@@ -144,6 +144,15 @@ const CHECKS: Check[] = [
     match: regexMatch(/\bsubstrate\b/i),
   },
   {
+    id: "checks-not-strings",
+    severity: "error",
+    description:
+      'Customer surfaces call user-submitted content "checks," not "strings." Robert\'s call: a pasted essay or PRD is not a string. The word "string" is a developer-API term and stays in API docs, type signatures, and DB schema. Customer prose uses "check" (singular) or "checks" (plural). See docs/copy-vocabulary.md.',
+    // Word-boundary match catches "string" / "strings" but not
+    // "stringify" / "stringent" / hyphenated technical compounds.
+    match: regexMatch(/\bstrings?\b/i),
+  },
+  {
     id: "no-internal-admin-route",
     severity: "error",
     description:

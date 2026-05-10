@@ -206,9 +206,8 @@ export default async function RunPage({ params }: RunParams) {
         <section className="rounded-lg border border-line p-6">
           <p className="text-sm text-default">
             No findings logged for this run. Either the GitHub Action
-            checked your strings and they all passed, or the run was
-            from a different team. ContentRX keeps run history for
-            90 days.
+            ran your checks and they all passed, or the run was from
+            a different team. ContentRX keeps run history for 90 days.
           </p>
           <Link
             href="/dashboard"
@@ -316,7 +315,7 @@ export default async function RunPage({ params }: RunParams) {
         flagged strings) once the PR closes.
       */}
       <aside className="rounded-md border border-line bg-overlay p-3 text-xs text-default">
-        Strings + flags live here as a durable record. The original
+        Checks + flags live here as a durable record. The original
         GitHub Action comment on the PR carries the issue text and a
         diff-fenced suggestion for each finding. Open the PR to act on
         them in GitHub&apos;s review UI.
@@ -324,7 +323,7 @@ export default async function RunPage({ params }: RunParams) {
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Stat label="Findings" value={stats.total} />
-        <Stat label="Strings" value={stats.stringCount} />
+        <Stat label="Checks" value={stats.stringCount} />
         <Stat label="Files" value={stats.fileCount} />
         <Stat label="High" value={stats.highCount} tone="high" />
         <Stat

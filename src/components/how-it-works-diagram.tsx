@@ -153,7 +153,7 @@ export function HowItWorksDiagram() {
       </ol>
       <p className="mt-4 text-xs text-quiet">
         Each stage compresses what reaches the LLM down to the
-        standards that actually apply to your string in your moment.
+        standards that actually apply to your check in your moment.
         That&apos;s the model around the model.
       </p>
     </div>

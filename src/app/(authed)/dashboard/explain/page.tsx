@@ -33,7 +33,7 @@ export default async function ExplainPage() {
           Paste-mode review
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
-          Check a string. Or long-form writing.
+          Run a check. Short copy or long-form writing.
         </h1>
         <p className="mt-3 text-sm text-default">
           Paste a button label, an error message, a product update

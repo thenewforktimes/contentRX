@@ -58,16 +58,16 @@ export default function AboutPage() {
 
       <Section title="Calibration, not training">
         <p>
-          ContentRX never reads a customer string for calibration
+          ContentRX never reads a customer check for calibration
           unless the customer shared it. The path is one button,
           Flag for Review, with a consent modal that names what gets
           stored and how to revoke. Nothing else feeds the corpus.
         </p>
         <p className="mt-3">
-          Training averages strings into a black box. Calibration
+          Training averages content into a black box. Calibration
           reads patterns and makes judgment calls. ContentRX improves
           because a content designer is reviewing the work by hand,
-          not because customer strings became someone else&apos;s data.
+          not because customer checks became someone else&apos;s data.
         </p>
         <p className="mt-3">
           Every Monday the measured accuracy lands on{" "}

@@ -223,13 +223,22 @@ Settled calls. Diverging in a new surface is a regression.
 - **Findings** is what customers see. **Violations** stays in the API
   envelope and DB schema. **Overrides** is what /admin calls
   dismissals. Three words for three audiences. Don't blur them.
+- **Checks** is the customer-facing word for what users submit to
+  ContentRX (per Robert's call 2026-05-10). A button label is a check.
+  A pasted essay is a check. A PRD is a check. *Never call these
+  "strings" in customer copy.* The word *string* stays in API docs,
+  TS type signatures, and DB schema names only. The lint rule
+  `checks-not-strings` blocks customer-facing uses of *string* /
+  *strings*.
 - **Flag for Review** is the customer-facing calibration-share path
   (per ADR 2026-05-11). One CTA on every finding card. One consent
   modal that names what gets stored and how to revoke. The dashboard
-  surface listing those strings is **Shared strings** at
+  surface listing those checks is **Shared checks** at
   `/dashboard/shared`. *"Share"* describes the action; *"flagged"* /
   *"flag for review"* names the CTA. Don't say *"opt in to
-  calibration"* in customer copy.
+  calibration"* in customer copy. Revoke happens in-product via the
+  *Remove this check* button on each row; email is the fallback for
+  edge cases.
 - **Team owner**, never *admin*. Per the Position-3 ICP locked
   2026-04-27 there is no admin role. The team owner is the billing
   contact, and any team member can manage rules. Code branches still

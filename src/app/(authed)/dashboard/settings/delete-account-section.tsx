@@ -82,9 +82,9 @@ export function DeleteAccountSection() {
         Delete account
       </p>
       <p className="mt-2 text-sm text-default">
-        This runs the same pseudonymization the privacy policy commits
-        to, immediately rather than after the 90-day grace period.
-        It can&apos;t be undone.
+        The baseline ContentRX commits to is the right and ability to
+        be forgotten. When you delete the account, every row attached
+        to it goes too. This can&apos;t be undone.
       </p>
       <ul className="mt-3 ml-5 list-disc space-y-1 text-sm text-default">
         <li>
@@ -92,17 +92,19 @@ export function DeleteAccountSection() {
           charged.
         </li>
         <li>
-          Team rules, custom examples, team members, and team
-          invitations are deleted.
+          Every check you ran is deleted. Hashes, findings,
+          overrides, dismissals, all of it.
         </li>
         <li>
-          Historical violation hashes and override records have your
-          user id set to null. The hashed text and verdicts stay
-          anonymized in our calibration corpus.
+          Every check you shared via Flag for Review is deleted from
+          the calibration log.
         </li>
         <li>
-          Your email, API key, and Stripe customer link are cleared
-          from your account row.
+          Team rules, team members, and team invitations are deleted.
+        </li>
+        <li>
+          Your account row, API key, and Stripe customer link are
+          deleted from ContentRX&apos;s database.
         </li>
         <li>
           Your Clerk login is deleted. You&apos;ll need to sign up

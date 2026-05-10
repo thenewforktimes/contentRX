@@ -1,5 +1,5 @@
 /**
- * `/dashboard/shared` — every string this customer has shared with
+ * `/dashboard/shared` — every check this customer has shared with
  * ContentRX via Flag for Review.
  *
  * Per ADR 2026-05-11 this surface is the customer's window into "what
@@ -12,9 +12,9 @@
  *     triage status.
  *   - No aggregate stats above the list that could leak content
  *     between customers.
- *   - Names the email-based revocation path explicitly. The contract
- *     in the modal says email to revoke; the customer needs to see
- *     that path again here without hunting through a footer.
+ *   - Per-card "Remove this check" button that calls
+ *     DELETE /api/customer-flag/[id]. In-product revoke is the
+ *     baseline right; email is the fallback for edge cases.
  *
  * Auth: Clerk session via the (authed) layout. Server Component; reads
  * directly from the DB.
@@ -29,9 +29,10 @@ import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import { humanizeMoment } from "@/lib/humanize";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
+import { RevokeButton } from "./revoke-button";
 
 export const metadata = {
-  title: "Shared strings · ContentRX",
+  title: "Shared checks · ContentRX",
 };
 
 const REASON_LABEL: Record<string, string> = {
@@ -56,7 +57,7 @@ const STATUS_TONE: Record<string, "stone" | "emerald" | "amber"> = {
   not_actionable: "amber",
 };
 
-export default async function SharedStringsPage() {
+export default async function SharedChecksPage() {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
     redirect("/sign-in?redirect_url=/dashboard/shared");
@@ -100,37 +101,30 @@ export default async function SharedStringsPage() {
       <header>
         <Eyebrow>Shared with ContentRX</Eyebrow>
         <h1 className="mt-2 text-2xl font-semibold text-strong">
-          Strings you have shared
+          Checks you have shared
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-default">
-          Every string here was shared deliberately, by tapping
+          Every check here was shared deliberately, by tapping
           {" "}
           <span className="font-medium text-strong">Flag for review</span>
           {" "}
-          and confirming the consent modal. ContentRX stores nothing else
-          from the originating check.
+          and confirming the consent modal. ContentRX stores nothing
+          else from the originating run.
         </p>
         <p className="mt-2 max-w-2xl text-sm text-default">
-          To withdraw a shared string from the calibration corpus, email{" "}
-          <a
-            href="mailto:privacy@contentrx.io"
-            className="font-medium text-strong underline underline-offset-2"
-          >
-            privacy@contentrx.io
-          </a>
+          To remove a check, use the{" "}
+          <span className="font-medium text-strong">Remove this check</span>
           {" "}
-          with the rough timing and source surface. ContentRX deletes
-          the row and any record that string produced in the
-          calibration log.
+          button on the card. ContentRX deletes the row and any record
+          it produced in the calibration log.
         </p>
       </header>
 
       {rows.length === 0 ? (
         <section className="rounded-lg border border-line bg-overlay p-6">
           <p className="text-sm text-default">
-            Nothing shared yet. ContentRX has no plaintext of any string
-            you have checked. To share a specific string, run a check
-            and tap{" "}
+            Nothing shared yet. ContentRX has no plaintext of any check
+            you have run. To share a specific check, run it and tap{" "}
             <span className="font-medium text-strong">Flag for review</span>
             {" "}
             on the result.
@@ -195,6 +189,9 @@ export default async function SharedStringsPage() {
                     </div>
                   )}
                 </dl>
+                <div className="mt-3 flex justify-end">
+                  <RevokeButton id={row.id} />
+                </div>
               </li>
             );
           })}

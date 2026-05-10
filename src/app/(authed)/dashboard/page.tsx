@@ -204,7 +204,7 @@ function TryACheckPanel({ plan }: { plan: Plan }) {
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold">Try a check</h2>
         <span className="text-xs text-default">
-          Paste any UI string · 1 check
+          Paste any UI copy · 1 check
         </span>
       </header>
       <ExplainClient plan={plan} />

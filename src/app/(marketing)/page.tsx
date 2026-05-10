@@ -47,7 +47,7 @@ import { Wordmark } from "@/components/wordmark";
 export const metadata: Metadata = {
   title: "ContentRX. Staff-level content design review, in every repo",
   description:
-    "ContentRX reviews your strings and long-form writing and gives you suggestions and rationale. Before your next PR, before merge.",
+    "ContentRX reviews your checks and long-form writing and gives you suggestions and rationale. Before your next PR, before merge.",
 };
 
 export default function Home() {
@@ -63,7 +63,7 @@ export default function Home() {
             Staff-level content design review in every repo
           </h1>
           <p className="mt-6 text-lg text-default sm:text-xl">
-            ContentRX reviews your strings and long-form writing and
+            ContentRX reviews your checks and long-form writing and
             gives you suggestions and rationale. Before your next PR,
             before merge.
           </p>
