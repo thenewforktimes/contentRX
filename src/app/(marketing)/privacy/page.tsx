@@ -56,7 +56,7 @@ export default function PrivacyPage() {
         <p>Four buckets.</p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>Account data.</strong> When you sign up, the
+            <strong>Account data</strong>. When you sign up, the
             authentication provider (Clerk) handles your email,
             password, and session. If you upgrade to a paid plan, the
             billing provider (Stripe) handles your card details.
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
             card number.
           </li>
           <li>
-            <strong>Content you submit for review.</strong> Every
+            <strong>Content you submit for review</strong>. Every
             string passed to <code>/api/check</code>,{" "}
             <code>/api/classify</code>, or <code>/api/suggest-fix</code>{" "}
             is forwarded to the evaluation engine and to Anthropic. In
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
             surface that made the request.
           </li>
           <li>
-            <strong>Strings you explicitly share via Flag for Review.</strong>
+            <strong>Strings you explicitly share via Flag for Review</strong>.
             {" "}When you tap Flag for Review on a finding and confirm
             the consent modal, the plaintext of that string is stored
             for calibration alongside a per-row consent record. Each
@@ -94,7 +94,7 @@ export default function PrivacyPage() {
             {" "}to revoke a shared string at any time.
           </li>
           <li>
-            <strong>Usage and operational telemetry.</strong> Counts
+            <strong>Usage and operational telemetry</strong>. Counts
             of checks per month (for billing), API token usage (for
             cost accounting), error reports captured by Sentry,
             anonymous page-view metrics from Plausible (which is
@@ -143,7 +143,7 @@ export default function PrivacyPage() {
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>ContentRX does not sell your strings.</strong>{" "}
+            <strong>ContentRX does not sell your strings</strong>.{" "}
             Hashed, anonymised, or otherwise. No data-broker contract,
             no advertiser arrangement.
           </li>
@@ -302,13 +302,20 @@ export default function PrivacyPage() {
           <a href={`mailto:${PRIVACY_EMAIL}`} className="underline underline-offset-2">
             {PRIVACY_EMAIL}
           </a>
-          . ContentRX will cancel any active subscription, anonymize
-          historical violation hashes and override records (the{" "}
-          <code>user_id</code> is set to null so engine calibration
-          retains the signal but the link back to you is severed),
-          delete any Flag-for-Review shares, clear identifiers on
-          your account row, and delete your Clerk login.
+          . ContentRX runs this sequence.
         </p>
+        <ul className="mt-3 ml-5 list-disc space-y-2">
+          <li>Cancels any active subscription.</li>
+          <li>
+            Anonymizes historical violation hashes and override
+            records by setting <code>user_id</code> to null. The
+            hashed signal stays so engine calibration retains it. The
+            link back to you is severed.
+          </li>
+          <li>Deletes any Flag-for-Review shares.</li>
+          <li>Clears identifiers on your account row.</li>
+          <li>Deletes your Clerk login.</li>
+        </ul>
         <p className="mt-3">
           Some records have legally required retention. Stripe
           receipts run 7 years for tax. Fraud-prevention logs run
@@ -327,29 +334,29 @@ export default function PrivacyPage() {
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>See what ContentRX has on you.</strong> Email the
+            <strong>See what ContentRX has on you</strong>. Email the
             address above. ContentRX will respond with the records
             it holds.
           </li>
           <li>
-            <strong>Correct it.</strong> Most fields are editable from
+            <strong>Correct it</strong>. Most fields are editable from
             the dashboard. For anything that is not, ask.
           </li>
           <li>
-            <strong>Delete your account.</strong> Email the address
+            <strong>Delete your account</strong>. Email the address
             above with subject{" "}
             <code>[DELETE]</code>. ContentRX runs the deletion
             sequence described in &ldquo;How long ContentRX keeps
             it.&rdquo;
           </li>
           <li>
-            <strong>Export your data.</strong> Email the address above
+            <strong>Export your data</strong>. Email the address above
             with subject{" "}
             <code>[EXPORT]</code>. ContentRX will respond within 30
             days.
           </li>
           <li>
-            <strong>Revoke a string you shared via Flag for Review.</strong>
+            <strong>Revoke a string you shared via Flag for Review</strong>.
             {" "}Email the address above with rough timing and source
             surface. ContentRX deletes the row and any record that
             string produced in the calibration log. Your{" "}
