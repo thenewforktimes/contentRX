@@ -173,6 +173,37 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     }
   });
 
+  it("surfaces the weekly review agent with three sub-claims", () => {
+    // The 2026-05-09 design pass added a section between
+    // SurfacesGrid and Built-for-stack to land the agent value prop
+    // (formerly absent from the homepage). Three sub-claim cards
+    // (Read-only / Deterministic / 0 checks per run) carry the
+    // brand promise; the third gets the accent-affirm treatment as
+    // the differentiator. The Try-the-preview link funnels to
+    // /dashboard/agent's Run-preview-now button.
+    expect(visible).toMatch(/weekly review agent/i);
+    expect(visible).toMatch(/drift, caught every monday/i);
+    expect(visible).toMatch(/Read-only\./);
+    expect(visible).toMatch(/Deterministic\./);
+    expect(visible).toMatch(/0 checks per run\./);
+    // Pricing read: agent ships on the Team plan.
+    expect(visible).toMatch(/folded\s+into\s+the\s+team\s+plan/i);
+    // Funnels visitors to the dashboard preview surface.
+    expect(visible).toContain('href="/dashboard/agent"');
+  });
+
+  it("agent section sits between SurfacesGrid and Built-for-stack", () => {
+    // Section ordering check — the agent section is a section-level
+    // beat, not a sub-claim of another section. Pinning order:
+    // SurfacesGrid → Weekly review agent → Built for your stack.
+    const surfacesIdx = visible.indexOf("SurfacesGrid");
+    const agentIdx = visible.indexOf("Weekly review agent");
+    const builtIdx = visible.indexOf("Built for your stack");
+    expect(surfacesIdx).toBeGreaterThan(-1);
+    expect(agentIdx).toBeGreaterThan(surfacesIdx);
+    expect(builtIdx).toBeGreaterThan(agentIdx);
+  });
+
   it("does not render the deprecated UseCaseToggle component", () => {
     // The UseCaseToggle was a tabbed card showing four kinds of
     // writing. Cut 2026-05-09: the IntegrationRow already proves
