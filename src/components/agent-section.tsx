@@ -45,27 +45,27 @@ export function AgentSection() {
             Drift, caught every Monday.
           </h2>
           <p className="mt-4 max-w-xl text-base text-default">
-            Every Monday a draft pull request lands with last
-            week&apos;s recurring patterns. Read-only. Deterministic.
-            The catch your senior reviewer would have made.
+            A draft pull request lands with last week&apos;s
+            recurring patterns. The catch your senior reviewer would
+            have made.
           </p>
 
           <ul className="mt-8 grid gap-3 sm:grid-cols-3">
             <ClaimCard
               title="Read-only."
-              body="The agent never edits your strings. Every run lands as a draft pull request. Close it, keep it, follow up."
+              body="Never edits your strings. Always a draft pull request."
             />
             <ClaimCard
               title="Deterministic."
-              body="Patterns from rule-based clustering. Not LLM guessing. Same input, same digest."
+              body="Rule-based clustering. Not LLM guessing. Reproducible."
             />
             <ClaimCard
               accent
               title="0 checks per run."
               body={
                 <>
-                  Rendered from your team&apos;s existing flag history.
-                  Zero LLM calls. Folded into the Team plan.{" "}
+                  Reads your existing flags. Zero LLM calls. On the
+                  Team plan.{" "}
                   <Link
                     href="/dashboard/agent"
                     className="underline underline-offset-2 hover:text-strong"

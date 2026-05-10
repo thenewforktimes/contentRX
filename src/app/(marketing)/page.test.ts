@@ -201,8 +201,12 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(agentSectionVisible).toMatch(/Read-only\./);
     expect(agentSectionVisible).toMatch(/Deterministic\./);
     expect(agentSectionVisible).toMatch(/0 checks per run\./);
-    // Pricing read: agent ships on the Team plan.
-    expect(agentSectionVisible).toMatch(/folded\s+into\s+the\s+team\s+plan/i);
+    // Pricing read: agent ships on the Team plan. Phrasing relaxed
+    // 2026-05-10 from "folded into the Team plan" to allow tighter
+    // alternatives ("on the Team plan", etc.) per the ruthless-cut
+    // pass. The structural assertion is "agent → Team plan," not the
+    // specific verb.
+    expect(agentSectionVisible).toMatch(/(folded\s+into\s+the|on\s+the)\s+team\s+plan/i);
     // Funnels visitors to the dashboard preview surface.
     expect(agentSectionVisible).toContain('href="/dashboard/agent"');
   });
