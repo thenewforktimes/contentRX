@@ -10,6 +10,7 @@
  *   - Pro:        $39/mo ($379/yr, 20% off). 1,000 checks/mo. Self-serve.
  *   - Team:       $79/seat/mo ($759/seat/yr, 20% off). 2,000 checks/seat,
  *                 pooled across the team. Self-serve, no seat minimum.
+ *                 Weekly review agent ships at this tier.
  *   - Scale:      $1,799/mo ($17,299/yr, 20% off). 60,000 checks pooled,
  *                 10-seat cap. Sales-assisted.
  *   - Enterprise: Coming soon. SSO/SAML, SCIM, audit logs, custom rules,
@@ -20,6 +21,13 @@
  *
  * Metering shape (schema 3.0.0): 1 check per 200 characters, rounded up.
  * A button label bills as 1 check; a 4,000-char doc bills as 20.
+ *
+ * Weekly review agent (added to Team + Scale features 2026-05-10): the
+ * Monday-cadence drift digest agent is a Team-plan-and-up feature.
+ * Calling it out by name on the plan cards (instead of letting it hide
+ * inside "Everything in Pro/Team") because it's a load-bearing
+ * differentiator — deterministic, read-only, 0 checks per run — that a
+ * buyer's eye should land on while comparing tiers.
  */
 
 import type { Metadata } from "next";
@@ -88,6 +96,7 @@ export default function PricingPage() {
           quota="2,000 checks per seat, pooled"
           features={[
             "Everything in Pro",
+            "Weekly review agent (Monday drift digest, 0 checks per run)",
             "Rule sharing across the team",
             "Member management with pooled checks",
           ]}
@@ -106,7 +115,7 @@ export default function PricingPage() {
           priceSubnote="$17,299/year (save 20%)"
           quota="60,000 checks per month, pooled"
           features={[
-            "Everything in Team",
+            "Everything in Team, including the weekly review agent",
             "Triple the checks of 10 Team seats",
             "10-seat cap, one flat invoice",
           ]}
@@ -156,6 +165,26 @@ export default function PricingPage() {
                 flags than usual.{" "}
                 <Link href="/writes" className="underline underline-offset-2">
                   See six worked examples
+                </Link>
+                .
+              </>
+            }
+          />
+          <Faq
+            q="What's the weekly review agent?"
+            a={
+              <>
+                A read-only agent on the Team plan and up that opens
+                a draft pull request every Monday with the
+                recurring-pattern flags from your team&apos;s last
+                week. Deterministic. Read-only. 0 checks per run
+                (the digest is rendered from your team&apos;s
+                existing flag history, not a fresh LLM pass).{" "}
+                <Link
+                  href="/dashboard/agent"
+                  className="underline underline-offset-2"
+                >
+                  Try the preview
                 </Link>
                 .
               </>
