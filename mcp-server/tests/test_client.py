@@ -74,13 +74,6 @@ async def test_check_success():
     # Substrate fields must NEVER leak through the MCP rendering boundary.
     # ADR 2026-04-25 (private-taxonomy pivot): standard_id + rule_version
     # are stripped from any user-facing surface that RENDERS a violation.
-    # ADR 2026-04-28 (admin echo-back carve-out): the strip rule applies
-    # to RENDERING surfaces (this one); echo-back surfaces like
-    # custom_example_* are exempt and intentionally include standard_id.
-    # Both halves of the contract are pinned by snapshot tests:
-    #   - rendering: this assertion (test_client.py)
-    #   - echo-back: test_adr_conformance_custom_example_*_preserves_standard_id
-    #     (test_custom_examples.py)
     assert "standard_id" not in result.violations[0]
     assert "rule_version" not in result.violations[0]
 

@@ -56,8 +56,6 @@ async function seedOpenOverride(
     textHash: "hash_" + overrideId,
     overrideType: "dismiss",
     source: "dashboard",
-    contributeUpstream: true,
-    text: "Save changes",
   });
 }
 
@@ -69,7 +67,7 @@ describe("triageOverride() — race guard", () => {
 
     const result = await triageOverride({
       overrideId: "ovr_1",
-      newStatus: "addressed_corpus",
+      newStatus: "addressed_patch",
       triagedBy: triager,
     });
     expect(result).toBe(true);
@@ -78,7 +76,7 @@ describe("triageOverride() — race guard", () => {
       .select()
       .from(schema.violationOverrides)
       .where(eq(schema.violationOverrides.id, "ovr_1"));
-    expect(row?.overrideStatus).toBe("addressed_corpus");
+    expect(row?.overrideStatus).toBe("addressed_patch");
     expect(row?.overrideStatusUpdatedBy).toBe(triager);
   });
 
@@ -90,7 +88,7 @@ describe("triageOverride() — race guard", () => {
 
     const first = await triageOverride({
       overrideId: "ovr_2",
-      newStatus: "addressed_corpus",
+      newStatus: "addressed_patch",
       triagedBy: a,
     });
     const second = await triageOverride({
@@ -108,7 +106,7 @@ describe("triageOverride() — race guard", () => {
       .select()
       .from(schema.violationOverrides)
       .where(eq(schema.violationOverrides.id, "ovr_2"));
-    expect(row?.overrideStatus).toBe("addressed_corpus");
+    expect(row?.overrideStatus).toBe("addressed_patch");
     expect(row?.overrideStatusUpdatedBy).toBe(a);
   });
 

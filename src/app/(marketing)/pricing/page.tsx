@@ -105,7 +105,7 @@ export default function PricingPage() {
           features={[
             "Everything in Pro",
             "Weekly review agent",
-            "Custom rules for your team",
+            "Team rule overrides",
           ]}
           overageNote="Hard cap by default. Opt in to $0.10/check overage from your dashboard."
           cta={{ href: "/sign-up", label: "Try Team free" }}

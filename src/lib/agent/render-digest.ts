@@ -93,11 +93,9 @@ function flagCount(n: number): string {
 
 /** Decide the trust-signal opener variant. */
 function isWarmedUp(c: CustomizationSignal): boolean {
-  // The roadmap's heuristic: ~30 flag decisions OR meaningful custom-
-  // example / team-rule layers. Either signal lifts the team out of
-  // cold-start.
+  // Either flag-decision history or an active team-rule layer lifts
+  // the team out of cold-start.
   if (c.overrideCount >= WARMED_UP_OVERRIDE_THRESHOLD) return true;
-  if (c.customExampleCount >= 3) return true;
   if (c.teamRuleCount >= 1) return true;
   return false;
 }
@@ -112,11 +110,6 @@ function renderOpener(
     parts.push(
       `your last ${customization.overrideCount} flag ${customization.overrideCount === 1 ? "decision" : "decisions"}`,
     );
-    if (customization.customExampleCount > 0) {
-      parts.push(
-        `your ${customization.customExampleCount} custom ${customization.customExampleCount === 1 ? "example" : "examples"}`,
-      );
-    }
     if (customization.teamRuleCount > 0) {
       parts.push(
         `your ${customization.teamRuleCount} active team ${customization.teamRuleCount === 1 ? "rule" : "rules"}`,

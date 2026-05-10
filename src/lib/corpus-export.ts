@@ -1,44 +1,42 @@
 /**
  * Pure-function library for the pilot-corrections corpus export.
  *
- * Session 8b of the post-launch corpus loop. The CLI runner at
- * `scripts/export-corpus.ts` reads `violation_overrides` rows
- * triaged to `addressed_corpus` with explicit pilot consent, then
- * delegates the JSON merge + serialization to this module so the
- * shape can be unit-tested without DB or filesystem.
+ * Per ADR 2026-05-11, the source is `customer_flagged_reviews` rows
+ * triaged to `addressed_corpus`. The CLI runner at
+ * `scripts/export-corpus.ts` reads those rows, then delegates the
+ * JSON merge + serialization to this module so the shape can be
+ * unit-tested without DB or filesystem.
  *
  * Output target: the private substrate submodule at
  * `src/content_checker/standards/private/pilot_corrections.json`.
  *
- * Idempotency contract: each entry is keyed by the override row id.
+ * Idempotency contract: each entry is keyed by the row id.
  * Re-running the export with the same input produces the same file
- * byte-for-byte (sorted keys + stable JSON formatting). New rows
- * append; updates to existing rows overwrite by id; deletes are
- * not supported — the founder edits the JSON manually if a
- * correction needs to be retracted.
+ * byte-for-byte. New rows append; updates to existing rows overwrite
+ * by id; deletes are not supported — the founder edits the JSON
+ * manually if a correction needs to be retracted.
  */
 
 export const PILOT_CORRECTIONS_SCHEMA_VERSION = "1.0.0" as const;
 
 export interface ExportableRow {
-  /** The `violation_overrides.id` — used as the corpus entry key. */
+  /** The source row id (customer_flagged_reviews.id). */
   id: string;
-  standardId: string;
+  /** Optional substrate-bucket axis. Customer-flag rows may not
+   * carry a standard_id until founder triage assigns one. */
+  standardId: string | null;
   moment: string | null;
   text: string;
   overrideReasonCode: string | null;
   overrideReason: string | null;
   sourceUserId: string | null;
   sourceTeamId: string | null;
-  /** When the row was triaged to `addressed_corpus`. Null on the
-   * legacy rows that pre-date the triage flow but somehow have
-   * consent + status — defensive only. */
   triagedAt: Date | null;
 }
 
 export interface PilotCorrectionEntry {
   id: string;
-  standard_id: string;
+  standard_id: string | null;
   moment: string | null;
   text: string;
   human_verdict: "pass";
@@ -62,10 +60,10 @@ export function emptyCorrectionsFile(now: Date = new Date()): PilotCorrectionsFi
   return {
     schema_version: PILOT_CORRECTIONS_SCHEMA_VERSION,
     description:
-      "Pilot corrections — overrides triaged `addressed_corpus` with " +
-      "explicit pilot consent. Each entry represents a single dismissal " +
-      "where the human verdict ('pass') overrode the engine's verdict. " +
-      "Per-entry data, never aggregated; private to the substrate repo.",
+      "Pilot corrections — customer-flagged-for-review strings " +
+      "triaged `addressed_corpus`. Each entry represents a single " +
+      "consented share via the Flag-for-Review flow. Per-entry data, " +
+      "never aggregated; private to the substrate repo.",
     generated_at: now.toISOString(),
     corrections: [],
   };

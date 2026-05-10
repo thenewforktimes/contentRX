@@ -88,12 +88,18 @@ const TABS: ReadonlyArray<{
   },
   {
     // Phase G3 — the weekly review agent install + preview surface.
-    // Visible to all plans; the cron itself only schedules for Team
-    // owners but the preview is free for anyone considering the
-    // upgrade. See src/app/(authed)/dashboard/agent/page.tsx.
     href: "/dashboard/agent",
     label: "Weekly agent",
     match: (p) => p.startsWith("/dashboard/agent"),
+  },
+  {
+    // Per ADR 2026-05-11 the explicit-share calibration surface. Lists
+    // every string the customer has shared via Flag for Review, plus
+    // the revocation path. Visible to all plans (the consent contract
+    // applies to every paying customer).
+    href: "/dashboard/shared",
+    label: "Shared strings",
+    match: (p) => p.startsWith("/dashboard/shared"),
   },
 ];
 

@@ -3,16 +3,15 @@
  * into an anonymized historical artifact:
  *
  *   1. Detach personal attribution from training-relevant rows
- *      (`violations`, `violation_overrides`, `preferences`) by setting
- *      their `user_id` to null. The hashed text + verdicts stay so
- *      engine calibration retains the signal; the link back to the
- *      person is gone.
+ *      (`violations`, `violation_overrides`, `customer_flagged_reviews`)
+ *      by setting their `user_id` to null. The hashed text + verdicts
+ *      stay so engine calibration retains the signal; the link back
+ *      to the person is gone.
  *
  *   2. Delete team-scoped rows that exist only because the user was
  *      operating ContentRX as a team owner: `team_rules`,
- *      `team_custom_examples`, `team_members`, `team_invitations`.
- *      No engine-training value, and PII-adjacent because they
- *      reference the user's workflow.
+ *      `team_members`, `team_invitations`. No engine-training value,
+ *      and PII-adjacent because they reference the user's workflow.
  *
  *   3. Replace identifiers on the `users` row with sentinel values.
  *      `users.email` is NOT NULL + UNIQUE, so the sentinel is keyed
@@ -57,18 +56,14 @@ export async function pseudonymizeUser(userId: string): Promise<void> {
     .where(eq(schema.violationOverrides.userId, userId));
 
   await db
-    .update(schema.preferences)
+    .update(schema.customerFlaggedReviews)
     .set({ userId: null })
-    .where(eq(schema.preferences.userId, userId));
+    .where(eq(schema.customerFlaggedReviews.userId, userId));
 
   // 2. Delete team-scoped rows.
   await db
     .delete(schema.teamRules)
     .where(eq(schema.teamRules.teamOwnerUserId, userId));
-
-  await db
-    .delete(schema.teamCustomExamples)
-    .where(eq(schema.teamCustomExamples.teamOwnerUserId, userId));
 
   await db
     .delete(schema.teamMembers)

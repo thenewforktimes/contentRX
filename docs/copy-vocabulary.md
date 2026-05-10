@@ -223,10 +223,17 @@ Settled calls. Diverging in a new surface is a regression.
 - **Findings** is what customers see. **Violations** stays in the API
   envelope and DB schema. **Overrides** is what /admin calls
   dismissals. Three words for three audiences. Don't blur them.
+- **Flag for Review** is the customer-facing calibration-share path
+  (per ADR 2026-05-11). One CTA on every finding card. One consent
+  modal that names what gets stored and how to revoke. The dashboard
+  surface listing those strings is **Shared strings** at
+  `/dashboard/shared`. *"Share"* describes the action; *"flagged"* /
+  *"flag for review"* names the CTA. Don't say *"opt in to
+  calibration"* in customer copy.
 - **Team owner**, never *admin*. Per the Position-3 ICP locked
   2026-04-27 there is no admin role. The team owner is the billing
-  contact, and any team member can manage rules and examples. Code
-  branches still use `isAdmin` internally; copy never does.
+  contact, and any team member can manage rules. Code branches still
+  use `isAdmin` internally; copy never does.
 - Surfaces are always **Figma plugin**, never just *Figma* (which is
   the company). Same for **GitHub Action** (full phrase, capital A),
   **MCP server** (when introducing it; "MCP" alone is fine in

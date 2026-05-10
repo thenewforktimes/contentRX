@@ -43,13 +43,11 @@ function pattern(
 
 const COLD_START_CUSTOMIZATION: CustomizationSignal = {
   overrideCount: 4,
-  customExampleCount: 0,
   teamRuleCount: 0,
 };
 
 const WARMED_UP_CUSTOMIZATION: CustomizationSignal = {
   overrideCount: 47,
-  customExampleCount: 12,
   teamRuleCount: 4,
 };
 
@@ -295,12 +293,10 @@ describe("renderDigest trust-signal opener", () => {
       ...FIXTURE_DRIFT,
       customization: {
         overrideCount: 31,
-        customExampleCount: 1,
         teamRuleCount: 1,
       },
     });
     expect(md).toContain("31 flag decisions");
-    expect(md).toContain("1 custom example");
     expect(md).toContain("1 active team rule");
   });
 });

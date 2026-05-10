@@ -13,7 +13,7 @@
  *   - customerFlagsOpen      customer_flagged_reviews where status='open',
  *                             joined to violations to get standard_id
  *   - suggestionCandidates   suggestion_candidates where status='pending'
- *                             AND share_upstream=true (founder-routable)
+ *                             AND share_upstream=true
  *
  * Refinements live in `taxonomy_refinement_log.md` but are keyed at the
  * proposal level (current_category), not standard level — they don't

@@ -45,7 +45,6 @@ export const DEFAULT_WINDOW_DAYS = 30;
  * the payload so the agent's read of the team is auditable. */
 export type CustomizationSignal = {
   overrideCount: number;
-  customExampleCount: number;
   teamRuleCount: number;
 };
 
@@ -123,51 +122,41 @@ export async function buildAgentRunPayload(
   }));
 
   // Customization signals — purely additive. The cold-start path
-  // (zero overrides, zero rules, zero examples) produces a payload
-  // with `customization: {0, 0, 0}` and the digest opener falls back
-  // to the cold-start variant in G4.
-  const [overrideRows, agreedByStandard, customExampleRows, teamRuleRows] =
-    await Promise.all([
-      db
-        .select({ id: schema.violationOverrides.id })
-        .from(schema.violationOverrides)
-        .where(
-          and(
-            eq(schema.violationOverrides.teamId, teamId),
-            gte(schema.violationOverrides.createdAt, windowStart),
-          ),
+  // (zero overrides, zero rules) produces a payload with
+  // `customization: {0, 0}` and the digest opener falls back to the
+  // cold-start variant in G4.
+  const [overrideRows, agreedByStandard, teamRuleRows] = await Promise.all([
+    db
+      .select({ id: schema.violationOverrides.id })
+      .from(schema.violationOverrides)
+      .where(
+        and(
+          eq(schema.violationOverrides.teamId, teamId),
+          gte(schema.violationOverrides.createdAt, windowStart),
         ),
-      // Per-standard tally of "agree" stances in the window — feeds
-      // the warmed-up citation in G4. A team that has accepted a
-      // pattern's rewrites repeatedly is the trust signal the digest
-      // cites; this row aggregates the count by standard.
-      db
-        .select({
-          standardId: schema.violationOverrides.standardId,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(schema.violationOverrides)
-        .where(
-          and(
-            eq(schema.violationOverrides.teamId, teamId),
-            eq(schema.violationOverrides.overrideStance, "agree"),
-            gte(schema.violationOverrides.createdAt, windowStart),
-          ),
-        )
-        .groupBy(schema.violationOverrides.standardId),
-      db
-        .select({ id: schema.teamCustomExamples.id })
-        .from(schema.teamCustomExamples)
-        .where(eq(schema.teamCustomExamples.teamOwnerUserId, teamId)),
-      db
-        .select({ id: schema.teamRules.id })
-        .from(schema.teamRules)
-        .where(eq(schema.teamRules.teamOwnerUserId, teamId)),
-    ]);
+      ),
+    db
+      .select({
+        standardId: schema.violationOverrides.standardId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schema.violationOverrides)
+      .where(
+        and(
+          eq(schema.violationOverrides.teamId, teamId),
+          eq(schema.violationOverrides.overrideStance, "agree"),
+          gte(schema.violationOverrides.createdAt, windowStart),
+        ),
+      )
+      .groupBy(schema.violationOverrides.standardId),
+    db
+      .select({ id: schema.teamRules.id })
+      .from(schema.teamRules)
+      .where(eq(schema.teamRules.teamOwnerUserId, teamId)),
+  ]);
 
   const customization: CustomizationSignal = {
     overrideCount: overrideRows.length,
-    customExampleCount: customExampleRows.length,
     teamRuleCount: teamRuleRows.length,
   };
 

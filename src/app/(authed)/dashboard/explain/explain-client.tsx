@@ -19,7 +19,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FindingAdjustModal } from "@/components/finding-adjust-modal";
-import { FindingMakeRuleModal } from "@/components/finding-make-rule-modal";
 import { FlagForReview } from "@/components/flag-for-review";
 import { Button, buttonStyles } from "@/components/ui/button";
 import { Pill } from "@/components/ui/pill";
@@ -925,7 +924,6 @@ function DocumentFindingsCategory({
 function DocumentFindingRow({
   finding,
   submittedText,
-  plan,
   isBigPicture,
 }: {
   finding: PublicViolation;
@@ -934,7 +932,6 @@ function DocumentFindingRow({
   isBigPicture: boolean;
 }) {
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [makeRuleOpen, setMakeRuleOpen] = useState(false);
   const excerpt = isBigPicture
     ? null
     : extractExcerpt(finding.issue, submittedText);
@@ -970,12 +967,6 @@ function DocumentFindingRow({
             source="dashboard"
             contextLine={`Flagging finding: "${truncateForContext(finding.issue)}"`}
           />
-          {plan === "team" && (
-            <MakeRuleButton
-              plan={plan}
-              onOpen={() => setMakeRuleOpen(true)}
-            />
-          )}
         </div>
       </div>
       {excerpt && (
@@ -995,21 +986,9 @@ function DocumentFindingRow({
         open={adjustOpen}
         onClose={() => setAdjustOpen(false)}
         submittedText={submittedText}
-        currentSuggestion={finding.suggestion ?? ""}
         issue={finding.issue}
         onSaved={() => {
           setAdjustOpen(false);
-        }}
-      />
-
-      <FindingMakeRuleModal
-        open={makeRuleOpen}
-        onClose={() => setMakeRuleOpen(false)}
-        submittedText={submittedText}
-        issue={finding.issue}
-        plan={plan}
-        onSaved={() => {
-          setMakeRuleOpen(false);
         }}
       />
     </li>
@@ -1263,20 +1242,15 @@ function formatResetDate(isoString: string): string {
 function FindingCard({
   finding,
   submittedText,
-  plan,
 }: {
   finding: PublicViolation;
   submittedText: string;
   plan: Plan;
 }) {
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [makeRuleOpen, setMakeRuleOpen] = useState(false);
   const [savedState, setSavedState] = useState<{
     verdictRecorded: boolean;
-    rewriteRecorded: boolean;
-    rewriteText: string | null;
   } | null>(null);
-  const [ruleSaved, setRuleSaved] = useState(false);
 
   return (
     <li className="rounded-md border border-line bg-raised p-3 text-sm">
@@ -1307,7 +1281,6 @@ function FindingCard({
             source="dashboard"
             contextLine={`Flagging finding: "${truncateForContext(finding.issue)}"`}
           />
-          <MakeRuleButton plan={plan} onOpen={() => setMakeRuleOpen(true)} />
         </div>
       </div>
       <p className="mt-2 text-strong">{finding.issue}</p>
@@ -1315,42 +1288,9 @@ function FindingCard({
         <DiffBlock before={submittedText} after={finding.suggestion} />
       )}
 
-      {savedState?.rewriteText && (
-        <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-950/20">
-          <p className="text-xs font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-            Your version
-          </p>
-          <p className="mt-1 text-sm text-strong">
-            {savedState.rewriteText}
-          </p>
-        </div>
-      )}
-
-      {savedState && !savedState.rewriteText && savedState.verdictRecorded && (
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <p className="text-xs text-emerald-700 dark:text-emerald-300">
-            Recorded. Thanks for the calibration signal.
-          </p>
-          {/* ADR §4 escalation: after a verdict-disagreement save, offer
-              a one-click hand-off to Make a rule for durable team-level
-              intent. Free/Pro see the upsell variant; Team gets the
-              modal. */}
-          {plan === "team" && !ruleSaved && (
-            <button
-              type="button"
-              onClick={() => setMakeRuleOpen(true)}
-              className="text-xs font-medium text-emerald-700 underline underline-offset-2 hover:text-emerald-800 dark:text-emerald-300 dark:hover:text-emerald-200"
-            >
-              Make a rule for your team →
-            </button>
-          )}
-        </div>
-      )}
-
-      {ruleSaved && (
+      {savedState?.verdictRecorded && (
         <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-300">
-          Rule saved. ContentRX will pin this string as a pass for your
-          team.
+          Recorded. The dismissal is on your dashboard.
         </p>
       )}
 
@@ -1358,55 +1298,13 @@ function FindingCard({
         open={adjustOpen}
         onClose={() => setAdjustOpen(false)}
         submittedText={submittedText}
-        currentSuggestion={finding.suggestion ?? ""}
         issue={finding.issue}
         onSaved={(saved) => {
           setSavedState(saved);
           setAdjustOpen(false);
         }}
       />
-
-      <FindingMakeRuleModal
-        open={makeRuleOpen}
-        onClose={() => setMakeRuleOpen(false)}
-        submittedText={submittedText}
-        issue={finding.issue}
-        plan={plan}
-        onSaved={() => {
-          setRuleSaved(true);
-          setMakeRuleOpen(false);
-        }}
-      />
     </li>
-  );
-}
-
-/**
- * MakeRuleButton — gates between modal (Team plan) and upsell
- * affordance (Free/Pro). Per ADR 2026-04-29 §3 the button is always
- * visible; only the click action differs by plan.
- */
-function MakeRuleButton({ plan, onOpen }: { plan: Plan; onOpen: () => void }) {
-  if (plan === "team") {
-    return (
-      <button
-        type="button"
-        onClick={onOpen}
-        aria-label="Make a rule for your team"
-        className="shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover"
-      >
-        Make a rule
-      </button>
-    );
-  }
-  return (
-    <Link
-      href="/pricing#team"
-      aria-label="Make a rule (Team plan)"
-      className="shrink-0 rounded-md border border-line bg-overlay px-2.5 py-1 text-xs font-medium text-quiet transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-200"
-    >
-      Make a rule (Team)
-    </Link>
   );
 }
 

@@ -1,15 +1,16 @@
 /**
  * `/admin/overrides` — override inbox.
  *
- * Phase 5 of the pre-pilot launch build. Lists `violation_overrides`
- * rows for triage. Every dismissal lands here as `open`; the founder
- * picks one of three resolutions per row from the action dropdown:
+ * Lists `violation_overrides` rows for triage. Every dismissal lands
+ * here as `open`; the founder picks a resolution per row:
  *
- *   - addressed_corpus  → add the case to the eval corpus as a
- *                         `human_verdict: pass` example (most
- *                         common — the pilot was right)
  *   - addressed_patch   → route into the patch queue (P1–P5)
  *   - not_actionable    → the pilot was wrong; rule fired correctly
+ *
+ * Per ADR 2026-05-11 the override row is a private record. The
+ * plaintext-and-corpus-contribution path moved to the Flag-for-Review
+ * surface (`/admin/customer-flags`); overrides no longer feed
+ * calibration directly.
  *
  * Filters via URL query params: `?user=<id>&standard=<id>&status=open|all`.
  * Default view: open overrides in the last 30 days.
@@ -22,7 +23,6 @@ import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
   inboxCounts,
@@ -39,7 +39,6 @@ export const metadata = {
 
 const STATUS_LABEL: Record<OverrideStatus, string> = {
   open: "Open",
-  addressed_corpus: "Added to corpus",
   addressed_patch: "Routed to patch",
   not_actionable: "Not actionable",
 };
@@ -61,7 +60,6 @@ async function triageAction(formData: FormData) {
     return;
   }
   if (
-    newStatus !== "addressed_corpus" &&
     newStatus !== "addressed_patch" &&
     newStatus !== "not_actionable"
   ) {
@@ -94,7 +92,6 @@ export default async function AdminOverridesPage({
   const statusFilter: OverrideStatus | "all" =
     params.status === "all" ||
     params.status === "open" ||
-    params.status === "addressed_corpus" ||
     params.status === "addressed_patch" ||
     params.status === "not_actionable"
       ? params.status
@@ -116,8 +113,8 @@ export default async function AdminOverridesPage({
           Override inbox
         </h1>
         <p className="mt-1 text-sm text-quiet">
-          Triage every dismissal into the corpus, the patch queue, or
-          mark not-actionable. Last 30 days, sorted most-recent-first.
+          Triage every dismissal into the patch queue or mark
+          not-actionable. Last 30 days, sorted most-recent-first.
         </p>
       </header>
 
@@ -129,11 +126,6 @@ export default async function AdminOverridesPage({
           label={`Open · ${counts.open}`}
           href={buildHref(params, { status: "open" })}
           active={statusFilter === "open"}
-        />
-        <FilterPill
-          label={`Corpus · ${counts.addressed_corpus}`}
-          href={buildHref(params, { status: "addressed_corpus" })}
-          active={statusFilter === "addressed_corpus"}
         />
         <FilterPill
           label={`Patch · ${counts.addressed_patch}`}
@@ -213,21 +205,11 @@ export default async function AdminOverridesPage({
                   )}
                 </p>
               )}
-              {row.contributeUpstream && row.text ? (
-                <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-900 dark:bg-emerald-950">
-                  <p className="text-xs font-medium text-emerald-900 dark:text-emerald-200">
-                    Pilot consented to share this string with calibration
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap font-mono text-sm text-emerald-950 dark:text-emerald-100">
-                    {row.text}
-                  </p>
-                </div>
-              ) : (
-                <p className="mt-3 rounded-md border border-line bg-overlay p-2 text-xs text-quiet">
-                  Text not retained &mdash; pilot did not opt in to share.
-                  Triage to corpus is unavailable for this row.
-                </p>
-              )}
+              <p className="mt-3 rounded-md border border-line bg-overlay p-2 text-xs text-quiet">
+                Hash only. Plaintext is never stored on override rows.
+                Calibration contributions come through
+                /admin/customer-flags.
+              </p>
               <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-quiet">
                 <span>
                   Status:{" "}
@@ -235,22 +217,11 @@ export default async function AdminOverridesPage({
                     {STATUS_LABEL[row.status]}
                   </span>
                 </span>
-                {row.status === "addressed_corpus" && row.exportedAt && (
-                  <Pill tone="emerald">
-                    Exported {row.exportedAt.toISOString().slice(0, 10)}
-                  </Pill>
-                )}
-                {row.status === "addressed_corpus" && !row.exportedAt && (
-                  <Pill tone="amber">
-                    Pending export &mdash; run npm run export-corpus
-                  </Pill>
-                )}
               </p>
               {row.status === "open" && (
                 <TriageForm
                   overrideId={row.id}
                   action={triageAction}
-                  canAddToCorpus={row.contributeUpstream && row.text !== null}
                 />
               )}
             </li>
@@ -264,11 +235,9 @@ export default async function AdminOverridesPage({
 function TriageForm({
   overrideId,
   action,
-  canAddToCorpus,
 }: {
   overrideId: string;
   action: (formData: FormData) => Promise<void>;
-  canAddToCorpus: boolean;
 }) {
   return (
     <form action={action} className="mt-3 flex flex-wrap items-center gap-2">
@@ -282,25 +251,11 @@ function TriageForm({
       <Button
         type="submit"
         name="newStatus"
-        value="addressed_corpus"
-        size="sm"
-        disabled={!canAddToCorpus}
-        title={
-          canAddToCorpus
-            ? undefined
-            : "Pilot did not opt in to share text; triage to corpus unavailable"
-        }
-      >
-        Add to corpus
-      </Button>
-      <button
-        type="submit"
-        name="newStatus"
         value="addressed_patch"
-        className="rounded-md bg-amber-700 px-3 py-1 text-xs font-medium text-white hover:bg-amber-800 dark:bg-amber-400 dark:text-amber-950 dark:hover:bg-amber-300"
+        size="sm"
       >
         Route to patch
-      </button>
+      </Button>
       <button
         type="submit"
         name="newStatus"

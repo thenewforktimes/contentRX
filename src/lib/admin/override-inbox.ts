@@ -1,23 +1,18 @@
 /**
  * Data helpers for `/admin/overrides` (override inbox).
  *
- * Phase 5 of the pre-pilot launch build. The inbox reads
- * `violation_overrides` rows where `override_status = 'open'` and
- * shows them as a triage queue. The founder picks one of three
- * resolutions per row:
+ * The inbox reads `violation_overrides` rows where
+ * `override_status = 'open'` and shows them as a triage queue. The
+ * founder picks one of two resolutions per row:
  *
- *   - addressed_corpus   → add to the eval corpus as a pass example
- *                          (the pilot was right)
- *   - addressed_patch    → route into the patch queue
- *                          (the rule needs work)
- *   - not_actionable     → the pilot was wrong; the rule fired correctly
+ *   - addressed_patch    → route into the patch queue (the rule
+ *                          needs work)
+ *   - not_actionable     → the pilot was wrong; the rule fired
+ *                          correctly
  *
- * No new schema beyond Phase 5a's three columns
- * (`override_status`, `override_status_updated_by`,
- * `override_status_updated_at`, `override_status_notes`).
- *
- * Filters: by user, by standard, by time window. The default view
- * shows open overrides sorted most-recent-first.
+ * Per ADR 2026-05-11 the override row is hash-only. The corpus
+ * contribution path moved to the Flag-for-Review surface
+ * (`customer_flagged_reviews`); overrides do not feed calibration.
  */
 
 import { and, desc, eq, gte, sql } from "drizzle-orm";
@@ -25,7 +20,6 @@ import { getDb, schema } from "@/db";
 
 export type OverrideStatus =
   | "open"
-  | "addressed_corpus"
   | "addressed_patch"
   | "not_actionable";
 
@@ -43,27 +37,13 @@ export interface InboxRow {
   source: string;
   status: OverrideStatus;
   createdAt: Date;
-  // Corpus-loop fields (Session 8). `text` is null unless the pilot
-  // explicitly opted in at dismiss time; `exportedAt` is set after
-  // the export script writes the row to the private corpus.
-  contributeUpstream: boolean;
-  text: string | null;
-  exportedAt: Date | null;
 }
 
 export interface InboxFilters {
-  /** Only rows for this user. Default: all users. */
   userId?: string;
-  /** Only rows for this standard. Default: all standards. */
   standardId?: string;
-  /** Only rows newer than this date. Default: last 30 days. */
   since?: Date;
-  /** Override-status filter. Default: 'open' (the triage queue);
-   * pass 'all' to include resolved rows in the per-user detail
-   * view. */
   status?: OverrideStatus | "all";
-  /** Max rows to return. Default 200 — enough for a busy week, small
-   * enough to keep the page snappy. */
   limit?: number;
 }
 
@@ -71,7 +51,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_WINDOW_DAYS = 30;
 const DEFAULT_LIMIT = 200;
 
-/** Read inbox rows matching the filters, sorted most-recent-first. */
 export async function loadOverrideInbox(
   filters: InboxFilters = {},
 ): Promise<InboxRow[]> {
@@ -108,9 +87,6 @@ export async function loadOverrideInbox(
       source: schema.violationOverrides.source,
       status: schema.violationOverrides.overrideStatus,
       createdAt: schema.violationOverrides.createdAt,
-      contributeUpstream: schema.violationOverrides.contributeUpstream,
-      text: schema.violationOverrides.text,
-      exportedAt: schema.violationOverrides.exportedAt,
     })
     .from(schema.violationOverrides)
     .leftJoin(
@@ -135,20 +111,12 @@ export async function loadOverrideInbox(
     source: r.source,
     status: r.status as OverrideStatus,
     createdAt: r.createdAt,
-    contributeUpstream: r.contributeUpstream,
-    text: r.text,
-    exportedAt: r.exportedAt,
   }));
 }
 
 /** Triage one override from `open` into a resolved state. Returns
  * whether the row was actually flipped (false when another founder
- * already triaged it, or when the row doesn't exist). The
- * `override_status = 'open'` guard makes the UPDATE atomic against
- * concurrent triage actions: the second writer gets a clean
- * rejection instead of silently overwriting attribution. The UI
- * surfaces the rejection as "already triaged by another admin"
- * (or stale-state) rather than a successful-but-stale write. */
+ * already triaged it, or when the row doesn't exist). */
 export async function triageOverride(args: {
   overrideId: string;
   newStatus: Exclude<OverrideStatus, "open">;
@@ -174,9 +142,6 @@ export async function triageOverride(args: {
   return result.length > 0;
 }
 
-/** Inbox-summary count per status. Used in the inbox header to
- * answer "how many opens are waiting?" without re-querying when the
- * user filters. */
 export async function inboxCounts(opts: {
   since?: Date;
 } = {}): Promise<Record<OverrideStatus, number>> {
@@ -194,7 +159,6 @@ export async function inboxCounts(opts: {
 
   const out: Record<OverrideStatus, number> = {
     open: 0,
-    addressed_corpus: 0,
     addressed_patch: 0,
     not_actionable: 0,
   };
