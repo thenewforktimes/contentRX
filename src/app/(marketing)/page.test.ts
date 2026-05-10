@@ -140,18 +140,50 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
   });
 
   it("leads with generation-layer surfaces (MCP before Figma)", () => {
-    // The Surfaces list must list MCP before Figma — Session 29
-    // moved the Figma plugin off the flagship slot, and the
-    // post-pivot positioning kept it that way. The surface labels
-    // were restructured 2026-04-29 from "<strong>Name.</strong>
-    // sentence" to "<strong>Name</strong> for/that-clause" because
-    // trailing periods on bold labels read as terminal punctuation
-    // (engine flagged them; copy-vocabulary.md confirms).
-    const mcpIdx = visible.indexOf("<strong>MCP server</strong>");
-    const figmaIdx = visible.indexOf("<strong>Figma plugin</strong>");
+    // Surface order in the SurfacesGrid: MCP must appear before
+    // Figma. Session 29 moved the Figma plugin off the flagship
+    // slot, and the post-pivot positioning kept it that way.
+    //
+    // 2026-05-09 design pass replaced the prior bullet `<strong>` /
+    // `<li>` shape with a card grid (`<SurfacesGrid />`); the
+    // ordering pin moves to the source of the surfaces array.
+    const gridSource = readSource("src/components/surfaces-grid.tsx");
+    const mcpIdx = gridSource.indexOf('name: "MCP server"');
+    const figmaIdx = gridSource.indexOf('name: "Figma plugin"');
     expect(mcpIdx).toBeGreaterThan(-1);
     expect(figmaIdx).toBeGreaterThan(-1);
     expect(mcpIdx).toBeLessThan(figmaIdx);
+  });
+
+  it("renders the SurfacesGrid in place of the prior bullet list", () => {
+    // The 2026-05-09 design pass replaced the bullet `<ul>` with a
+    // 6-card grid. The structural pin: the import + render exist,
+    // and all six surfaces are named in the grid's data array.
+    expect(source).toContain("SurfacesGrid");
+    const gridSource = readSource("src/components/surfaces-grid.tsx");
+    for (const surface of [
+      "Dashboard paste mode",
+      "MCP server",
+      "LSP server",
+      "CLI",
+      "GitHub Action",
+      "Figma plugin",
+    ]) {
+      expect(gridSource).toContain(`name: "${surface}"`);
+    }
+  });
+
+  it("does not render the deprecated UseCaseToggle component", () => {
+    // The UseCaseToggle was a tabbed card showing four kinds of
+    // writing. Cut 2026-05-09: the IntegrationRow already proves
+    // breadth-of-surface, the lede already names long-form writing,
+    // and /writes is the dedicated long-form proof page. A third
+    // breadth-statement on the homepage hurt pacing.
+    //
+    // Asserting against `visible` (post-comment-strip) so the
+    // comment in page.tsx that explains the cut isn't itself a
+    // false-positive trigger.
+    expect(visible).not.toContain("UseCaseToggle");
   });
 
   it("hero CTA points to /install, not straight to the Figma community page", () => {
@@ -200,26 +232,6 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(visible).not.toMatch(/\bverdict\b/i);
   });
 
-  it("renders the use-case toggle showing breadth of writing kinds (F1)", () => {
-    // The use-case toggle proves the "same engine, every kind of
-    // writing" claim. Structural pin: the component is imported and
-    // rendered. The component's own source carries the specific
-    // example labels.
-    expect(source).toContain("UseCaseToggle");
-    const toggleSource = readSource("src/components/use-case-toggle.tsx");
-    const toggleVisible = visibleCopy(toggleSource);
-    for (const label of [
-      "Button label",
-      "Error message",
-      "Product update email",
-      "Security disclosure",
-    ]) {
-      expect(toggleVisible).toContain(label);
-    }
-    // Substrate-clean: no engine substrate IDs ever leak to the
-    // landing page. The toggle uses customer-facing labels only.
-    expect(toggleVisible).not.toMatch(/standard_id|rule_version/);
-  });
 });
 
 describe("/about page (src/app/(marketing)/about/page.tsx)", () => {

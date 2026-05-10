@@ -24,89 +24,35 @@
  */
 
 import Link from "next/link";
+import {
+  ClaudeCodeIcon,
+  CliIcon,
+  CursorIcon,
+  FigmaIcon,
+  GitHubIcon,
+  McpIcon,
+  VsCodeIcon,
+} from "@/components/surface-icons";
 
 type Integration = {
   name: string;
   /** Where in /install this integration is documented. */
   href: string;
-  /** Inline SVG glyph. Each glyph is 24×24 with stroke-based shapes
-   * and `currentColor` so the parent text class drives the color. */
-  glyph: React.ReactNode;
+  /** Glyph component. Each is a 24×24 stroke-based SVG with
+   * `currentColor` so the parent text class drives the color. The
+   * shared icon set lives in surface-icons.tsx and is reused by
+   * SurfacesGrid on the landing page. */
+  Glyph: React.ComponentType<{ className?: string }>;
 };
 
 const INTEGRATIONS: readonly Integration[] = [
-  {
-    name: "MCP",
-    href: "/install#mcp",
-    glyph: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 7l9-4 9 4-9 4-9-4z" />
-        <path d="M3 12l9 4 9-4" />
-        <path d="M3 17l9 4 9-4" />
-      </svg>
-    ),
-  },
-  {
-    name: "Claude Code",
-    href: "/install#mcp",
-    glyph: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 3l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" />
-      </svg>
-    ),
-  },
-  {
-    name: "Cursor",
-    href: "/install#mcp",
-    glyph: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 3l14 9-6 1-3 8-5-18z" />
-      </svg>
-    ),
-  },
-  {
-    name: "VS Code",
-    href: "/install#lsp",
-    glyph: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 3l-13 9 13 9V3z" />
-        <path d="M6 12l-3-2v4l3-2z" />
-      </svg>
-    ),
-  },
-  {
-    name: "GitHub",
-    href: "/install#action",
-    glyph: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 19c-4 1-4-2-6-2m12 4v-4a3 3 0 00-1-2c3 0 6-2 6-6a4.5 4.5 0 00-1-3 4 4 0 00-.1-3s-1-.3-3 1.2a10 10 0 00-5 0c-2-1.5-3-1.2-3-1.2A4 4 0 005 6a4.5 4.5 0 00-1 3c0 4 3 6 6 6a3 3 0 00-1 2v4" />
-      </svg>
-    ),
-  },
-  {
-    name: "Figma",
-    href: "/install#figma",
-    glyph: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 3a3 3 0 100 6h3V3H9z" />
-        <path d="M9 9a3 3 0 100 6h3V9H9z" />
-        <path d="M9 15a3 3 0 103 3v-3H9z" />
-        <path d="M12 3h3a3 3 0 010 6h-3V3z" />
-        <circle cx="15" cy="12" r="3" />
-      </svg>
-    ),
-  },
-  {
-    name: "CLI",
-    href: "/install#cli",
-    glyph: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2.5" y="4" width="19" height="16" rx="2" />
-        <path d="M6 9l3 3-3 3" />
-        <path d="M12 15h6" />
-      </svg>
-    ),
-  },
+  { name: "MCP", href: "/install#mcp", Glyph: McpIcon },
+  { name: "Claude Code", href: "/install#mcp", Glyph: ClaudeCodeIcon },
+  { name: "Cursor", href: "/install#mcp", Glyph: CursorIcon },
+  { name: "VS Code", href: "/install#lsp", Glyph: VsCodeIcon },
+  { name: "GitHub", href: "/install#action", Glyph: GitHubIcon },
+  { name: "Figma", href: "/install#figma", Glyph: FigmaIcon },
+  { name: "CLI", href: "/install#cli", Glyph: CliIcon },
 ];
 
 export function IntegrationRow() {
@@ -123,7 +69,7 @@ export function IntegrationRow() {
               className="group flex w-full items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 text-quiet transition hover:border-line-strong hover:bg-canvas hover:text-strong sm:w-auto"
             >
               <span className="h-5 w-5 shrink-0" aria-hidden>
-                {integration.glyph}
+                <integration.Glyph className="h-5 w-5" />
               </span>
               <span className="text-xs font-medium">{integration.name}</span>
             </Link>
