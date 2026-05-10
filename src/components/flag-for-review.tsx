@@ -161,18 +161,18 @@ export function FlagForReview({
                 suggestions improve.
               </p>
               <p className="text-sm text-default">
-                <strong>What gets stored.</strong> This exact string,
+                <strong>What gets stored</strong>. This exact string,
                 the finding it produced, the time you shared it, and
                 the content type. Nothing else from this session.
               </p>
               <p className="text-sm text-default">
-                <strong>What ContentRX does with it.</strong> A content
+                <strong>What ContentRX does with it</strong>. A content
                 designer reviews shared strings by hand. Patterns
                 inform how the engine reasons. Your string is not sold
                 or given to any third party.
               </p>
               <p className="text-sm text-default">
-                <strong>How to revoke.</strong> Email{" "}
+                <strong>How to revoke</strong>. Email{" "}
                 <a
                   href="mailto:privacy@contentrx.io"
                   className="font-medium text-strong underline underline-offset-2"
