@@ -96,9 +96,9 @@ export default function PrivacyPage() {
           <li>
             <strong>Usage and operational telemetry</strong>. Check
             counts per month for billing. API token usage for cost
-            accounting. Error reports captured by Sentry. Page-view
-            metrics from Plausible, which is cookieless and does not
-            track across sites. Rate-limit counters in Upstash Redis.
+            accounting. Error reports captured by Sentry. Anonymous
+            page-view metrics from Plausible. Rate-limit counters in
+            Upstash Redis.
           </li>
         </ul>
         <p className="mt-3">
