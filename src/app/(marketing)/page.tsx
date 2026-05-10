@@ -152,76 +152,74 @@ export default function Home() {
           treatment as the load-bearing differentiator. */}
       <AgentSection />
 
+      {/* Built for your stack — redesigned 2026-05-10. The prior 4-up
+          card grid gave the four items equal weight. They aren't. One
+          approval is the procurement-friction differentiator that
+          closes the deal vs custom-LLM alternatives; Privacy, Security,
+          and Integrations are trust-link hooks that route to dedicated
+          pages. The new layout gives One approval a hero card and
+          demotes the three trust links to a horizontal strip below.
+          Different silhouette from the surrounding sections, and the
+          procurement story actually lands.
+
+          Words cut ruthlessly per voice rules tightened 2026-05-10
+          (short declarative, no em dashes, no semicolons, no colons). */}
       <Section
         eyebrow="Built for your stack"
         title="Easier to adopt. Safer to ship."
       >
-        {/* Card geometry is uniform across all four cards — the prior
-            pass put accent-affirm on "One approval" but the agent
-            section now owns that treatment for the page. Two
-            accent-affirm grids in a row diluted both. The procurement
-            angle still leads the grid (first card slot). */}
-        <ul className="mt-2 grid gap-4 sm:grid-cols-2 sm:gap-3">
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-affirm-text/10 text-[10px] font-bold text-accent-affirm-text">
-                ✓
-              </span>
-              <p className="text-sm font-semibold text-strong">
-                One approval.
-              </p>
-            </div>
-            <p className="mt-2 text-sm text-default">
-              Same approval pattern your team uses for Slack or
-              Figma. $39/month, five-minute install. No new LLM
-              contract, no Anthropic or OpenAI key needed.
+        <div className="mt-2 rounded-2xl border border-line bg-raised p-6 sm:p-8">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent-affirm-text/10 text-xs font-bold text-accent-affirm-text">
+              ✓
+            </span>
+            <p className="text-base font-semibold text-strong sm:text-lg">
+              One approval.
             </p>
-          </li>
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <p className="text-sm font-semibold text-strong">
-              Privacy.
-            </p>
-            <p className="mt-2 text-sm text-default">
-              Your subscription is the whole revenue model. We
-              don&apos;t sell, repackage, or train on your content.{" "}
+          </div>
+          <p className="mt-3 max-w-2xl text-base text-default">
+            $39/month. Five-minute install. Same approval pattern your
+            team uses for Slack or Figma. No LLM contract. No
+            Anthropic or OpenAI key.
+          </p>
+        </div>
+
+        <ul className="mt-6 grid gap-3 sm:grid-cols-3">
+          <li className="rounded-lg border border-line bg-raised p-4">
+            <p className="text-sm font-semibold text-strong">Privacy.</p>
+            <p className="mt-1 text-sm text-default">
+              Your subscription is the whole revenue model.{" "}
               <Link
                 href="/privacy"
-                className="underline underline-offset-2"
+                className="underline underline-offset-2 hover:text-strong"
               >
                 Read the position
               </Link>
               .
             </p>
           </li>
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <p className="text-sm font-semibold text-strong">
-              Security.
-            </p>
-            <p className="mt-2 text-sm text-default">
-              Text gets hashed at the boundary. PII is screened
-              before any LLM call. Cancelled accounts pseudonymize
-              after ninety days. The full posture is documented.{" "}
+          <li className="rounded-lg border border-line bg-raised p-4">
+            <p className="text-sm font-semibold text-strong">Security.</p>
+            <p className="mt-1 text-sm text-default">
+              Hashed at the boundary. PII screened pre-LLM.{" "}
               <Link
                 href="/security"
-                className="underline underline-offset-2"
+                className="underline underline-offset-2 hover:text-strong"
               >
                 Details
               </Link>
               .
             </p>
           </li>
-          <li className="rounded-lg border border-line bg-raised p-5">
+          <li className="rounded-lg border border-line bg-raised p-4">
             <p className="text-sm font-semibold text-strong">
               Integrations.
             </p>
-            <p className="mt-2 text-sm text-default">
-              We meet content where it&apos;s being written. MCP for
-              Claude Code, CLI for the terminal, GitHub Action for
-              pull requests, LSP for editors, the Figma plugin for
-              design-time. Same engine on every surface.{" "}
+            <p className="mt-1 text-sm text-default">
+              Same engine, every surface.{" "}
               <Link
                 href="/install"
-                className="underline underline-offset-2"
+                className="underline underline-offset-2 hover:text-strong"
               >
                 Install instructions
               </Link>
@@ -231,57 +229,75 @@ export default function Home() {
         </ul>
       </Section>
 
-      {/*
-        Section frame: the cards are commitments, not outcome claims.
-        The earlier copy ("Why it works" + "What ContentRX is great
-        at") implied the system has already proven itself — but the
-        latest measurement (reports/accuracy/latest.json) shows
-        self-drift κ = 0.57 with a wide CI on a small sample, and the
-        system kappa is still pending. Saying "great at" was
-        overpromising. The card-level frame now names what we commit
-        to do, not how good we already are. Each of the three cards
-        re-reads as a commitment when the section frames them that
-        way: we publish κ with CIs (incl. drift weeks), we hold the
-        style guides so you don't, your team's rules override ours.
-      */}
+      {/* Commitments — redesigned 2026-05-10 as a checkmark list.
+          The prior 3-card grid read as "another card grid" against
+          everything else on the page. The list-with-checkmarks
+          treatment carries the same content with a different
+          silhouette and tighter spacing.
+
+          Section frame: the items are commitments, not outcome claims.
+          The latest measurement (reports/accuracy/latest.json) shows
+          self-drift kappa = 0.57 with a wide CI on a small sample;
+          system kappa is pending. The card-level frame names what we
+          commit to do, not how good we already are. */}
       <Section eyebrow="Commitments" title="What we commit to.">
-        <ul className="mt-2 grid gap-4 sm:grid-cols-3 sm:gap-3">
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <p className="text-sm font-semibold text-strong">
-              Calibrated judgment.
-            </p>
-            <p className="mt-2 text-sm text-default">
-              Content design discretion benchmarked against a held-out
-              golden set. We publish kappa with its 95% confidence
-              interval, including the weeks we drift.{" "}
-              <Link
-                href="/accuracy"
-                className="underline underline-offset-2"
-              >
-                See what we measured
-              </Link>
-              .
-            </p>
+        <ul className="mt-4 space-y-4 border-y border-line py-6 sm:space-y-6 sm:py-8">
+          <li className="flex gap-4">
+            <span
+              aria-hidden
+              className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-affirm-text/10 text-sm font-bold text-accent-affirm-text"
+            >
+              ✓
+            </span>
+            <div>
+              <p className="text-base font-semibold text-strong">
+                Calibrated judgment.
+              </p>
+              <p className="mt-1 text-sm text-default">
+                Kappa with 95% CI. Drift weeks included.{" "}
+                <Link
+                  href="/accuracy"
+                  className="underline underline-offset-2 hover:text-strong"
+                >
+                  See what we measured
+                </Link>
+                .
+              </p>
+            </div>
           </li>
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <p className="text-sm font-semibold text-strong">
-              Style guides we maintain.
-            </p>
-            <p className="mt-2 text-sm text-default">
-              Stop chasing voice docs and ruleset PDFs. ContentRX
-              holds the standards, watches the context, and applies
-              them where you&apos;re shipping content.
-            </p>
+          <li className="flex gap-4">
+            <span
+              aria-hidden
+              className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-affirm-text/10 text-sm font-bold text-accent-affirm-text"
+            >
+              ✓
+            </span>
+            <div>
+              <p className="text-base font-semibold text-strong">
+                Style guides we maintain.
+              </p>
+              <p className="mt-1 text-sm text-default">
+                We hold the standards. We watch the context. You
+                ship.
+              </p>
+            </div>
           </li>
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <p className="text-sm font-semibold text-strong">
-              Custom rules in context.
-            </p>
-            <p className="mt-2 text-sm text-default">
-              Adjust ContentRX&apos;s recommendations with your
-              team&apos;s own rules. No retraining, no pipeline
-              changes, no waiting on a release.
-            </p>
+          <li className="flex gap-4">
+            <span
+              aria-hidden
+              className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-affirm-text/10 text-sm font-bold text-accent-affirm-text"
+            >
+              ✓
+            </span>
+            <div>
+              <p className="text-base font-semibold text-strong">
+                Custom rules in context.
+              </p>
+              <p className="mt-1 text-sm text-default">
+                Your team&apos;s rules override ours. No retraining.
+                No pipeline changes.
+              </p>
+            </div>
           </li>
         </ul>
       </Section>

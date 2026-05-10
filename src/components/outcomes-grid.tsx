@@ -1,26 +1,20 @@
 /**
  * OutcomesGrid — landing page's value-prop spine.
  *
- * Four customer-facing outcomes ContentRX commits to: time saved on
- * the review loop, cost contained vs a custom-LLM contract,
- * consistency across surfaces, and long-form writing handled
- * end-to-end. These are the questions a skeptical engineering team
- * scans for first; they were missing from the landing's lower half,
- * which read as procurement-and-commitments without surfacing the
- * outcome story.
+ * Four customer-facing reasons engineering teams pick ContentRX.
+ * Time saved on the review loop, cost contained vs a custom-LLM
+ * contract, consistency across surfaces, long-form writing handled
+ * end-to-end.
  *
  * Visual treatment: editorial 4-up grid, no card chrome. The
- * surrounding sections (SurfacesGrid above, Weekly review agent +
- * Built-for-stack below) all use bordered cards. Dropping the chrome
- * here gives the section a different silhouette so the eye notices
- * it as a different kind of beat. The vertical rules (border-y on
- * the list, divide-x between columns at lg+) stand in for the
- * card borders without enclosing each item.
+ * surrounding sections (SurfacesGrid above, AgentSection below) use
+ * bordered surfaces. Dropping the chrome here gives the section a
+ * different silhouette so the eye notices it as a different beat.
  *
- * The eyebrow label on each item names the value (Time / Money /
- * Consistency / Long-form). A reader scanning the labels column-down
- * gets the four-word version of the page before reading any body
- * copy.
+ * Voice rules tightened 2026-05-10: short declarative sentences. No
+ * em dashes. No semicolons. No colons. Cards land at 12-20 words of
+ * body each, down from 30-40 in the prior pass. Readers were losing
+ * scannability to word-stuffing.
  */
 
 import Link from "next/link";
@@ -38,26 +32,25 @@ const OUTCOMES: readonly Outcome[] = [
   {
     label: "Time",
     headline: "Reviews in seconds, not hours.",
-    body: "The staff-content-designer read happens in the surface the writing is happening in. No 'ping me when this is ready,' no second-pass review meeting on the calendar.",
+    body: "The read happens where you write. No 'ping me when this is ready'. No second-pass review meeting.",
   },
   {
     label: "Money",
     headline: "One model, one bill.",
-    body: "$39 a month covers MCP, LSP, CLI, GitHub Action, Figma plugin, and the dashboard. No Anthropic key. No custom-LLM contract. No per-team prompt to maintain.",
+    body: "$39/month covers every surface. No Anthropic key. No custom-LLM contract.",
   },
   {
     label: "Consistency",
     headline: "Same call across surfaces.",
-    body: "The standard that flags 'Submit' in the Figma plugin flags it the same way in the GitHub Action, the LSP, and the CLI. Same engine. Same precedents. The customer reads one team.",
+    body: "One engine. One set of standards. Same flag in Figma, the LSP, the GitHub Action, and the CLI.",
   },
   {
     label: "Long-form",
-    headline: "Document-level read, not just per-string flags.",
+    headline: "Long-form, handled.",
     body: (
       <>
-        Paste a product update, a security advisory, an internal
-        announcement. Get the document-level diagnostic, a clean
-        rewrite, and the reasoning.{" "}
+        Product updates. Security advisories. Internal announcements.
+        Get the full read and a clean rewrite.{" "}
         <Link
           href="/writes"
           className="underline underline-offset-2 hover:text-strong"
@@ -76,15 +69,10 @@ export function OutcomesGrid() {
       id="outcomes"
       className="mt-16 border-t border-line pt-10 scroll-mt-16"
     >
-      <Eyebrow>What teams ship with this</Eyebrow>
+      <Eyebrow>Outcomes</Eyebrow>
       <h2 className="mt-2 text-2xl font-semibold text-strong sm:text-3xl">
-        Faster reviews. One bill. Consistent across surfaces. Long-form handled.
+        Why teams pick this.
       </h2>
-      <p className="mt-4 max-w-2xl text-base text-default">
-        The four outcomes ContentRX commits to. Each one is an
-        engineering team&apos;s reason for picking it over a Claude
-        wrapper or a per-team prompt.
-      </p>
       <ul className="mt-10 grid grid-cols-1 gap-y-10 sm:grid-cols-2 sm:gap-x-10 lg:grid-cols-4 lg:gap-x-8 lg:divide-x lg:divide-line">
         {OUTCOMES.map((o) => (
           <li

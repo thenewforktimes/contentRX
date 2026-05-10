@@ -45,31 +45,27 @@ export function AgentSection() {
             Drift, caught every Monday.
           </h2>
           <p className="mt-4 max-w-xl text-base text-default">
-            ContentRX groups your team&apos;s flag history by pattern
-            and opens a draft pull request every Monday with the
-            patterns worth pulling into your next review.
-            Deterministic. Read-only. The kind of recurring-pattern
-            review your senior reviewer would have caught, on a
-            cadence that doesn&apos;t depend on anyone scheduling it.
+            Every Monday a draft pull request lands with last
+            week&apos;s recurring patterns. Read-only. Deterministic.
+            The catch your senior reviewer would have made.
           </p>
 
           <ul className="mt-8 grid gap-3 sm:grid-cols-3">
             <ClaimCard
               title="Read-only."
-              body="The agent never edits your strings. Every run lands as a draft pull request you can close, keep, or follow up on inside your normal workflow."
+              body="The agent never edits your strings. Every run lands as a draft pull request. Close it, keep it, follow up."
             />
             <ClaimCard
               title="Deterministic."
-              body="Patterns surface from rule-based clustering, not LLM guessing. Same input, same digest. Reproducible across runs."
+              body="Patterns from rule-based clustering. Not LLM guessing. Same input, same digest."
             />
             <ClaimCard
               accent
               title="0 checks per run."
               body={
                 <>
-                  The digest is rendered from your team&apos;s
-                  existing flag history. Zero LLM calls per run.
-                  Folded into the Team plan.{" "}
+                  Rendered from your team&apos;s existing flag history.
+                  Zero LLM calls. Folded into the Team plan.{" "}
                   <Link
                     href="/dashboard/agent"
                     className="underline underline-offset-2 hover:text-strong"
@@ -151,40 +147,35 @@ function DigestMock() {
         ContentRX weekly review · Apr 28 to May 4
       </p>
 
+      {/* Pattern bullets. The category label sits as a Pill (tag),
+          not a heading-with-period or a colon-led label. Pills aren't
+          headings, so the engine doesn't flag them as
+          headings-with-trailing-periods. Voice rule: no colons. The
+          description follows as plain text. */}
       <ol className="mt-4 space-y-3 text-sm">
-        <li className="flex gap-3">
-          <span
-            className="mt-1.5 inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-accent-caution-text"
-            aria-hidden
-          />
+        <li className="flex gap-2">
+          <Pill tone="amber" size="xs">
+            Action verbs
+          </Pill>
           <p className="text-default">
-            <span className="font-semibold text-strong">Action verbs:</span>{" "}
             12 strings used &lsquo;Submit&rsquo; on a destructive
-            action this week.
+            action.
           </p>
         </li>
-        <li className="flex gap-3">
-          <span
-            className="mt-1.5 inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-accent-caution-text"
-            aria-hidden
-          />
+        <li className="flex gap-2">
+          <Pill tone="amber" size="xs">
+            Plain language
+          </Pill>
           <p className="text-default">
-            <span className="font-semibold text-strong">
-              Plain language:
-            </span>{" "}
             7 strings reached for &lsquo;utilize&rsquo; or
             &lsquo;leverage&rsquo;.
           </p>
         </li>
-        <li className="flex gap-3">
-          <span
-            className="mt-1.5 inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-accent-caution-text"
-            aria-hidden
-          />
+        <li className="flex gap-2">
+          <Pill tone="amber" size="xs">
+            Accessibility
+          </Pill>
           <p className="text-default">
-            <span className="font-semibold text-strong">
-              Accessibility:
-            </span>{" "}
             4 link strings still read &lsquo;click here&rsquo;.
           </p>
         </li>
