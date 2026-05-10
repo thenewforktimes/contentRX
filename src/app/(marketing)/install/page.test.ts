@@ -21,17 +21,22 @@ const visible = SOURCE
   .replace(/(^|\s)\/\/.*$/gm, "$1");
 
 describe("/install page source", () => {
-  it("renders MCP before LSP before CLI before GitHub Action before Figma", () => {
+  it("renders MCP before GitHub Action before CLI before LSP before Figma", () => {
+    // 2026-05-11 reorder. Rationale: every team using MCP probably
+    // already has the IDE story covered, so LSP doesn't need to lead;
+    // the GitHub Action gates merge on every PR and earns the higher
+    // slot. Figma stays last (Coming soon) until publication clears,
+    // then flips up.
     const mcpIdx = visible.indexOf('id="mcp"');
-    const lspIdx = visible.indexOf('id="lsp"');
-    const cliIdx = visible.indexOf('id="cli"');
     const actionIdx = visible.indexOf('id="action"');
+    const cliIdx = visible.indexOf('id="cli"');
+    const lspIdx = visible.indexOf('id="lsp"');
     const figmaIdx = visible.indexOf('id="figma"');
     expect(mcpIdx).toBeGreaterThan(-1);
-    expect(lspIdx).toBeGreaterThan(mcpIdx);
-    expect(cliIdx).toBeGreaterThan(lspIdx);
-    expect(actionIdx).toBeGreaterThan(cliIdx);
-    expect(figmaIdx).toBeGreaterThan(actionIdx);
+    expect(actionIdx).toBeGreaterThan(mcpIdx);
+    expect(cliIdx).toBeGreaterThan(actionIdx);
+    expect(lspIdx).toBeGreaterThan(cliIdx);
+    expect(figmaIdx).toBeGreaterThan(lspIdx);
   });
 
   it("carries the real MCP install command", () => {

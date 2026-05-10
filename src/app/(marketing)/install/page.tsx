@@ -71,16 +71,16 @@ export default function InstallPage() {
             >
               API key
             </Link>
-            {" "}covers them all. No Anthropic or OpenAI key needed.
+            {" "}covers them all.
           </>
         }
       >
         <nav className="mt-6 flex flex-wrap gap-2 text-sm">
           <SurfaceChip href="#paste" label="Dashboard" tagline="no install" />
           <SurfaceChip href="#mcp" label="MCP" tagline="Claude Code · Cursor" />
-          <SurfaceChip href="#lsp" label="LSP" tagline="VS Code · Cursor · Zed" />
-          <SurfaceChip href="#cli" label="CLI" tagline="contentrx" />
           <SurfaceChip href="#action" label="GitHub Action" tagline="PR gate" />
+          <SurfaceChip href="#cli" label="CLI" tagline="contentrx" />
+          <SurfaceChip href="#lsp" label="LSP" tagline="VS Code · Cursor · Zed" />
           <SurfaceChip href="#figma" label="Figma plugin" tagline="design-time" />
         </nav>
       </PageHeader>
@@ -121,67 +121,6 @@ uvx contentrx-mcp`}
         </p>
       </Section>
 
-      <Section id="lsp" title="LSP server. Inline diagnostics in any LSP editor">
-        <p>
-          Diagnostics as you type. Right-click to rewrite in place,
-          open the rationale, or mark false positive.
-        </p>
-        <p className="mt-3">Any LSP editor (VS Code, Cursor, Zed, Neovim, JetBrains, emacs lsp-mode):</p>
-        <Code>
-          {`uvx contentrx-lsp                    # one-shot, no persistent install
-# or:
-pipx install contentrx-lsp           # persistent install
-# or:
-uv tool install contentrx-lsp        # persistent install via uv
-
-export CONTENTRX_API_KEY=cx_...
-# Point your editor's LSP client at \`contentrx-lsp\` (stdio)`}
-        </Code>
-        <p className="mt-3 text-sm text-quiet">
-          A VS Code extension that wraps the LSP is in development.
-          Marketplace listing coming soon. The manual install above
-          works in VS Code today via any generic LSP-client extension.
-        </p>
-        <p className="mt-3 text-sm text-quiet">
-          Scope is JSX and TSX text children, plus the{" "}
-          <code>alt</code>, <code>aria-label</code>,{" "}
-          <code>placeholder</code>, <code>title</code>,{" "}
-          <code>tooltip</code>, and <code>label</code> attributes.
-          Random string literals stay unflagged. Source:{" "}
-          <a
-            href="https://github.com/thenewforktimes/contentRX/tree/main/lsp-server"
-            className="underline underline-offset-2"
-          >
-            lsp-server
-          </a>
-          .
-        </p>
-      </Section>
-
-      <Section id="cli" title="CLI. contentrx on PyPI">
-        <p>
-          One pip install. Stdlib-only runtime. Exit codes are part
-          of the public API, gate pipelines on them.
-        </p>
-        <Code>
-          {`pip install contentrx-cli
-export CONTENTRX_API_KEY=cx_...
-contentrx "Click here"
-contentrx --batch strings.txt --json
-contentrx --explain "Are you sure?"`}
-        </Code>
-        <p className="mt-3 text-sm text-quiet">
-          Source:{" "}
-          <a
-            href="https://github.com/thenewforktimes/contentRX/tree/main/cli-client"
-            className="underline underline-offset-2"
-          >
-            cli-client
-          </a>
-          .
-        </p>
-      </Section>
-
       <Section
         id="action"
         title="GitHub Action. PR gate"
@@ -217,6 +156,67 @@ jobs:
             className="underline underline-offset-2"
           >
             github-action
+          </a>
+          .
+        </p>
+      </Section>
+
+      <Section id="cli" title="CLI. contentrx on PyPI">
+        <p>
+          One pip install. Stdlib-only runtime. Exit codes are part
+          of the public API, gate pipelines on them.
+        </p>
+        <Code>
+          {`pip install contentrx-cli
+export CONTENTRX_API_KEY=cx_...
+contentrx "Click here"
+contentrx --batch strings.txt --json
+contentrx --explain "Are you sure?"`}
+        </Code>
+        <p className="mt-3 text-sm text-quiet">
+          Source:{" "}
+          <a
+            href="https://github.com/thenewforktimes/contentRX/tree/main/cli-client"
+            className="underline underline-offset-2"
+          >
+            cli-client
+          </a>
+          .
+        </p>
+      </Section>
+
+      <Section id="lsp" title="LSP server. Inline diagnostics in any LSP editor">
+        <p>
+          Diagnostics as you type. Right-click to rewrite in place,
+          open the rationale, or mark false positive.
+        </p>
+        <p className="mt-3">Any LSP editor (VS Code, Cursor, Zed, Neovim, JetBrains, emacs lsp-mode):</p>
+        <Code>
+          {`uvx contentrx-lsp                    # one-shot, no persistent install
+# or:
+pipx install contentrx-lsp           # persistent install
+# or:
+uv tool install contentrx-lsp        # persistent install via uv
+
+export CONTENTRX_API_KEY=cx_...
+# Point your editor's LSP client at \`contentrx-lsp\` (stdio)`}
+        </Code>
+        <p className="mt-3 text-sm text-quiet">
+          A VS Code extension that wraps the LSP is in development.
+          Marketplace listing coming soon. The manual install above
+          works in VS Code today via any generic LSP-client extension.
+        </p>
+        <p className="mt-3 text-sm text-quiet">
+          Scope is JSX and TSX text children, plus the{" "}
+          <code>alt</code>, <code>aria-label</code>,{" "}
+          <code>placeholder</code>, <code>title</code>,{" "}
+          <code>tooltip</code>, and <code>label</code> attributes.
+          Random string literals stay unflagged. Source:{" "}
+          <a
+            href="https://github.com/thenewforktimes/contentRX/tree/main/lsp-server"
+            className="underline underline-offset-2"
+          >
+            lsp-server
           </a>
           .
         </p>
