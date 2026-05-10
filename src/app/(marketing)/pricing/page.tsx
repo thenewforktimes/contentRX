@@ -147,12 +147,19 @@ export default function PricingPage() {
 
       <section className="mt-16">
         <h2 className="text-lg font-semibold">FAQ</h2>
-        {/* Accordion (native <details>/<summary>) replaces the prior
-            2-column grid 2026-05-11. The grid mixed short and long
-            answers across columns, leaving uneven empty space. The
-            accordion shows all 9 questions at a glance and expands
-            only what the reader clicks. Clean, accessible, no
-            density mismatch. */}
+        {/* Accordion order locked 2026-05-11 (Robo's IA call):
+              1. What's a check?              (mechanic)
+              2. What kind of writing...      (fit)
+              3. What's the weekly review...  (feature)
+              4. Does ContentRX have monthly limits?  (boundaries)
+              5. Can I cancel anytime?        (commitment)
+              6. Do I need a credit card...   (friction)
+              7. Do I need an Anthropic...    (friction)
+              8. Where do I install it?       (next step)
+              9. Is ContentRX accurate?       (proof, the closer)
+            Mechanic → fit → feature → boundaries → commitment →
+            friction × 2 → install → proof. Reads as a buyer's
+            mental walkthrough, ending on the moat link. */}
         <ul className="mt-4 divide-y divide-line border-y border-line">
           <FaqRow
             q="What's a check?"
@@ -164,7 +171,7 @@ export default function PricingPage() {
             }
           />
           <FaqRow
-            q="What kind of writing does this handle?"
+            q="What kind of writing does ContentRX handle?"
             a={
               <>
                 Short-form UI strings (button labels, error messages,
@@ -200,12 +207,33 @@ export default function PricingPage() {
             }
           />
           <FaqRow
-            q="What if I hit my limit on Pro?"
+            q="Does ContentRX have monthly limits?"
             a={
               <>
-                You&apos;ll get an email at 80% and again at 100%. By
-                default, checks pause at the cap. Opt into $0.10/check
-                overage from your dashboard if you want to keep going.
+                Yes. Each plan has a monthly check limit.
+                <ul className="mt-2 space-y-1">
+                  <li>
+                    <span className="font-medium text-strong">Free</span>,
+                    10 checks.
+                  </li>
+                  <li>
+                    <span className="font-medium text-strong">Pro</span>,
+                    1,000 checks.
+                  </li>
+                  <li>
+                    <span className="font-medium text-strong">Team</span>,
+                    2,000 checks per seat, pooled.
+                  </li>
+                  <li>
+                    <span className="font-medium text-strong">Scale</span>,
+                    60,000 checks pooled, 10-seat cap.
+                  </li>
+                </ul>
+                <p className="mt-3">
+                  Email warnings at 80% and 100%. Checks pause at the
+                  cap by default. Opt into $0.10/check overage from
+                  your dashboard to keep going.
+                </p>
               </>
             }
           />
@@ -214,21 +242,7 @@ export default function PricingPage() {
             a="Yes. Stripe-hosted Customer Portal. Your team setup stays put for 90 days after cancellation."
           />
           <FaqRow
-            q="How do I know the accuracy holds up?"
-            a={
-              <>
-                Every Monday, the{" "}
-                <Link href="/calibration" className="underline underline-offset-2">
-                  calibration log
-                </Link>
-                {" "}publishes the previous week&apos;s measured kappa,
-                drift signals, and which standards were refined. If the
-                number drops, you&apos;ll see it before you feel it.
-              </>
-            }
-          />
-          <FaqRow
-            q="Do I need a credit card to try it?"
+            q="Do I need a credit card to try ContentRX?"
             a="No. Free is 10 checks per month, no card required."
           />
           <FaqRow
@@ -244,6 +258,25 @@ export default function PricingPage() {
                 </Link>
                 {" "}covers the MCP server, the LSP, the CLI, the
                 GitHub Action, and the Figma plugin.
+              </>
+            }
+          />
+          <FaqRow
+            q="Is ContentRX accurate?"
+            a={
+              <>
+                Every Monday, the{" "}
+                <Link href="/calibration" className="underline underline-offset-2">
+                  calibration log
+                </Link>
+                {" "}publishes the previous week&apos;s measured kappa,
+                drift signals, and which standards were refined. If
+                the number drops, you&apos;ll see it before you feel
+                it.{" "}
+                <Link href="/accuracy" className="underline underline-offset-2">
+                  See the accuracy page
+                </Link>
+                {" "}for the methodology.
               </>
             }
           />
