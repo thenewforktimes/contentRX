@@ -170,9 +170,14 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     // diluting the core staff-level position. The line is
     // load-bearing for the long-form-positioning workstream — if a
     // future edit drops it, /writes loses its inbound from the hero.
-    expect(visible).toMatch(
-      /longer-form writing your team sends to itself/i,
-    );
+    //
+    // Reword 2026-05-09 (later same day): dropped "to itself" so
+    // the line covers external long-form too (product update emails,
+    // security disclosures, blog posts) — the engine handles both
+    // inbound and outbound long-form, and "to itself" was scoping
+    // away the bigger half.
+    expect(visible).toMatch(/longer-form writing your team sends/i);
+    expect(visible).not.toMatch(/longer-form writing your team sends to itself/i);
   });
 
   it("renders the use-case toggle showing breadth of writing kinds (F1)", () => {
