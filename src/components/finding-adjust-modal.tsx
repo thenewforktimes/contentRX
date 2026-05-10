@@ -4,24 +4,19 @@
  * FindingAdjustModal — the customer's path for telling ContentRX
  * "you got this wrong" on a check finding.
  *
- * Block 1c of the calibration plan. Implements the Adjust modal
- * specified in ADR 2026-04-29 §4: two checkable dimensions in one
- * save (verdict and/or suggestion), default-OFF upstream-share
- * checkbox, PII-screening on every text field server-side.
+ * Per ADR 2026-05-11, Adjust is a private record of the customer's
+ * own dismissal. The string and the disagreement land in
+ * `violation_overrides` (sha256 only). Nothing flows into the
+ * calibration corpus from here.
  *
- * Why one modal, two dimensions: the user's actual disagreement is
- * usually one of three flavors — "the call was wrong", "the call
- * was right but the fix is wrong", or both. Forcing a single-intent
- * picker would either (a) lose the connection between correlated
- * disagreements or (b) require multiple round-trips. The two-
- * checkbox shape captures both signals from one click without
- * requiring the user to pre-categorize their disagreement.
+ * To share a string with ContentRX for calibration, the customer
+ * uses the separate Flag-for-Review CTA + consent modal
+ * (src/components/flag-for-review.tsx). That is the only path.
  *
  * Substrate boundary (ADR 2026-04-25): this component sees only
- * public-envelope fields. The submitted text + the LLM's
- * suggestion + the user's rewrite are the only payload. The server
- * route correlates against the violations table to recover
- * (moment, content_type, standard_id) for substrate-side storage.
+ * public-envelope fields. The server route correlates against the
+ * violations table to recover (moment, content_type, standard_id)
+ * for substrate-side storage.
  */
 
 import { useEffect, useId, useState } from "react";
@@ -33,9 +28,7 @@ import {
 
 // The 3 verdict-disagreement codes shown in the Adjust modal. The
 // other two from override-reasons.ts (`fix_is_worse`,
-// `shipping_anyway`) belong to different flows: fix_is_worse is
-// captured by the suggestion-rewrite dimension below; shipping_anyway
-// belongs on Ship-anyway-gated surfaces (CLI, GH Action, LSP).
+// `shipping_anyway`) belong to different flows.
 const VERDICT_REASON_CODES: ReadonlyArray<OverrideReasonCode> = [
   "not_applicable_here",
   "standard_too_strict",
@@ -47,18 +40,10 @@ export interface FindingAdjustModalProps {
   onClose: () => void;
   /** The text the customer originally checked. */
   submittedText: string;
-  /** The LLM's current suggestion (pre-fills the rewrite textarea). */
-  currentSuggestion: string;
   /** The public-envelope issue text — passed through for clustering. */
   issue: string;
-  /** Called after a successful save with the response payload, so the
-   *  parent can collapse the finding card and show the user's
-   *  rewrite (if any) inline. */
-  onSaved: (saved: {
-    verdictRecorded: boolean;
-    rewriteRecorded: boolean;
-    rewriteText: string | null;
-  }) => void;
+  /** Called after a successful save with the response payload. */
+  onSaved: (saved: { verdictRecorded: boolean }) => void;
 }
 
 type SubmitState = "idle" | "submitting" | "error";
@@ -67,68 +52,42 @@ export function FindingAdjustModal({
   open,
   onClose,
   submittedText,
-  currentSuggestion,
   issue,
   onSaved,
 }: FindingAdjustModalProps) {
-  const verdictBoxId = useId();
-  const suggestionBoxId = useId();
-  const upstreamBoxId = useId();
+  const reasonId = useId();
+  const notesId = useId();
 
-  const [verdictChecked, setVerdictChecked] = useState(false);
-  const [suggestionChecked, setSuggestionChecked] = useState(false);
   const [reasonCode, setReasonCode] = useState<OverrideReasonCode>(
     "not_applicable_here",
   );
   const [notes, setNotes] = useState("");
-  const [rewrite, setRewrite] = useState(currentSuggestion);
-  const [shareUpstream, setShareUpstream] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Reset local state when the modal opens with a fresh finding —
-  // otherwise the previous finding's rewrite leaks into the next one.
   useEffect(() => {
     if (!open) return;
-    setVerdictChecked(false);
-    setSuggestionChecked(false);
     setReasonCode("not_applicable_here");
     setNotes("");
-    setRewrite(currentSuggestion);
-    setShareUpstream(false);
     setSubmitState("idle");
     setErrorMessage(null);
-  }, [open, currentSuggestion]);
+  }, [open]);
 
   if (!open) return null;
 
-  const canSubmit =
-    submitState !== "submitting" && (verdictChecked || suggestionChecked);
+  const canSubmit = submitState !== "submitting";
 
   const onSubmit = async () => {
     setSubmitState("submitting");
     setErrorMessage(null);
 
-    const signalType: "verdict" | "suggestion" | "both" =
-      verdictChecked && suggestionChecked
-        ? "both"
-        : verdictChecked
-          ? "verdict"
-          : "suggestion";
-
     const body: Record<string, unknown> = {
       text: submittedText,
-      signal_type: signalType,
+      signal_type: "verdict",
       issue,
-      share_upstream: shareUpstream,
+      override_reason_code: reasonCode,
     };
-    if (verdictChecked) {
-      body.override_reason_code = reasonCode;
-      if (notes.trim()) body.override_notes = notes.trim();
-    }
-    if (suggestionChecked) {
-      body.rewrite_text = rewrite;
-    }
+    if (notes.trim()) body.override_notes = notes.trim();
 
     try {
       const res = await fetch("/api/violations/adjust", {
@@ -147,13 +106,9 @@ export function FindingAdjustModal({
         return;
       }
       const data = (await res.json().catch(() => ({}))) as {
-        recorded?: { verdict?: boolean; suggestion?: boolean };
+        recorded?: { verdict?: boolean };
       };
-      onSaved({
-        verdictRecorded: Boolean(data.recorded?.verdict),
-        rewriteRecorded: Boolean(data.recorded?.suggestion),
-        rewriteText: suggestionChecked ? rewrite : null,
-      });
+      onSaved({ verdictRecorded: Boolean(data.recorded?.verdict) });
     } catch {
       setErrorMessage("Couldn't reach the server. Check your connection.");
       setSubmitState("error");
@@ -173,132 +128,59 @@ export function FindingAdjustModal({
       <div className="w-full max-w-lg rounded-lg border border-line bg-raised shadow-xl">
         <header className="border-b border-line px-5 py-4">
           <h2 className="text-base font-semibold text-strong">
-            Adjust this finding
+            Adjust the verdict
           </h2>
           <p className="mt-1 text-sm text-default">
-            Tell ContentRX what to change. Check whichever applies.
+            Record that this finding doesn&apos;t apply to your team&apos;s
+            context. ContentRX stores a hash of the string for your
+            private dashboard. Nothing here is shared. To share the
+            string for calibration, use Flag for Review on the finding.
           </p>
         </header>
 
-        <div className="space-y-5 px-5 py-5">
-          {/* ──────────────── Verdict dimension ──────────────── */}
-          <section>
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                id={verdictBoxId}
-                type="checkbox"
-                checked={verdictChecked}
-                onChange={(e) => setVerdictChecked(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-line-strong text-emerald-600 focus:ring-emerald-500"
-              />
-              <span className="flex-1">
-                <span className="font-medium text-strong">
-                  Adjust the verdict
-                </span>
-                <span className="mt-0.5 block text-quiet">
-                  This isn&apos;t a finding for your team&apos;s context.
-                </span>
-              </span>
+        <div className="space-y-4 px-5 py-5">
+          <div>
+            <label
+              htmlFor={reasonId}
+              className="block text-xs font-medium text-default"
+            >
+              Reason
             </label>
-
-            {verdictChecked && (
-              <div className="mt-3 space-y-3 pl-7">
-                <div>
-                  <label className="block text-xs font-medium text-default">
-                    Reason
-                  </label>
-                  <select
-                    value={reasonCode}
-                    onChange={(e) =>
-                      setReasonCode(e.target.value as OverrideReasonCode)
-                    }
-                    className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
-                  >
-                    {VERDICT_REASON_CODES.map((code) => (
-                      <option key={code} value={code}>
-                        {OVERRIDE_REASON_META[code].label}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-xs text-quiet">
-                    {OVERRIDE_REASON_META[reasonCode].description}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-default">
-                    Notes <span className="font-normal text-quiet">(optional)</span>
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={2}
-                    maxLength={500}
-                    className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
-                    placeholder="Anything else that would help us calibrate?"
-                  />
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* ──────────────── Suggestion dimension ──────────────── */}
-          <section>
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                id={suggestionBoxId}
-                type="checkbox"
-                checked={suggestionChecked}
-                onChange={(e) => setSuggestionChecked(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-line-strong text-emerald-600 focus:ring-emerald-500"
-              />
-              <span className="flex-1">
-                <span className="font-medium text-strong">
-                  Adjust the suggestion
-                </span>
-                <span className="mt-0.5 block text-quiet">
-                  Write the version you&apos;d ship below.
-                </span>
-              </span>
+            <select
+              id={reasonId}
+              value={reasonCode}
+              onChange={(e) =>
+                setReasonCode(e.target.value as OverrideReasonCode)
+              }
+              className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
+            >
+              {VERDICT_REASON_CODES.map((code) => (
+                <option key={code} value={code}>
+                  {OVERRIDE_REASON_META[code].label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-quiet">
+              {OVERRIDE_REASON_META[reasonCode].description}
+            </p>
+          </div>
+          <div>
+            <label
+              htmlFor={notesId}
+              className="block text-xs font-medium text-default"
+            >
+              Notes <span className="font-normal text-quiet">(optional)</span>
             </label>
-
-            {suggestionChecked && (
-              <div className="mt-3 pl-7">
-                <textarea
-                  value={rewrite}
-                  onChange={(e) => setRewrite(e.target.value)}
-                  rows={3}
-                  maxLength={100_000}
-                  className="block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
-                  placeholder="Your version"
-                />
-              </div>
-            )}
-          </section>
-
-          {/* ──────────────── Upstream-share opt-in ──────────────── */}
-          {(verdictChecked || suggestionChecked) && (
-            <section className="rounded-md border border-line bg-overlay px-3 py-2.5 /50">
-              <label className="flex items-start gap-3 text-sm">
-                <input
-                  id={upstreamBoxId}
-                  type="checkbox"
-                  checked={shareUpstream}
-                  onChange={(e) => setShareUpstream(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-line-strong text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="flex-1">
-                  <span className="font-medium text-strong">
-                    Help calibrate the ContentRX model
-                  </span>
-                  <span className="mt-0.5 block text-quiet">
-                    Your edit becomes a candidate for review. Only
-                    approved suggestions reach the model. Off by
-                    default.
-                  </span>
-                </span>
-              </label>
-            </section>
-          )}
+            <textarea
+              id={notesId}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              maxLength={500}
+              className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
+              placeholder="Anything else worth recording for yourself?"
+            />
+          </div>
 
           {errorMessage && (
             <p

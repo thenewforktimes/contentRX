@@ -1,23 +1,27 @@
 "use client";
 
 /**
- * Flag-for-review button + consent modal.
+ * Flag-for-Review button + consent modal.
  *
- * The customer hits "Flag for review" on a check result; the modal
- * captures (1) what they think is off, (2) optional note, (3) required
- * consent. On submit, POSTs to /api/customer-flag and the row lands
- * in /admin/customer-flags for the founder to triage.
+ * Per ADR 2026-05-11 this is the only path by which a customer string
+ * enters ContentRX's calibration corpus. The customer taps Flag for
+ * Review on a check result; the modal captures (1) what they think is
+ * off, (2) optional note, (3) required consent. On submit, POSTs to
+ * /api/customer-flag and the row lands in /admin/customer-flags for
+ * triage. The customer can revoke a shared string by emailing
+ * privacy@contentrx.io.
  *
- * Privacy contract:
+ * Consent contract:
  *   - The consent box is never pre-checked. The submit button stays
  *     disabled until the customer ticks it.
- *   - The modal copy explicitly says what we do with the text.
+ *   - The modal copy names the consent in plain terms: what's stored,
+ *     what it's used for, how to revoke.
  *   - The button is opt-in. Customers who never click it never share
- *     their strings. (Other guard rails — pii-screen, sentry-scrub,
- *     safe-error-log — apply on every text-bearing route regardless.)
+ *     their strings. (Guard rails pii-screen, sentry-scrub,
+ *     safe-error-log apply on every text-bearing route regardless.)
  *
- * Brand voice: calm, direct, plain. Mirrors the suggestion-quality
- * rules — no "Please feel free to," no em dashes, no "rest assured."
+ * Brand voice: ContentRX framing, no first-person, no em dashes, no
+ * semicolons, no colons in body sentences, singular they.
  */
 
 import { useEffect, useId, useRef, useState } from "react";
@@ -92,7 +96,7 @@ export function FlagForReview({
   if (status === "submitted") {
     return (
       <p className="text-xs text-emerald-700 dark:text-emerald-400">
-        Flagged. Robert will look at it.
+        Shared. Visible to you on the Shared strings tab.
       </p>
     );
   }
@@ -149,13 +153,34 @@ export function FlagForReview({
                 id={`${consentId}-title`}
                 className="text-lg font-semibold text-strong"
               >
-                Flag for review
+                Share this string with ContentRX
               </h2>
               <p className="text-sm text-default">
-                You&rsquo;re sending this {violationId ? "finding" : "check"}{" "}
-                to Robert to review. He&rsquo;ll see the original text, the
-                verdict, and your note. With your consent, it can be used
-                to refine the rulesets and improve the model.
+                Sharing means ContentRX stores the plaintext of this
+                string and uses it to calibrate the engine so future
+                suggestions improve.
+              </p>
+              <p className="text-sm text-default">
+                <strong>What gets stored</strong>. This exact string,
+                the finding it produced, the time you shared it, and
+                the content type. Nothing else from this session.
+              </p>
+              <p className="text-sm text-default">
+                <strong>What ContentRX does with it</strong>. A content
+                designer reviews shared strings by hand. Patterns
+                inform how the engine reasons. Your string is not sold
+                or given to any third party.
+              </p>
+              <p className="text-sm text-default">
+                <strong>How to revoke</strong>. Email{" "}
+                <a
+                  href="mailto:privacy@contentrx.io"
+                  className="font-medium text-strong underline underline-offset-2"
+                >
+                  privacy@contentrx.io
+                </a>
+                {" "}with rough timing and ContentRX deletes the string.
+                You can revoke any time.
               </p>
               {contextLine && (
                 <p className="rounded-md border border-line bg-sunken px-3 py-2 text-xs text-default">
@@ -268,8 +293,8 @@ export function FlagForReview({
                   className="mt-0.5 accent-strong"
                 />
                 <span>
-                  I consent to ContentRX seeing this string and using it
-                  to refine the rulesets and improve the model.
+                  Share this string with ContentRX and consent to its
+                  use for engine calibration.
                 </span>
               </label>
 
@@ -292,7 +317,7 @@ export function FlagForReview({
                   disabled={!consent || status === "submitting"}
                   className="rounded-md bg-stone-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
                 >
-                  {status === "submitting" ? "Flagging…" : "Flag for review"}
+                  {status === "submitting" ? "Sharing…" : "Confirm and share"}
                 </button>
               </div>
             </form>

@@ -1,7 +1,7 @@
 /**
  * POST /api/check — the product's hot path.
  *
- * Flow (locked per BUILD_PLAN session 3):
+ * Flow:
  *   1. Auth (Clerk session OR CONTENTRX_API_KEY bearer)
  *   2. Load team rules (if user is on Team plan)
  *   3. Check monthly quota — 402 if exhausted
@@ -25,10 +25,6 @@ import {
   recordUsageEvent,
 } from "@/lib/cost-monitor";
 import { corsJson, corsPreflight } from "@/lib/cors";
-import {
-  findMatchingExample,
-  shortCircuitFromExample,
-} from "@/lib/custom-examples";
 import { appUrl, sendEmail } from "@/lib/email";
 import { AUDIENCES, CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 import {
@@ -344,36 +340,6 @@ export async function POST(req: Request) {
 
   const teamRules = await loadTeamRules(auth.teamOwnerUserId);
 
-  // Human-eval build plan Session 30 — custom examples short-circuit.
-  //
-  // When the request belongs to a Team-plan user AND the normalized
-  // text matches a team-authored custom example, skip the LLM entirely
-  // and return the stored verdict. Quota still decrements (one request
-  // = one slot, regardless of whether we called the LLM) but token
-  // cost drops to zero for the matched case.
-  //
-  // Non-team requests (Free / Pro) skip this block — custom examples
-  // are a Team-plan feature, and the `teamOwnerUserId` resolver
-  // returns null for non-team users so the query would never match
-  // anyway; we short-circuit the short-circuit for clarity.
-  const teamOwnerForExamples =
-    auth.plan === "team" ? (auth.teamOwnerUserId ?? auth.user.id) : null;
-  let customExampleResult: Awaited<ReturnType<typeof findMatchingExample>> = null;
-  if (teamOwnerForExamples) {
-    try {
-      customExampleResult = await findMatchingExample({
-        teamOwnerUserId: teamOwnerForExamples,
-        text,
-        moment: moment ?? null,
-        contentType: content_type ?? null,
-      });
-    } catch (err) {
-      // Matching failures must never break a scan. Fall through to
-      // the LLM path with a warning; Sentry catches it.
-      logSafeError("findMatchingExample failed; falling through", err);
-    }
-  }
-
   let evalResponse: EvaluateResponse;
   // Holistic rewrite, fired for large inputs (>UNIT_WINDOW chars) when
   // there are findings worth editing around. Null on small inputs,
@@ -384,124 +350,82 @@ export async function POST(req: Request) {
   // same lifecycle, same null conditions. Powers the verdict header.
   let suggestedDiagnostic: string | null = null;
 
-  if (customExampleResult) {
-    const sc = shortCircuitFromExample(customExampleResult);
-    evalResponse = {
-      result: {
-        content_type: content_type ?? "unknown",
-        overall_verdict: sc.overall_verdict,
-        verdict: sc.verdict,
-        review_reason: null,
-        violations: sc.violations,
-        passes: [],
-        summary:
-          sc.notes ?? "Matched a team custom example; LLM bypass.",
-        audience: audience ?? "product_ui",
-        moment: moment ?? customExampleResult.moment ?? "",
-        pipeline: {},
-        rationale_chain: [sc.rationale_hop],
-      },
-      latency_ms: 0,
-      tokens: { input: 0, output: 0 },
-    };
-  } else {
-    // Block 2c (calibration plan): pull approved precedents matching
-    // (moment, content_type) and pass them to the engine for voice-
-    // guidance prompt injection. Empty array when no precedents
-    // match — engine falls back to the universal voice rules from
-    // PR #252.
-    let precedents: Awaited<ReturnType<typeof fetchPrecedentsForCheck>> = [];
-    try {
-      precedents = await fetchPrecedentsForCheck({
-        moment: moment ?? null,
-        contentType: content_type ?? null,
-      });
-    } catch (err) {
-      // Retrieval failure is non-fatal: log + continue without
-      // precedents. The check still runs against the universal
-      // voice rules.
-      logSafeError("precedent retrieval failed", err);
-    }
-
-    // Schema 3.0.0: the holistic rewrite fires for any "large" input
-    // (>200 chars) — that's the dashboard's rich-UX threshold and the
-    // billing window's upper boundary. Fired IN PARALLEL with the
-    // regular evaluate so wall time is one round-trip, not two. The
-    // rewrite is best-effort — if it fails, we still return the
-    // check results with `suggested_rewrite: null` so the surface
-    // degrades gracefully.
-    const wantsRewrite = isLargeInput(text);
-    const evaluatePromise = evaluate({
-      text,
-      content_type,
-      audience,
-      moment,
-      precedents: precedents.map((p) => ({
-        approved_text: p.approvedText,
-        sample_size: p.sampleSize,
-      })),
+  // Block 2c (calibration plan): pull approved precedents matching
+  // (moment, content_type) and pass them to the engine for voice-
+  // guidance prompt injection. Empty array when no precedents
+  // match — engine falls back to the universal voice rules.
+  let precedents: Awaited<ReturnType<typeof fetchPrecedentsForCheck>> = [];
+  try {
+    precedents = await fetchPrecedentsForCheck({
+      moment: moment ?? null,
+      contentType: content_type ?? null,
     });
-    const rewritePromise: Promise<
-      Awaited<ReturnType<typeof rewriteDocument>> | null
-    > = wantsRewrite
-      ? rewriteDocument(text).catch((err) => {
-          logSafeError("rewriteDocument() failed; returning null", err);
-          return null;
-        })
-      : Promise.resolve(null);
+  } catch (err) {
+    logSafeError("precedent retrieval failed", err);
+  }
 
-    const [evalSettled, rewriteSettled] = await Promise.allSettled([
-      evaluatePromise,
-      rewritePromise,
-    ]);
+  // Schema 3.0.0: the holistic rewrite fires for any "large" input
+  // (>200 chars). Fired IN PARALLEL with the regular evaluate so wall
+  // time is one round-trip, not two. The rewrite is best-effort.
+  const wantsRewrite = isLargeInput(text);
+  const evaluatePromise = evaluate({
+    text,
+    content_type,
+    audience,
+    moment,
+    precedents: precedents.map((p) => ({
+      approved_text: p.approvedText,
+      sample_size: p.sampleSize,
+    })),
+  });
+  const rewritePromise: Promise<
+    Awaited<ReturnType<typeof rewriteDocument>> | null
+  > = wantsRewrite
+    ? rewriteDocument(text).catch((err) => {
+        logSafeError("rewriteDocument() failed; returning null", err);
+        return null;
+      })
+    : Promise.resolve(null);
 
-    if (evalSettled.status === "rejected") {
-      logSafeError("evaluate() failed", evalSettled.reason);
-      return json(
-        { error: "Evaluation service unavailable" },
-        { status: 502 },
-      );
-    }
-    evalResponse = evalSettled.value;
-    if (rewriteSettled.status === "fulfilled" && rewriteSettled.value) {
-      // Stash the rewrite into the response shape so we can attach to
-      // the public envelope below. Keeps the substrate evalResponse
-      // shape intact for downstream code paths.
-      const rewriteResp = rewriteSettled.value;
-      // Extend tokens with the rewrite call's usage so cost telemetry
-      // stays accurate. The rewrite is real LLM work the customer
-      // paid for via the length-routed billing on the input.
-      evalResponse = {
-        ...evalResponse,
-        latency_ms:
-          evalResponse.latency_ms + rewriteResp.latency_ms,
-        tokens: {
-          input: evalResponse.tokens.input + rewriteResp.tokens.input,
-          output: evalResponse.tokens.output + rewriteResp.tokens.output,
-          cache_creation_input:
-            (evalResponse.tokens.cache_creation_input ?? 0) +
-            (rewriteResp.tokens.cache_creation_input ?? 0),
-          cache_read_input:
-            (evalResponse.tokens.cache_read_input ?? 0) +
-            (rewriteResp.tokens.cache_read_input ?? 0),
-        },
-      };
-      suggestedRewrite = rewriteResp.result.rewritten;
-      // Diagnostic is best-effort — empty string when JSON parse
-      // failed engine-side. Coerce to null so the public envelope is
-      // consistently nullable rather than carrying an empty string.
-      suggestedDiagnostic = rewriteResp.result.diagnostic
-        ? rewriteResp.result.diagnostic
-        : null;
-    }
+  const [evalSettled, rewriteSettled] = await Promise.allSettled([
+    evaluatePromise,
+    rewritePromise,
+  ]);
+
+  if (evalSettled.status === "rejected") {
+    logSafeError("evaluate() failed", evalSettled.reason);
+    return json(
+      { error: "Evaluation service unavailable" },
+      { status: 502 },
+    );
+  }
+  evalResponse = evalSettled.value;
+  if (rewriteSettled.status === "fulfilled" && rewriteSettled.value) {
+    const rewriteResp = rewriteSettled.value;
+    evalResponse = {
+      ...evalResponse,
+      latency_ms:
+        evalResponse.latency_ms + rewriteResp.latency_ms,
+      tokens: {
+        input: evalResponse.tokens.input + rewriteResp.tokens.input,
+        output: evalResponse.tokens.output + rewriteResp.tokens.output,
+        cache_creation_input:
+          (evalResponse.tokens.cache_creation_input ?? 0) +
+          (rewriteResp.tokens.cache_creation_input ?? 0),
+        cache_read_input:
+          (evalResponse.tokens.cache_read_input ?? 0) +
+          (rewriteResp.tokens.cache_read_input ?? 0),
+      },
+    };
+    suggestedRewrite = rewriteResp.result.rewritten;
+    suggestedDiagnostic = rewriteResp.result.diagnostic
+      ? rewriteResp.result.diagnostic
+      : null;
   }
 
   // Team-rule pipeline: disable first (strip), then override display fields
   // on the survivors, then append custom team-added rule matches, then
   // recompute verdict from the final violations list.
-  // When a custom example fired, team rules still apply — an admin might
-  // want to strip a rule that appears on the violations array attached
-  // to a short-circuited violation-verdict entry.
   const disabled = applyDisabledFilter(evalResponse.result, teamRules.disabledStandardIds);
   const overridden = applyOverrides(disabled, teamRules.overridesByStandardId);
   const withAdds = applyAddedRules(overridden, text, teamRules.adds);

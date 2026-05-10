@@ -1,16 +1,16 @@
 /**
  * Cross-source search across the three founder-facing review streams:
  *
- *   - violation_overrides       (customer disagreements)
- *   - violations                (review_recommended queue)
- *   - customer_flagged_reviews  (customer flags)
+ *   - violation_overrides       (customer disagreements, hash only)
+ *   - violations                (review_recommended queue, hash only)
+ *   - customer_flagged_reviews  (consented Flag-for-Review shares,
+ *                                plaintext present per ADR 2026-05-11)
  *
  * Search modes:
  *
  *   - Substring (case-insensitive ILIKE) on whichever text field each
- *     table exposes — `text` on overrides + flags, `text_hash` on the
- *     queue (the queue stores hashes only).
- *   - Standard-ID exact match on `standard_id` (e.g. "ACT-01").
+ *     table exposes — `text` on customer flags, `standard_id` on
+ *     overrides and queue rows that lack plaintext.
  *   - Hash prefix match on `text_hash` (e.g. "#a3f2…").
  *
  * Returns a flat list of typed results sorted most-recent-first
@@ -68,10 +68,11 @@ export async function searchAdmin(rawQuery: string): Promise<SearchResults> {
     : null;
 
   // -- overrides --------------------------------------------------------
+  // Per ADR 2026-05-11 override rows carry hash only. Substring match
+  // falls back to standard_id; hash-prefix match works unchanged.
   const overrideRows = await db
     .select({
       id: schema.violationOverrides.id,
-      text: schema.violationOverrides.text,
       textHash: schema.violationOverrides.textHash,
       standardId: schema.violationOverrides.standardId,
       moment: schema.violationOverrides.moment,
@@ -83,10 +84,7 @@ export async function searchAdmin(rawQuery: string): Promise<SearchResults> {
     .where(
       hashPrefix
         ? ilike(schema.violationOverrides.textHash, hashPrefix)
-        : or(
-            ilike(schema.violationOverrides.standardId, ilikeQuery),
-            ilike(schema.violationOverrides.text, ilikeQuery),
-          ),
+        : ilike(schema.violationOverrides.standardId, ilikeQuery),
     )
     .orderBy(desc(schema.violationOverrides.createdAt))
     .limit(PER_SOURCE_LIMIT);
@@ -156,7 +154,7 @@ export async function searchAdmin(rawQuery: string): Promise<SearchResults> {
     ...overrideRows.map((r): SearchResult => ({
       type: "override",
       id: r.id,
-      textPreview: r.text ?? `(text not retained — #${r.textHash.slice(0, 12)})`,
+      textPreview: `#${r.textHash.slice(0, 12)}`,
       contextLine: [
         r.standardId,
         r.moment ?? null,

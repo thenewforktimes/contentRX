@@ -2,11 +2,12 @@
  * Export pilot corrections to the private substrate's
  * `pilot_corrections.json`.
  *
- * Session 8b of the post-launch corpus loop. Reads `violation_overrides`
- * rows triaged to `addressed_corpus` with explicit pilot consent, then
- * delegates the JSON merge to `src/lib/corpus-export.ts` and writes the
- * result to the private submodule. Marks each exported row's
- * `exported_at` so re-runs are idempotent.
+ * Per ADR 2026-05-11, the sole source is `customer_flagged_reviews`
+ * rows triaged to `addressed_corpus`. Plaintext is always present on
+ * these rows because the row's existence implies explicit consent
+ * recorded via the Flag-for-Review modal. The merge delegates to
+ * `src/lib/corpus-export.ts` and writes to the private submodule.
+ * Marks each exported row's `exported_at` so re-runs are idempotent.
  *
  * Usage:
  *
@@ -31,7 +32,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { argv, exit } from "node:process";
-import { and, eq, isNull, inArray } from "drizzle-orm";
+import { and, eq, isNull, inArray, sql } from "drizzle-orm";
 import { getDb, schema } from "../src/db";
 import {
   emptyCorrectionsFile,
@@ -75,59 +76,44 @@ async function loadPendingRows(): Promise<ExportableRow[]> {
   const db = getDb();
   const rows = await db
     .select({
-      id: schema.violationOverrides.id,
-      standardId: schema.violationOverrides.standardId,
-      moment: schema.violationOverrides.moment,
-      text: schema.violationOverrides.text,
-      overrideReasonCode: schema.violationOverrides.overrideReasonCode,
-      overrideReason: schema.violationOverrides.overrideReason,
-      sourceUserId: schema.violationOverrides.userId,
-      sourceTeamId: schema.violationOverrides.teamId,
-      triagedAt: schema.violationOverrides.overrideStatusUpdatedAt,
+      id: schema.customerFlaggedReviews.id,
+      standardId: sql<string | null>`null`.as("standard_id"),
+      moment: schema.customerFlaggedReviews.moment,
+      text: schema.customerFlaggedReviews.text,
+      flagReason: schema.customerFlaggedReviews.flagReason,
+      customerNote: schema.customerFlaggedReviews.customerNote,
+      sourceUserId: schema.customerFlaggedReviews.userId,
+      sourceTeamId: schema.customerFlaggedReviews.teamId,
+      triagedAt: schema.customerFlaggedReviews.triagedAt,
     })
-    .from(schema.violationOverrides)
+    .from(schema.customerFlaggedReviews)
     .where(
       and(
-        eq(schema.violationOverrides.overrideStatus, "addressed_corpus"),
-        eq(schema.violationOverrides.contributeUpstream, true),
-        isNull(schema.violationOverrides.exportedAt),
+        eq(schema.customerFlaggedReviews.status, "addressed_corpus"),
+        isNull(schema.customerFlaggedReviews.exportedAt),
       ),
     );
 
-  // The schema allows `text` to be null. A row that lands here without
-  // text is a defect (consent flag set without text capture); skip
-  // with a warning rather than crash the export.
-  const usable: ExportableRow[] = [];
-  for (const row of rows) {
-    if (row.text === null) {
-      console.warn(
-        `Skipping row ${row.id}: contribute_upstream=true but text is null. ` +
-          `Investigate the override write path; this row can't be exported.`,
-      );
-      continue;
-    }
-    usable.push({
-      id: row.id,
-      standardId: row.standardId,
-      moment: row.moment,
-      text: row.text,
-      overrideReasonCode: row.overrideReasonCode,
-      overrideReason: row.overrideReason,
-      sourceUserId: row.sourceUserId,
-      sourceTeamId: row.sourceTeamId,
-      triagedAt: row.triagedAt,
-    });
-  }
-  return usable;
+  return rows.map((row) => ({
+    id: row.id,
+    standardId: row.standardId,
+    moment: row.moment,
+    text: row.text,
+    overrideReasonCode: row.flagReason,
+    overrideReason: row.customerNote,
+    sourceUserId: row.sourceUserId,
+    sourceTeamId: row.sourceTeamId,
+    triagedAt: row.triagedAt,
+  }));
 }
 
 async function markExported(ids: string[], now: Date): Promise<void> {
   if (ids.length === 0) return;
   const db = getDb();
   await db
-    .update(schema.violationOverrides)
+    .update(schema.customerFlaggedReviews)
     .set({ exportedAt: now })
-    .where(inArray(schema.violationOverrides.id, ids));
+    .where(inArray(schema.customerFlaggedReviews.id, ids));
 }
 
 async function main(): Promise<void> {

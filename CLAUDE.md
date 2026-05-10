@@ -182,7 +182,7 @@ flipped to `true` so the path doesn't silently rot.
 Source of truth: `src/db/schema.ts`. Core tables: `users`, `usage`,
 `subscriptions`, `team_members`, `team_rules`, `violations`, `ditto_syncs`,
 `violation_overrides`, `graduation_status`, `rationale_feedback`,
-`team_custom_examples`.
+`customer_flagged_reviews`.
 Always use Drizzle — never raw SQL. Schema pushes run via `npm run db:push`
 (wraps `drizzle-kit push` with `.env.local` loaded via `dotenv-cli`,
 because `drizzle-kit` does not auto-load `.env.local` the way Next.js does).
@@ -209,20 +209,12 @@ pitfall that silently breaks auth adapters.
 2. Load team rules (only matters when user is on Team plan)
 3. Check monthly quota — 402 if exhausted
 4. Rate limit check — 429 if exceeded (60/min per user, sliding window)
-5. **Custom-example short-circuit** (Team plan only — human-eval
-   Session 30): if `normalizeText(text)` matches a
-   `team_custom_examples` row scoped to the team and its optional
-   moment/content_type context, skip the LLM entirely and use the
-   stored verdict. Quota still decrements; LLM token cost goes to
-   zero for the match.
-6. Otherwise call `/api/evaluate` (Python) with validated `text`,
-   `content_type`, `audience`, `moment`.
-7. Apply team's disabled-rule filter + overrides + added rules
-   (runs in both paths — admins can still strip standards from a
-   custom-example violation-verdict row).
-8. Log each violation into `violations` table with `sha256(text)`.
-9. Increment `usage` counter for the current month.
-10. Return result + usage metadata.
+5. Call `/api/evaluate` (Python) with validated `text`, `content_type`,
+   `audience`, `moment`.
+6. Apply team's disabled-rule filter + overrides + added rules.
+7. Log each violation into `violations` table with `sha256(text)`.
+8. Increment `usage` counter for the current month.
+9. Return result + usage metadata.
 
 ## Python engine in the Vercel deployment
 
@@ -561,8 +553,9 @@ behaves this way.
   credentials and PII (credit cards via Luhn, SSNs, AWS / Stripe /
   OpenAI / Anthropic / GitHub keys) on every text-accepting route.
   Wired into `/api/check`, `/api/classify`, `/api/suggest-fix`,
-  `/api/violations/override`, and `/api/team-custom-examples`. Add
-  a new public route that takes a string → wire the pre-screen too.
+  `/api/violations/override`, `/api/violations/adjust`, and
+  `/api/customer-flag`. Add a new public route that takes a string →
+  wire the pre-screen too.
 - `src/lib/sentry-scrub.ts` — Sentry `beforeSend` handler. Drops
   request bodies, auth headers, cookies, query strings; truncates
   exception messages at 200 chars; redacts text-shaped extras /
@@ -584,12 +577,13 @@ behaves this way.
 - Removing or weakening any of the three guard files above without
   a new ADR superseding 2026-04-28.
 
-**The contributeUpstream review surface** (when you build it). Today
-no admin route reads `teamCustomExamples WHERE contributeUpstream =
-true`. When that admin queue ships, the rules: per-entry display
-only, never aggregated, never default-on, with a "this is the team's
-own opt-in contribution" banner so the surface can't be mistaken for
-implicit harvesting.
+**The Flag-for-Review consent flow** (per ADR 2026-05-11). Customer
+strings enter the calibration corpus only via the Flag-for-Review CTA
+plus modal-consent confirmation. The `customer_flagged_reviews` table
+is the only writer; the row's existence implies explicit per-row
+consent. The customer-facing `/dashboard/shared` page lists every
+shared string. Revocation runs by email to `privacy@contentrx.io` at
+v1; the operator deletes the row and any downstream substrate.
 
 **The Anthropic ZDR commitment** (operational, not code). Customer
 strings transit Anthropic's API. Anthropic's default 30-day API-log

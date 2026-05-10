@@ -7,9 +7,8 @@
  * `tools/refinement_candidate_detector.py`.
  *
  * Auth: `Authorization: Bearer <CRON_SECRET>`. Same tier as
- * `/api/cron/weekly-digest` and `/api/preferences/export`. Never
- * exposed to browser clients — the detector runs in a GitHub Action
- * cron with the secret injected.
+ * `/api/cron/weekly-digest`. Never exposed to browser clients — the
+ * detector runs in a GitHub Action cron with the secret injected.
  *
  * Shape (mirror of `tools/refinement_candidate_detector.py`):
  *   {

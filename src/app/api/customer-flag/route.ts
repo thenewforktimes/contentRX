@@ -7,24 +7,29 @@
  * rulesets and the model — the founder triages each flag in
  * /admin/customer-flags.
  *
+ * Per ADR 2026-05-11, this is the ONLY path by which a customer
+ * string enters ContentRX's calibration corpus. Override dismissals
+ * are private hashes; this route is the explicit-share consent flow.
+ *
  * Distinct from POST /api/violations/override:
- *   - Override: "I disagree with this finding." Stores text_hash only;
- *     plaintext requires the separate `contribute_upstream` opt-in.
+ *   - Override: "I disagree with this finding." Stores text_hash only.
+ *     Never plaintext.
  *   - Flag: "Please look at this." Plaintext is stored unconditionally
  *     because the existence of the flag implies consent. The customer
  *     ticks a consent box before the flag fires.
  *
- * Privacy contract (per ADR 2026-04-28):
+ * Privacy contract:
  *   - The route MUST receive `consent: true`. Without it, the request
  *     400s. Never inferred.
  *   - Plaintext goes through the same `detectSensitivePatterns` screen
  *     as every other text-bearing route. A flag containing detected
- *     PII is rejected — we'd rather lose the contribution than store
- *     credit cards.
+ *     PII is rejected — ContentRX would rather lose the contribution
+ *     than store credit cards.
  *   - The row carries `consent_recorded_at` for audit.
  *   - Per-entry display only on the admin surface — never aggregated,
- *     never default-on (mirrors team_custom_examples and
- *     violation_overrides.contribute_upstream rules).
+ *     never default-on.
+ *   - Customers can revoke a shared string by emailing
+ *     privacy@contentrx.io.
  *
  * Auth: Clerk session OR Bearer cx_<api_key>. Same as /api/check.
  */

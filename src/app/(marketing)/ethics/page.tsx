@@ -143,11 +143,19 @@ export default function EthicsPage() {
           </li>
           <li>
             ContentRX does not train a model on your content. Yours,
-            ours, Anthropic&apos;s, anyone&apos;s. Not without your
-            explicit per-entry opt-in. The Team-plan custom-example
-            contribution toggle is the only path by which a customer
-            string ever joins the calibration corpus. Off by default.
-            Per-entry, not account-wide.
+            ours, Anthropic&apos;s, anyone&apos;s. A customer string
+            joins the calibration corpus only when you share it via
+            Flag for Review. One path. One consent modal per string.
+            Available to every paying customer. Revoke any time by
+            email. The strings you have shared live on your dashboard
+            at{" "}
+            <Link
+              href="/dashboard/shared"
+              className="underline underline-offset-2"
+            >
+              /dashboard/shared
+            </Link>
+            .
           </li>
           <li>
             ContentRX does not run an engagement-metrics or

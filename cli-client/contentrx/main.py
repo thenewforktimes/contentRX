@@ -459,14 +459,6 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def run(argv: list[str]) -> int:
-    # Human-eval build plan Session 30 PR B — `contentrx example …`
-    # subcommand group. Intercepted BEFORE argparse so the main
-    # parser's positional `text` doesn't consume "example" as input.
-    # Keeps the single-string muscle memory (`contentrx "hello"`)
-    # working while adding the new command group.
-    if argv and argv[0] == "example":
-        return _run_example_subcommand(argv[1:])
-
     parser = _build_parser()
     args = parser.parse_args(argv)
 
@@ -612,35 +604,6 @@ def _confirm_proceed(count: int, *, yes: bool) -> bool:
     except EOFError:
         return False
     return response in ("", "y", "yes")
-
-
-def _run_example_subcommand(argv: list[str]) -> int:
-    """Dispatch `contentrx example …` (Session 30 PR B).
-
-    Builds a mini-parser for the subcommand group and delegates to
-    `example_cmd.dispatch`. Kept separate from `_build_parser` so the
-    main-CLI muscle memory (`contentrx "string"`) stays unchanged.
-    """
-    from . import example_cmd
-
-    parser = argparse.ArgumentParser(
-        prog="contentrx example",
-        description=(
-            "Manage team custom examples. Admin-only, Team-plan feature. "
-            "See https://docs.contentrx.io/guides/custom-examples for the "
-            "full workflow."
-        ),
-    )
-    sub = parser.add_subparsers(dest="example_command", required=True)
-    example_cmd.add_subparsers(sub)
-    args = parser.parse_args(argv)
-
-    api_key = _read_api_key()
-    api_url = _api_base_url()
-    try:
-        return example_cmd.dispatch(args, api_url=api_url, api_key=api_key)
-    except example_cmd._CliError as err:
-        raise CliError(str(err), code=err.code) from err
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -141,44 +141,6 @@ classify_moment(text: str) -> {
 Free of quota. Rate-limited at 60/min per user (same bucket as
 `evaluate_copy`).
 
-### Team-plan custom examples
-
-Team-plan teams can curate strings whose verdict is well-known to them
-— a phrasing they've already vetted as on-brand (`verdict: "pass"`) or
-a known anti-pattern they don't want regressing (`verdict: "violation"`).
-When `/api/check` sees a matching string from that team again, it
-short-circuits to the stored verdict instead of re-running the LLM.
-Reduces noise on recurring voice calls and saves quota.
-
-These tools are Team plan only and require team-admin role.
-
-#### `custom_example_add`
-
-```
-custom_example_add(
-  text: str,                       # the exact phrasing to short-circuit
-  verdict: "pass" | "violation",
-  moment: str | None,              # scope match to one moment context
-  content_type: str | None,        # scope match to one content_type context
-  standard_id: str | None,         # required when verdict == "violation"
-  notes: str | None,               # 1–3 sentences explaining the decision
-  contribute_upstream: bool = false,  # opt in to anonymised contribution
-)
-```
-
-#### `custom_example_list(limit?)`
-
-List the team's entries. Read-only; any authenticated team member can view.
-
-#### `custom_example_search(text)`
-
-Look up by normalised text. Use before `_add` to avoid duplicate-entry
-errors — matching is case + whitespace insensitive.
-
-#### `custom_example_remove(example_id)`
-
-Delete an entry by id.
-
 ## Prompts
 
 ### `/review_ui_copy [focus?]`

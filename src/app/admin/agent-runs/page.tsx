@@ -130,12 +130,6 @@ export default async function AgentRunsPage() {
                         </span>
                       </li>
                       <li>
-                        Custom examples:{" "}
-                        <span className="font-mono">
-                          {payload.customization.customExampleCount}
-                        </span>
-                      </li>
-                      <li>
                         Team rules:{" "}
                         <span className="font-mono">
                           {payload.customization.teamRuleCount}

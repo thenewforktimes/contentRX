@@ -1,8 +1,7 @@
 """Tests for the team_rule_* MCP tools.
 
-Mirrors test_custom_examples.py — mocks `httpx.AsyncClient` and pins
-the request / response shape so a regression on /api/team-rules
-shows up here before MCP clients hit it.
+Mocks `httpx.AsyncClient` and pins the request / response shape so a
+regression on /api/team-rules shows up here before MCP clients hit it.
 """
 
 from __future__ import annotations

@@ -84,21 +84,19 @@ describe("searchAdmin", () => {
     expect(r.results[0].type).toBe("override");
   });
 
-  it("matches multiple sources from a single substring", async () => {
+  it("matches override by standard substring + flag by text substring", async () => {
     const user = await seedUser(harness);
-    // Override w/ shared text
+    // Override row carries no plaintext per ADR 2026-05-11; the
+    // substring path now matches standard_id only.
     await harness.db.insert(schema.violationOverrides).values({
       id: "ovr_1",
       userId: user,
       teamId: user,
-      standardId: "VOC-01",
+      standardId: "SAVE-01",
       textHash: "h1",
       overrideType: "dismiss",
       source: "dashboard",
-      contributeUpstream: true,
-      text: "save your work",
     });
-    // Flag w/ matching text
     await harness.db.insert(schema.customerFlaggedReviews).values({
       id: "flag_1",
       userId: user,
@@ -151,12 +149,10 @@ describe("searchAdmin", () => {
       id: "ovr_old",
       userId: user,
       teamId: user,
-      standardId: "VOC-01",
+      standardId: "SAVE-01",
       textHash: "h1",
       overrideType: "dismiss",
       source: "dashboard",
-      contributeUpstream: true,
-      text: "save older",
       createdAt: old,
     });
     await harness.db.insert(schema.customerFlaggedReviews).values({

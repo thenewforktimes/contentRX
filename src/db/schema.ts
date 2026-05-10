@@ -70,24 +70,13 @@ export const users = pgTable("users", {
   // user re-subscribes later.
   stripeCustomerId: text("stripe_customer_id").unique(),
   dittoApiKeyEncrypted: text("ditto_api_key_encrypted"),
-  // Human-eval build plan Session 31. When set, the user opted out of
-  // pairwise-preference elicitation prompts. The /api/preferences/*
-  // routes honor it immediately; weekly scheduler skips opted-out
-  // users. Null = opted in (default). The timestamp records when
-  // they opted out so we can distinguish "never asked" from
-  // "explicitly declined" in telemetry. The customer-facing
-  // /dashboard/calibrate surface was removed 2026-04-29; the column
-  // stays for substrate-side scheduling and the /admin surface.
-  preferenceOptedOutAt: timestamp("preference_opted_out_at", {
-    withTimezone: true,
-  }),
   // PR-31 (90-day retention). Set by the
   // /api/cron/pseudonymize-cancelled job when this user's
   // subscription has been cancelled for >= 90 days AND no other
   // active subscription exists. Once set: email + apiKeyHash +
   // apiKeyPrefix have been replaced with sentinels, team-scoped
   // rows have been deleted, and historical violations /
-  // violation_overrides / preferences have userId set to null.
+  // violation_overrides have userId set to null.
   // Reactivation post-pseudonymize is a cold start — the user
   // appears as a fresh signup to themselves, but their anonymized
   // signal continues to feed engine calibration.
@@ -530,16 +519,20 @@ export const violationOverrides = pgTable(
     sessionId: text("session_id"),
     // Founder-side triage state (Phase 5, pre-pilot launch). Every
     // dismissal lands as `open`; the founder triages each into one of
-    // three resolved states from `/admin/overrides`:
-    //   - addressed_corpus    → added to the eval corpus as a pass
-    //                           example (the pilot was right)
+    // two resolved states from `/admin/overrides`:
     //   - addressed_patch     → routed into the patch queue
     //                           (rule needs work)
     //   - not_actionable      → pilot was wrong; rule fired correctly
     // `open` overrides surface in the inbox by default; resolved ones
     // hide unless explicitly filtered in.
+    //
+    // Per ADR 2026-05-11 the override row no longer carries plaintext
+    // or a corpus-contribution path. Overrides are a private record of
+    // the customer's own dismissals. Calibration corpus contributions
+    // come exclusively through the Flag-for-Review consent flow
+    // (`customer_flagged_reviews`).
     overrideStatus: text("override_status", {
-      enum: ["open", "addressed_corpus", "addressed_patch", "not_actionable"],
+      enum: ["open", "addressed_patch", "not_actionable"],
     })
       .notNull()
       .default("open"),
@@ -551,29 +544,6 @@ export const violationOverrides = pgTable(
       withTimezone: true,
     }),
     overrideStatusNotes: text("override_status_notes"),
-    // Corpus-loop opt-in (Session 8, post-launch). When the pilot
-    // explicitly checks "share with calibration" at dismiss time,
-    // `contribute_upstream` is true AND `text` carries the
-    // PII-screened plaintext that the founder needs to triage. Without
-    // consent, only `text_hash` lands; `text` stays null and the row
-    // can't be triaged to `addressed_corpus`.
-    //
-    // Privacy contract:
-    //   - default false; never set without an explicit pilot opt-in
-    //   - `text` is nullable; populated only when consent is true
-    //   - PII pre-screen runs at write time (same path as /api/check)
-    //   - per-entry display only on the founder surface; never
-    //     aggregated, never default-on (mirrors team_custom_examples
-    //     contributeUpstream rules per CLAUDE.md customer-data section)
-    contributeUpstream: boolean("contribute_upstream")
-      .notNull()
-      .default(false),
-    text: text("text"),
-    // Set by `scripts/export-corpus.ts` when the row's contribution
-    // lands in the private substrate's `pilot_corrections.json`. Used
-    // for idempotent re-runs (already-exported rows are skipped) and
-    // for the "exported [date]" pill on /admin/overrides.
-    exportedAt: timestamp("exported_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -603,20 +573,24 @@ export const violationOverrides = pgTable(
   ],
 ).enableRLS();
 
-// Suggestion candidates — ADR 2026-04-29 (suggestion calibration loop).
+// Suggestion candidates — ADR 2026-04-29 (suggestion calibration loop),
+// scope narrowed by ADR 2026-05-11 to a single source.
 //
-// The customer side of the two-tier signal architecture. Every customer
-// action that informs suggestion phrasing (Copy on a finding, Adjust →
-// rewrite, Team rule creation, preference pair) writes a row here. The
-// founder /admin queue triages these into PRECEDENTS (the curated set
-// the runtime LLM context reads). Only Robert's curation reaches the
+// Engine-output popularity signal: when a customer copies a suggestion
+// the engine produced, a row lands here with the engine's own
+// `candidateText` and `shareUpstream = false`. No customer input
+// strings ever land in this table; that path is `customer_flagged_reviews`,
+// reached only through the Flag-for-Review consent flow.
+//
+// The founder /admin queue can promote rows into PRECEDENTS (the curated
+// set the runtime LLM context reads). Only Robert's curation reaches the
 // runtime prompt — customers never poison the model directly.
 //
-// Privacy: per ADR 2026-04-28, every text-bearing field is PII-screened
-// before write (handled at the route layer via src/lib/pii-screen.ts).
-// `share_upstream` defaults FALSE; rows scoped to a team owner stay
-// team-private until the customer explicitly opts in. The /admin triage
-// surface only sees rows where `share_upstream = TRUE`.
+// Privacy: per ADR 2026-04-28 and ADR 2026-05-11, every text-bearing field
+// is PII-screened before write (handled at the route layer via
+// src/lib/pii-screen.ts). `shareUpstream` is hardcoded false for the
+// remaining writer; the field stays for substrate-side queries that
+// historically gated on it.
 //
 // Substrate context (moment, contentType, standardId) is server-side-
 // correlated at write time by joining against the violations table via
@@ -633,23 +607,12 @@ export const suggestionCandidates = pgTable(
     moment: text("moment"),
     contentType: text("content_type"),
     standardId: text("standard_id"),
-    // Source distinguishes signal weight at retrieval time:
-    //   customer_copy     — positive signal: someone used the LLM's
-    //                        suggestion as-is. Lowest weight.
-    //   customer_rewrite  — direct rewrite proposal from a customer.
-    //                        Higher weight when share_upstream = true.
-    //   team_rule         — derived from a team's custom example with
-    //                        contributeUpstream = true (existing flag
-    //                        on team_custom_examples).
-    //   preference_pair   — from /api/preferences/session pairwise
-    //                        elicitation. Existing substrate.
+    // Source. After ADR 2026-05-11 the only remaining writer is the
+    // copy-event route (engine-suggestion popularity tracking). The
+    // customer_rewrite / team_rule / preference_pair sources are
+    // retired with their respective callers.
     source: text("source", {
-      enum: [
-        "customer_copy",
-        "customer_rewrite",
-        "team_rule",
-        "preference_pair",
-      ],
+      enum: ["customer_copy"],
     }).notNull(),
     // Who emitted the signal. Nullable + set-null on delete to keep the
     // signal alive past account deletion (audit H-08 pattern).
@@ -667,11 +630,8 @@ export const suggestionCandidates = pgTable(
     // hashing convention as violations.textHash. Used for clustering
     // and de-dup at /admin triage time.
     inputHash: text("input_hash").notNull(),
-    // For customer_copy: the LLM's own suggestion (engine output, not
-    // PII). For customer_rewrite: the customer's rewrite (PII-screened
-    // before insert). For team_rule / preference_pair: the canonical
-    // text from that source. Nullable for sources that don't carry a
-    // candidate string per row.
+    // The LLM's own suggestion (engine output, not PII). Nullable when
+    // the source row doesn't carry a candidate string.
     candidateText: text("candidate_text"),
     // Optional issue/notes context, useful for clustering at triage.
     // Carries the public-envelope `issue` field for customer-source
@@ -899,209 +859,6 @@ export const rationaleFeedback = pgTable(
   ],
 ).enableRLS();
 
-// Custom examples — human-eval build plan Session 30.
-//
-// Team-authored, team-scoped string-level decisions that short-circuit
-// evaluation. When /api/check sees an input whose normalized text
-// matches an entry for the team's scope, the LLM call is skipped and
-// the stored verdict is returned directly. This carves out surgical
-// exceptions for team voice quirks without weakening global rules —
-// a team that ships "Let's go." on confirmations can mark the string
-// as a pass without disabling PRF-03 everywhere else.
-//
-// Privacy: `text` is plaintext and team-owned (team admins authored
-// it; no user text ever lands here). Scoped by `teamOwnerUserId`
-// exactly like `team_rules`.
-//
-// Naming: "custom examples" throughout the product surface. The word
-// "example" matches how content designers already talk about specific
-// phrasings + is a count noun that scales cleanly across the CLI
-// (`contentrx example list`), MCP (`custom_example_add`), and web
-// audit UI.
-export const teamCustomExamples = pgTable(
-  "team_custom_examples",
-  {
-    id: cuid(),
-    // Team scope. Matches `team_rules.team_owner_user_id` — every
-    // member of the team gets the short-circuit; only the admin
-    // (team owner) can manage.
-    teamOwnerUserId: text("team_owner_user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    // Who added the entry. Set-null on delete so the entry survives
-    // an admin's account deletion — the team keeps its custom
-    // examples even when a specific admin leaves.
-    createdByUserId: text("created_by_user_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    // The string to short-circuit on. Plaintext; bounded at 100k to
-    // match /api/check's input cap.
-    text: text("text").notNull(),
-    // Case + whitespace normalized form used for deterministic
-    // matching. Computed in code (src/lib/custom-examples.ts)
-    // on create and update so the logic stays changeable without
-    // a migration.
-    normalizedText: text("normalized_text").notNull(),
-    // Only `pass` and `violation` — `review_recommended` doesn't
-    // make sense for a team-decided verdict.
-    verdict: text("verdict", { enum: ["pass", "violation"] }).notNull(),
-    // Optional context filters. When set, the match only fires when
-    // the request's moment / content_type matches. When unset, the
-    // entry matches any context.
-    moment: text("moment"),
-    contentType: text("content_type"),
-    // For verdict=violation, the standard the team asserts fires.
-    // Shows up in the rationale chain as the one-hop short-circuit
-    // citation. Nullable for verdict=pass entries.
-    standardId: text("standard_id"),
-    // Admin-authored prose explaining why this entry exists. Surfaced
-    // to team members when the short-circuit fires so newcomers see
-    // the team's reasoning.
-    notes: text("notes"),
-    // Opt-in to anonymised contribution to the core content model
-    // when Robert reviews. Defaults to false — zero assumptions about
-    // whether the team wants their voice decisions to flow upstream.
-    contributeUpstream: boolean("contribute_upstream").notNull().default(false),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    // Hot path: /api/check looks up (team, normalized_text) for every
-    // scan. Without this index every eval does a table scan of
-    // everyone's custom examples — catastrophic at any scale.
-    index("team_custom_examples_team_text_idx").on(
-      t.teamOwnerUserId,
-      t.normalizedText,
-    ),
-    // Admin list view sorts by recency.
-    index("team_custom_examples_team_created_idx").on(
-      t.teamOwnerUserId,
-      t.createdAt,
-    ),
-    // No duplicate (team, normalized_text) entries. Uniqueness is on
-    // the normalized form so "Let's go." and "Let's Go." can't both
-    // exist as competing entries for the same team.
-    uniqueIndex("team_custom_examples_team_text_unique").on(
-      t.teamOwnerUserId,
-      t.normalizedText,
-    ),
-  ],
-).enableRLS();
-
-// Pairwise-preference curation pool — human-eval build plan Session 31.
-//
-// Each row is a hand-picked pair of strings that ask a content-design
-// judgment call: given (moment, content_type, standard), which of
-// these two candidate strings is better? The /api/preferences/session
-// endpoint picks three unseen pairs per user per session (weekly) and
-// writes the user's answer into `preferences`. The customer-facing
-// /dashboard/calibrate surface that originally drove this was removed
-// 2026-04-29; calibration runs from the /admin substrate now.
-//
-// Seed pool ships as a JSON artifact (`evals/preference_pairs.json`)
-// and is loaded into the DB via `tools/seed_preference_pairs.py`. New
-// pairs can be appended without a migration — the JSON is the source
-// of truth, the DB is the cache for fast lookup.
-//
-// Privacy: both `leftText` and `rightText` are author-curated (Robert
-// + collaborators), not user-submitted. Nothing here is PII.
-export const preferencePairs = pgTable(
-  "preference_pairs",
-  {
-    id: cuid(),
-    // Stable cross-version identifier from the seed JSON. Lets the
-    // seeder re-run idempotently and keeps a pair's identity stable
-    // across DB re-creations so historic `preferences` rows remain
-    // interpretable.
-    seedKey: text("seed_key").notNull().unique(),
-    moment: text("moment").notNull(),
-    contentType: text("content_type").notNull(),
-    // The standard this pair is probing. Responses aggregate by
-    // (standard_id, content_type, verdict) into the precedent index
-    // the auto-annotator consults.
-    standardId: text("standard_id").notNull(),
-    leftText: text("left_text").notNull(),
-    rightText: text("right_text").notNull(),
-    // Which side the pair's author believes is the stronger answer.
-    // Optional — when unset, the pair is treated as a genuine judgment
-    // probe with no canonical answer. When set, we can compute a
-    // "percent aligned with author" rollup during review.
-    expectedPreferred: text("expected_preferred", {
-      enum: ["left", "right"],
-    }),
-    // Short prompt shown above the pair, e.g. "Which confirms a
-    // destructive action more clearly?" Optional.
-    prompt: text("prompt"),
-    // Admin-only flag for pairs that should be pulled from rotation
-    // without deleting the row (preserves historic responses).
-    retiredAt: timestamp("retired_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    index("preference_pairs_moment_content_idx").on(t.moment, t.contentType),
-    index("preference_pairs_standard_idx").on(t.standardId),
-  ],
-).enableRLS();
-
-// Pairwise-preference responses — human-eval build plan Session 31.
-//
-// One row per (user, pair) answered. The `preferred` enum captures
-// "left is better", "right is better", or "neither" (user explicitly
-// declined to prefer). Unanswered pairs don't land here.
-//
-// Aggregation: counts of (standard_id, content_type, preferred_verdict)
-// feed the auto-annotator's precedent index as a second source
-// alongside existing approved annotations. Mapping from preferred-side
-// to verdict depends on the pair metadata — if `expected_preferred`
-// is "left" and the user picked "left", that's alignment with the
-// standard-encoded preference (→ verdict maps to "fail" for the
-// other side / "pass" for the chosen side, depending on pair framing).
-// The library helper in `src/lib/preferences.ts` handles the mapping.
-export const preferences = pgTable(
-  "preferences",
-  {
-    id: cuid(),
-    // userId nullable + set-null on delete (audit H-08). Anonymized
-    // pairwise-preference signal preserved for engine training.
-    userId: text("user_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    teamId: text("team_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    pairId: text("pair_id")
-      .notNull()
-      .references(() => preferencePairs.id, { onDelete: "cascade" }),
-    preferred: text("preferred", {
-      enum: ["left", "right", "neither"],
-    }).notNull(),
-    // Optional free-text rationale. Bounded at route level.
-    note: text("note"),
-    // How long the user spent on the pair, ms. Short + "neither"
-    // ≈ skip; long + confident pick ≈ informed call. Powers a
-    // signal-quality lens on the preferences export.
-    timeMs: integer("time_ms"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    // A user answers each pair at most once. Changing your mind later
-    // is a new pair, not a mutation of this row.
-    uniqueIndex("preferences_user_pair_unique").on(t.userId, t.pairId),
-    index("preferences_user_created_idx").on(t.userId, t.createdAt),
-    // Precedent-index hot path: aggregate by pair (which implies
-    // standard/content_type) without a join.
-    index("preferences_pair_idx").on(t.pairId),
-  ],
-).enableRLS();
-
 // Audit Pack credits — one row per pack purchase. PR-06 inserts on
 // successful Stripe webhook for the one-time invoice item. /api/check
 // (PR-08) deducts pack credits BEFORE subscription quota when both
@@ -1220,9 +977,8 @@ export const teamInvitations = pgTable(
 //   - `consent_recorded_at` captures the moment of consent
 //   - PII pre-screen runs at write time (same path as /api/check)
 //   - Per-entry display only on the founder surface; never aggregated,
-//     never default-on (mirrors team_custom_examples contributeUpstream
-//     and violation_overrides.contribute_upstream rules per CLAUDE.md
-//     customer-data section)
+//     never default-on (per ADR 2026-05-11 + CLAUDE.md customer-data
+//     section)
 //
 // Triage parallels violation_overrides:
 //   - addressed_corpus    → added to the eval corpus as a calibration
@@ -1449,9 +1205,6 @@ export type SuggestionCandidate = InferSelectModel<typeof suggestionCandidates>;
 export type SuggestionPrecedent = InferSelectModel<typeof suggestionPrecedents>;
 export type GraduationStatus = InferSelectModel<typeof graduationStatus>;
 export type RationaleFeedback = InferSelectModel<typeof rationaleFeedback>;
-export type TeamCustomExample = InferSelectModel<typeof teamCustomExamples>;
-export type PreferencePair = InferSelectModel<typeof preferencePairs>;
-export type Preference = InferSelectModel<typeof preferences>;
 export type CreditPack = InferSelectModel<typeof creditPacks>;
 export type OverageState = InferSelectModel<typeof overageState>;
 export type CustomerFlaggedReview = InferSelectModel<

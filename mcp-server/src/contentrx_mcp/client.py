@@ -64,31 +64,6 @@ class ClassifyResult:
 
 
 @dataclass
-class CustomExample:
-    """A single team-scoped custom-example entry (human-eval Session 30)."""
-
-    id: str
-    text: str
-    verdict: str  # "pass" | "violation"
-    moment: str | None
-    content_type: str | None
-    standard_id: str | None
-    notes: str | None
-    contribute_upstream: bool
-    created_at: str
-    updated_at: str
-
-
-@dataclass
-class CustomExampleCap:
-    """Pagination-like response envelope for list + search."""
-
-    examples: list[CustomExample]
-    count: int
-    cap: int
-
-
-@dataclass
 class TeamRule:
     """A single team_rules row. Mirrors the Drizzle schema at
     `src/db/schema.ts` but keeps the substrate `team_owner_user_id`
@@ -175,84 +150,6 @@ class ContentRXClient:
             content_type=result.get("content_type", "unknown"),
             moment=result.get("moment", "unknown"),
         )
-
-    # ------------------------------------------------------------------
-    # Custom examples (human-eval build plan Session 30, PR B)
-    # ------------------------------------------------------------------
-
-    async def add_custom_example(
-        self,
-        *,
-        text: str,
-        verdict: str,
-        moment: str | None = None,
-        content_type: str | None = None,
-        standard_id: str | None = None,
-        notes: str | None = None,
-        contribute_upstream: bool = False,
-    ) -> CustomExample:
-        """POST /api/team-custom-examples — add one entry. Admin-only."""
-        body: dict[str, Any] = {
-            "text": text,
-            "verdict": verdict,
-            "contribute_upstream": contribute_upstream,
-        }
-        if moment is not None:
-            body["moment"] = moment
-        if content_type is not None:
-            body["content_type"] = content_type
-        if standard_id is not None:
-            body["standard_id"] = standard_id
-        if notes is not None:
-            body["notes"] = notes
-        resp = await self._client.post("/api/team-custom-examples", json=body)
-        self._raise_for_typed_status(resp)
-        data = resp.json()
-        entry = (data.get("result") or {}).get("example") or {}
-        return _example_from_json(entry)
-
-    async def list_custom_examples(
-        self,
-        *,
-        limit: int | None = None,
-    ) -> CustomExampleCap:
-        """GET /api/team-custom-examples — list the team's entries."""
-        params: dict[str, Any] = {}
-        if limit is not None:
-            params["limit"] = str(limit)
-        resp = await self._client.get(
-            "/api/team-custom-examples",
-            params=params or None,
-        )
-        self._raise_for_typed_status(resp)
-        result = (resp.json().get("result") or {})
-        return CustomExampleCap(
-            examples=[_example_from_json(e) for e in (result.get("examples") or [])],
-            count=int(result.get("count") or 0),
-            cap=int(result.get("cap") or 0),
-        )
-
-    async def search_custom_examples(self, *, text: str) -> CustomExampleCap:
-        """GET /api/team-custom-examples?text=… — check if a string is covered."""
-        resp = await self._client.get(
-            "/api/team-custom-examples",
-            params={"text": text},
-        )
-        self._raise_for_typed_status(resp)
-        result = (resp.json().get("result") or {})
-        return CustomExampleCap(
-            examples=[_example_from_json(e) for e in (result.get("examples") or [])],
-            count=int(result.get("count") or 0),
-            cap=int(result.get("cap") or 0),
-        )
-
-    async def remove_custom_example(self, *, example_id: str) -> bool:
-        """DELETE /api/team-custom-examples/[id]. Returns True on success."""
-        resp = await self._client.delete(
-            f"/api/team-custom-examples/{example_id}",
-        )
-        self._raise_for_typed_status(resp)
-        return True
 
     # ------------------------------------------------------------------
     # Team rules (CRUD on /api/team-rules)
@@ -362,26 +259,6 @@ def open_client() -> ContentRXClient:
 # ---------------------------------------------------------------------------
 # Response parsers
 # ---------------------------------------------------------------------------
-
-
-def _example_from_json(entry: dict[str, Any]) -> CustomExample:
-    """Convert the REST payload shape (camel + snake mix) into the
-    dataclass. Keeps the rest of the client free of shape-wrangling.
-    """
-    return CustomExample(
-        id=entry.get("id", ""),
-        text=entry.get("text", ""),
-        verdict=entry.get("verdict", ""),
-        moment=entry.get("moment"),
-        content_type=entry.get("contentType") or entry.get("content_type"),
-        standard_id=entry.get("standardId") or entry.get("standard_id"),
-        notes=entry.get("notes"),
-        contribute_upstream=bool(
-            entry.get("contributeUpstream") or entry.get("contribute_upstream") or False
-        ),
-        created_at=str(entry.get("createdAt") or entry.get("created_at") or ""),
-        updated_at=str(entry.get("updatedAt") or entry.get("updated_at") or ""),
-    )
 
 
 def _team_rule_from_json(entry: dict[str, Any]) -> TeamRule:

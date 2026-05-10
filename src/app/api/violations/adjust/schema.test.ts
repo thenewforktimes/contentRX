@@ -4,14 +4,10 @@ import { RequestSchema } from "./schema";
 /**
  * Pin the request-validation contract for /api/violations/adjust.
  *
- * The contract has two cross-field rules that aren't expressible
- * through plain field-level zod:
- *   - signal_type ∈ {verdict, both} requires override_reason_code
- *   - signal_type ∈ {suggestion, both} requires rewrite_text
- *
- * If a future refactor drops either refine, /admin queue starts
- * collecting malformed candidates with no recoverable substrate
- * intent. These tests catch that regression.
+ * Per ADR 2026-05-11 the route is verdict-only. The customer's
+ * dismissal lands in `violation_overrides` as a private record. The
+ * separate Flag-for-Review consent flow is the only path to the
+ * calibration corpus.
  */
 
 describe("/api/violations/adjust — RequestSchema", () => {
@@ -20,7 +16,6 @@ describe("/api/violations/adjust — RequestSchema", () => {
       const result = RequestSchema.safeParse({
         text: "Click here",
         signal_type: "verdict",
-        // override_reason_code intentionally omitted
       });
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -41,113 +36,49 @@ describe("/api/violations/adjust — RequestSchema", () => {
       expect(result.success).toBe(true);
     });
 
-    it("does not require rewrite_text on verdict-only signal", () => {
-      const result = RequestSchema.safeParse({
-        text: "Click here",
-        signal_type: "verdict",
-        override_reason_code: "standard_too_strict",
-      });
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe("suggestion signal", () => {
-    it("requires rewrite_text", () => {
-      const result = RequestSchema.safeParse({
-        text: "Click here",
-        signal_type: "suggestion",
-        // rewrite_text intentionally omitted
-      });
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(
-          result.error.issues.some((i) => i.path.join(".") === "rewrite_text"),
-        ).toBe(true);
-      }
-    });
-
-    it("accepts a suggestion request with rewrite_text", () => {
-      const result = RequestSchema.safeParse({
-        text: "Click here",
-        signal_type: "suggestion",
-        rewrite_text: "View pricing",
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("does not require override_reason_code on suggestion-only signal", () => {
-      const result = RequestSchema.safeParse({
-        text: "Click here",
-        signal_type: "suggestion",
-        rewrite_text: "View pricing",
-      });
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe("both signal", () => {
-    it("requires both reason_code AND rewrite_text", () => {
-      // Missing both
+    it("rejects non-verdict signal_type values", () => {
       const r1 = RequestSchema.safeParse({
         text: "Click here",
-        signal_type: "both",
+        signal_type: "suggestion",
+        override_reason_code: "not_applicable_here",
       });
-      expect(r1.success).toBe(false);
-
-      // Missing rewrite_text
       const r2 = RequestSchema.safeParse({
         text: "Click here",
         signal_type: "both",
         override_reason_code: "not_applicable_here",
       });
+      expect(r1.success).toBe(false);
       expect(r2.success).toBe(false);
-
-      // Missing reason_code
-      const r3 = RequestSchema.safeParse({
-        text: "Click here",
-        signal_type: "both",
-        rewrite_text: "View pricing",
-      });
-      expect(r3.success).toBe(false);
-
-      // Both present → valid
-      const r4 = RequestSchema.safeParse({
-        text: "Click here",
-        signal_type: "both",
-        override_reason_code: "not_applicable_here",
-        rewrite_text: "View pricing",
-      });
-      expect(r4.success).toBe(true);
     });
-  });
 
-  describe("share_upstream default", () => {
-    it("defaults share_upstream to FALSE per ADR 2026-04-28", () => {
-      // Privacy-by-default. The customer must explicitly opt in to
-      // share their adjustment with the upstream model. A future
-      // refactor that flips this default would silently leak
-      // customer rewrites into Robert's triage queue.
+    it("rejects rewrite_text payloads (suggestion path retired per ADR 2026-05-11)", () => {
+      // ADR 2026-05-11 explicitly forbids the suggestion-share path
+      // from the Adjust modal. If a future refactor re-adds it here,
+      // calibration corpus contributions can flow without the
+      // Flag-for-Review consent surface. That regression must fail
+      // loud — the schema is strict, no extra keys allowed.
       const result = RequestSchema.safeParse({
         text: "Click here",
         signal_type: "verdict",
         override_reason_code: "not_applicable_here",
+        rewrite_text: "View pricing",
       });
-      expect(result.success).toBe(true);
+      // Zod default is to strip unknown keys silently; verify the
+      // shape doesn't smuggle the field through.
       if (result.success) {
-        expect(result.data.share_upstream).toBe(false);
+        expect("rewrite_text" in result.data).toBe(false);
       }
     });
 
-    it("accepts share_upstream=true when the customer explicitly opts in", () => {
+    it("rejects share_upstream payloads (calibration-share path retired per ADR 2026-05-11)", () => {
       const result = RequestSchema.safeParse({
         text: "Click here",
-        signal_type: "suggestion",
-        rewrite_text: "View pricing",
+        signal_type: "verdict",
+        override_reason_code: "not_applicable_here",
         share_upstream: true,
       });
-      expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.share_upstream).toBe(true);
+        expect("share_upstream" in result.data).toBe(false);
       }
     });
   });

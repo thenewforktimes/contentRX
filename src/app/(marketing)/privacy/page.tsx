@@ -67,11 +67,30 @@ export default function PrivacyPage() {
             string passed to <code>/api/check</code>,{" "}
             <code>/api/classify</code>, or <code>/api/suggest-fix</code>{" "}
             is forwarded to the evaluation engine and to Anthropic. In
-            our own database we store only a sha256 hash of the text,
-            never the plaintext. We do retain metadata: the verdict,
-            severity, content type, file path (if your tool supplied
-            one), and the surface that called us (MCP, LSP, CLI,
-            GitHub Action, Figma plugin, web).
+            ContentRX&apos;s own database, only a sha256 hash of the
+            text persists. The plaintext is held in memory for the
+            request lifecycle and then discarded. ContentRX retains
+            metadata for that hash: the verdict, severity, content
+            type, file path (if your tool supplied one), and the
+            surface that called us.
+          </li>
+          <li>
+            <strong>Strings you explicitly share via Flag for Review.</strong>
+            {" "}When you tap Flag for Review on a finding and confirm
+            the consent modal, the plaintext of that string is stored
+            for calibration alongside a per-row consent record. Each
+            shared string is visible to you at{" "}
+            <Link href="/dashboard/shared" className="underline underline-offset-2">
+              /dashboard/shared
+            </Link>
+            . Email{" "}
+            <a
+              href="mailto:privacy@contentrx.io"
+              className="underline underline-offset-2"
+            >
+              privacy@contentrx.io
+            </a>
+            {" "}to revoke a shared string at any time.
           </li>
           <li>
             <strong>Usage and operational telemetry.</strong> Counts
@@ -91,29 +110,27 @@ export default function PrivacyPage() {
 
       <Section title="What we do with it">
         <p>
-          Account and billing data: to keep your account working and
-          send you the receipts you&apos;d expect.
+          Account and billing data, to keep your account working and
+          send you the receipts you would expect.
         </p>
         <p className="mt-3">
-          Content strings: to run the evaluation, return verdicts,
-          and (where you&apos;ve given a Team-plan opt-in) inform our
-          calibration log so the model gets better. The hash we store
-          lets us look up your history and aggregate dashboard
-          insights without keeping the raw text.
+          Content strings, to run the evaluation, return verdicts, and
+          (when you have explicitly shared a string via Flag for
+          Review) inform the calibration log so the engine gets
+          better. The hash stored for unshared strings supports
+          dashboard history lookups without keeping the plaintext.
         </p>
         <p className="mt-3">
-          Telemetry: to fix bugs (Sentry), bill correctly (token
+          Telemetry, to fix bugs (Sentry), bill correctly (token
           counts), enforce rate limits (Redis), and understand which
           public pages people read (Plausible). None of these
           subprocessors receive content strings.
         </p>
         <p className="mt-3">
-          We do not sell your data. We do not use your content to
-          train any model, ours or anyone else&apos;s. The Team-plan
-          opt-in (off by default; explicit per-entry toggle on{" "}
-          <code>custom_example_add</code>) is the only path by which a
-          customer string ever influences our calibration corpus, and
-          even then it&apos;s anonymised at ingest.
+          ContentRX does not sell your data and does not train any
+          model on customer content. The Flag-for-Review consent flow
+          is the only path by which a customer string influences the
+          calibration corpus.
         </p>
       </Section>
 
@@ -136,8 +153,9 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>We don&apos;t use your content to train any
-            model</strong> (ours, Anthropic&apos;s, anyone&apos;s)
-            without your explicit, per-entry opt-in.
+            model</strong> (ours, Anthropic&apos;s, anyone&apos;s).
+            Strings you share via Flag for Review feed a hand-curated
+            calibration corpus. Nothing else does.
           </li>
           <li>
             <strong>We don&apos;t share your strings with any third
