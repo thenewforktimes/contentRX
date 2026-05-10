@@ -1,50 +1,44 @@
 /**
- * Landing page — 2026-05-10 design refresh.
+ * Landing page — 2026-05-10 lower-fold quadrant rebuild.
  *
- * The 2026-05-10 pass changes the lower-half rhythm (everything below
- * SurfacesGrid). The prior pass shipped four sections of bordered
- * cards in a row; even with the dot-grid panel on How-it-works, the
- * eye saw "card grid, card grid, card grid" and the user's primary
- * value props (time, money, consistency, long-form) weren't
- * surfaced anywhere on the page.
+ * Robo's review on the prior pass: the lower-fold sections felt
+ * shabby compared to the upper sections. The hero, integration row,
+ * How-it-works panel, and SurfacesGrid each had a distinct visual
+ * treatment; below that, three card-grids in a row read as text
+ * documents.
  *
- * The refresh:
- *
- *   - **Outcomes** — new 4-up editorial section between SurfacesGrid
- *     and the agent. No card chrome, vertical rules between columns
- *     at lg+. Names the four outcomes a skeptical engineering team
- *     scans for first (Time / Money / Consistency / Long-form). The
- *     page now leads its lower half with what ships changes.
- *   - **Weekly review agent** — moved into a panel section with a
- *     stylized digest mock alongside the three sub-claim cards.
- *     Two-column at lg+. Reads as a section-level beat, not another
- *     card grid. Same panel idiom How-it-works uses.
- *   - **Built for your stack** — kept, but the accent-affirm
- *     treatment came off "One approval" (which the new Outcomes
- *     section's Money card now leads on). Reserves the accent for
- *     the agent's "0 checks per run" so emphasis doesn't get
- *     diluted twice in close proximity.
- *   - **AuthorBlock** — moved to the page foot and switched to the
- *     compact byline variant. The earlier hero-up treatment
- *     overweighted the founder-credit against the load-bearing
- *     value props; the byline still does the moat work, just at
- *     editorial-foot register instead of hero-card register.
- *
- * Voice and copy unchanged from the prior pass except where the
- * new sections introduce strings; those follow docs/copy-vocabulary.md
- * (calm, named, concrete, no em dashes).
+ * This pass converts the lower fold to a 2x2 product-quadrant
+ * pattern (modeled on Apple's homepage product cells). Each cell
+ * has a hero visual filling its bottom half, sparse copy on top,
+ * a single-verb eyebrow label, and (where relevant) one CTA pill.
  *
  * Section order:
  *   1. Hero — wordmark + brand promise + verdict mock
- *   2. Integration row — surfaces under the fold, immediately
- *   3. How it works — animated pipeline, with dot-grid bg
+ *   2. Integration row — chip strip
+ *   3. How it works — animated pipeline panel, dot-grid bg
  *   4. Where it runs — 6 surface cards (SurfacesGrid)
- *   5. Outcomes — Time / Money / Consistency / Long-form
- *   6. Weekly review agent — panelled, with digest mock
- *   7. Built for your stack — One approval / Privacy / Security /
- *      Integrations as a 2x2 grid
- *   8. Commitments — three product-strength cards
- *   9. Author byline — compact editorial closer
+ *   5. Outcomes — 2x2 quadrant: Save time / Save money /
+ *      Stay consistent / Long-form review (OutcomesGrid)
+ *   6. Agent + One approval — 2-up quadrant row
+ *   7. Trust strip — Privacy / Security / Install / Accuracy as
+ *      a single horizontal arrow-link row
+ *   8. Author byline — compact editorial closer
+ *
+ * Cuts in this pass (per Robo's review):
+ *   - "Built for your stack" eyebrow + 4-card grid. One approval
+ *     becomes its own quadrant cell; Privacy/Security/Integrations
+ *     fold into the trust strip with /accuracy added.
+ *   - "Style guides we maintain" — disingenuous (we provide style
+ *     guidance to the model, not external style guides).
+ *   - "Calibrated judgment" — readers don't drill into kappa from
+ *     home; /accuracy still reachable via trust strip + global footer.
+ *   - "Custom rules in context" — Team-plan feature; /pricing
+ *     carries the upsell. Home-page real estate goes further on
+ *     universally-relevant outcomes.
+ *
+ * Verb-led labels throughout the lower fold (Save time, Save money,
+ * Stay consistent, Drift caught, One approval). Voice rules:
+ * declarative, no em dashes, no semicolons, no colons.
  */
 
 import type { Metadata } from "next";
@@ -54,11 +48,12 @@ import { AuthorBlock } from "@/components/author-block";
 import { HeroVerdictMock } from "@/components/hero-verdict-mock";
 import { HowItWorksDiagram } from "@/components/how-it-works-diagram";
 import { IntegrationRow } from "@/components/integration-row";
+import { OneApprovalCell } from "@/components/one-approval-cell";
 import { OutcomesGrid } from "@/components/outcomes-grid";
 import { SurfacesGrid } from "@/components/surfaces-grid";
+import { TrustStrip } from "@/components/trust-strip";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { Section } from "@/components/ui/section";
 import { Wordmark } from "@/components/wordmark";
 
 export const metadata: Metadata = {
@@ -137,170 +132,40 @@ export default function Home() {
           the teaser; this is the index). 2026-05-09 design pass. */}
       <SurfacesGrid />
 
-      {/* Outcomes — 4-up editorial value-prop section.
-          New 2026-05-10. Time / Money / Consistency / Long-form —
-          the four outcomes a skeptical engineering team scans for
-          first. Editorial layout (no card chrome) gives the section
-          a different silhouette from the surrounding card grids. */}
+      {/* Outcomes — 2x2 product-quadrant grid. Rebuilt 2026-05-10
+          (per Robo's review: the prior text-only editorial 4-up
+          read shabby next to the visual-rich upper sections). Each
+          quadrant cell has a hero visual: typographic Hours →
+          Seconds, $39 anchor with surface icons, stylized
+          5-surface flag-row, mini /writes example snippet. */}
       <OutcomesGrid />
 
-      {/* Weekly review agent — panelled section with the digest mock
-          and three sub-claim cards. Replaces the 3-card grid that
-          shipped 2026-05-09; the panel + mock combination lets the
-          agentic value prop land harder than three flat cards did.
-          The "0 checks per run" sub-claim keeps its accent-affirm
-          treatment as the load-bearing differentiator. */}
-      <AgentSection />
+      {/* Agent + One approval — 2-up quadrant row. Companion cells
+          continuing the lower-fold quadrant rhythm. AgentSection is
+          now a single cell (down from a full-width panel); One
+          approval is typography-only (no fake checkout UI). Both
+          render as <li> so they sit inside this <ul>. */}
+      <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+        <AgentSection />
+        <OneApprovalCell />
+      </ul>
 
-      {/* Built for your stack — redesigned 2026-05-10. The prior 4-up
-          card grid gave the four items equal weight. They aren't. One
-          approval is the procurement-friction differentiator that
-          closes the deal vs custom-LLM alternatives; Privacy, Security,
-          and Integrations are trust-link hooks that route to dedicated
-          pages. The new layout gives One approval a hero card and
-          demotes the three trust links to a horizontal strip below.
-          Different silhouette from the surrounding sections, and the
-          procurement story actually lands.
+      {/* Trust strip — inline horizontal link row. Replaces the
+          prior Privacy/Security/Integrations 3-card grid AND the
+          Commitments 3-row checkmark list. The four trust pages
+          (Privacy, Security, Install, Accuracy) live as arrow-links
+          on a single line. /accuracy moves here from the Commitments
+          section that got cut so the moat link still surfaces from
+          body copy.
 
-          Words cut ruthlessly per voice rules tightened 2026-05-10
-          (short declarative, no em dashes, no semicolons, no colons). */}
-      <Section
-        eyebrow="Built for your stack"
-        title="Easier to adopt. Safer to ship."
-      >
-        <div className="mt-2 rounded-2xl border border-line bg-raised p-6 sm:p-8">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent-affirm-text/10 text-xs font-bold text-accent-affirm-text">
-              ✓
-            </span>
-            <p className="text-base font-semibold text-strong sm:text-lg">
-              One approval.
-            </p>
-          </div>
-          <p className="mt-3 max-w-2xl text-base text-default">
-            $39/month. Five-minute install. Same approval pattern your
-            team uses for Slack or Figma. No LLM contract. No
-            Anthropic or OpenAI key.
-          </p>
-        </div>
-
-        <ul className="mt-6 grid gap-3 sm:grid-cols-3">
-          <li className="rounded-lg border border-line bg-raised p-4">
-            <p className="text-sm font-semibold text-strong">Privacy.</p>
-            <p className="mt-1 text-sm text-default">
-              Your subscription is the whole revenue model.{" "}
-              <Link
-                href="/privacy"
-                className="underline underline-offset-2 hover:text-strong"
-              >
-                Read the position
-              </Link>
-              .
-            </p>
-          </li>
-          <li className="rounded-lg border border-line bg-raised p-4">
-            <p className="text-sm font-semibold text-strong">Security.</p>
-            <p className="mt-1 text-sm text-default">
-              Hashed at the boundary. PII screened pre-LLM.{" "}
-              <Link
-                href="/security"
-                className="underline underline-offset-2 hover:text-strong"
-              >
-                Details
-              </Link>
-              .
-            </p>
-          </li>
-          <li className="rounded-lg border border-line bg-raised p-4">
-            <p className="text-sm font-semibold text-strong">
-              Integrations.
-            </p>
-            <p className="mt-1 text-sm text-default">
-              Same engine, every surface.{" "}
-              <Link
-                href="/install"
-                className="underline underline-offset-2 hover:text-strong"
-              >
-                Install instructions
-              </Link>
-              .
-            </p>
-          </li>
-        </ul>
-      </Section>
-
-      {/* Commitments — redesigned 2026-05-10 as a checkmark list.
-          The prior 3-card grid read as "another card grid" against
-          everything else on the page. The list-with-checkmarks
-          treatment carries the same content with a different
-          silhouette and tighter spacing.
-
-          Section frame: the items are commitments, not outcome claims.
-          The latest measurement (reports/accuracy/latest.json) shows
-          self-drift kappa = 0.57 with a wide CI on a small sample;
-          system kappa is pending. The card-level frame names what we
-          commit to do, not how good we already are. */}
-      <Section eyebrow="Commitments" title="What we commit to.">
-        <ul className="mt-4 space-y-4 border-y border-line py-6 sm:space-y-6 sm:py-8">
-          <li className="flex gap-4">
-            <span
-              aria-hidden
-              className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-affirm-text/10 text-sm font-bold text-accent-affirm-text"
-            >
-              ✓
-            </span>
-            <div>
-              <p className="text-base font-semibold text-strong">
-                Calibrated judgment.
-              </p>
-              <p className="mt-1 text-sm text-default">
-                Kappa with 95% CI. Drift weeks included.{" "}
-                <Link
-                  href="/accuracy"
-                  className="underline underline-offset-2 hover:text-strong"
-                >
-                  See what we measured
-                </Link>
-                .
-              </p>
-            </div>
-          </li>
-          <li className="flex gap-4">
-            <span
-              aria-hidden
-              className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-affirm-text/10 text-sm font-bold text-accent-affirm-text"
-            >
-              ✓
-            </span>
-            <div>
-              <p className="text-base font-semibold text-strong">
-                Style guides we maintain.
-              </p>
-              <p className="mt-1 text-sm text-default">
-                We hold the standards. We watch the context. You
-                ship.
-              </p>
-            </div>
-          </li>
-          <li className="flex gap-4">
-            <span
-              aria-hidden
-              className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-affirm-text/10 text-sm font-bold text-accent-affirm-text"
-            >
-              ✓
-            </span>
-            <div>
-              <p className="text-base font-semibold text-strong">
-                Custom rules in context.
-              </p>
-              <p className="mt-1 text-sm text-default">
-                Your team&apos;s rules override ours. No retraining.
-                No pipeline changes.
-              </p>
-            </div>
-          </li>
-        </ul>
-      </Section>
+          Cuts 2026-05-10 (per Robo): "Style guides we maintain"
+          (disingenuous; we don't maintain external style guides),
+          "Calibrated judgment" (readers don't drill into kappa from
+          home; /accuracy still reachable via this strip + global
+          footer), "Custom rules in context" (Team-plan feature;
+          home-page real estate goes further on universally-relevant
+          outcomes; /pricing carries the upsell). */}
+      <TrustStrip />
 
       {/* Author byline — compact editorial closer. Moved to the page
           foot 2026-05-10 so the load-bearing value props lead the

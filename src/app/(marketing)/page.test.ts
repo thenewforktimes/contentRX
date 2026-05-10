@@ -77,33 +77,65 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(visible).toMatch(/the model around the model/i);
   });
 
-  it("closes with three value-prop cards", () => {
-    // The "Why it works" section is the closer. Three load-bearing
-    // value props:
-    //   1. Calibrated judgment
-    //   2. Style guides we maintain
-    //   3. Custom rules in context
-    // (2026-05-05: third card was "Custom rules in the moment" until
-    // the moments→context sweep — `moment` is reserved internal vocab.)
-    expect(visible).toMatch(/calibrated judgment/i);
-    expect(visible).toMatch(/style guides we maintain/i);
-    expect(visible).toMatch(/custom rules in context/i);
+  it("does NOT render the cut commitments (anti-regression for 2026-05-10)", () => {
+    // Three commitments cards were dropped 2026-05-10 per Robo's
+    // review:
+    //   - "Calibrated judgment" — readers don't drill into kappa
+    //     from home; /accuracy still reachable via TrustStrip.
+    //   - "Style guides we maintain" — disingenuous (we provide
+    //     style guidance to the model, not external style guides).
+    //   - "Custom rules in context" — Team-plan feature; /pricing
+    //     carries the upsell. Home-page real estate goes further on
+    //     universally-relevant outcomes.
+    // Anti-regression: future edits should not re-introduce these
+    // headings without an explicit ADR.
+    expect(visible).not.toMatch(/calibrated judgment/i);
+    expect(visible).not.toMatch(/style guides we maintain/i);
+    expect(visible).not.toMatch(/custom rules in context/i);
   });
 
-  it("surfaces the four buyer/IT value props (One approval, Privacy, Security, Integrations)", () => {
-    // The "Built for your stack" section bundles One approval (the
-    // procurement-friction killer, promoted from /about), Privacy,
-    // Security, and Integrations as one block of 2x2 cards. If a
-    // future edit drops one of these card titles, the section goes
-    // soft.
-    expect(visible).toMatch(/one approval/i);
-    expect(visible).toMatch(/\bprivacy\./i);
-    expect(visible).toMatch(/\bsecurity\./i);
-    expect(visible).toMatch(/\bintegrations\./i);
-    // The eyebrow + title hold the section together; if either
-    // changes, the section is being meaningfully edited.
-    expect(visible).toMatch(/built for your stack/i);
-    expect(visible).toMatch(/easier to adopt.{1,4}safer to ship/i);
+  it("renders the OneApprovalCell with the procurement story", () => {
+    // 2026-05-10 quadrant rebuild: "Built for your stack" was a
+    // 1-hero-card + 3-trust-cards section; replaced with a single
+    // OneApprovalCell paired with AgentSection in a 2-up quadrant
+    // row. The procurement angle still leads the lower fold; the
+    // trust links moved into TrustStrip below.
+    expect(source).toContain("OneApprovalCell");
+    const oneApprovalVisible = visibleCopy(
+      readSource("src/components/one-approval-cell.tsx"),
+    );
+    expect(oneApprovalVisible).toMatch(/one approval/i);
+    expect(oneApprovalVisible).toMatch(/\$39/);
+    // Funnels comparison-shoppers to /pricing.
+    expect(oneApprovalVisible).toContain('href="/pricing"');
+  });
+
+  it("renders the TrustStrip with four trust links", () => {
+    // 2026-05-10: Privacy, Security, Install, Accuracy fold from
+    // their prior card / commitment treatments into a single inline
+    // link strip. /accuracy moved here when the Calibrated judgment
+    // commitment got cut, so the moat link still surfaces from body
+    // copy (not just the global footer).
+    expect(source).toContain("TrustStrip");
+    const trustVisible = visibleCopy(
+      readSource("src/components/trust-strip.tsx"),
+    );
+    for (const label of ["Privacy", "Security", "Install", "Accuracy"]) {
+      expect(trustVisible).toContain(`label: "${label}"`);
+    }
+    expect(trustVisible).toContain('href: "/privacy"');
+    expect(trustVisible).toContain('href: "/security"');
+    expect(trustVisible).toContain('href: "/install"');
+    expect(trustVisible).toContain('href: "/accuracy"');
+  });
+
+  it("does NOT use the prior Built-for-stack section frame (anti-regression)", () => {
+    // 2026-05-10: the "Built for your stack" eyebrow + "Easier to
+    // adopt. Safer to ship." H2 came off the page when One approval
+    // moved into its own quadrant cell. Anti-regression: if a future
+    // edit re-adds those strings, it's reverting the structure.
+    expect(visible).not.toMatch(/built for your stack/i);
+    expect(visible).not.toMatch(/easier to adopt.{1,4}safer to ship/i);
   });
 
   it("home byline leads with the staff-content-designer claim", () => {
@@ -129,13 +161,15 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
   });
 
   it("links the public accountability surface from the body copy", () => {
-    // /accuracy and /calibration are inline-linked from the
-    // "why it works" section. The remaining trust surfaces
-    // (/ethics, /privacy, /security) live in the global
-    // <SiteFooter>; the body copy doesn't have to carry every
-    // cross-link, but it has to walk the reader to at least one
-    // accountability surface inline.
-    expect(visible).toMatch(/href="\/(accuracy|calibration)"/);
+    // /accuracy and /calibration are inline-linked from the body
+    // copy. 2026-05-10: the link moved from the (cut) Calibrated
+    // judgment commitment card into the TrustStrip alongside
+    // Privacy / Security / Install. The body-copy assertion now
+    // reads from the trust-strip component source.
+    const trustVisible = visibleCopy(
+      readSource("src/components/trust-strip.tsx"),
+    );
+    expect(trustVisible).toMatch(/href:\s*"\/(accuracy|calibration)"/);
   });
 
   it("does not link to the private /model surface", () => {
@@ -181,94 +215,77 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     }
   });
 
-  it("surfaces the weekly review agent with three sub-claims", () => {
-    // The 2026-05-09 design pass added a section between
-    // SurfacesGrid and Built-for-stack to land the agent value prop
-    // (formerly absent from the homepage). Three sub-claim cards
-    // (Read-only / Deterministic / 0 checks per run) carry the
-    // brand promise; the third gets the accent-affirm treatment as
-    // the differentiator. The Try-the-preview link funnels to
-    // /dashboard/agent's Run-preview-now button.
+  it("surfaces the weekly review agent with the digest mock", () => {
+    // 2026-05-09: agent block was extracted into AgentSection.
+    // 2026-05-10: AgentSection converted from full-width panel to
+    // a single quadrant cell (paired with OneApprovalCell). The 3
+    // sub-claim cards (Read-only / Deterministic / 0 checks per
+    // run) were dropped; the digest mock + headline + 1-line body
+    // + CTA carries the cell now. Sub-claims still live in
+    // /dashboard/agent for users who want the full breakdown.
     //
-    // 2026-05-10 refresh: the section was extracted into
-    // <AgentSection /> so the digest mock could live alongside the
-    // sub-claim cards. The structural pin is unchanged — the same
-    // copy still has to surface — but the assertions now read the
-    // agent-section component source.
+    // Pinned: agent eyebrow, headline, Team-plan pricing read,
+    // /dashboard/agent CTA, digest-mock category Pills.
     expect(source).toContain("AgentSection");
     expect(agentSectionVisible).toMatch(/weekly review agent/i);
     expect(agentSectionVisible).toMatch(/drift, caught every monday/i);
-    expect(agentSectionVisible).toMatch(/Read-only\./);
-    expect(agentSectionVisible).toMatch(/Deterministic\./);
-    expect(agentSectionVisible).toMatch(/0 checks per run\./);
     // Pricing read: agent ships on the Team plan. Phrasing relaxed
     // 2026-05-10 from "folded into the Team plan" to allow tighter
-    // alternatives ("on the Team plan", etc.) per the ruthless-cut
-    // pass. The structural assertion is "agent → Team plan," not the
-    // specific verb.
+    // alternatives ("on the Team plan", etc.).
     expect(agentSectionVisible).toMatch(/(folded\s+into\s+the|on\s+the)\s+team\s+plan/i);
     // Funnels visitors to the dashboard preview surface.
     expect(agentSectionVisible).toContain('href="/dashboard/agent"');
+    // Digest mock category Pills (the visual that carries the cell).
+    expect(agentSectionVisible).toMatch(/Action verbs/);
+    expect(agentSectionVisible).toMatch(/Plain language/);
+    expect(agentSectionVisible).toMatch(/Accessibility/);
   });
 
-  it("agent section sits between SurfacesGrid and Built-for-stack", () => {
-    // Section ordering check — the agent section is a section-level
-    // beat, not a sub-claim of another section. Pinning order:
-    // SurfacesGrid → AgentSection → Built for your stack.
-    //
-    // 2026-05-10: the OutcomesGrid was added between SurfacesGrid
-    // and AgentSection (the new value-prop spine sits above the
-    // agent's own sub-section). The agent block still has to land
-    // before "Built for your stack"; the SurfacesGrid → AgentSection
-    // ordering relaxes to "agent block follows surfaces block,
-    // outcomes block in between is allowed."
+  it("lower fold sits in the order Surfaces → Outcomes → Agent → TrustStrip → Author", () => {
+    // 2026-05-10 quadrant rebuild: the lower fold is now five
+    // ordered beats: SurfacesGrid (above-fold ends), OutcomesGrid
+    // (4-cell quadrant), AgentSection + OneApprovalCell (2-up
+    // quadrant row), TrustStrip (inline link strip), AuthorBlock
+    // (compact byline). This pins the order so a future edit can't
+    // accidentally reorder the visual rhythm.
     const surfacesIdx = visible.indexOf("SurfacesGrid");
+    const outcomesIdx = visible.indexOf("OutcomesGrid");
     const agentIdx = visible.indexOf("AgentSection");
-    const builtIdx = visible.indexOf("Built for your stack");
+    const oneApprovalIdx = visible.indexOf("OneApprovalCell");
+    const trustIdx = visible.indexOf("TrustStrip");
+    const authorIdx = visible.indexOf("<AuthorBlock");
     expect(surfacesIdx).toBeGreaterThan(-1);
-    expect(agentIdx).toBeGreaterThan(surfacesIdx);
-    expect(builtIdx).toBeGreaterThan(agentIdx);
+    expect(outcomesIdx).toBeGreaterThan(surfacesIdx);
+    expect(agentIdx).toBeGreaterThan(outcomesIdx);
+    expect(oneApprovalIdx).toBeGreaterThan(agentIdx);
+    expect(trustIdx).toBeGreaterThan(oneApprovalIdx);
+    expect(authorIdx).toBeGreaterThan(trustIdx);
   });
 
-  it("renders the OutcomesGrid with four named outcomes", () => {
-    // 2026-05-10 design refresh: the OutcomesGrid was added between
-    // SurfacesGrid and AgentSection to land the four customer-facing
-    // outcomes (Time / Money / Consistency / Long-form) that the
-    // prior page never surfaced. The structural pin: the import +
-    // render exist, and the four outcome labels live in the grid's
-    // data array.
+  it("renders the OutcomesGrid with four verb-led outcomes", () => {
+    // 2026-05-10 quadrant rebuild: OutcomesGrid is a 2x2 grid of
+    // four cells (Save time / Save money / Stay consistent /
+    // Long-form review). Each cell has a hero visual filling the
+    // bottom half. Verb-led labels per Robo's call: single-noun
+    // labels ("Time", "Money") felt undernourished, so the
+    // eyebrows landed on action phrases.
+    //
+    // The structural pin: the import + render exist, and the four
+    // verb-led labels surface in the component source.
     expect(source).toContain("OutcomesGrid");
     const outcomesVisible = visibleCopy(
       readSource("src/components/outcomes-grid.tsx"),
     );
-    for (const label of ["Time", "Money", "Consistency", "Long-form"]) {
-      expect(outcomesVisible).toContain(`label: "${label}"`);
-    }
-    // Funnels visitors to the long-form gallery.
-    expect(outcomesVisible).toContain('href="/writes"');
-  });
-
-  it("outcomes section sits between SurfacesGrid and AgentSection", () => {
-    // Section ordering check — outcomes is the value-prop spine; the
-    // agent section is one of the agentic mechanisms behind those
-    // outcomes. Outcomes lands first.
-    const surfacesIdx = visible.indexOf("SurfacesGrid");
-    const outcomesIdx = visible.indexOf("OutcomesGrid");
-    const agentIdx = visible.indexOf("AgentSection");
-    expect(surfacesIdx).toBeGreaterThan(-1);
-    expect(outcomesIdx).toBeGreaterThan(surfacesIdx);
-    expect(agentIdx).toBeGreaterThan(outcomesIdx);
-  });
-
-  it("AuthorBlock sits at the page foot, after Commitments", () => {
-    // 2026-05-10 design refresh: the named-author block moved to the
-    // page foot (and switched to the compact variant) so the load-
-    // bearing value props lead the page. The structural pin: the
-    // AuthorBlock JSX appears AFTER the "Commitments" eyebrow string.
-    const commitmentsIdx = visible.indexOf("Commitments");
-    const authorIdx = visible.indexOf("<AuthorBlock");
-    expect(commitmentsIdx).toBeGreaterThan(-1);
-    expect(authorIdx).toBeGreaterThan(commitmentsIdx);
+    expect(outcomesVisible).toMatch(/Save time/);
+    expect(outcomesVisible).toMatch(/Save money/);
+    expect(outcomesVisible).toMatch(/Stay consistent/);
+    expect(outcomesVisible).toMatch(/Long-form review/);
+    // Funnels visitors to the long-form gallery (cta is passed as
+    // a JS object, so the hrefs surface as `href: "/path"` rather
+    // than the JSX-attribute form `href="/path"`).
+    expect(outcomesVisible).toContain('href: "/writes"');
+    // Funnels comparison-shoppers from the Save money cell to /pricing.
+    expect(outcomesVisible).toContain('href: "/pricing"');
   });
 
   it("does not render the deprecated UseCaseToggle component", () => {
@@ -287,7 +304,26 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
   it("hero CTA points to /install, not straight to the Figma community page", () => {
     // The hero funnels through /install so first-time visitors
     // see MCP/CLI/Action before Figma.
-    expect(visible).toContain('href="/install"');
+    //
+    // 2026-05-10: the /install link moved from a body-copy card
+    // into the TrustStrip + remains via the IntegrationRow at the
+    // top of the lower fold. Either path satisfies the funnel; the
+    // test reads both component sources.
+    const trustVisible = visibleCopy(
+      readSource("src/components/trust-strip.tsx"),
+    );
+    const integrationVisible = visibleCopy(
+      readSource("src/components/integration-row.tsx"),
+    );
+    const installInTrust =
+      trustVisible.includes('href: "/install"') ||
+      trustVisible.includes('href="/install"');
+    const installInIntegrationRow =
+      integrationVisible.includes('"/install') ||
+      integrationVisible.includes('"/install#');
+    expect(installInTrust || installInIntegrationRow).toBe(true);
+    // Anti-regression: the hero CTA must not bypass /install and
+    // route straight to the public Figma community page.
     expect(visible).not.toMatch(
       /href=["']https?:\/\/(www\.)?figma\.com\/community[^"']*["']\s+className=[^>]*bg-black/,
     );

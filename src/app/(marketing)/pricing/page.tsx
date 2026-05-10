@@ -97,7 +97,7 @@ export default function PricingPage() {
           features={[
             "Everything in Pro",
             "Weekly review agent (Monday drift digest, 0 checks per run)",
-            "Rule sharing across the team",
+            "Custom rules your team owns. Override ours. Add your own.",
             "Member management with pooled checks",
           ]}
           overageNote="Hard cap by default. Opt in to $0.10/check overage from your dashboard."

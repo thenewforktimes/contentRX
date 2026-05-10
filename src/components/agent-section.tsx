@@ -1,31 +1,27 @@
 /**
- * AgentSection — landing page's revamped weekly review agent block.
+ * AgentSection — quadrant-cell version of the weekly review agent.
  *
- * Replaces the prior 3-card grid (which read as "another card grid"
- * against the surrounding sections). The new layout is 2-column at
- * md+: the digest mock on the right shows what the Monday output
- * actually looks like, the value-prop copy on the left names the
- * three load-bearing sub-claims (Read-only, Deterministic, 0 checks
- * per run).
+ * 2026-05-10 lower-fold rebuild. The prior pass shipped this as a
+ * full-width panel with a 2-column layout (sub-claim cards + digest
+ * mock). Robo's review on the rebuild flagged the lower fold as
+ * shabby compared to the upper sections; the agent panel was the
+ * one good visual but the surrounding sections were text-only.
  *
- * The mock is structurally similar to HeroVerdictMock — stylized,
- * decorative, aria-hidden — but uses a single layered "draft PR"
- * card geometry instead of the three-card fan in the hero. One mock
- * per visual moment; the hero owns the per-string finding shape, the
- * agent section owns the weekly-digest shape.
- *
- * Section wraps in a panel (rounded-3xl border + bg-raised/40) so it
- * reads as a section-level beat distinct from the flat-card grids
- * above and below it. Same panel idiom that How-it-works uses, but
- * without the dot-grid backdrop — two dot-grid panels in a row would
- * compete.
+ * Solution: convert the lower fold to a 2x2 product-quadrant rhythm
+ * (Apple homepage pattern). Agent becomes one of two cells in the
+ * second 2-up row, alongside One approval. The 3 sub-claim cards
+ * are dropped; the simplified digest mock + headline + 1-line body
+ * + CTA carries the cell.
  *
  * Pinned copy (the page test asserts on these strings):
  *   - "Weekly review agent" (eyebrow)
  *   - "Drift, caught every Monday." (heading)
- *   - "Read-only.", "Deterministic.", "0 checks per run." (sub-claims)
- *   - "Folded into the Team plan." (pricing read)
+ *   - "Team plan" (pricing read; phrasing relaxed via regex)
  *   - href="/dashboard/agent" (preview link)
+ *
+ * The mock is the load-bearing visual. Stylized, decorative,
+ * aria-hidden. Trimmed for cell-fit: Pull-request header chip,
+ * digest title, three pattern bullets with Pill tags, footer line.
  */
 
 import Link from "next/link";
@@ -34,99 +30,44 @@ import { Pill } from "@/components/ui/pill";
 
 export function AgentSection() {
   return (
-    <section
+    <li
       id="agent"
-      className="mt-16 rounded-3xl border border-line bg-raised/40 p-8 sm:p-12 scroll-mt-16"
+      className="flex min-h-[360px] flex-col rounded-2xl border border-line bg-raised p-8 sm:p-10"
     >
-      <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-14">
-        <div>
-          <Eyebrow>Weekly review agent</Eyebrow>
-          <h2 className="mt-2 text-2xl font-semibold text-strong sm:text-3xl">
-            Drift, caught every Monday.
-          </h2>
-          <p className="mt-4 max-w-xl text-base text-default">
-            A draft pull request lands with last week&apos;s
-            recurring patterns. The catch your senior reviewer would
-            have made.
-          </p>
-
-          <ul className="mt-8 grid gap-3 sm:grid-cols-3">
-            <ClaimCard
-              title="Read-only."
-              body="Never edits your strings. Always a draft pull request."
-            />
-            <ClaimCard
-              title="Deterministic."
-              body="Rule-based clustering. Not LLM guessing. Reproducible."
-            />
-            <ClaimCard
-              accent
-              title="0 checks per run."
-              body={
-                <>
-                  Reads your existing flags. Zero LLM calls. On the
-                  Team plan.{" "}
-                  <Link
-                    href="/dashboard/agent"
-                    className="underline underline-offset-2 hover:text-strong"
-                  >
-                    Try the preview
-                  </Link>
-                  .
-                </>
-              }
-            />
-          </ul>
-        </div>
-
-        <div className="relative">
-          <DigestMock />
-        </div>
+      <Eyebrow>Weekly review agent</Eyebrow>
+      <p className="mt-3 text-lg font-semibold text-strong sm:text-xl">
+        Drift, caught every Monday.
+      </p>
+      <p className="mt-2 text-sm text-default">
+        A weekly digest. Zero LLM calls. On the Team plan.
+      </p>
+      <div className="mt-auto pt-6">
+        <DigestMock />
       </div>
-    </section>
-  );
-}
-
-function ClaimCard({
-  title,
-  body,
-  accent,
-}: {
-  title: string;
-  body: React.ReactNode;
-  accent?: boolean;
-}) {
-  // The accent variant is reserved for the differentiator card in this
-  // grid (0 checks per run). One accent per grid; the Built-for-stack
-  // section dropped its accent treatment so this one stands alone on
-  // the page.
-  const baseClasses = "rounded-lg p-5";
-  const surfaceClasses = accent
-    ? "border-2 border-accent-affirm-border bg-accent-affirm-soft/30"
-    : "border border-line bg-canvas/60";
-  return (
-    <li className={`${baseClasses} ${surfaceClasses}`}>
-      <p className="text-sm font-semibold text-strong">{title}</p>
-      <p className="mt-2 text-sm text-default">{body}</p>
+      <Link
+        href="/dashboard/agent"
+        className="mt-5 inline-flex w-fit items-center gap-1 text-sm font-medium text-default underline underline-offset-2 hover:text-strong"
+      >
+        Try the preview →
+      </Link>
     </li>
   );
 }
 
 /**
- * DigestMock — stylized "draft PR" card showing what the Monday
- * digest looks like in GitHub. Decorative; aria-hidden so screen
- * readers skip past (the heading + sub-claims carry the meaning).
+ * DigestMock — stylized "draft PR" card, sized for a quadrant cell.
+ * Decorative; aria-hidden so screen readers skip past (the headline
+ * and 1-line body carry the meaning).
  *
- * Three pattern bullets shown — same shape as the real PR body
- * (render-digest.ts produces a pattern list followed by the
- * zero-checks footer). Pattern strings here are illustrative, not
- * sourced from a customer's data.
+ * Voice rule: no colons. The category labels are Pill components, not
+ * inline `Label:` colons. Pills aren't headings, so the engine's
+ * no-trailing-period-on-headings rule passes without forcing colons.
  */
 function DigestMock() {
   return (
     <div
       aria-hidden
-      className="rounded-xl border border-line bg-canvas p-5 shadow-lg shadow-canvas/40 ring-1 ring-line/40 sm:p-6"
+      className="rounded-xl border border-line bg-canvas p-4 shadow-md shadow-canvas/40"
     >
       <div className="flex items-center gap-2">
         <Pill tone="stone" size="xs">
@@ -135,58 +76,42 @@ function DigestMock() {
         <span className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
           Pull request
         </span>
-        <span className="ml-auto text-[10px] text-quiet">
-          Mon · 9:00
-        </span>
+        <span className="ml-auto text-[10px] text-quiet">Mon</span>
       </div>
-
-      <p className="mt-3 font-mono text-xs text-quiet">
-        thenewforktimes/your-app
-      </p>
-      <p className="mt-2 text-sm font-semibold text-strong">
+      <p className="mt-2 text-xs font-semibold text-strong">
         ContentRX weekly review · Apr 28 to May 4
       </p>
 
-      {/* Pattern bullets. The category label sits as a Pill (tag),
-          not a heading-with-period or a colon-led label. Pills aren't
-          headings, so the engine doesn't flag them as
-          headings-with-trailing-periods. Voice rule: no colons. The
-          description follows as plain text. */}
-      <ol className="mt-4 space-y-3 text-sm">
-        <li className="flex gap-2">
+      <ol className="mt-3 space-y-2 text-xs">
+        <li className="flex items-center gap-2">
           <Pill tone="amber" size="xs">
             Action verbs
           </Pill>
           <p className="text-default">
-            12 strings used &lsquo;Submit&rsquo; on a destructive
-            action.
+            12 strings used &lsquo;Submit&rsquo;.
           </p>
         </li>
-        <li className="flex gap-2">
+        <li className="flex items-center gap-2">
           <Pill tone="amber" size="xs">
             Plain language
           </Pill>
           <p className="text-default">
-            7 strings reached for &lsquo;utilize&rsquo; or
-            &lsquo;leverage&rsquo;.
+            7 reached for &lsquo;utilize&rsquo;.
           </p>
         </li>
-        <li className="flex gap-2">
+        <li className="flex items-center gap-2">
           <Pill tone="amber" size="xs">
             Accessibility
           </Pill>
           <p className="text-default">
-            4 link strings still read &lsquo;click here&rsquo;.
+            4 read &lsquo;click here&rsquo;.
           </p>
         </li>
       </ol>
 
-      <div className="mt-5 flex items-center gap-3 border-t border-line pt-3 text-[10px] uppercase tracking-wider text-quiet">
-        <span className="inline-flex items-center gap-1">
-          <span aria-hidden>⚡</span> 0 checks
-        </span>
-        <span aria-hidden>·</span>
-        <span>deterministic</span>
+      <div className="mt-3 flex items-center gap-2 border-t border-line pt-2 text-[10px] uppercase tracking-wider text-quiet">
+        <span aria-hidden>⚡</span>
+        <span>0 checks</span>
         <span aria-hidden>·</span>
         <span>read-only</span>
       </div>
