@@ -33,7 +33,7 @@ export function OneApprovalCell() {
         Same approval pattern as Slack or Figma.
       </p>
 
-      <div className="mt-auto flex flex-col items-stretch gap-3 pt-8">
+      <div className="flex flex-1 flex-col justify-center gap-3 py-6">
         <AnchorLine value="$39" unit="/month" />
         <AnchorLine value="5" unit="minute install" />
         <AnchorLine value="0" unit="LLM contracts" />
@@ -41,7 +41,7 @@ export function OneApprovalCell() {
 
       <Link
         href="/pricing"
-        className="mt-6 inline-flex w-fit items-center gap-1 text-sm font-medium text-default underline underline-offset-2 hover:text-strong"
+        className="inline-flex w-fit items-center gap-1 text-sm font-medium text-default underline underline-offset-2 hover:text-strong"
       >
         See pricing →
       </Link>

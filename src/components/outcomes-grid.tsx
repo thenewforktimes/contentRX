@@ -81,19 +81,24 @@ function Cell({
   visual: React.ReactNode;
   cta?: { href: string; label: string };
 }) {
+  // 2026-05-11 polish #2: visual block uses `flex-1 items-center
+  // justify-center` so it takes all remaining vertical space in the
+  // cell and centers its content. The prior `mt-auto pt-8` pushed
+  // the visual to the bottom, which dumped empty space at the top
+  // of cells with short content (Save time, Receipts).
   return (
     <li className="flex flex-col rounded-2xl border border-line bg-raised p-6 sm:p-8">
       <Eyebrow>{eyebrow}</Eyebrow>
       <p className="mt-3 text-lg font-semibold text-strong sm:text-xl">
         {headline}
       </p>
-      <div className="mt-auto flex flex-col items-stretch pt-8">
+      <div className="flex flex-1 flex-col items-center justify-center py-6">
         {visual}
       </div>
       {cta && (
         <Link
           href={cta.href}
-          className="mt-5 inline-flex w-fit items-center gap-1 text-sm font-medium text-default underline underline-offset-2 hover:text-strong"
+          className="inline-flex w-fit items-center gap-1 text-sm font-medium text-default underline underline-offset-2 hover:text-strong"
         >
           {cta.label} →
         </Link>
@@ -114,11 +119,13 @@ function Cell({
  *     vertical scale.
  *   - Bottom element: a single text/icon row at the same scale.
  *
- * Sizing calibration (2026-05-11 polish):
- *   - Stopwatch glyph: 48px (unchanged)
- *   - "Hours → Seconds" text: text-3xl sm:text-4xl (was 2xl/3xl)
- *   - "$39" anchor: text-4xl sm:text-5xl (was 5xl/6xl)
- *   - Surface icons: h-7 w-7 (unchanged)
+ * Sizing calibration (2026-05-11 polish, refined again 2026-05-11):
+ *   - Stopwatch glyph: 48px
+ *   - "Hours → Seconds" text: text-3xl sm:text-4xl
+ *   - "$39" anchor: text-3xl sm:text-4xl (matches the $39 in
+ *     OneApprovalCell so the same number doesn't render at two
+ *     different sizes on the same page)
+ *   - Surface icons: h-7 w-7
  *
  * Both visuals end up similar in total height and visual weight.
  */
@@ -157,7 +164,7 @@ function SaveMoneyCell() {
       visual={
         <div className="flex flex-col items-center gap-4 py-2">
           <p className="leading-none">
-            <span className="text-4xl font-bold tracking-tight text-accent-affirm-text sm:text-5xl">
+            <span className="text-3xl font-bold tracking-tight text-accent-affirm-text sm:text-4xl">
               $39
             </span>
             <span className="ml-1 text-base text-default sm:text-lg">

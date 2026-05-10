@@ -42,7 +42,7 @@ export function TrustCell() {
 
       <ul
         aria-label="Trust pages"
-        className="mt-auto grid grid-cols-2 gap-4 pt-8 sm:gap-5"
+        className="my-auto grid grid-cols-2 gap-4 py-6 sm:gap-5"
       >
         {LINKS.map((l) => (
           <li key={l.label}>

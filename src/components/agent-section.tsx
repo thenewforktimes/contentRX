@@ -41,12 +41,12 @@ export function AgentSection() {
       <p className="mt-2 text-sm text-default">
         A weekly digest. Zero LLM calls. On the Team plan.
       </p>
-      <div className="mt-auto pt-6">
+      <div className="flex flex-1 items-center justify-center py-6">
         <DigestMock />
       </div>
       <Link
         href="/dashboard/agent"
-        className="mt-5 inline-flex w-fit items-center gap-1 text-sm font-medium text-default underline underline-offset-2 hover:text-strong"
+        className="inline-flex w-fit items-center gap-1 text-sm font-medium text-default underline underline-offset-2 hover:text-strong"
       >
         Try the preview →
       </Link>
