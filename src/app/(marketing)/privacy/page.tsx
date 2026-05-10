@@ -1,16 +1,16 @@
 /**
  * /privacy — public privacy policy.
  *
- * Plain English first; legal scaffolding is the minimum needed for
- * GDPR/CCPA. The voice matches the rest of the public surface — direct,
- * specific, no boilerplate phrases like "your privacy is important
- * to us." If something matters less than the words around it, it
- * doesn't need to be here.
+ * Plain language first. Legal scaffolding is the minimum needed for
+ * GDPR/CCPA. Voice matches /ethics and /about: ContentRX-third-person,
+ * no em dashes, no semicolons, no colons in body sentences, no
+ * boilerplate phrases like "your privacy is important to us."
  *
  * Voice note for Robert: this is a starter draft. Have a lawyer review
- * before paid customers land — especially the data-rights section
- * and the subprocessor list (which must match exactly what you've
- * actually contracted with).
+ * before paid customers land. The sections that materially changed
+ * with ADR 2026-05-11 are "What ContentRX collects" (added the
+ * shared-strings bucket) and "Your rights" (replaced the calibration
+ * opt-out with the Flag-for-Review revocation path).
  */
 
 import type { Metadata } from "next";
@@ -18,13 +18,13 @@ import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
 import { Section } from "@/components/ui/section";
 
-const EFFECTIVE_DATE = "April 27, 2026";
+const EFFECTIVE_DATE = "May 10, 2026";
 const PRIVACY_EMAIL = "privacy@contentrx.io";
 
 export const metadata: Metadata = {
   title: "Privacy. ContentRX",
   description:
-    "What ContentRX collects, how it's used, who else sees it, and how to delete or export it. Plain language; legal precision where it matters.",
+    "What ContentRX collects, how it's used, who else sees it, and how to delete or export it. Plain language. Legal precision where it matters.",
 };
 
 export default function PrivacyPage() {
@@ -36,11 +36,12 @@ export default function PrivacyPage() {
         lede={
           <>
             ContentRX is a content-design review tool. To do that job,
-            we have to receive the strings you check, run them through
-            our evaluation engine (which uses Anthropic&apos;s Claude
-            models), and store enough of a record to bill you and to
-            show you your own history. This page lays out exactly what
-            flows where, who else sees it, and how to make us forget you.
+            ContentRX has to receive the strings you check, run them
+            through the evaluation engine (which uses Anthropic&apos;s
+            Claude models), and store enough of a record to bill you
+            and to show you your own history. This page lays out what
+            flows where, who else sees it, and how to delete or revoke
+            it.
           </>
         }
         meta={
@@ -51,16 +52,16 @@ export default function PrivacyPage() {
         }
       />
 
-      <Section title="What we collect">
-        <p>Three buckets:</p>
+      <Section title="What ContentRX collects">
+        <p>Four buckets.</p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>Account data.</strong> When you sign up, our
+            <strong>Account data.</strong> When you sign up, the
             authentication provider (Clerk) handles your email,
-            password, and session. If you upgrade to a paid plan, our
-            billing provider (Stripe) handles your card details. We
-            never see your password and we never store your card
-            number.
+            password, and session. If you upgrade to a paid plan, the
+            billing provider (Stripe) handles your card details.
+            ContentRX never sees your password and never stores your
+            card number.
           </li>
           <li>
             <strong>Content you submit for review.</strong> Every
@@ -70,9 +71,9 @@ export default function PrivacyPage() {
             ContentRX&apos;s own database, only a sha256 hash of the
             text persists. The plaintext is held in memory for the
             request lifecycle and then discarded. ContentRX retains
-            metadata for that hash: the verdict, severity, content
+            metadata for that hash. The verdict, severity, content
             type, file path (if your tool supplied one), and the
-            surface that called us.
+            surface that made the request.
           </li>
           <li>
             <strong>Strings you explicitly share via Flag for Review.</strong>
@@ -85,10 +86,10 @@ export default function PrivacyPage() {
             </Link>
             . Email{" "}
             <a
-              href="mailto:privacy@contentrx.io"
+              href={`mailto:${PRIVACY_EMAIL}`}
               className="underline underline-offset-2"
             >
-              privacy@contentrx.io
+              {PRIVACY_EMAIL}
             </a>
             {" "}to revoke a shared string at any time.
           </li>
@@ -102,27 +103,27 @@ export default function PrivacyPage() {
           </li>
         </ul>
         <p className="mt-3">
-          We do <strong>not</strong> collect: your IP address beyond
-          what&apos;s needed for short-window rate limiting, advertising
-          identifiers, or third-party tracking pixels.
+          ContentRX does <strong>not</strong> collect your IP address
+          beyond what is needed for short-window rate limiting, and
+          uses no advertising identifiers or third-party tracking pixels.
         </p>
       </Section>
 
-      <Section title="What we do with it">
+      <Section title="What ContentRX does with it">
         <p>
-          Account and billing data, to keep your account working and
-          send you the receipts you would expect.
+          Account and billing data keep your account working and send
+          you the receipts you would expect.
         </p>
         <p className="mt-3">
-          Content strings, to run the evaluation, return verdicts, and
+          Content strings run the evaluation, return verdicts, and
           (when you have explicitly shared a string via Flag for
           Review) inform the calibration log so the engine gets
           better. The hash stored for unshared strings supports
           dashboard history lookups without keeping the plaintext.
         </p>
         <p className="mt-3">
-          Telemetry, to fix bugs (Sentry), bill correctly (token
-          counts), enforce rate limits (Redis), and understand which
+          Telemetry fixes bugs (Sentry), bills correctly (token
+          counts), enforces rate limits (Redis), and tracks which
           public pages people read (Plausible). None of these
           subprocessors receive content strings.
         </p>
@@ -134,50 +135,50 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section title="What we won&apos;t do, in plain language">
+      <Section title="What ContentRX does not do, in plain language">
         <p>
-          Subscription is the entire revenue model. We don&apos;t make
-          money any other way; the things below are the lines we
-          won&apos;t cross to make up the difference.
+          Subscription is the entire revenue model. ContentRX does not
+          make money any other way. The bullets below are the lines
+          ContentRX will not cross to make up the difference.
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>We don&apos;t sell your strings.</strong> Hashed,
-            anonymised, or otherwise. No data-broker contract, no
-            advertiser arrangement.
+            <strong>ContentRX does not sell your strings.</strong>{" "}
+            Hashed, anonymised, or otherwise. No data-broker contract,
+            no advertiser arrangement.
           </li>
           <li>
-            <strong>We don&apos;t repackage your check history into
-            a profile</strong> of you, your team, or your industry
+            <strong>ContentRX does not repackage your check history
+            into a profile</strong> of you, your team, or your industry
             that gets marketed against you.
           </li>
           <li>
-            <strong>We don&apos;t use your content to train any
-            model</strong> (ours, Anthropic&apos;s, anyone&apos;s).
+            <strong>ContentRX does not use your content to train any
+            model</strong> (its own, Anthropic&apos;s, anyone&apos;s).
             Strings you share via Flag for Review feed a hand-curated
             calibration corpus. Nothing else does.
           </li>
           <li>
-            <strong>We don&apos;t share your strings with any third
-            party</strong> beyond the subprocessors named below.
+            <strong>ContentRX does not share your strings with any
+            third party</strong> beyond the subprocessors named below.
           </li>
           <li>
-            <strong>We don&apos;t run engagement-modelling
-            telemetry</strong> on how you use ContentRX. We track
-            check counts (because billing) and crash reports
-            (because bugs). Nothing else.
+            <strong>ContentRX does not run engagement-modelling
+            telemetry</strong> on how you use the product. The only
+            usage data tracked is check counts (because billing) and
+            crash reports (because bugs).
           </li>
         </ul>
         <p className="mt-4">
-          And the engineering layer behind that: every public route
-          that takes a string runs a pre-screen that refuses obvious
-          credentials and PII (credit card numbers, SSNs, AWS /
-          Stripe / OpenAI / Anthropic / GitHub keys) before they can
-          reach Anthropic, our error logs, or anyone&apos;s eyes.
-          Sentry events have request bodies and auth headers stripped
-          before send. The long-form version of this commitment, with
-          the rationale and the &ldquo;what changes if we ever change
-          our mind&rdquo; path, is at{" "}
+          The engineering layer behind that. Every public route that
+          takes a string runs a pre-screen that refuses obvious
+          credentials and PII (credit card numbers, SSNs, AWS, Stripe,
+          OpenAI, Anthropic, GitHub keys) before they can reach
+          Anthropic, the error logs, or anyone&apos;s eyes. Sentry
+          events have request bodies and auth headers stripped before
+          send. The long-form version of this commitment, with the
+          rationale and the &ldquo;what changes if ContentRX ever
+          changes its mind&rdquo; path, lives at{" "}
           <Link href="/ethics" className="underline underline-offset-2">
             /ethics
           </Link>
@@ -188,7 +189,7 @@ export default function PrivacyPage() {
       <Section title="Who else sees it (subprocessors)">
         <p>
           Running ContentRX requires partners. Each one sees only the
-          data it needs for the job we&apos;re paying it to do.
+          data it needs for the job ContentRX is paying it to do.
         </p>
         <table className="mt-4 w-full text-sm">
           <thead>
@@ -227,7 +228,7 @@ export default function PrivacyPage() {
             <SubprocessorRow
               name="Resend"
               purpose="Transactional email"
-              data="Your email address and the message body we send to you."
+              data="Your email address and the message body ContentRX sends to you."
             />
             <SubprocessorRow
               name="Sentry"
@@ -252,15 +253,15 @@ export default function PrivacyPage() {
           </tbody>
         </table>
         <p className="mt-4">
-          We&apos;ll update this list within 30 days of any change. If a
-          new subprocessor would meaningfully change what data we
-          share, we&apos;ll post about it in advance.
+          ContentRX updates this list within 30 days of any change. If
+          a new subprocessor would meaningfully change what data is
+          shared, ContentRX posts about it in advance.
         </p>
       </Section>
 
       <Section title="Where the data lives">
         <p>
-          Our application data lives in US-region Supabase Postgres.
+          Application data lives in US-region Supabase Postgres.
           Anthropic processes content in its own infrastructure under
           its standard API policy. Vercel runs functions in regions
           close to your users.
@@ -269,137 +270,115 @@ export default function PrivacyPage() {
           If you have a regulatory requirement for EU-region data
           residency or specific retention guarantees from any of the
           subprocessors named above, email{" "}
-          <code>{PRIVACY_EMAIL}</code> before signing up. We&apos;ll
-          be straight with you about whether we can meet it today.
+          <code>{PRIVACY_EMAIL}</code> before signing up. ContentRX
+          will be straight with you about whether the requirement can
+          be met today.
         </p>
       </Section>
 
-      <Section title="How long we keep it">
+      <Section title="How long ContentRX keeps it">
         <p>
-          While your account is active, we keep the data described
-          above for as long as it&apos;s useful to you and to us.
-          What happens when you stop being a customer depends on
-          which kind of customer you were.
+          While your account is active, the data described above
+          sticks around for as long as it is useful to you and to
+          ContentRX.
         </p>
         <p className="mt-3">
-          <strong>If you&apos;re on a paid plan and you cancel:</strong>{" "}
-          your account stays intact for 90 days so you can reactivate
-          without losing your team setup. After that grace period we
-          run a one-time pseudonymization pass:
-        </p>
-        <ul className="mt-3 ml-5 list-disc space-y-2">
-          <li>
-            <strong>Deleted.</strong> Your team rules, custom
-            examples, team-member records, and outstanding team
-            invitations. These are the configuration you and your
-            team built up over time; once you&apos;ve been gone for 90
-            days they&apos;re removed entirely.
-          </li>
-          <li>
-            <strong>Anonymized, not deleted.</strong> Historical
-            violation hashes and override records have their{" "}
-            <code>user_id</code> set to null. The hashed text and the
-            verdicts stay in our database (they fed engine
-            calibration during your time as a customer), but the link
-            back to you is severed.
-          </li>
-          <li>
-            <strong>Cleared.</strong> Email, API key, and Stripe
-            customer ID on your <code>users</code> row are replaced
-            with sentinels. The row stays so foreign-key references
-            in the anonymized history remain valid.
-          </li>
-        </ul>
-        <p className="mt-3">
-          <strong>If you&apos;re on the free plan</strong>, no
-          cancellation event ever fires, so the automated 90-day
-          pass doesn&apos;t apply. Your account sits idle until you
-          explicitly delete it (see &ldquo;Your rights&rdquo; below).
-          We may eventually add an inactivity-based cleanup; if we
-          do, the policy will say so before it runs.
-        </p>
-        <p className="mt-3">
-          <strong>If you delete on demand</strong>, the same
-          pseudonymization runs immediately rather than after 90 days.
-          You can do this yourself from{" "}
-          <Link
-            href="/dashboard/settings"
-            className="underline underline-offset-2"
-          >
-            /dashboard/settings
+          <strong>Strings you shared via Flag for Review</strong>{" "}
+          stay in the calibration corpus until you revoke them. To
+          revoke a specific string, email{" "}
+          <a href={`mailto:${PRIVACY_EMAIL}`} className="underline underline-offset-2">
+            {PRIVACY_EMAIL}
+          </a>
+          {" "}with rough timing and source surface. Your shared-strings
+          list at{" "}
+          <Link href="/dashboard/shared" className="underline underline-offset-2">
+            /dashboard/shared
           </Link>
-          . The Privacy panel has a &ldquo;Delete my account&rdquo;
-          flow that cancels your subscription, pseudonymizes your
-          data, and removes your Clerk login in a single call. A few
-          records have legally required retention (Stripe receipts at
-          7 years for tax, fraud-prevention logs); we&apos;ll tell you
-          specifically which when you ask.
+          {" "}is the canonical record of what ContentRX has on you
+          from that consent flow.
+        </p>
+        <p className="mt-3">
+          <strong>To delete your account entirely</strong>, email{" "}
+          <a href={`mailto:${PRIVACY_EMAIL}`} className="underline underline-offset-2">
+            {PRIVACY_EMAIL}
+          </a>
+          . ContentRX will cancel any active subscription, anonymize
+          historical violation hashes and override records (the{" "}
+          <code>user_id</code> is set to null so engine calibration
+          retains the signal but the link back to you is severed),
+          delete any Flag-for-Review shares, clear identifiers on
+          your account row, and delete your Clerk login.
+        </p>
+        <p className="mt-3">
+          Some records have legally required retention. Stripe
+          receipts run 7 years for tax. Fraud-prevention logs run
+          shorter. ContentRX will tell you specifically what stays
+          and why when you ask.
         </p>
       </Section>
 
       <Section title="Your rights">
-        <p>If you&apos;re a customer or end-user, you can:</p>
+        <p>
+          Everything below routes through{" "}
+          <a href={`mailto:${PRIVACY_EMAIL}`} className="underline underline-offset-2">
+            {PRIVACY_EMAIL}
+          </a>
+          . ContentRX responds within 30 days.
+        </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            <strong>See what we have on you.</strong> Email{" "}
-            <code>{PRIVACY_EMAIL}</code> and we&apos;ll send back a
-            machine-readable export within 30 days.
+            <strong>See what ContentRX has on you.</strong> Email the
+            address above. ContentRX will respond with the records
+            it holds.
           </li>
           <li>
             <strong>Correct it.</strong> Most fields are editable from
-            the dashboard. For anything that isn&apos;t, ask us.
+            the dashboard. For anything that is not, ask.
           </li>
           <li>
-            <strong>Delete it</strong> from{" "}
-            <Link
-              href="/dashboard/settings"
-              className="underline underline-offset-2"
-            >
-              /dashboard/settings
+            <strong>Delete your account.</strong> Email the address
+            above with subject{" "}
+            <code>[DELETE]</code>. ContentRX runs the deletion
+            sequence described in &ldquo;How long ContentRX keeps
+            it.&rdquo;
+          </li>
+          <li>
+            <strong>Export your data.</strong> Email the address above
+            with subject{" "}
+            <code>[EXPORT]</code>. ContentRX will respond within 30
+            days.
+          </li>
+          <li>
+            <strong>Revoke a string you shared via Flag for Review.</strong>
+            {" "}Email the address above with rough timing and source
+            surface. ContentRX deletes the row and any record that
+            string produced in the calibration log. Your{" "}
+            <Link href="/dashboard/shared" className="underline underline-offset-2">
+              /dashboard/shared
             </Link>
-            . The &ldquo;Delete my account&rdquo; flow under the
-            Privacy panel cancels your subscription, pseudonymizes
-            your data, and removes your Clerk login in a single call.
-            The deliberate friction is a typed-confirm input
-            (<code>DELETE</code>) so it doesn&apos;t
-            happen by accident. Some records (Stripe receipts,
-            fraud-prevention logs) may have longer legally required
-            retention; we&apos;ll tell you specifically which if you
-            ask.
-          </li>
-          <li>
-            <strong>Export it.</strong> Same address; subject line{" "}
-            <code>[EXPORT]</code>.
-          </li>
-          <li>
-            <strong>Opt out of calibration contributions.</strong>{" "}
-            Already off by default. Verify on the{" "}
-            <Link href="/dashboard" className="underline underline-offset-2">
-              dashboard
-            </Link>{" "}
-            or via the MCP <code>custom_example_*</code> tools.
+            {" "}page lists every string ContentRX is holding on this
+            path.
           </li>
         </ul>
       </Section>
 
       <Section title="Cookies">
         <p>
-          The only cookie we set ourselves is the Clerk authentication
-          session: strictly necessary, expires when you sign out.
-          Plausible is cookieless. We don&apos;t use third-party
-          analytics, ad networks, or tracking pixels. If you&apos;re
-          seeing a cookie banner request from a regulator, the
-          honest answer is &ldquo;we don&apos;t need one, but tell us
-          and we&apos;ll add it.&rdquo;
+          The only cookie ContentRX sets is the Clerk authentication
+          session. Strictly necessary, expires when you sign out.
+          Plausible is cookieless. ContentRX does not use third-party
+          analytics, ad networks, or tracking pixels. If a regulator
+          asks for a cookie banner, the honest answer is &ldquo;not
+          needed today, but tell ContentRX and one will land.&rdquo;
         </p>
       </Section>
 
       <Section title="Children">
         <p>
-          ContentRX is a B2B tool. We don&apos;t target it at, or
+          ContentRX is a B2B tool. ContentRX does not target it at, or
           knowingly accept accounts from, anyone under 16. If a parent
           or guardian believes their child has signed up, email{" "}
-          <code>{PRIVACY_EMAIL}</code> and we&apos;ll delete the
+          <code>{PRIVACY_EMAIL}</code> and ContentRX will delete the
           account.
         </p>
       </Section>
@@ -416,7 +395,7 @@ export default function PrivacyPage() {
       <Section title="Questions">
         <p>
           Email <code>{PRIVACY_EMAIL}</code>. The same address handles
-          GDPR/CCPA requests, DPA inquiries, and subprocessor-list
+          GDPR and CCPA requests, DPA inquiries, and subprocessor-list
           questions. For security-specific reports, the{" "}
           <Link href="/security" className="underline underline-offset-2">
             security disclosure policy

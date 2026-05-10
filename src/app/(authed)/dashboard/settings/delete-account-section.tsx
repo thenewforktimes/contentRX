@@ -92,8 +92,11 @@ export function DeleteAccountSection() {
           charged.
         </li>
         <li>
-          Team rules, custom examples, team members, and team
-          invitations are deleted.
+          Team rules, team members, and team invitations are deleted.
+        </li>
+        <li>
+          Strings you shared via Flag for Review are deleted from the
+          calibration log.
         </li>
         <li>
           Historical violation hashes and override records have your

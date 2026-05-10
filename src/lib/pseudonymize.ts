@@ -1,36 +1,38 @@
 /**
  * Pseudonymization helper. The DB-side pass that turns one user row
- * into an anonymized historical artifact:
+ * into an anonymized historical artifact.
  *
- *   1. Detach personal attribution from training-relevant rows
- *      (`violations`, `violation_overrides`, `customer_flagged_reviews`)
- *      by setting their `user_id` to null. The hashed text + verdicts
- *      stay so engine calibration retains the signal; the link back
- *      to the person is gone.
+ *   1. Detach personal attribution from anonymizable rows
+ *      (`violations`, `violation_overrides`) by setting their
+ *      `user_id` to null. The hashed text and verdicts stay so engine
+ *      calibration retains the signal but the link back to the
+ *      person is gone.
  *
- *   2. Delete team-scoped rows that exist only because the user was
+ *   2. Delete rows whose existence depends on a specific consent
+ *      grant by this user: `customer_flagged_reviews` (per ADR
+ *      2026-05-11, the row IS the consent record). Account deletion
+ *      revokes those grants.
+ *
+ *   3. Delete team-scoped rows that exist only because the user was
  *      operating ContentRX as a team owner: `team_rules`,
  *      `team_members`, `team_invitations`. No engine-training value,
  *      and PII-adjacent because they reference the user's workflow.
  *
- *   3. Replace identifiers on the `users` row with sentinel values.
+ *   4. Replace identifiers on the `users` row with sentinel values.
  *      `users.email` is NOT NULL + UNIQUE, so the sentinel is keyed
  *      on the user id (`pseudonymized-{id}@deleted.contentrx.io`) so
  *      uniqueness is preserved without a schema change. The API key
  *      hash + prefix + Stripe customer id + Ditto key are cleared
  *      outright. `pseudonymizedAt` is set last so a partial failure
- *      leaves the user in a recoverable state — the next run picks
- *      up where this one left off.
+ *      leaves the user in a recoverable state. The next run picks up
+ *      where this one left off.
  *
- * Two callers:
- *   - `POST /api/cron/pseudonymize-cancelled` — 90-day retention
- *     pass for cancelled subscriptions.
- *   - `POST /api/dashboard/delete-account` — on-demand delete from
- *     the dashboard. Wraps Stripe cancellation + Clerk delete around
- *     this helper so the user is fully retired in one call.
+ * Callers: `POST /api/dashboard/delete-account` is the in-product
+ * surface today. `POST /api/cron/pseudonymize-cancelled` exists as a
+ * route but is not currently scheduled in `vercel.json`.
  *
- * This module is the DB-only concern. Stripe/Clerk side-effects live
- * at their respective call sites.
+ * This module is the DB-only concern. Stripe and Clerk side-effects
+ * live at the respective call sites.
  */
 
 import { eq } from "drizzle-orm";
@@ -55,9 +57,13 @@ export async function pseudonymizeUser(userId: string): Promise<void> {
     .set({ userId: null })
     .where(eq(schema.violationOverrides.userId, userId));
 
+  // Per ADR 2026-05-11 the customer flagged reviews row represents a
+  // specific consent grant by this user. When the account is deleted,
+  // the grant is meaningless. Delete the rows entirely rather than
+  // anonymizing them. (Other historical tables retain the signal in
+  // anonymized form. The consent path is different in kind.)
   await db
-    .update(schema.customerFlaggedReviews)
-    .set({ userId: null })
+    .delete(schema.customerFlaggedReviews)
     .where(eq(schema.customerFlaggedReviews.userId, userId));
 
   // 2. Delete team-scoped rows.
