@@ -23,8 +23,6 @@ CREATE TABLE users (
   api_key_created_at timestamptz,
   stripe_customer_id text UNIQUE,
   ditto_api_key_encrypted text,
-  preference_opted_out_at timestamptz,
-  pseudonymized_at timestamptz,
   daily_cost_threshold_usd numeric(10, 2) NOT NULL DEFAULT 50.00,
   monthly_cost_threshold_usd numeric(10, 2) NOT NULL DEFAULT 500.00,
   cost_pause_active boolean NOT NULL DEFAULT false,
@@ -121,9 +119,6 @@ CREATE TABLE violation_overrides (
   override_status_updated_by text REFERENCES users(id) ON DELETE SET NULL,
   override_status_updated_at timestamptz,
   override_status_notes text,
-  contribute_upstream boolean NOT NULL DEFAULT false,
-  text text,
-  exported_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -214,3 +209,113 @@ CREATE TABLE overage_state (
 
 CREATE UNIQUE INDEX overage_state_user_month_idx
   ON overage_state (user_id, month);
+
+-- rationale_feedback ----------------------------------------------------
+-- Pure user feedback loop (Session 21). The test harness models it so
+-- pseudonymize_user's DELETE step doesn't fail on a missing table.
+CREATE TABLE rationale_feedback (
+  id text PRIMARY KEY,
+  user_id text REFERENCES users(id) ON DELETE SET NULL,
+  team_id text REFERENCES users(id) ON DELETE SET NULL,
+  text_hash text NOT NULL,
+  hop_step text NOT NULL,
+  original_value text NOT NULL,
+  corrected_value text,
+  correction_type text NOT NULL,
+  note text,
+  source text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- suggestion_candidates -------------------------------------------------
+-- Engine-output popularity signal (ADR 2026-04-29, narrowed by ADR
+-- 2026-05-11). pseudonymize_user deletes rows scoped to the user.
+CREATE TABLE suggestion_candidates (
+  id text PRIMARY KEY,
+  moment text,
+  content_type text,
+  standard_id text,
+  source text NOT NULL,
+  source_user_id text REFERENCES users(id) ON DELETE SET NULL,
+  source_team_owner_user_id text REFERENCES users(id) ON DELETE SET NULL,
+  input_hash text NOT NULL,
+  candidate_text text,
+  issue_context text,
+  share_upstream boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'pending',
+  reviewed_by text REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- team_rules ------------------------------------------------------------
+CREATE TABLE team_rules (
+  id text PRIMARY KEY,
+  team_owner_user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  standard_id text NOT NULL,
+  action text NOT NULL,
+  rule_json jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- team_members ----------------------------------------------------------
+CREATE TABLE team_members (
+  id text PRIMARY KEY,
+  team_owner_user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  member_user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role text NOT NULL DEFAULT 'member',
+  invited_at timestamptz NOT NULL DEFAULT now(),
+  accepted_at timestamptz
+);
+
+-- team_invitations ------------------------------------------------------
+CREATE TABLE team_invitations (
+  id text PRIMARY KEY,
+  team_owner_user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  email text NOT NULL,
+  token text NOT NULL UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL,
+  accepted_at timestamptz,
+  accepted_by_member_user_id text REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- agent_runs ------------------------------------------------------------
+CREATE TABLE agent_runs (
+  id text PRIMARY KEY,
+  team_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  run_at timestamptz NOT NULL DEFAULT now(),
+  window_days integer NOT NULL,
+  total_flags integer NOT NULL,
+  header_variant text NOT NULL,
+  payload jsonb NOT NULL
+);
+
+-- agent_github_installations --------------------------------------------
+CREATE TABLE agent_github_installations (
+  id text PRIMARY KEY,
+  team_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  github_installation_id integer NOT NULL,
+  github_account_login text NOT NULL,
+  github_account_type text NOT NULL,
+  target_repo_owner text NOT NULL,
+  target_repo_name text NOT NULL,
+  target_branch text NOT NULL DEFAULT 'main',
+  last_pr_number integer,
+  last_pr_url text,
+  last_pr_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- credit_packs ----------------------------------------------------------
+CREATE TABLE credit_packs (
+  id text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  stripe_invoice_item_id text NOT NULL UNIQUE,
+  credits_total integer NOT NULL,
+  credits_used integer NOT NULL DEFAULT 0,
+  purchased_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL
+);

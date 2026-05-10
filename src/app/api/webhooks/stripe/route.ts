@@ -312,11 +312,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const db = getDb();
 
   // Mark the subscription row canceled so the partial unique index on
-  // active subscriptions stops blocking future upgrades. Stamp
-  // `cancelledAt` so the pseudonymize-cancelled cron has a date to
-  // window against — the 90-day customer-data retention promise (see
-  // decisions/2026-04-28-customer-not-product.md and
-  // src/db/schema.ts:261-265) depends on this column being non-null.
+  // active subscriptions stops blocking future upgrades. `cancelledAt`
+  // is stamped for audit (it surfaces in /admin and downstream
+  // reports). Per the 2026-05-10 cleanup there is no auto-retention
+  // cron; customers initiate deletion themselves from
+  // /dashboard/settings.
   await db
     .update(schema.subscriptions)
     .set({ status: "canceled", cancelledAt: new Date() })
@@ -443,9 +443,9 @@ async function upsertSubscription(args: {
     // mid-migration weirdness where a previous sub's deletion event
     // hasn't arrived yet.
     if (entitled) {
-      // Same `cancelledAt` stamp as handleSubscriptionDeleted — the
-      // pseudonymize-cancelled cron filters on this column, so a
-      // canceled-mid-migration row needs a date too.
+      // Same `cancelledAt` stamp as handleSubscriptionDeleted so the
+      // column reflects when the row was actually canceled, even
+      // mid-migration.
       await db
         .update(schema.subscriptions)
         .set({ status: "canceled", cancelledAt: new Date() })

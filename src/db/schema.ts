@@ -70,17 +70,6 @@ export const users = pgTable("users", {
   // user re-subscribes later.
   stripeCustomerId: text("stripe_customer_id").unique(),
   dittoApiKeyEncrypted: text("ditto_api_key_encrypted"),
-  // PR-31 (90-day retention). Set by the
-  // /api/cron/pseudonymize-cancelled job when this user's
-  // subscription has been cancelled for >= 90 days AND no other
-  // active subscription exists. Once set: email + apiKeyHash +
-  // apiKeyPrefix have been replaced with sentinels, team-scoped
-  // rows have been deleted, and historical violations /
-  // violation_overrides have userId set to null.
-  // Reactivation post-pseudonymize is a cold start — the user
-  // appears as a fresh signup to themselves, but their anonymized
-  // signal continues to feed engine calibration.
-  pseudonymizedAt: timestamp("pseudonymized_at", { withTimezone: true }),
   // Cost monitor (Phase 1, pre-pilot launch). Daily and monthly thresholds
   // for runaway-script detection. Defaults are anomaly-catching, not
   // normal-usage-capping — Free/Pro at typical Anthropic rates of

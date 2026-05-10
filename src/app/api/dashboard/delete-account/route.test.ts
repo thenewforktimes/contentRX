@@ -5,8 +5,8 @@
  * pseudonymizeUser, getDb) and exercises the orchestration logic:
  * auth → confirmation validation → Stripe cancel → pseudonymize →
  * Clerk delete. The pseudonymize helper itself is exercised
- * indirectly via the cron (production traffic) and via the simple
- * 8-Drizzle-call shape that's small enough to verify by code review.
+ * against a pglite-backed DB in `src/lib/pseudonymize.test.ts`,
+ * which asserts the hard-delete semantics on every attributed table.
  *
  * Mock pattern: ref objects mutated by tests, with vi.mock factories
  * closing over them. Mocks themselves are created inside the

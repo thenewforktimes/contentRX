@@ -67,6 +67,14 @@ const TABLES_TO_RESET = [
   "overage_state",
   "usage",
   "subscriptions",
+  "rationale_feedback",
+  "suggestion_candidates",
+  "team_rules",
+  "team_members",
+  "team_invitations",
+  "agent_runs",
+  "agent_github_installations",
+  "credit_packs",
   "users",
 ] as const;
 

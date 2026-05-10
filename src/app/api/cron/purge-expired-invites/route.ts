@@ -8,8 +8,8 @@
  * which is a soft footgun if the same email later needs a fresh
  * invite. Nightly cron is plenty — there's no urgency.
  *
- * Wiring: same CRON_SECRET pattern as pseudonymize-cancelled. Add a
- * scheduler entry in `.github/workflows/` (or vercel.ts cron) that
+ * Wiring: same CRON_SECRET pattern as the other cron endpoints. Add
+ * a scheduler entry in `.github/workflows/` (or vercel.ts cron) that
  * POSTs once a day.
  */
 

@@ -10,20 +10,18 @@
  * holds on its side (Stripe's tax/legal retention, not ContentRX's
  * choice).
  *
- * The function is named `pseudonymizeUser` for backwards-compatibility
- * with existing callers (the cron route and the dashboard delete
- * route both import this name). The semantics moved from
- * pseudonymize-then-keep to delete-everything.
+ * The function is named `pseudonymizeUser` for symmetry with the
+ * original pseudonymize-then-keep helper. The semantics moved to
+ * delete-everything (2026-05-10); the name stays because the
+ * dashboard caller already imports it under that name.
  *
  * Order matters: tables with FK references to `users.id` are
  * deleted before the users row itself so explicit deletes leave
  * no orphans. Tables that cascade-on-delete (team_members,
  * team_rules, team_invitations) auto-clear when the users row goes.
  *
- * Two callers:
- *   - `POST /api/dashboard/delete-account` — the in-product surface.
- *   - `POST /api/cron/pseudonymize-cancelled` — the route exists but
- *     is not currently scheduled in `vercel.json`.
+ * Sole caller: `POST /api/dashboard/delete-account`. The customer
+ * owns the trigger. No auto-pseudonymize cron runs.
  *
  * This module is the DB-only concern. Stripe and Clerk side-effects
  * live at the respective call sites.
