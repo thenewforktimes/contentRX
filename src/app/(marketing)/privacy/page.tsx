@@ -94,11 +94,12 @@ export default function PrivacyPage() {
             {" "}to revoke a shared string at any time.
           </li>
           <li>
-            <strong>Usage and operational telemetry</strong>. Check
-            counts per month for billing. API token usage for cost
-            accounting. Error reports captured by Sentry. Anonymous
-            page-view metrics from Plausible. Rate-limit counters in
-            Upstash Redis.
+            <strong>Usage and operational telemetry</strong>.
+            ContentRX counts your checks per month for billing.
+            ContentRX tracks API token usage for cost accounting.
+            Sentry captures error reports. Plausible collects
+            anonymous page-view metrics. Upstash Redis stores
+            rate-limit counters.
           </li>
         </ul>
         <p className="mt-3">
