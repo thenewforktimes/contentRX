@@ -44,13 +44,10 @@ import { Pill } from "@/components/ui/pill";
 
 export function OutcomesGrid() {
   return (
-    <section
-      id="outcomes"
-      className="mt-16 border-t border-line pt-10 scroll-mt-16"
-    >
+    <section id="outcomes" className="mt-20 scroll-mt-16">
       <Eyebrow>Outcomes</Eyebrow>
       <h2 className="mt-2 text-2xl font-semibold text-strong sm:text-3xl">
-        Why teams pick this.
+        Why teams pick ContentRX.
       </h2>
 
       <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
@@ -105,15 +102,35 @@ function Cell({
   );
 }
 
+/**
+ * Save time + Save money are paired in the top row of the grid.
+ * Their visuals follow an identical scaffold so the row reads as
+ * one cohesive system:
+ *
+ *   - Inner flex container: `flex flex-col items-center gap-4 py-2`
+ *     (no `justify-center` divergence between the two cells).
+ *   - Top element: a single visual moment (stopwatch glyph in
+ *     SaveTime, $39 anchor in SaveMoney) at roughly the same
+ *     vertical scale.
+ *   - Bottom element: a single text/icon row at the same scale.
+ *
+ * Sizing calibration (2026-05-11 polish):
+ *   - Stopwatch glyph: 48px (unchanged)
+ *   - "Hours → Seconds" text: text-3xl sm:text-4xl (was 2xl/3xl)
+ *   - "$39" anchor: text-4xl sm:text-5xl (was 5xl/6xl)
+ *   - Surface icons: h-7 w-7 (unchanged)
+ *
+ * Both visuals end up similar in total height and visual weight.
+ */
 function SaveTimeCell() {
   return (
     <Cell
       eyebrow="Save time"
       headline="Reviews in seconds, not hours."
       visual={
-        <div className="flex flex-col items-center justify-center gap-4 py-2">
+        <div className="flex flex-col items-center gap-4 py-2">
           <StopwatchGlyph />
-          <div className="flex items-center gap-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+          <div className="flex items-center gap-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             <span className="text-quiet line-through decoration-2 decoration-quiet/60">
               Hours
             </span>
@@ -129,10 +146,9 @@ function SaveTimeCell() {
 }
 
 function SaveMoneyCell() {
-  // Six surface icons (Dashboard paste mode + MCP + LSP + GitHub
-  // Action + CLI + Figma plugin) so the row matches SurfacesGrid
-  // and IntegrationRow at the top of the page. Icon size bumped
-  // h-5 → h-7; the prior size read as a footnote.
+  // Six surface icons (Dashboard + MCP + LSP + GitHub Action + CLI
+  // + Figma plugin) so the row matches SurfacesGrid and
+  // IntegrationRow at the top of the page.
   return (
     <Cell
       eyebrow="Save money"
@@ -141,7 +157,7 @@ function SaveMoneyCell() {
       visual={
         <div className="flex flex-col items-center gap-4 py-2">
           <p className="leading-none">
-            <span className="text-5xl font-bold tracking-tight text-accent-affirm-text sm:text-6xl">
+            <span className="text-4xl font-bold tracking-tight text-accent-affirm-text sm:text-5xl">
               $39
             </span>
             <span className="ml-1 text-base text-default sm:text-lg">

@@ -143,11 +143,11 @@ export default function AccuracyPage() {
       </section>
 
       {/* Named-byline. The accuracy methodology is the named-
-          author's claim; the byline is the proof. Uses the `card`
-          variant — accuracy methodology binds tightly to the named
-          author and earns the bigger treatment. */}
+          author's claim; the byline is the proof. Accuracy
+          methodology binds tightly to the named author and earns
+          the byline closer. */}
       <div className="mt-16">
-        <AuthorBlock variant="card" />
+        <AuthorBlock />
       </div>
 
       <footer className="mt-12 text-xs text-quiet">

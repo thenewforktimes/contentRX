@@ -77,7 +77,7 @@ export default function InstallPage() {
       <Section
         id="paste"
         eyebrow="No install"
-        title="Dashboard paste mode. Sign in, paste, get the review"
+        title="Dashboard. Sign in, paste, get the review"
       >
         <p>
           The dashboard&apos;s paste-mode surface handles the same

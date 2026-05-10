@@ -165,13 +165,12 @@ export default function AboutPage() {
           model is one designer's judgment. Closing on the byline
           binds the claim to the named author.
 
-          Uses the `card` variant (the bigger 2-col block with the
-          monogram) — the about page is where the byline IS the
-          section, so the bigger treatment earns its place. The
-          landing's default switched to the compact byline as of
-          2026-05-10 to lower the founder-credit's hero weight. */}
+          2026-05-11: AuthorBlock simplified to a single card render
+          (compact variant cut after the landing dropped its byline).
+          /about and /accuracy are the two surfaces where the byline
+          earns its place. */}
       <div className="mt-16">
-        <AuthorBlock variant="card" />
+        <AuthorBlock />
       </div>
     </main>
   );

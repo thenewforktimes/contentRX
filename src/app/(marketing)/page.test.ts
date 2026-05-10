@@ -45,18 +45,11 @@ function visibleCopy(source: string): string {
 describe("landing page (src/app/(marketing)/page.tsx)", () => {
   const source = readSource("src/app/(marketing)/page.tsx");
   const visible = visibleCopy(source);
-  // 2026-05-06 design refresh: the named-author block was extracted
-  // into its own component (`src/components/author-block.tsx`) so
-  // /home and /about share the byline. Tests that previously asserted
-  // on inline page copy now read the component source too.
-  const authorBlockVisible = visibleCopy(
-    readSource("src/components/author-block.tsx"),
-  );
   // 2026-05-10 design refresh: the weekly review agent block was
   // extracted into `src/components/agent-section.tsx` so the digest
   // mock and value-prop copy live alongside each other. Tests that
   // previously asserted on inline page copy now read the agent-
-  // section source the same way they read the author-block source.
+  // section source.
   const agentSectionVisible = visibleCopy(
     readSource("src/components/agent-section.tsx"),
   );
@@ -144,26 +137,14 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(visible).not.toMatch(/easier to adopt.{1,4}safer to ship/i);
   });
 
-  it("home byline leads with the staff-content-designer claim", () => {
-    // 2026-05-05: bio reordered to lead with credentialing before
-    // the name. 2026-05-06: the bio moved into <AuthorBlock> so the
-    // structural claim now lives in the component, not inline on the
-    // page. The claim still hooks readers who don't know who Robert
-    // is yet — it just renders through the component.
-    expect(source).toContain("AuthorBlock");
-    expect(authorBlockVisible).toMatch(/staff content designer/i);
-  });
-
-  it("names the four orgs in the founder credit (Intuit, Meta, Opendoor, PayPal)", () => {
-    // The named-expert positioning hinges on the org arc. If a
-    // future edit drops one of these, the credibility surface
-    // narrows. After 2026-05-06 the arc lives in <AuthorBlock>'s
-    // CAREER_ARC array; the test reads the component source.
-    for (const org of ["Intuit", "Meta", "Opendoor", "PayPal"]) {
-      expect(authorBlockVisible).toContain(org);
-    }
-    // Robert's name lives in the AuthorBlock's display copy.
-    expect(authorBlockVisible).toMatch(/Robert\s+Ballard/);
+  it("home page no longer renders the AuthorBlock byline", () => {
+    // 2026-05-11: the named-author byline was cut from the landing
+    // page. /about and /accuracy still surface it (those pages are
+    // ABOUT the model, so the byline earns its place). Anti-
+    // regression: the landing should not re-import or re-render
+    // AuthorBlock without an explicit ADR.
+    expect(visible).not.toContain("AuthorBlock");
+    expect(visible).not.toMatch(/Robert Ballard/);
   });
 
   it("links the public accountability surface from the body copy", () => {
@@ -210,7 +191,7 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(source).toContain("SurfacesGrid");
     const gridSource = readSource("src/components/surfaces-grid.tsx");
     for (const surface of [
-      "Dashboard paste mode",
+      "Dashboard",
       "MCP server",
       "LSP server",
       "CLI",
@@ -245,17 +226,15 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(agentSectionVisible).toMatch(/Accessibility/);
   });
 
-  it("lower fold sits in the order Surfaces → Outcomes → Author in page.tsx", () => {
-    // 2026-05-11 six-cell rebuild: page.tsx's lower fold collapses
-    // to three ordered beats — SurfacesGrid, OutcomesGrid (the six
-    // quadrant cells), AuthorBlock. The agent / one-approval / trust
-    // cells used to be siblings; they now live INSIDE OutcomesGrid.
+  it("lower fold sits in the order Surfaces → Outcomes in page.tsx", () => {
+    // 2026-05-11 final polish: page.tsx's lower fold is just two
+    // ordered beats — SurfacesGrid, OutcomesGrid (the six quadrant
+    // cells). The author byline got cut; agent / one-approval /
+    // trust cells live INSIDE OutcomesGrid.
     const surfacesIdx = visible.indexOf("SurfacesGrid");
     const outcomesIdx = visible.indexOf("OutcomesGrid");
-    const authorIdx = visible.indexOf("<AuthorBlock");
     expect(surfacesIdx).toBeGreaterThan(-1);
     expect(outcomesIdx).toBeGreaterThan(surfacesIdx);
-    expect(authorIdx).toBeGreaterThan(outcomesIdx);
   });
 
   it("OutcomesGrid renders the six cells in row order", () => {

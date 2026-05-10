@@ -84,6 +84,11 @@ describe("/install page source", () => {
     // mode surface) and the chip nav adds a Dashboard chip pointing
     // at the new section.
     expect(visible).toContain('href="/dashboard/explain"');
-    expect(visible).toMatch(/Dashboard paste mode/i);
+    // 2026-05-11: surface renamed "Dashboard paste mode" → "Dashboard"
+    // (the "paste mode" qualifier added noise; the description
+    // already explains the no-install paste workflow). The
+    // structural pin loosens to "Dashboard" + paste-flow language
+    // somewhere in the section.
+    expect(visible).toMatch(/Dashboard\.\s+Sign in, paste/i);
   });
 });

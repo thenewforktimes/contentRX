@@ -1,49 +1,40 @@
 /**
- * Landing page — 2026-05-10 lower-fold quadrant rebuild.
- *
- * Robo's review on the prior pass: the lower-fold sections felt
- * shabby compared to the upper sections. The hero, integration row,
- * How-it-works panel, and SurfacesGrid each had a distinct visual
- * treatment; below that, three card-grids in a row read as text
- * documents.
- *
- * This pass converts the lower fold to a 2x2 product-quadrant
- * pattern (modeled on Apple's homepage product cells). Each cell
- * has a hero visual filling its bottom half, sparse copy on top,
- * a single-verb eyebrow label, and (where relevant) one CTA pill.
+ * Landing page — 2026-05-11 final polish pass.
  *
  * Section order:
  *   1. Hero — wordmark + brand promise + verdict mock
  *   2. Integration row — chip strip
  *   3. How it works — animated pipeline panel, dot-grid bg
  *   4. Where it runs — 6 surface cards (SurfacesGrid)
- *   5. Outcomes — 2x2 quadrant: Save time / Save money /
- *      Stay consistent / Long-form review (OutcomesGrid)
- *   6. Agent + One approval — 2-up quadrant row
- *   7. Trust strip — Privacy / Security / Install / Accuracy as
- *      a single horizontal arrow-link row
- *   8. Author byline — compact editorial closer
+ *   5. Outcomes — 2x3 quadrant grid (six cells, OutcomesGrid):
+ *      Save time / Save money / One approval / Weekly review agent /
+ *      Receipts / Long-form review
  *
- * Cuts in this pass (per Robo's review):
- *   - "Built for your stack" eyebrow + 4-card grid. One approval
- *     becomes its own quadrant cell; Privacy/Security/Integrations
- *     fold into the trust strip with /accuracy added.
- *   - "Style guides we maintain" — disingenuous (we provide style
- *     guidance to the model, not external style guides).
- *   - "Calibrated judgment" — readers don't drill into kappa from
- *     home; /accuracy still reachable via trust strip + global footer.
- *   - "Custom rules in context" — Team-plan feature; /pricing
- *     carries the upsell. Home-page real estate goes further on
- *     universally-relevant outcomes.
+ * Section dividers (`border-t border-line pt-10`) cut from the
+ * lower fold 2026-05-11. Each section now has enough visual
+ * character (panel, card grid, quadrant cells) that the rules
+ * read as chrome. Section spacing (mt-20) handles the rhythm.
  *
- * Verb-led labels throughout the lower fold (Save time, Save money,
- * Stay consistent, Drift caught, One approval). Voice rules:
- * declarative, no em dashes, no semicolons, no colons.
+ * Author byline cut from the foot 2026-05-11. The named-author
+ * block lives on /about and /accuracy where it earns its place;
+ * home page real estate goes to the value-prop quadrant grid.
+ *
+ * Cuts across the lower-fold rebuild:
+ *   - "Built for your stack" 4-card section
+ *   - "Stay consistent" cell (WHERE IT RUNS already lands the story)
+ *   - "Style guides we maintain" commitment (disingenuous)
+ *   - "Calibrated judgment" commitment (readers don't drill into
+ *     kappa from home; /accuracy still reachable via Receipts cell)
+ *   - "Custom rules in context" commitment (Team-plan feature; lives
+ *     on /pricing)
+ *   - Author byline at the foot (above)
+ *
+ * Voice rules: short declarative, no em dashes, no semicolons, no
+ * colons. Verb-led eyebrow labels where the cell content allows.
  */
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AuthorBlock } from "@/components/author-block";
 import { HeroVerdictMock } from "@/components/hero-verdict-mock";
 import { HowItWorksDiagram } from "@/components/how-it-works-diagram";
 import { IntegrationRow } from "@/components/integration-row";
@@ -152,13 +143,13 @@ export default function Home() {
           now needs only the OutcomesGrid render. */}
       <OutcomesGrid />
 
-      {/* Author byline — compact editorial closer. Moved to the page
-          foot 2026-05-10 so the load-bearing value props lead the
-          page; the named author still does the moat work but at
-          byline-register, not hero-card register. */}
-      <div className="mt-20">
-        <AuthorBlock />
-      </div>
+      {/* Author byline cut 2026-05-11. The named-author block lived
+          here from 2026-05-06 → 2026-05-11 as a moat against the
+          studiously-anonymous AI tools. Robo's call: home page real
+          estate goes further on the value-prop quadrant grid above.
+          The byline still lives on /about and /accuracy via the
+          card variant of <AuthorBlock />, which earns its place on
+          those surfaces (the page IS about the model). */}
     </main>
   );
 }

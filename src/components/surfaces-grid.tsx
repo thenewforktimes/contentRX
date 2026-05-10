@@ -17,7 +17,7 @@
  * Card order mirrors the install-page chip-nav order so the surfaces
  * read in the same sequence whether a visitor lands here or on
  * /install:
- *   1. Dashboard paste mode (no install — first because it's the
+ *   1. Dashboard (no install — first because it's the
  *      lowest-friction try)
  *   2. MCP server
  *   3. LSP
@@ -53,11 +53,11 @@ type Surface = {
 
 const SURFACES: readonly Surface[] = [
   {
-    name: "Dashboard paste mode",
+    name: "Dashboard",
     href: "/dashboard/explain",
     Glyph: PasteModeIcon,
     description:
-      "Sign in, paste a string or long-form writing, get the document-level diagnostic and a clean rewrite. No install.",
+      "Sign in and paste your writing. Get the document-level diagnostic and a clean rewrite. No install.",
     ctaLabel: "Open the dashboard",
   },
   {
@@ -109,7 +109,7 @@ const SURFACES: readonly Surface[] = [
 
 export function SurfacesGrid() {
   return (
-    <section className="mt-16 border-t border-line pt-10 scroll-mt-16">
+    <section className="mt-20 scroll-mt-16">
       <Eyebrow>Where it runs</Eyebrow>
       <h2 className="mt-2 text-2xl font-semibold text-strong">
         Where you ship content.

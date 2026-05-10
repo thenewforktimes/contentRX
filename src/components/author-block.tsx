@@ -1,32 +1,20 @@
 /**
- * AuthorBlock — the "named author" trust signal.
+ * AuthorBlock — the named-author byline used on /about and /accuracy.
  *
- * ContentRX has a single human attached to it: Robert Ballard, staff
- * content designer. That's a secondary trust signal against
- * studiously-anonymous AI tools, but not the lead pitch — the load-
- * bearing value props (time, cost, consistency, long-form) carry the
- * page. The block sits at the foot of the landing as an editorial
- * byline, not a hero card.
- *
- * Renders in two modes:
- *
- *   - default ("compact"): a single editorial line at the page foot.
- *     Name + role + career arc inline. No monogram, no aside. The
- *     2026-05-10 default. Used by the landing page.
- *
- *   - "card": the older 2-col card with the RB monogram, name, role,
- *     and full timeline. Reserved for surfaces where the byline is
- *     the section (about-page, etc.) — not a competitor with
- *     value-prop copy elsewhere on the page.
- *
- * Career-arc data lives in CAREER_ARC; the page test pins the four
- * orgs (Intuit, Meta, Opendoor, PayPal) so a future re-order or rename
- * has to keep that set intact.
+ * Pre-2026-05-11 this had two render modes (compact + card); the
+ * compact variant lived on the landing page. The landing dropped
+ * the byline 2026-05-11 (the 6-cell quadrant grid carries the page
+ * now), leaving only the card variant in active use on /about
+ * (where the byline IS the section) and /accuracy (the methodology
+ * binds tightly to the named author). The compact path was removed.
  *
  * No portrait by design — the brand isn't trading on Robert's face,
  * it's trading on the verifiable career arc and the public
  * accountability surfaces (/accuracy, /calibration, /ethics) the
  * model holds itself to.
+ *
+ * Career-arc data lives in CAREER_ARC; the page test pins the four
+ * orgs (Intuit, Meta, Opendoor, PayPal).
  */
 
 import Link from "next/link";
@@ -38,79 +26,7 @@ const CAREER_ARC: readonly { name: string; current?: boolean }[] = [
   { name: "PayPal", current: true },
 ] as const;
 
-export function AuthorBlock({
-  variant = "compact",
-}: {
-  variant?: "compact" | "card";
-} = {}) {
-  if (variant === "card") {
-    return <CardVariant />;
-  }
-  return <CompactVariant />;
-}
-
-/**
- * CompactVariant — single editorial line, page-foot treatment.
- *
- * The visual register matches a newspaper byline: small bold name,
- * thin role line, career arc rendered inline as the small-caps
- * lineage that signals "this person has done this work in
- * recognizable rooms" without staking the brand on the face.
- */
-function CompactVariant() {
-  return (
-    <aside className="border-t border-line pt-8 text-sm">
-      <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
-        Built by
-      </p>
-      <p className="mt-1 text-base font-semibold text-strong">
-        Robert Ballard, staff content designer.
-      </p>
-      <p className="mt-1 text-default">
-        The context, the weights, and the standards all carry one
-        designer&apos;s judgment calls, attributed and published.
-      </p>
-      <ol className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-quiet">
-        {CAREER_ARC.map((stop, i) => (
-          <li key={stop.name} className="flex items-center gap-2">
-            <span
-              className={
-                stop.current
-                  ? "font-semibold text-strong"
-                  : "text-default"
-              }
-            >
-              {stop.name}
-              {stop.current && (
-                <span className="ml-1 text-quiet">(today)</span>
-              )}
-            </span>
-            {i < CAREER_ARC.length - 1 && (
-              <span aria-hidden>·</span>
-            )}
-          </li>
-        ))}
-      </ol>
-      <p className="mt-3 text-xs text-quiet">
-        Read the longer story on the{" "}
-        <Link
-          href="/about"
-          className="underline underline-offset-2 hover:text-default"
-        >
-          about-the-model
-        </Link>{" "}
-        page.
-      </p>
-    </aside>
-  );
-}
-
-/**
- * CardVariant — the prior block, kept for callers (about-page) that
- * want the bigger byline. Same monogram + 2-col layout that landed
- * 2026-05-06.
- */
-function CardVariant() {
+export function AuthorBlock() {
   return (
     <aside className="rounded-2xl border border-line bg-raised p-6 sm:p-8">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
