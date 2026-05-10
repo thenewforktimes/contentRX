@@ -51,7 +51,9 @@ export function RevokeButton({ id }: { id: string }) {
   if (state === "confirming" || state === "submitting") {
     return (
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-default">Remove this check?</span>
+        <span className="text-default">
+          This deletes the check from the calibration log.
+        </span>
         <button
           type="button"
           onClick={onConfirm}
