@@ -52,6 +52,14 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
   const authorBlockVisible = visibleCopy(
     readSource("src/components/author-block.tsx"),
   );
+  // 2026-05-10 design refresh: the weekly review agent block was
+  // extracted into `src/components/agent-section.tsx` so the digest
+  // mock and value-prop copy live alongside each other. Tests that
+  // previously asserted on inline page copy now read the agent-
+  // section source the same way they read the author-block source.
+  const agentSectionVisible = visibleCopy(
+    readSource("src/components/agent-section.tsx"),
+  );
 
   it("leads with the brand promise (staff-level content design review, in every repo)", () => {
     // The hero h1 is the brand promise. If a future edit weakens
@@ -181,27 +189,82 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     // brand promise; the third gets the accent-affirm treatment as
     // the differentiator. The Try-the-preview link funnels to
     // /dashboard/agent's Run-preview-now button.
-    expect(visible).toMatch(/weekly review agent/i);
-    expect(visible).toMatch(/drift, caught every monday/i);
-    expect(visible).toMatch(/Read-only\./);
-    expect(visible).toMatch(/Deterministic\./);
-    expect(visible).toMatch(/0 checks per run\./);
+    //
+    // 2026-05-10 refresh: the section was extracted into
+    // <AgentSection /> so the digest mock could live alongside the
+    // sub-claim cards. The structural pin is unchanged — the same
+    // copy still has to surface — but the assertions now read the
+    // agent-section component source.
+    expect(source).toContain("AgentSection");
+    expect(agentSectionVisible).toMatch(/weekly review agent/i);
+    expect(agentSectionVisible).toMatch(/drift, caught every monday/i);
+    expect(agentSectionVisible).toMatch(/Read-only\./);
+    expect(agentSectionVisible).toMatch(/Deterministic\./);
+    expect(agentSectionVisible).toMatch(/0 checks per run\./);
     // Pricing read: agent ships on the Team plan.
-    expect(visible).toMatch(/folded\s+into\s+the\s+team\s+plan/i);
+    expect(agentSectionVisible).toMatch(/folded\s+into\s+the\s+team\s+plan/i);
     // Funnels visitors to the dashboard preview surface.
-    expect(visible).toContain('href="/dashboard/agent"');
+    expect(agentSectionVisible).toContain('href="/dashboard/agent"');
   });
 
   it("agent section sits between SurfacesGrid and Built-for-stack", () => {
     // Section ordering check — the agent section is a section-level
     // beat, not a sub-claim of another section. Pinning order:
-    // SurfacesGrid → Weekly review agent → Built for your stack.
+    // SurfacesGrid → AgentSection → Built for your stack.
+    //
+    // 2026-05-10: the OutcomesGrid was added between SurfacesGrid
+    // and AgentSection (the new value-prop spine sits above the
+    // agent's own sub-section). The agent block still has to land
+    // before "Built for your stack"; the SurfacesGrid → AgentSection
+    // ordering relaxes to "agent block follows surfaces block,
+    // outcomes block in between is allowed."
     const surfacesIdx = visible.indexOf("SurfacesGrid");
-    const agentIdx = visible.indexOf("Weekly review agent");
+    const agentIdx = visible.indexOf("AgentSection");
     const builtIdx = visible.indexOf("Built for your stack");
     expect(surfacesIdx).toBeGreaterThan(-1);
     expect(agentIdx).toBeGreaterThan(surfacesIdx);
     expect(builtIdx).toBeGreaterThan(agentIdx);
+  });
+
+  it("renders the OutcomesGrid with four named outcomes", () => {
+    // 2026-05-10 design refresh: the OutcomesGrid was added between
+    // SurfacesGrid and AgentSection to land the four customer-facing
+    // outcomes (Time / Money / Consistency / Long-form) that the
+    // prior page never surfaced. The structural pin: the import +
+    // render exist, and the four outcome labels live in the grid's
+    // data array.
+    expect(source).toContain("OutcomesGrid");
+    const outcomesVisible = visibleCopy(
+      readSource("src/components/outcomes-grid.tsx"),
+    );
+    for (const label of ["Time", "Money", "Consistency", "Long-form"]) {
+      expect(outcomesVisible).toContain(`label: "${label}"`);
+    }
+    // Funnels visitors to the long-form gallery.
+    expect(outcomesVisible).toContain('href="/writes"');
+  });
+
+  it("outcomes section sits between SurfacesGrid and AgentSection", () => {
+    // Section ordering check — outcomes is the value-prop spine; the
+    // agent section is one of the agentic mechanisms behind those
+    // outcomes. Outcomes lands first.
+    const surfacesIdx = visible.indexOf("SurfacesGrid");
+    const outcomesIdx = visible.indexOf("OutcomesGrid");
+    const agentIdx = visible.indexOf("AgentSection");
+    expect(surfacesIdx).toBeGreaterThan(-1);
+    expect(outcomesIdx).toBeGreaterThan(surfacesIdx);
+    expect(agentIdx).toBeGreaterThan(outcomesIdx);
+  });
+
+  it("AuthorBlock sits at the page foot, after Commitments", () => {
+    // 2026-05-10 design refresh: the named-author block moved to the
+    // page foot (and switched to the compact variant) so the load-
+    // bearing value props lead the page. The structural pin: the
+    // AuthorBlock JSX appears AFTER the "Commitments" eyebrow string.
+    const commitmentsIdx = visible.indexOf("Commitments");
+    const authorIdx = visible.indexOf("<AuthorBlock");
+    expect(commitmentsIdx).toBeGreaterThan(-1);
+    expect(authorIdx).toBeGreaterThan(commitmentsIdx);
   });
 
   it("does not render the deprecated UseCaseToggle component", () => {

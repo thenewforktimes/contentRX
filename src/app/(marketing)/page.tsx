@@ -1,53 +1,60 @@
 /**
- * Landing page — 2026-05-06 design refresh.
+ * Landing page — 2026-05-10 design refresh.
  *
- * The big shift from the prior pass: this page now reads as a
- * product page, not a policy document. Specifically:
+ * The 2026-05-10 pass changes the lower-half rhythm (everything below
+ * SurfacesGrid). The prior pass shipped four sections of bordered
+ * cards in a row; even with the dot-grid panel on How-it-works, the
+ * eye saw "card grid, card grid, card grid" and the user's primary
+ * value props (time, money, consistency, long-form) weren't
+ * surfaced anywhere on the page.
  *
- *   - Wider canvas. max-w-6xl (1152px) on the landing only; other
- *     marketing pages (privacy/ethics/etc.) keep the narrower
- *     reading column.
- *   - Layered hero. 2-column at md+: animated wordmark + headline +
- *     CTAs on the left, decorative HeroVerdictMock (3-card stack)
- *     on the right.
- *   - Trust signal. IntegrationRow shows the seven surfaces
- *     ContentRX runs in — own the integration breadth as the proof
- *     point that's currently honest (no customer logos to show yet).
- *   - Author up. The "Built by Robert Ballard" block moves above
- *     the feature sections — it's the moat against anonymous AI
- *     tooling, treat it like an editorial byline rather than a
- *     buried about-page link.
- *   - Visual rhythm. The "How it works" section gets a subtle dot-
- *     grid radial-gradient background to break the otherwise-flat
- *     section flow; the "One approval" card on "Built for your
- *     stack" gets an accent-affirm border treatment to distinguish
- *     the differentiator from the supporting cards.
- *   - CTA discipline. Hero CTAs trim to two (Try free + See how it
- *     works); Pricing and Sign-in already live in the global header.
+ * The refresh:
  *
- * Voice and copy unchanged from the prior pass — calm, named,
- * concrete (per docs/copy-vocabulary.md). The visual restructure
- * lets the existing copy land harder.
+ *   - **Outcomes** — new 4-up editorial section between SurfacesGrid
+ *     and the agent. No card chrome, vertical rules between columns
+ *     at lg+. Names the four outcomes a skeptical engineering team
+ *     scans for first (Time / Money / Consistency / Long-form). The
+ *     page now leads its lower half with what ships changes.
+ *   - **Weekly review agent** — moved into a panel section with a
+ *     stylized digest mock alongside the three sub-claim cards.
+ *     Two-column at lg+. Reads as a section-level beat, not another
+ *     card grid. Same panel idiom How-it-works uses.
+ *   - **Built for your stack** — kept, but the accent-affirm
+ *     treatment came off "One approval" (which the new Outcomes
+ *     section's Money card now leads on). Reserves the accent for
+ *     the agent's "0 checks per run" so emphasis doesn't get
+ *     diluted twice in close proximity.
+ *   - **AuthorBlock** — moved to the page foot and switched to the
+ *     compact byline variant. The earlier hero-up treatment
+ *     overweighted the founder-credit against the load-bearing
+ *     value props; the byline still does the moat work, just at
+ *     editorial-foot register instead of hero-card register.
+ *
+ * Voice and copy unchanged from the prior pass except where the
+ * new sections introduce strings; those follow docs/copy-vocabulary.md
+ * (calm, named, concrete, no em dashes).
  *
  * Section order:
  *   1. Hero — wordmark + brand promise + verdict mock
  *   2. Integration row — surfaces under the fold, immediately
- *   3. Built by — named author + career arc (moat)
- *   4. How it works — animated pipeline, with dot-grid bg
- *   5. Where it runs — surface detail (the integration row is the
- *      teaser; this is the index)
- *   6. Built for your stack — One approval / Privacy / Security /
- *      Integrations as a 2x2 grid, with the One-approval card
- *      visually emphasized
- *   7. Why it works — three product-strength cards
+ *   3. How it works — animated pipeline, with dot-grid bg
+ *   4. Where it runs — 6 surface cards (SurfacesGrid)
+ *   5. Outcomes — Time / Money / Consistency / Long-form
+ *   6. Weekly review agent — panelled, with digest mock
+ *   7. Built for your stack — One approval / Privacy / Security /
+ *      Integrations as a 2x2 grid
+ *   8. Commitments — three product-strength cards
+ *   9. Author byline — compact editorial closer
  */
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AgentSection } from "@/components/agent-section";
 import { AuthorBlock } from "@/components/author-block";
 import { HeroVerdictMock } from "@/components/hero-verdict-mock";
 import { HowItWorksDiagram } from "@/components/how-it-works-diagram";
 import { IntegrationRow } from "@/components/integration-row";
+import { OutcomesGrid } from "@/components/outcomes-grid";
 import { SurfacesGrid } from "@/components/surfaces-grid";
 import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -99,21 +106,10 @@ export default function Home() {
 
       <IntegrationRow />
 
-      {/* Author up. The named-byline block sits high so the moat
-          lands before the feature copy.
-          2026-05-09: the UseCaseToggle that briefly sat between
-          IntegrationRow and AuthorBlock got cut. /writes is the
-          dedicated long-form proof page; the IntegrationRow chips
-          already prove breadth-of-surface; the toggle was a third
-          breadth-statement that hurt the page's pacing. */}
-      <div className="mt-20">
-        <AuthorBlock />
-      </div>
-
-      {/* How it works — same animated diagram, now with a subtle dot-
+      {/* How it works — same animated diagram, with a subtle dot-
           grid backdrop to break the otherwise-flat section flow. The
           radial-gradient is one of two repeating visual punctuation
-          marks on the page (the other is the integration row). */}
+          marks on the page (the other is the agent section panel). */}
       <section
         id="how-it-works"
         className="mt-20 rounded-3xl border border-line bg-raised/40 p-8 sm:p-12"
@@ -137,85 +133,36 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Where it runs — a 2x3 card grid replacing the prior bullet
-          list (2026-05-09 design pass). The bullet list read as docs
-          directly under the heavy dot-grid panel of How-it-works;
-          the card grid carries the same content with a marketing
-          register that earns its place. Surface order matches the
-          chip-nav order on /install. */}
+      {/* Where it runs — 6 surface cards (the integration row is
+          the teaser; this is the index). 2026-05-09 design pass. */}
       <SurfacesGrid />
 
-      {/* Weekly review agent. Section-level value prop for the
-          read-only drift-catcher Phase G shipped this week. Three
-          sub-claim cards: Read-only (safety), Deterministic (math),
-          0 checks per run (the differentiation, accent-affirm card
-          treatment matching the One-approval lead in Built-for-
-          stack below). The "Try the preview" link funnels visitors
-          to /dashboard/agent's Run-preview-now button — even free
-          users can preview the digest. */}
-      <Section
-        eyebrow="Weekly review agent"
-        title="Drift, caught every Monday."
-      >
-        <p className="mt-2 max-w-2xl text-base text-default">
-          ContentRX groups your team&apos;s flag history by pattern
-          and opens a draft pull request every Monday with the
-          patterns worth pulling into your next review. Deterministic.
-          Read-only. The kind of recurring-pattern review your senior
-          reviewer would have caught, on a cadence that doesn&apos;t
-          depend on anyone scheduling it.
-        </p>
-        <ul className="mt-6 grid gap-4 sm:grid-cols-3 sm:gap-3">
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <p className="text-sm font-semibold text-strong">
-              Read-only.
-            </p>
-            <p className="mt-2 text-sm text-default">
-              The agent never edits your strings. Every run lands as
-              a draft pull request you can close, keep, or follow up
-              on inside your normal workflow.
-            </p>
-          </li>
-          <li className="rounded-lg border border-line bg-raised p-5">
-            <p className="text-sm font-semibold text-strong">
-              Deterministic.
-            </p>
-            <p className="mt-2 text-sm text-default">
-              Patterns surface from rule-based clustering, not LLM
-              guessing. Same input, same digest. Same output
-              reproducible across runs.
-            </p>
-          </li>
-          <li className="rounded-lg border-2 border-accent-affirm-border bg-accent-affirm-soft/30 p-5">
-            <p className="text-sm font-semibold text-strong">
-              0 checks per run.
-            </p>
-            <p className="mt-2 text-sm text-default">
-              The digest is rendered from your team&apos;s existing
-              flag history. Zero LLM calls per run. Folded into the
-              Team plan.{" "}
-              <Link
-                href="/dashboard/agent"
-                className="underline underline-offset-2"
-              >
-                Try the preview
-              </Link>
-              .
-            </p>
-          </li>
-        </ul>
-      </Section>
+      {/* Outcomes — 4-up editorial value-prop section.
+          New 2026-05-10. Time / Money / Consistency / Long-form —
+          the four outcomes a skeptical engineering team scans for
+          first. Editorial layout (no card chrome) gives the section
+          a different silhouette from the surrounding card grids. */}
+      <OutcomesGrid />
+
+      {/* Weekly review agent — panelled section with the digest mock
+          and three sub-claim cards. Replaces the 3-card grid that
+          shipped 2026-05-09; the panel + mock combination lets the
+          agentic value prop land harder than three flat cards did.
+          The "0 checks per run" sub-claim keeps its accent-affirm
+          treatment as the load-bearing differentiator. */}
+      <AgentSection />
 
       <Section
         eyebrow="Built for your stack"
         title="Easier to adopt. Safer to ship."
       >
+        {/* Card geometry is uniform across all four cards — the prior
+            pass put accent-affirm on "One approval" but the agent
+            section now owns that treatment for the page. Two
+            accent-affirm grids in a row diluted both. The procurement
+            angle still leads the grid (first card slot). */}
         <ul className="mt-2 grid gap-4 sm:grid-cols-2 sm:gap-3">
-          {/* "One approval" gets the accent-affirm treatment — it's
-              the differentiator that closes the deal vs custom-LLM
-              alternatives. The other three cards stay neutral so this
-              one reads as the lead. */}
-          <li className="rounded-lg border-2 border-accent-affirm-border bg-accent-affirm-soft/30 p-5">
+          <li className="rounded-lg border border-line bg-raised p-5">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-affirm-text/10 text-[10px] font-bold text-accent-affirm-text">
                 ✓
@@ -338,6 +285,14 @@ export default function Home() {
           </li>
         </ul>
       </Section>
+
+      {/* Author byline — compact editorial closer. Moved to the page
+          foot 2026-05-10 so the load-bearing value props lead the
+          page; the named author still does the moat work but at
+          byline-register, not hero-card register. */}
+      <div className="mt-20">
+        <AuthorBlock />
+      </div>
     </main>
   );
 }

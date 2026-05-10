@@ -163,9 +163,15 @@ export default function AboutPage() {
 
       {/* Named-byline closer. The page is "about the model"; the
           model is one designer's judgment. Closing on the byline
-          binds the claim to the named author. */}
+          binds the claim to the named author.
+
+          Uses the `card` variant (the bigger 2-col block with the
+          monogram) — the about page is where the byline IS the
+          section, so the bigger treatment earns its place. The
+          landing's default switched to the compact byline as of
+          2026-05-10 to lower the founder-credit's hero weight. */}
       <div className="mt-16">
-        <AuthorBlock />
+        <AuthorBlock variant="card" />
       </div>
     </main>
   );
