@@ -1,47 +1,32 @@
 /**
- * /ethics — ContentRX's four load-bearing commitments.
+ * /ethics — ContentRX's three load-bearing commitments.
  *
- * 2026-05-05 rewrite per Robert's audit: when the page first shipped
- * (Session 14) ContentRX agreed to a public-facing taxonomy, and the
- * page was structured around external-signal hygiene (transparency,
- * attribution, robots.txt respect, license-awareness, PII avoidance,
- * customer-not-product). The 2026-04-25 private-taxonomy pivot
- * inverted that framing — we don't publish the taxonomy, we don't
- * crawl at scale, and customers paying for a tool care about
- * outcomes, not robots.txt.
+ * 2026-05-11 rewrite per Robo's audit:
+ *   - Drop "I" framing across the page in favor of the brand voice
+ *     ("ContentRX does not [...]"). The page makes a brand-level
+ *     position. First-person presupposed the reader cared who Robert
+ *     was, doesn't scale past the first hire, and weakens the
+ *     declarative pattern.
+ *   - Drop "Sources I have rights to use" (Commitment 4). The section
+ *     was the weakest on the page (rewritten three times in two days,
+ *     repeatedly trimmed, currently 2 sentences and saying nothing
+ *     concrete). Buyers reading /ethics want "what happens to MY
+ *     stuff," not "where did your model learn from." Fair use covers
+ *     the engine inputs and there's no legal disclosure requirement.
+ *   - Tighten Privacy + Security to remove voice-rule violations
+ *     (a colon in Privacy, a semicolon in Security).
+ *   - Rewrite Customer-not-product bullets to the user's declarative
+ *     pattern ("ContentRX does not sell your strings. ContentRX does
+ *     not repackage [...]"). Drops the "I won't cross these lines"
+ *     framing.
  *
- * 2026-05-06 update: /sources retired (ADR 2026-05-06). The
- * transparency-and-opt-out commitment that page anchored folds in
- * here as Commitment 4 with a deep-link target (#no-stolen-content)
- * that the /sources route now 308s into. The slug is preserved so
- * external bookmarks and the /about inline link still resolve.
- *
- * 2026-05-06 (later): renamed Commitment 4 from "No stolen content"
- * to "Sources I have rights to use." The original framing
- * presupposed an accusation no one had made; the new title
- * describes the standard positively (rights to use) rather than
- * denying its inverse (theft). Slug intentionally not renamed —
- * external bookmarks.
- *
- * 2026-05-06 (later still): trimmed Commitment 4's body to describe
- * what's actually true today instead of forecasting future state.
- * Removed (a) the OSS-repository mention — the github_miner is
- * built but has never run, so the model doesn't actually draw from
- * those repos yet — and (b) the maintainer opt-out paragraph — post-
- * anonymization (ADR 2026-05-06-source-name-anonymization), no
- * project is named in any tracked file, so there's nothing for a
- * maintainer to find and request the removal of. If/when either
- * pattern actually exists, the body grows back to fit. Today it
- * shouldn't promise things that aren't there.
- *
- * Four commitments, in this order:
+ * Three commitments:
  *   1. Privacy
  *   2. Security
  *   3. Customer, not product
- *   4. Sources I have rights to use
  *
- * Voice: Robert's first-person voice. Calm, direct, plain. No em
- * dashes. Names the actor. Doesn't blame. Points somewhere.
+ * Voice: short declarative sentences, no em dashes, no semicolons,
+ * no colons. Brand voice (ContentRX as subject), not first-person.
  */
 
 import type { Metadata } from "next";
@@ -51,7 +36,7 @@ import { PageHeader } from "@/components/ui/page-header";
 export const metadata: Metadata = {
   title: "Ethics. ContentRX",
   description:
-    "How ContentRX handles your work. Four commitments: Privacy, Security, Customer not product, Sources I have rights to use.",
+    "How ContentRX handles your work. Three commitments. Privacy. Security. Customer, not product.",
 };
 
 export default function EthicsPage() {
@@ -59,10 +44,10 @@ export default function EthicsPage() {
     <main className="mx-auto max-w-2xl px-6 py-20">
       <PageHeader
         eyebrow="Ethics"
-        title="How we handle your work"
+        title="How ContentRX handles your work"
         lede={
           <p className="text-sm text-quiet">
-            Four commitments hold the rest of the product together.
+            Three commitments hold the rest of the product together.
             They&apos;re short on purpose. The deep policy lives at{" "}
             <Link href="/privacy" className="underline underline-offset-2">
               /privacy
@@ -71,7 +56,7 @@ export default function EthicsPage() {
             <Link href="/security" className="underline underline-offset-2">
               /security
             </Link>
-            ; this page is the position those policies sit under.
+            . This page is the position those policies sit under.
           </p>
         }
       />
@@ -79,26 +64,26 @@ export default function EthicsPage() {
       <Section
         number="1"
         title="Privacy"
-        summary="Your text is reviewed, returned, and gone. The hash is what we keep."
+        summary="Your text is reviewed, returned, and gone. The hash is what ContentRX keeps."
       >
         <p>
-          When you send a string to ContentRX for review, the engine
-          evaluates it, the verdict comes back, and the plaintext
-          doesn&apos;t persist. What we retain in our database is a
-          sha256 hash, the verdict, the severity, the content type,
-          and which surface called us. That&apos;s the entire list.
-          We can&apos;t reconstruct your writing from what we keep.
+          Send a string to ContentRX. The engine evaluates it. The
+          verdict comes back. The plaintext doesn&apos;t persist.
+          ContentRX retains a sha256 hash, the verdict, the severity,
+          the content type, and the surface that called. That&apos;s
+          the entire list. ContentRX cannot reconstruct your writing
+          from what&apos;s kept.
         </p>
         <p className="mt-3">
           A pre-screen on every public route refuses obvious
-          credentials and PII before they reach the engine: credit
-          card numbers, SSNs, Stripe / OpenAI / Anthropic / GitHub
-          keys, AWS access keys. They never reach the engine, never
-          reach Anthropic, never reach the error logs. Sentry events
-          have request bodies and auth headers stripped before send.
+          credentials and PII. Credit card numbers. SSNs. Stripe,
+          OpenAI, Anthropic, and GitHub keys. AWS access keys. None
+          reach the engine, Anthropic, or the error logs. Sentry
+          events have request bodies and auth headers stripped before
+          send.
         </p>
         <p className="mt-3">
-          The full policy, including the subprocessor list, is at{" "}
+          The full policy, including the subprocessor list, lives at{" "}
           <Link href="/privacy" className="underline underline-offset-2">
             /privacy
           </Link>
@@ -112,24 +97,23 @@ export default function EthicsPage() {
         summary="Standard SaaS hygiene, audit-ready posture."
       >
         <p>
-          TLS in transit, hashed credentials at rest, audit logs on
-          admin-tier surfaces. The web app, the engine, and the
-          subprocessors named on{" "}
+          TLS in transit. Credentials hashed at rest. Audit logs on
+          admin-tier surfaces. The trust boundary is the web app, the
+          engine, and the subprocessors listed on{" "}
           <Link href="/privacy" className="underline underline-offset-2">
             /privacy
           </Link>
-          {" "}form the trust boundary; everything outside of that is
-          the public internet.
+          . Everything outside is the public internet.
         </p>
         <p className="mt-3">
-          SOC 2 Type II is the work in progress. Until that&apos;s in
-          hand we publish what we do today on{" "}
+          SOC 2 Type II is in progress. Until then,{" "}
           <Link href="/security" className="underline underline-offset-2">
             /security
           </Link>
-          {" "}and answer specific posture questions in writing. If
-          you&apos;ve found a vulnerability, the same page has the
-          coordinated-disclosure path.
+          {" "}publishes what ContentRX does today and answers
+          specific posture questions in writing. Found a
+          vulnerability? The same page has the coordinated-disclosure
+          path.
         </p>
       </Section>
 
@@ -139,71 +123,52 @@ export default function EthicsPage() {
         summary="ContentRX makes money by charging for a tool. Not by selling, repackaging, or modeling the work you check."
       >
         <p>
-          The subscription is the entire revenue model. Free exists
-          so you can try the product; paid tiers exist because the
-          engine costs real money to run and the calibration work
-          takes real time. There&apos;s no second shoe to drop. The
-          lines I won&apos;t cross to make up the difference, in
-          plain language:
+          ContentRX makes money from subscriptions. Free exists so
+          you can try the product. Paid tiers exist because the
+          engine costs real money to run and calibration takes real
+          time. There&apos;s no second shoe to drop.
         </p>
         <ul className="mt-3 ml-5 list-disc space-y-2">
           <li>
-            I don&apos;t sell your strings (hashed, anonymised, or
-            otherwise) to data brokers, advertisers, or anyone else.
-            There is no third-party broker contract; there will not
-            be one.
+            ContentRX does not sell your strings. Not hashed. Not
+            anonymised. Not to data brokers, advertisers, or anyone
+            else. There is no third-party broker contract. There
+            will not be one.
           </li>
           <li>
-            I don&apos;t repackage your check history into a profile
-            of you, your team, or your industry that gets marketed
-            against you. Your dashboard shows your activity to you;
-            no aggregate &ldquo;intent signal&rdquo; product gets
-            sold on top.
+            ContentRX does not repackage your check history into a
+            profile of you, your team, or your industry. Your
+            dashboard shows your activity to you. No aggregate
+            intent-signal product gets sold on top.
           </li>
           <li>
-            I don&apos;t use your content to train a model (mine,
-            Anthropic&apos;s, anyone&apos;s) without your explicit,
-            per-entry opt-in. The Team-plan custom-example
+            ContentRX does not train a model on your content. Yours,
+            ours, Anthropic&apos;s, anyone&apos;s. Not without your
+            explicit per-entry opt-in. The Team-plan custom-example
             contribution toggle is the only path by which a customer
-            string ever joins the calibration corpus. It&apos;s off
-            by default, and it&apos;s a per-entry toggle, not a
-            one-time account-wide setting.
+            string ever joins the calibration corpus. Off by default.
+            Per-entry, not account-wide.
           </li>
           <li>
-            I don&apos;t run an &ldquo;engagement metrics&rdquo; or
-            behavioural-modelling layer on how you use ContentRX. We
-            track monthly check counts (because billing) and crash
-            reports (because bugs). Nothing else.
+            ContentRX does not run an engagement-metrics or
+            behavioural-modelling layer on how you use the product.
+            ContentRX tracks monthly check counts (because billing)
+            and crash reports (because bugs). Nothing else.
           </li>
         </ul>
         <p className="mt-3">
-          If any of this ever changes, say a future investor pitches
-          &ldquo;but think of the data,&rdquo; the policy here gets
-          superseded by an ADR I publish before any new collection
-          starts, and existing customers are notified by email. The
-          version of this commitment that&apos;s live is always the
-          one at /ethics. If there&apos;s no superseding ADR linked
-          from this page, the rules above are the rules.
-        </p>
-      </Section>
-
-      <Section
-        number="4"
-        title="Sources I have rights to use"
-        summary="Open-licensed code, fair-use editorial citation, and original work. The three buckets the model learns from."
-        id="no-stolen-content"
-      >
-        <p>
-          The model draws from two kinds of inputs: principles I&apos;ve
-          taken from published style guides, and content I write
-          myself. Every input has an MIT license, a fair-use standing,
-          or a public-style-guide convention behind it.
+          If any of this ever changes, ContentRX publishes a
+          superseding ADR before any new collection starts. Existing
+          customers are notified by email. The version of this
+          commitment that&apos;s live is always the one at /ethics.
+          If there&apos;s no superseding ADR linked from this page,
+          the rules above are the rules.
         </p>
       </Section>
 
       <footer className="mt-16 text-xs text-quiet">
         <p>
-          Last updated 2026-05-06. Source:{" "}
+          Last updated 2026-05-11. Source:{" "}
           <a
             href="https://github.com/thenewforktimes/contentRX/blob/main/src/app/(marketing)/ethics/page.tsx"
             className="underline underline-offset-2"
@@ -221,23 +186,15 @@ function Section({
   number,
   title,
   summary,
-  id,
   children,
 }: {
   number: string;
   title: string;
   summary: string;
-  /** Optional anchor id. When set, the section uses `scroll-mt-16`
-   * so deep links (#no-stolen-content) land below the sticky header
-   * instead of jamming the heading under it. */
-  id?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section
-      id={id}
-      className="mt-8 border-t border-line pt-8 scroll-mt-16 first:border-t-0 first:pt-0"
-    >
+    <section className="mt-8 border-t border-line pt-8 scroll-mt-16 first:border-t-0 first:pt-0">
       <p className="text-xs font-semibold uppercase tracking-widest text-quiet">
         Commitment {number}
       </p>
