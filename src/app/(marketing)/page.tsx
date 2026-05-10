@@ -145,6 +145,67 @@ export default function Home() {
           chip-nav order on /install. */}
       <SurfacesGrid />
 
+      {/* Weekly review agent. Section-level value prop for the
+          read-only drift-catcher Phase G shipped this week. Three
+          sub-claim cards: Read-only (safety), Deterministic (math),
+          0 checks per run (the differentiation, accent-affirm card
+          treatment matching the One-approval lead in Built-for-
+          stack below). The "Try the preview" link funnels visitors
+          to /dashboard/agent's Run-preview-now button — even free
+          users can preview the digest. */}
+      <Section
+        eyebrow="Weekly review agent"
+        title="Drift, caught every Monday."
+      >
+        <p className="mt-2 max-w-2xl text-base text-default">
+          ContentRX groups your team&apos;s flag history by pattern
+          and opens a draft pull request every Monday with the
+          patterns worth pulling into your next review. Deterministic.
+          Read-only. The kind of recurring-pattern review your senior
+          reviewer would have caught, on a cadence that doesn&apos;t
+          depend on anyone scheduling it.
+        </p>
+        <ul className="mt-6 grid gap-4 sm:grid-cols-3 sm:gap-3">
+          <li className="rounded-lg border border-line bg-raised p-5">
+            <p className="text-sm font-semibold text-strong">
+              Read-only.
+            </p>
+            <p className="mt-2 text-sm text-default">
+              The agent never edits your strings. Every run lands as
+              a draft pull request you can close, keep, or follow up
+              on inside your normal workflow.
+            </p>
+          </li>
+          <li className="rounded-lg border border-line bg-raised p-5">
+            <p className="text-sm font-semibold text-strong">
+              Deterministic.
+            </p>
+            <p className="mt-2 text-sm text-default">
+              Patterns surface from rule-based clustering, not LLM
+              guessing. Same input, same digest. Same output
+              reproducible across runs.
+            </p>
+          </li>
+          <li className="rounded-lg border-2 border-accent-affirm-border bg-accent-affirm-soft/30 p-5">
+            <p className="text-sm font-semibold text-strong">
+              0 checks per run.
+            </p>
+            <p className="mt-2 text-sm text-default">
+              The digest is rendered from your team&apos;s existing
+              flag history. Zero LLM calls per run. Folded into the
+              Team plan.{" "}
+              <Link
+                href="/dashboard/agent"
+                className="underline underline-offset-2"
+              >
+                Try the preview
+              </Link>
+              .
+            </p>
+          </li>
+        </ul>
+      </Section>
+
       <Section
         eyebrow="Built for your stack"
         title="Easier to adopt. Safer to ship."
