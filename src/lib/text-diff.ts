@@ -98,20 +98,3 @@ function pushToken(tokens: DiffToken[], next: DiffToken) {
     tokens.push(next);
   }
 }
-
-/**
- * Convenience: render a diff token stream as a unified-style markdown
- * snippet for surfaces that don't support inline HTML (the GitHub
- * Action PR comment in particular). Removed tokens get `~~strikethrough~~`,
- * added get `**bold**`. Suitable for pasting into GitHub-flavored
- * markdown.
- */
-export function renderDiffMarkdown(tokens: DiffToken[]): string {
-  return tokens
-    .map((t) => {
-      if (t.kind === "equal") return t.text;
-      if (t.kind === "removed") return `~~${t.text}~~`;
-      return `**${t.text}**`;
-    })
-    .join("");
-}
