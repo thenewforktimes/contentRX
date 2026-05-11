@@ -21,6 +21,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthorBlock } from "@/components/author-block";
+import { Divider } from "@/components/ui/divider";
 import { PageHeader } from "@/components/ui/page-header";
 import {
   loadPublicAccuracySnapshot,
@@ -145,8 +146,11 @@ export default function AccuracyPage() {
       {/* Named-byline. The accuracy methodology is the named-
           author's claim; the byline is the proof. Accuracy
           methodology binds tightly to the named author and earns
-          the byline closer. */}
+          the byline closer. Heavy divider above so the byline reads
+          as a distinct section — the architectural punctuation move
+          lifted from Ditto / Linear / Vercel. */}
       <div className="mt-16">
+        <Divider weight="strong" className="mb-12" />
         <AuthorBlock />
       </div>
 
