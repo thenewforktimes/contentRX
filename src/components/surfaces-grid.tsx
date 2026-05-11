@@ -115,7 +115,9 @@ const SURFACES: readonly Surface[] = [
 
 export function SurfacesGrid() {
   return (
-    <section className="mt-20 scroll-mt-16">
+    <section
+      className="mt-20 scroll-mt-16 rounded-3xl border border-accent-info-border/40 bg-accent-info-soft/30 p-8 sm:p-12"
+    >
       <Eyebrow>Where it runs</Eyebrow>
       <h2 className="mt-2 text-2xl font-semibold text-strong">
         Where you ship content.
