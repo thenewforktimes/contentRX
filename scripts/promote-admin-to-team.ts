@@ -15,16 +15,16 @@
  *
  * Idempotent. Re-running on someone already on "team" is a no-op.
  *
- * Usage:
+ * Usage (via npm — picks up the local node_modules/.bin/dotenv, so it
+ * works even when a Python venv has shadowed the global `dotenv` on PATH):
  *
  *   # Always dry-run first
- *   dotenv -e .env.local -- tsx scripts/promote-admin-to-team.ts --dry-run
+ *   npm run promote-admin -- --dry-run
  *
  *   # Actually flip the plan
- *   dotenv -e .env.local -- tsx scripts/promote-admin-to-team.ts
+ *   npm run promote-admin
  *
- * Not wired into npm scripts — one-off founder utility, run with tsx
- * directly the way `reset-usage.ts` is.
+ * Wired into package.json the same way `reset-usage` is.
  */
 
 import { eq, inArray } from "drizzle-orm";
