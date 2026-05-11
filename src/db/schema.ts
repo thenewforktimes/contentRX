@@ -609,9 +609,9 @@ export const violationOverrides = pgTable(
 //
 // Engine-output popularity signal: when a customer copies a suggestion
 // the engine produced, a row lands here with the engine's own
-// `candidateText` and `shareUpstream = false`. No customer input
-// strings ever land in this table; that path is `customer_flagged_reviews`,
-// reached only through the Flag-for-Review consent flow.
+// `candidateText`. No customer input strings ever land in this table;
+// that path is `customer_flagged_reviews`, reached only through the
+// Flag-for-Review consent flow.
 //
 // The founder /admin queue can promote rows into PRECEDENTS (the curated
 // set the runtime LLM context reads). Only Robert's curation reaches the
@@ -619,9 +619,11 @@ export const violationOverrides = pgTable(
 //
 // Privacy: per ADR 2026-04-28 and ADR 2026-05-11, every text-bearing field
 // is PII-screened before write (handled at the route layer via
-// src/lib/pii-screen.ts). `shareUpstream` is hardcoded false for the
-// remaining writer; the field stays for substrate-side queries that
-// historically gated on it.
+// src/lib/pii-screen.ts). Visibility is uniform — every candidate row is
+// readable by the founder at /admin and by the writing team's analytics.
+// The earlier two-tier opt-in (`share_upstream`) was retired with the
+// Flag-for-Review pivot; that explicit consent flow now owns the
+// "customer-input-into-substrate" path.
 //
 // Substrate context (moment, contentType, standardId) is server-side-
 // correlated at write time by joining against the violations table via
@@ -650,9 +652,10 @@ export const suggestionCandidates = pgTable(
     sourceUserId: text("source_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
-    // Team scope for opt-out tracking. When a row's team_owner_user_id
-    // is set, it's visible to that team's admins regardless of
-    // share_upstream. share_upstream additionally exposes it to /admin.
+    // Team scope. When set, the row is visible to that team's analytics
+    // (per-team rollups). Every row is also visible to the founder at
+    // /admin regardless of team scope — the earlier `share_upstream`
+    // gating was retired by ADR 2026-05-11.
     sourceTeamOwnerUserId: text("source_team_owner_user_id").references(
       () => users.id,
       { onDelete: "set null" },
@@ -668,10 +671,6 @@ export const suggestionCandidates = pgTable(
     // Carries the public-envelope `issue` field for customer-source
     // rows; null otherwise. PII-screened.
     issueContext: text("issue_context"),
-    // Customer's explicit opt-in, per ADR 2026-04-28. Default FALSE.
-    // FALSE = team-private. TRUE = eligible for /admin triage and
-    // (after approval) promotion to suggestion_precedents.
-    shareUpstream: boolean("share_upstream").notNull().default(false),
     // Triage state. Pending = unreviewed; Approved = promoted to
     // suggestion_precedents (Block 2a); Rejected = slop, kept for
     // metrics; Merged = combined into an existing precedent.
@@ -698,9 +697,8 @@ export const suggestionCandidates = pgTable(
       t.standardId,
       t.status,
     ),
-    // Team-private slice: when a customer's row is share_upstream=false,
-    // it still surfaces to that team's analytics. This index supports
-    // "show me my team's candidates."
+    // Team-scope slice: supports "show me my team's candidates" rollups
+    // for per-team analytics.
     index("suggestion_candidates_team_idx").on(t.sourceTeamOwnerUserId),
     // FK index on source_user_id for the deletion cascade.
     index("suggestion_candidates_user_idx").on(t.sourceUserId),

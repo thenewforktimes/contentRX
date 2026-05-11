@@ -1369,8 +1369,9 @@ function CopySuggestionButton({
       // Block 3a (calibration plan): also fire-and-forget a POST so
       // the substrate gets a customer_copy row. Failure is silent —
       // the clipboard already succeeded; substrate accounting is
-      // best-effort. The row is always share_upstream=false (passive
-      // signal, no opt-in), so it stays team-private.
+      // best-effort. The row carries the engine's own suggestion text,
+      // not customer input — customer-input substrate flows through
+      // Flag-for-Review per ADR 2026-05-11.
       void fetch("/api/calibration/copy-event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -71,9 +71,9 @@ export default async function CalibrationCoveragePage() {
       schema.suggestionPrecedents.contentType,
     );
 
-  // Per-bucket pending candidate counts. Only share_upstream=true
-  // candidates show up in /admin/suggestions, so coverage scopes
-  // the same way — team-private candidates aren't Robert's queue.
+  // Per-bucket pending candidate counts across every candidate row.
+  // The earlier `share_upstream` two-tier opt-in was retired by
+  // ADR 2026-05-11 — every candidate now surfaces to /admin/suggestions.
   const pendingRows = await db
     .select({
       moment: schema.suggestionCandidates.moment,
@@ -81,17 +81,14 @@ export default async function CalibrationCoveragePage() {
       count: sql<number>`count(*)::int`,
     })
     .from(schema.suggestionCandidates)
-    .where(
-      sql`${schema.suggestionCandidates.status} = 'pending' AND ${schema.suggestionCandidates.shareUpstream} = true`,
-    )
+    .where(sql`${schema.suggestionCandidates.status} = 'pending'`)
     .groupBy(
       schema.suggestionCandidates.moment,
       schema.suggestionCandidates.contentType,
     );
 
   // Block 3c: per-bucket rejected + merged counts for the slop
-  // rejection rate. Same share_upstream=true scope so the rate
-  // reflects only the candidates Robert actually triaged.
+  // rejection rate. Scoped to triaged statuses across all candidates.
   const reviewedRows = await db
     .select({
       moment: schema.suggestionCandidates.moment,
@@ -100,9 +97,7 @@ export default async function CalibrationCoveragePage() {
       count: sql<number>`count(*)::int`,
     })
     .from(schema.suggestionCandidates)
-    .where(
-      sql`${schema.suggestionCandidates.status} IN ('rejected', 'merged') AND ${schema.suggestionCandidates.shareUpstream} = true`,
-    )
+    .where(sql`${schema.suggestionCandidates.status} IN ('rejected', 'merged')`)
     .groupBy(
       schema.suggestionCandidates.moment,
       schema.suggestionCandidates.contentType,

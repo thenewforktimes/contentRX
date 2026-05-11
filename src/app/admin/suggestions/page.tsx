@@ -41,7 +41,6 @@ interface PendingCandidate {
   candidateText: string | null;
   issueContext: string | null;
   source: string;
-  shareUpstream: boolean;
   createdAt: Date;
 }
 
@@ -56,10 +55,10 @@ interface ClusterRow {
 export default async function AdminSuggestionsPage() {
   const db = getDb();
 
-  // Pending candidates only. We restrict to share_upstream=true rows
-  // so that team-private candidates don't leak into the founder
-  // triage view (ADR 2026-04-28 — opt-in-default-OFF must hold even
-  // on /admin).
+  // Pending candidates. Every row is visible to the founder /admin
+  // queue; the earlier `share_upstream` two-tier opt-in was retired by
+  // ADR 2026-05-11 (Flag-for-Review now owns the explicit-consent path
+  // for customer-input-into-substrate).
   const pendingRows = await db
     .select({
       id: schema.suggestionCandidates.id,
@@ -69,16 +68,10 @@ export default async function AdminSuggestionsPage() {
       candidateText: schema.suggestionCandidates.candidateText,
       issueContext: schema.suggestionCandidates.issueContext,
       source: schema.suggestionCandidates.source,
-      shareUpstream: schema.suggestionCandidates.shareUpstream,
       createdAt: schema.suggestionCandidates.createdAt,
     })
     .from(schema.suggestionCandidates)
-    .where(
-      and(
-        eq(schema.suggestionCandidates.status, "pending"),
-        eq(schema.suggestionCandidates.shareUpstream, true),
-      ),
-    )
+    .where(eq(schema.suggestionCandidates.status, "pending"))
     .orderBy(desc(schema.suggestionCandidates.createdAt))
     .limit(500);
 
@@ -106,7 +99,6 @@ export default async function AdminSuggestionsPage() {
         candidateText: row.candidateText,
         issueContext: row.issueContext,
         source: row.source,
-        shareUpstream: row.shareUpstream,
         createdAt: row.createdAt,
       });
     }
@@ -137,12 +129,7 @@ export default async function AdminSuggestionsPage() {
       totalPending: sql<number>`count(*)::int`,
     })
     .from(schema.suggestionCandidates)
-    .where(
-      and(
-        eq(schema.suggestionCandidates.status, "pending"),
-        eq(schema.suggestionCandidates.shareUpstream, true),
-      ),
-    );
+    .where(eq(schema.suggestionCandidates.status, "pending"));
 
   const [{ totalPrecedents }] = await db
     .select({
