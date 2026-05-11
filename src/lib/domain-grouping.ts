@@ -21,6 +21,7 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { getDb, schema } from "@/db";
+import { logSafeError } from "@/lib/safe-error-log";
 import { getStripe } from "@/lib/stripe";
 
 const GROUP_THRESHOLD = 3;
@@ -210,7 +211,7 @@ export async function maybeGroupByDomain(
   // subscription. Skip the entire step when the env var isn't set
   // (Robert creates the coupon in Stripe Dashboard before flipping it on).
   await applyDomainCoupon(sameDomain.map((u) => u.id)).catch((err) => {
-    console.warn("domain coupon application failed (non-fatal)", err);
+    logSafeError("[domain-grouping] coupon application failed (non-fatal)", err);
   });
 
   return groupId;
@@ -246,8 +247,8 @@ async function applyDomainCoupon(userIds: string[]): Promise<void> {
         discounts: [{ coupon: couponId }],
       });
     } catch (err) {
-      console.warn(
-        `failed to apply domain coupon to ${sub.stripeSubId}`,
+      logSafeError(
+        `[domain-grouping] failed to apply coupon to ${sub.stripeSubId}`,
         err,
       );
     }

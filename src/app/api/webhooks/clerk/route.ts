@@ -68,10 +68,12 @@ export async function POST(req: Request) {
   // retry, no users row created, dashboard dead-ended).
   //
   // The DB writes below are all idempotent (onConflictDoNothing on
-  // insert, by-id update on update, by-id delete on delete). They are
-  // safe to re-run on every retry. The dedupe key is now scoped to the
-  // *side effects* (welcome email, analytics) where re-firing actually
-  // matters, and is set only after they have been attempted.
+  // insert, by-id update on update, by-id delete on delete) and run on
+  // every retry. The dedupe key now scopes only the *side effects*
+  // (welcome email, analytics): `shouldFireSideEffects()` claims the
+  // key just before the side effects run, so a crash *during* those
+  // side effects still leaves the key claimed — we'd rather drop a
+  // duplicate welcome email than fan one out on every retry.
   async function shouldFireSideEffects(): Promise<boolean> {
     try {
       const redis = getRedis();
