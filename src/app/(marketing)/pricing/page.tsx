@@ -40,7 +40,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buttonStyles } from "@/components/ui/button";
+import { ButtonArrow, buttonStyles } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { Pill } from "@/components/ui/pill";
@@ -57,6 +57,7 @@ export default function PricingPage() {
       <PageHeader
         className="max-w-3xl"
         eyebrow="Pricing"
+        eyebrowHighlight
         scale="display"
         title="Staff-level content design review on every check you ship."
         lede={
@@ -349,7 +350,7 @@ function PlanCard({
             variant: emphasized ? "primary" : "secondary",
           })}
         >
-          {cta.label}
+          {cta.label} <ButtonArrow />
         </Link>
       ) : (
         <p className="text-xs text-quiet">

@@ -41,7 +41,7 @@ import { HowItWorksDiagram } from "@/components/how-it-works-diagram";
 import { IntegrationRow } from "@/components/integration-row";
 import { OutcomesGrid } from "@/components/outcomes-grid";
 import { SurfacesGrid } from "@/components/surfaces-grid";
-import { buttonStyles } from "@/components/ui/button";
+import { ButtonArrow, buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Wordmark } from "@/components/wordmark";
 
@@ -70,7 +70,7 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
             <Link href="/sign-up" className={buttonStyles({ variant: "primary" })}>
-              Try free →
+              Try free <ButtonArrow />
             </Link>
             <Link
               href="#how-it-works"

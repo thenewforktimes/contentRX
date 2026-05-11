@@ -22,6 +22,7 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ButtonArrow } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/eyebrow";
 
@@ -44,7 +45,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     description:
       "Inline checks in Claude Code, Cursor, or any MCP client. The LLM narrates the verdict before you ship.",
     href: "/install#mcp",
-    cta: "Set up MCP →",
+    cta: "Set up MCP",
   },
   {
     key: "lsp",
@@ -52,7 +53,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     description:
       "Diagnostics in VS Code, Zed, JetBrains, Neovim, anywhere with an LSP client. Squiggle as you type.",
     href: "/install#lsp",
-    cta: "Set up LSP →",
+    cta: "Set up LSP",
   },
   {
     key: "action",
@@ -60,7 +61,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     description:
       "Gate every PR on content quality. Drop a YAML snippet into .github/workflows/.",
     href: "/install#action",
-    cta: "Set up Action →",
+    cta: "Set up Action",
   },
   {
     key: "figma",
@@ -68,7 +69,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     description:
       "Catch strings during design, before they land in code. Per-frame verdicts in the side panel.",
     href: "/install#figma",
-    cta: "Set up Figma →",
+    cta: "Set up Figma",
   },
   {
     key: "cli",
@@ -76,7 +77,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     description:
       "Batch checks from the terminal or CI. One pip install, stdlib runtime, exit codes you can pipe.",
     href: "/install#cli",
-    cta: "Set up CLI →",
+    cta: "Set up CLI",
   },
 ];
 
@@ -116,7 +117,7 @@ export default async function OnboardPage() {
                 {option.description}
               </p>
               <p className="text-sm font-medium text-strong">
-                {option.cta}
+                {option.cta} <ButtonArrow />
               </p>
             </Card>
           </Link>

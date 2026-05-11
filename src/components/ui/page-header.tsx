@@ -65,6 +65,7 @@ const titleClasses: Record<PageHeaderScale, string> = {
 
 export function PageHeader({
   eyebrow,
+  eyebrowHighlight = false,
   title,
   lede,
   meta,
@@ -76,6 +77,11 @@ export function PageHeader({
   /** Small uppercase tracking-widest label above the heading. Optional;
    * /accuracy and /calibration historically didn't render one. */
   eyebrow?: string;
+  /** When true, render the eyebrow with the soft-caution marker-pen
+   * treatment (see `<Eyebrow highlight>`). Off by default so existing
+   * pages stay unchanged. Use on commercial pages where a flash of
+   * personality earns its keep. */
+  eyebrowHighlight?: boolean;
   /** The page's H1. */
   title: string;
   /** Optional supporting paragraph immediately below the heading. */
@@ -98,7 +104,7 @@ export function PageHeader({
 }) {
   return (
     <header id={id} className={`mb-12 ${className}`.trim()}>
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+      {eyebrow && <Eyebrow highlight={eyebrowHighlight}>{eyebrow}</Eyebrow>}
       <h1 className={`${eyebrow ? "mt-3 " : ""}${titleClasses[scale]}`}>
         {title}
       </h1>
