@@ -36,6 +36,7 @@ import {
   planFromPriceId,
   type PaidPlan,
 } from "@/lib/stripe";
+import { PaymentFailedEmail } from "@/emails/payment-failed";
 import { SubscriptionConfirmationEmail } from "@/emails/subscription-confirmation";
 
 const DEDUPE_PREFIX = "stripe_event:";
@@ -358,12 +359,16 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  // Stripe keeps the subscription active through the grace period defined
-  // in Dashboard → Billing settings. We don't change the plan here — we
-  // just log. Session 13 wires Resend for the dunning email.
-  // Invoice schema can vary by API version; read subscription id via
-  // the parent relationship when available. See `InvoiceWithParent`
-  // type alias above for the documented field shape.
+  // Stripe keeps the subscription active through the grace period
+  // defined in Dashboard → Billing settings. We don't change the
+  // plan here — Stripe's smart-retries do the work. We send a
+  // single dunning email per invoice (dedupe by invoice.id) so
+  // Stripe's three-week retry cadence doesn't spam the customer.
+  //
+  // Invoice schema can vary by API version; read subscription id
+  // via the parent relationship when available. See
+  // `InvoiceWithParent` type alias above for the documented field
+  // shape.
   const parent = (invoice as unknown as InvoiceWithParent).parent;
   const subId = parent?.subscription;
   console.warn(
@@ -371,6 +376,54 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
       invoice.customer_email ? ` email=${invoice.customer_email}` : ""
     }`,
   );
+
+  if (!subId) {
+    // No subscription on the invoice — likely a one-off or a Stripe
+    // event shape we don't recognize. Nothing to send.
+    return;
+  }
+
+  const db = getDb();
+  const [row] = await db
+    .select({
+      userId: schema.subscriptions.userId,
+      plan: schema.subscriptions.plan,
+      seats: schema.subscriptions.seats,
+      email: schema.users.email,
+    })
+    .from(schema.subscriptions)
+    .innerJoin(
+      schema.users,
+      eq(schema.users.id, schema.subscriptions.userId),
+    )
+    .where(eq(schema.subscriptions.stripeSubId, subId))
+    .limit(1);
+
+  if (!row) {
+    // Subscription not yet upserted into our DB. Stripe will retry
+    // the failed-payment webhook on the next retry cycle; if the
+    // subscription lands by then, we'll send the email then.
+    return;
+  }
+
+  const planLabel = row.plan === "team" ? `Team` : "Pro";
+
+  try {
+    await sendEmail({
+      to: row.email,
+      subject: `Your ContentRX payment didn't go through`,
+      react: PaymentFailedEmail({
+        appUrl: appUrl(),
+        planLabel,
+      }),
+      // Dedupe on invoice.id so Stripe's retry attempts on the same
+      // invoice don't fan out to multiple emails. Each retry fires
+      // its own webhook, but the email lands once per invoice.
+      dedupeKey: `payment_failed:${invoice.id ?? "no-id"}`,
+    });
+  } catch (err) {
+    logSafeError("payment-failed email send", err);
+  }
 }
 
 // ---------------------------------------------------------------------------

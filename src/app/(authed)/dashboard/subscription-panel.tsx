@@ -80,10 +80,22 @@ function UpgradeCard() {
   const [selectedPlan, setSelectedPlan] = useState<"pro" | "team">("pro");
   const [interval, setInterval] = useState<Interval>("monthly");
   const [seats, setSeats] = useState(TEAM_MIN_SEATS);
+  // California Automatic Renewal Law (CARL / AB 2863, 2025-07-01)
+  // requires affirmative consent to auto-renewal that is separate
+  // from agreement to the Terms of Service. The checkbox below MUST
+  // remain a distinct affirmation — combining it with the ToS
+  // checkbox or a "Continue" CTA defeats CARL's intent.
+  const [autoRenewalConsented, setAutoRenewalConsented] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
+    if (!autoRenewalConsented) {
+      setError(
+        "Please confirm you agree to automatic renewal before continuing.",
+      );
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -94,6 +106,10 @@ function UpgradeCard() {
           plan: selectedPlan,
           interval,
           ...(selectedPlan === "team" ? { seats } : {}),
+          // Server persists `users.auto_renewal_consented_at` when
+          // this is true. /api/checkout refuses to create a Stripe
+          // Checkout Session without a consent timestamp on the row.
+          autoRenewalConsented: true,
         }),
       });
       if (!res.ok) {
@@ -161,13 +177,37 @@ function UpgradeCard() {
         )}
       </div>
 
+      {/* CARL-compliant auto-renewal consent. Separate from any ToS
+          checkbox at signup. Plain language, names the cadence, and
+          points at the Stripe Portal as the cancellation path. */}
+      <label className="mb-3 flex items-start gap-2 rounded-md border border-line bg-canvas p-3 text-xs text-default">
+        <input
+          type="checkbox"
+          checked={autoRenewalConsented}
+          onChange={(e) => setAutoRenewalConsented(e.target.checked)}
+          className="mt-0.5 shrink-0"
+          aria-describedby="auto-renewal-consent-text"
+        />
+        <span id="auto-renewal-consent-text">
+          I agree that my subscription will renew automatically
+          {" "}
+          {interval === "monthly" ? "every month" : "every year"}
+          {" "}at the price shown above. I can cancel anytime from
+          the dashboard, and access continues through the end of the
+          paid period.
+        </span>
+      </label>
+
       {error && (
         <div className="mb-3 rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-xs text-accent-concern-text">
           {error}
         </div>
       )}
 
-      <Button onClick={submit} disabled={loading}>
+      <Button
+        onClick={submit}
+        disabled={loading || !autoRenewalConsented}
+      >
         {loading ? "Redirecting to Stripe…" : "Continue to checkout"}
       </Button>
     </section>

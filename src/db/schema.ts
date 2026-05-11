@@ -99,6 +99,18 @@ export const users = pgTable("users", {
     .notNull()
     .default(false),
   overageOptedInAt: timestamp("overage_opted_in_at", { withTimezone: true }),
+  // California Automatic Renewal Law (CARL / AB 2863, effective
+  // 2025-07-01) requires affirmative consent to auto-renewal that is
+  // separate from agreement to the Terms of Service. Set at Stripe
+  // Checkout time after the user ticks the dedicated consent
+  // checkbox in <SubscriptionPanel>. Nullable because Free users
+  // never reach the checkbox; /api/checkout enforces non-null
+  // before creating the Stripe Checkout Session. Retention: CARL
+  // requires 3 years or 1 year after contract ends — that's
+  // covered as long as we don't delete this column for that window.
+  autoRenewalConsentedAt: timestamp("auto_renewal_consented_at", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

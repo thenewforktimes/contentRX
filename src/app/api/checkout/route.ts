@@ -35,6 +35,13 @@ const RequestSchema = z.object({
   plan: z.enum(["pro", "team"]),
   interval: z.enum(["monthly", "annual"]),
   seats: z.number().int().min(1).max(500).optional(),
+  // California Automatic Renewal Law (CARL / AB 2863, 2025-07-01)
+  // requires affirmative consent to auto-renewal that is separate
+  // from agreement to the Terms of Service. The client sets this to
+  // `true` only after the customer ticks the dedicated checkbox in
+  // <SubscriptionPanel>. We refuse to create a Stripe Checkout
+  // Session without it.
+  autoRenewalConsented: z.literal(true),
 });
 
 export async function POST(req: Request) {
@@ -95,6 +102,15 @@ export async function POST(req: Request) {
       { status: 404 },
     );
   }
+
+  // CARL: stamp the auto-renewal consent timestamp before we create
+  // the Stripe Checkout Session. Idempotent — if the user re-runs
+  // checkout (cancelled, came back), the latest consent overwrites
+  // the prior one. Retention: keep the row for ≥3 years per CARL.
+  await db
+    .update(schema.users)
+    .set({ autoRenewalConsentedAt: new Date() })
+    .where(eq(schema.users.id, user.id));
 
   const stripe = getStripe();
   const baseUrl = appUrl();

@@ -28,6 +28,7 @@ CREATE TABLE users (
   cost_pause_active boolean NOT NULL DEFAULT false,
   overage_opt_in_active boolean NOT NULL DEFAULT false,
   overage_opted_in_at timestamptz,
+  auto_renewal_consented_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
