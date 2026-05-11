@@ -90,6 +90,41 @@ export function humanizeMoment(value: string | null | undefined): string {
   return MOMENT_LABELS[value] ?? fallback(value);
 }
 
+/**
+ * Source-surface label for `usage_events.source` / `violations.source`
+ * style values. Used by the dashboard's "via {source}" annotations on
+ * /dashboard/runs, /dashboard/shared, etc. so customers see the
+ * surface name they recognise — "Figma plugin" not "plugin", "Web
+ * app" not "dashboard". Engine-side stays the short enum; render
+ * boundary humanises.
+ */
+export function humanizeSource(value: string | null | undefined): string {
+  if (!value) return "";
+  if (value === "action") return "GitHub Action";
+  if (value === "cli") return "CLI";
+  if (value === "mcp") return "MCP";
+  if (value === "lsp") return "LSP";
+  if (value === "plugin") return "Figma plugin";
+  if (value === "dashboard") return "Web app";
+  return value;
+}
+
+/**
+ * Terse, label-only verdict — for surfaces that show the engine's
+ * verdict without the finding-count nuance (e.g., /dashboard/shared).
+ * For the verdict-header in /dashboard/checks where the count matters,
+ * use `humanizeVerdict` with the full signature.
+ */
+export function humanizeVerdictLabel(
+  value: string | null | undefined,
+): string {
+  if (!value) return "";
+  if (value === "pass") return "All clear";
+  if (value === "review_recommended") return "Worth a look";
+  if (value === "violation") return "Findings to adjust";
+  return fallback(value);
+}
+
 export function humanizeContentType(value: string | null | undefined): string {
   if (!value) return "";
   return CONTENT_TYPE_LABELS[value] ?? fallback(value);

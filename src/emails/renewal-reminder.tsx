@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 import { Button, Heading, Text } from "@react-email/components";
 import { EmailShell, bodyStyle, headingStyle, primaryButton } from "./_shell";
 

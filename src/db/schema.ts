@@ -436,6 +436,12 @@ export const violations = pgTable(
     // PR-40: per-run dashboard page query — `WHERE team_id = $1 AND
     // run_id = $2` ordered by createdAt.
     index("violations_team_run_idx").on(t.teamId, t.runId, t.createdAt),
+    // Audit 2026-05-11 round 3: rollback-monitor + admin standard-
+    // activity loaders filter `WHERE standard_id = $1 AND created_at
+    // >= $2`. The first time this matters is at ~10K rows — well within
+    // beta-volume range once CI runs land. Pre-fix, both queries were
+    // full-table scans per standard (49+ scans per nightly cron).
+    index("violations_standard_created_idx").on(t.standardId, t.createdAt),
   ],
 ).enableRLS();
 
@@ -574,6 +580,16 @@ export const violationOverrides = pgTable(
       t.teamId,
       t.standardId,
       t.moment,
+    ),
+    // Audit 2026-05-11 round 3: rollback-monitor cron filters
+    // `WHERE standard_id = $1 AND created_at >= $2` per standard.
+    // The existing (team_id, standard_id) index doesn't satisfy this
+    // because there's no leading team scope. Adds the missing
+    // (standard_id, created_at) covering index so the per-standard
+    // rollup stops full-table-scanning at every nightly cron run.
+    index("violation_overrides_standard_created_idx").on(
+      t.standardId,
+      t.createdAt,
     ),
     // FK index on violation_id. When a violation is deleted, PG has to
     // find all overrides pointing at it to apply ON DELETE SET NULL —
@@ -1106,6 +1122,14 @@ export const customerFlaggedReviews = pgTable(
     // Cross-reference with violation_overrides via text_hash so the
     // founder can see "this string was flagged AND overridden."
     index("customer_flagged_reviews_text_hash_idx").on(t.textHash),
+    // FK-perf indexes — added in the 2026-05-11 round-3 audit. Both
+    // columns are nullable `.references()`, so on user-delete /
+    // violation-delete PG has to find rows pointing here to apply
+    // ON DELETE SET NULL. Without these, that's a full-table scan
+    // (same fix the audit comment on
+    // `violation_overrides_violation_idx` calls out).
+    index("customer_flagged_reviews_triaged_by_idx").on(t.triagedBy),
+    index("customer_flagged_reviews_violation_idx").on(t.violationId),
   ],
 ).enableRLS();
 

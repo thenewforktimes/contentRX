@@ -10,9 +10,9 @@ months later there are 40 copies of "Error occurred" scattered across
 toast calls, `error.tsx` files, and 401 handlers. Nobody meant to
 ship that. Nobody reviewed it.
 
-This guide shows what ContentRX catches in the `error_recovery`
-moment across a Next.js 15 App Router app, using three real surfaces:
-the global `error.tsx` boundary, the per-route `not-found.tsx`, and
+This guide shows what ContentRX catches in error-recovery copy
+across a Next.js 15 App Router app, using three real surfaces: the
+global `error.tsx` boundary, the per-route `not-found.tsx`, and
 inline toast errors.
 
 ## Setup
@@ -24,10 +24,9 @@ Assumed stack:
 - A toast library (sonner, react-hot-toast, or similar)
 - ContentRX installed via the MCP server or the GitHub Action
 
-The `error_recovery` moment weighs two standards especially heavily:
-[VT-05](/spec/standards/VT-05) (empathy scaled to severity) and
-[CLR-02](/spec/standards/CLR-02) (lead with the most important
-information). Most error-copy violations are one of those two.
+The error-recovery context weighs two qualities especially heavily:
+empathy scaled to severity, and leading with the most important
+information. Most error-copy findings come back to one of those two.
 
 ## What you'll see — a global error boundary
 
@@ -50,37 +49,34 @@ export default function Error({ error, reset }: {
 }
 ```
 
-ContentRX raises three violations:
+ContentRX raises three findings:
 
-### Violation 1 — `<h2>Something went wrong!</h2>`
+### Finding 1 — `<h2>Something went wrong!</h2>`
 
-- **[GRM-03](/spec/standards/GRM-03)** `[block]` — The rule is
-  explicit: _"Never use [exclamation points] in error messages or
-  alerts."_ The enthusiasm reads as dismissive when the user is
-  already frustrated.
-- **[VT-05](/spec/standards/VT-05)** `[warn]` — "Something went
-  wrong" is the canonical low-empathy error message. It tells the
-  user nothing and implicitly shrugs. Suggested rewrite: **"We
-  couldn't load this page"** (takes responsibility, names what
-  broke).
+- **Mechanics** `[block]` — exclamation points read as dismissive in
+  error copy when the user is already frustrated. The voice guide is
+  explicit: leave exclamation points out of error messages and
+  alerts.
+- **Voice & tone** `[warn]` — "Something went wrong" is the canonical
+  low-empathy error message. It tells the user nothing and implicitly
+  shrugs. Suggested rewrite: **"We couldn't load this page"** (takes
+  responsibility, names what broke).
 
-### Violation 2 — `<p>An error occurred.</p>`
+### Finding 2 — `<p>An error occurred.</p>`
 
-- **[CLR-02](/spec/standards/CLR-02)** `[block]` — The rule asks
-  you to lead with the most important information. "An error
+- **Structure** `[block]` — leads with the wrong thing. "An error
   occurred" has zero information density — it's a placeholder
-  someone forgot to replace. Suggested rewrite: **"A temporary
-  issue on our end interrupted the request"** or **"A network
-  error stopped us from loading this page"**.
+  someone forgot to replace. Suggested rewrite: **"A temporary issue
+  on our end interrupted the request"** or **"A network error stopped
+  us from loading this page"**.
 
-### Violation 3 — `<button onClick={reset}>Try again</button>`
+### Finding 3 — `<button onClick={reset}>Try again</button>`
 
-- **[ACT-02](/spec/standards/ACT-02)** `[info]` — "Try again" is
-  moderately vague. Not a hard block in the `error_recovery`
-  moment — retry-style buttons are a well-known pattern — but the
-  rule prefers specific verbs. Suggested alternative: **"Reload"**
-  (one word, specific action) or leave "Try again" if your team
-  prefers it.
+- **Voice & tone** `[info]` — "Try again" is a moderately vague verb.
+  Not a hard block here — retry-style buttons are a well-known
+  pattern — but more specific verbs read better. Suggested
+  alternative: **"Reload"** (one word, specific action) or leave
+  "Try again" if your team prefers it.
 
 ## The fix
 
@@ -101,15 +97,15 @@ export default function Error({ error, reset }: {
 }
 ```
 
-Three changes, zero blocking violations. The tone shifts from
-"the user caused this" to "we caused this and we can fix it" —
-[VT-05](/spec/standards/VT-05)'s core ask.
+Three changes, zero blocking findings. The tone shifts from "the
+user caused this" to "we caused this and we can fix it" — exactly
+what error-recovery copy needs.
 
 ## Inline toast errors
 
 Toast errors are where this pattern scales. A 20-file codebase
 typically has 10–20 `toast.error(...)` calls. Once you've reviewed
-the first few, the same violations repeat:
+the first few, the same findings repeat:
 
 Before:
 
@@ -128,13 +124,12 @@ toast.error("That subscription has already been canceled.");
 ```
 
 The after versions are longer — 8–12 words instead of 2–4 — but
-they tell the user what happened AND what to do. The
-[error recovery moment](/spec/moments) is specifically calibrated
-to accept that extra length.
+they tell the user what happened AND what to do. Error-recovery
+copy is calibrated to accept that extra length when it's load-bearing.
 
 ## 404 / not-found pages
 
-`not-found.tsx` runs in the same moment and the same rules apply.
+`not-found.tsx` runs in the same context and the same rules apply.
 A common anti-pattern:
 
 ```tsx
@@ -150,10 +145,9 @@ export default function NotFound() {
 }
 ```
 
-All three strings flag on [CLR-02](/spec/standards/CLR-02) (lead with
-information) and the link flags on [ACC-01](/spec/standards/ACC-01)
-("Home" alone is borderline — works if the surrounding context makes
-the destination unambiguous).
+All three strings flag on structure (leading with the wrong thing)
+and the link flags on accessibility ("Home" alone is borderline —
+works if the surrounding context makes the destination unambiguous).
 
 After:
 
@@ -173,7 +167,7 @@ export default function NotFound() {
 ## Running this on your codebase
 
 **Via the MCP server (writing new errors):** Claude Code consults
-ContentRX when you write a new toast or error page. Violations
+ContentRX when you write a new toast or error page. Findings
 surface before the code lands.
 
 **Via the GitHub Action (existing codebase):** Scope the action to
@@ -189,16 +183,13 @@ on:
       - '**/toast-helpers.ts'
 ```
 
-This keeps the action focused on the pages where violations compound
+This keeps the action focused on the pages where findings compound
 and avoids blowing through your quota on every UI tweak.
 
-## Related standards
+## Categories on the public envelope
 
-- [VT-05](/spec/standards/VT-05) — Empathy scaled to severity
-- [CLR-02](/spec/standards/CLR-02) — Lead with the most important
-  information
-- [GRM-03](/spec/standards/GRM-03) — No exclamation points in error
-  messages
-- [ACT-02](/spec/standards/ACT-02) — Specific verbs beat vague ones
-- [ACC-01](/spec/standards/ACC-01) — Descriptive link text
-- [Error recovery moment](/spec/moments)
+ContentRX returns each finding under a customer-facing category —
+**Voice & tone**, **Mechanics**, **Structure**, **Accessibility**,
+**Inclusion**, **Big picture**. The categories above match what
+shows up in your editor diagnostics, your PR comment, and the
+dashboard.

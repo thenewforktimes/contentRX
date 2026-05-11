@@ -32,7 +32,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { gte } from "drizzle-orm";
+import { and, gte, isNotNull } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { requireCronAuth } from "@/lib/cron-auth";
 import { buildSignalDump } from "@/lib/refinement-signals";
@@ -80,9 +80,11 @@ export async function GET(req: Request) {
     .where(gte(schema.violationOverrides.createdAt, thirty));
 
   // 60-day review-tagged violations — feeds OOD + conflict clusters.
-  // Not filtering on reviewReasonSubtype at SQL layer; the aggregator
-  // handles that, and the shape is small enough (`violations_subtype_created_idx`
-  // narrows it).
+  // Push the `reviewReasonSubtype IS NOT NULL` filter into SQL so
+  // `violations_subtype_created_idx` (on subtype + createdAt) can do
+  // the work. Previously the filter ran in JS after fetching every
+  // 60-day row, defeating the index and pulling far more rows than
+  // the aggregator needed.
   const reviewViolations60d = await db
     .select({
       checkEventId: schema.violations.checkEventId,
@@ -95,7 +97,12 @@ export async function GET(req: Request) {
       createdAt: schema.violations.createdAt,
     })
     .from(schema.violations)
-    .where(gte(schema.violations.createdAt, sixty));
+    .where(
+      and(
+        gte(schema.violations.createdAt, sixty),
+        isNotNull(schema.violations.reviewReasonSubtype),
+      ),
+    );
 
   const dump = buildSignalDump({
     now,

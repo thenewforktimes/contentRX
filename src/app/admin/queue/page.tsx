@@ -249,7 +249,7 @@ function FilterTab({
   count: number;
 }) {
   const cls = active
-    ? "rounded-md bg-stone-900 text-white dark:bg-white dark:text-black"
+    ? "rounded-md bg-accent-primary-solid text-accent-primary-on"
     : "rounded-md bg-sunken text-default hover:bg-hover";
   return (
     <Link href={href} className={`${cls} px-3 py-1.5 text-xs font-medium`}>

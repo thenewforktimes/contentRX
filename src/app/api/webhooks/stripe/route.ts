@@ -5,11 +5,20 @@
  * the raw request body; the STRIPE_WEBHOOK_SECRET env var must match
  * the endpoint's signing secret from the Stripe Dashboard.
  *
- * Idempotency: Stripe retries failed deliveries with the same `event.id`.
- * We SET NX into Redis with a 24h TTL before processing — if the key
- * already exists the event is a replay and we short-circuit with 200
- * so Stripe stops retrying. (Returning non-2xx would keep the retry
- * loop going against an already-applied change.)
+ * Idempotency: every Stripe handler in this file is idempotent —
+ * `upsertSubscription` is a true upsert, status / plan / cancelledAt
+ * updates are last-write-wins, and the side effects (welcome email,
+ * upgrade analytics, payment-failed email) each carry their own
+ * per-(userId, subscription | invoice) Redis dedupe. So Stripe's
+ * retries are safe to run end-to-end; we don't need (and used to
+ * have a buggy version of) a top-level event-id dedupe.
+ *
+ * The earlier top-level dedupe set the event-id key BEFORE running
+ * any work. When a handler crashed mid-flight (DB outage, Stripe API
+ * timeout), we returned 500 → Stripe retried → the retry saw the
+ * key and short-circuited as `deduplicated: true` without re-running
+ * the handler, silently dropping the upsert. Matches the same fix
+ * the Clerk webhook landed on 2026-04-25.
  *
  * Handlers (locked per BUILD_PLAN §8):
  *   - checkout.session.completed       → link subscription, set plan
@@ -38,9 +47,6 @@ import {
 } from "@/lib/stripe";
 import { PaymentFailedEmail } from "@/emails/payment-failed";
 import { SubscriptionConfirmationEmail } from "@/emails/subscription-confirmation";
-
-const DEDUPE_PREFIX = "stripe_event:";
-const DEDUPE_TTL_SECONDS = 24 * 60 * 60;
 
 /**
  * Stripe SDK shapes that vary by API version. The `Stripe.Invoice` and
@@ -111,23 +117,13 @@ async function handleStripeWebhook(req: Request): Promise<Response> {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // Dedupe. If this event.id has already been processed, ACK the replay
-  // so Stripe quiets down — don't re-apply the change.
-  try {
-    const redis = getRedis();
-    const setResult = await redis.set(DEDUPE_PREFIX + event.id, "1", {
-      nx: true,
-      ex: DEDUPE_TTL_SECONDS,
-    });
-    if (setResult === null) {
-      return NextResponse.json({ received: true, deduplicated: true });
-    }
-  } catch (err) {
-    // Redis outage shouldn't block a valid webhook — log and proceed.
-    // Worst case: we double-apply an event, which each handler is
-    // written to tolerate (upserts, not inserts).
-    logSafeError("[stripe-webhook] dedupe lookup failed, proceeding without", err);
-  }
+  // No top-level event-id dedupe. Each handler's DB writes are
+  // idempotent and the side effects (welcome email, upgrade
+  // analytics, payment-failed email) carry their own per-action
+  // Redis dedupe keys. The header comment block has the longer
+  // rationale; the short version is that pre-claiming the event-id
+  // key turned mid-handler crashes into silent permanent failures
+  // on retry.
 
   try {
     switch (event.type) {

@@ -64,13 +64,27 @@ import urllib.request
 from pathlib import Path
 from typing import Any, Iterable
 
-# Lazy imports for intent_classifier + repo_quality — keeps the
-# CLI fast when only filter logic runs + avoids circular paths.
-from intent_classifier import (  # type: ignore[import-not-found]
-    classify_intent,
-    suggested_triage_category,
-)
-from repo_quality import score_repo  # type: ignore[import-not-found]
+# Sibling-module imports for intent_classifier + repo_quality. The
+# `external_signal` directory is meant to be invoked both as a script
+# (`python external_signal/github_miner.py`) and as a module
+# (`python -m external_signal.github_miner`, plus `import` for tests),
+# so we try the package-relative import first and fall back to the
+# bare names when running as a top-level script with this directory
+# on sys.path.
+try:
+    from external_signal.intent_classifier import (  # type: ignore[import-not-found]
+        classify_intent,
+        suggested_triage_category,
+    )
+    from external_signal.repo_quality import (  # type: ignore[import-not-found]
+        score_repo,
+    )
+except ImportError:  # pragma: no cover — script-invocation fallback
+    from intent_classifier import (  # type: ignore[import-not-found]
+        classify_intent,
+        suggested_triage_category,
+    )
+    from repo_quality import score_repo  # type: ignore[import-not-found]
 
 
 # ---------------------------------------------------------------------------

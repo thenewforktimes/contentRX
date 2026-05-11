@@ -518,12 +518,17 @@ function humanizeSeverityLabel(severity: string): string {
 }
 
 function SeverityDot({ severity }: { severity: string }) {
+  // Severity dots map to the design system's three "urgency" accents:
+  // concern (red) for high, caution (amber) for medium, info (blue)
+  // for low. All three solids pair with -on text and meet WCAG AAA;
+  // pre-token the dots used raw shades (rose/amber/stone) that didn't
+  // verify against the contrast checker.
   const tone =
     severity === "high"
-      ? "bg-rose-500"
+      ? "bg-accent-concern-solid"
       : severity === "medium"
-        ? "bg-amber-500"
-        : "bg-stone-400";
+        ? "bg-accent-caution-solid"
+        : "bg-accent-info-solid";
   return (
     <span
       className={`mt-1.5 inline-block h-2 w-2 flex-none rounded-full ${tone}`}

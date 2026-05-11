@@ -130,7 +130,7 @@ export default async function JoinPage({ searchParams }: PageProps) {
         </h1>
         <p className="mt-3 text-sm text-quiet">
           Accepting this invitation adds your account to the team.
-          You&apos;ll share the team&apos;s monthly check quota and
+          You&apos;ll share the team&apos;s monthly check limit and
           custom rules.
         </p>
       </header>

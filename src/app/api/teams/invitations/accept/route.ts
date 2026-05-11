@@ -139,6 +139,12 @@ function describeAcceptError(reason: string): {
         message:
           "You already own a team. Cancel that subscription before joining another team.",
       };
+    case "user_not_provisioned":
+      return {
+        status: 503,
+        message:
+          "We're still setting up your account. Refresh in a moment and try again.",
+      };
     default:
       return {
         status: 409,

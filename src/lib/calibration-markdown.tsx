@@ -1,18 +1,18 @@
 /**
  * Calibration-log markdown renderer.
  *
- * Renders the templated markdown emitted by
- * `reports/calibration/generate.py` into proper JSX. The page used to
- * dump the file as a `<pre>` block, which produced an illegible wall
- * of literal `#`, `**`, `_`, and backtick characters. This module
- * fixes that.
+ * Renders the templated markdown that Robert hand-maintains at
+ * `reports/calibration/<YYYY-WW>.md` into proper JSX. The page used
+ * to dump the file as a `<pre>` block, which produced an illegible
+ * wall of literal `#`, `**`, `_`, and backtick characters. This
+ * module fixes that.
  *
  * Why we don't pull `react-markdown` (or similar):
  *   - The calibration log uses a narrow, templated subset: H1, H2,
  *     bullet lists (with one level of nesting), bold, italic, and
- *     inline code. We control the template — the generator emits a
- *     known shape, so a 50-line targeted parser is more accurate
- *     than a general one and adds zero bundle weight.
+ *     inline code. The template is small and stable — a 50-line
+ *     targeted parser is more accurate than a general one and adds
+ *     zero bundle weight.
  *   - The calibration page is the ONLY consumer today. Adding a
  *     heavy markdown dep for one page is a poor trade.
  *

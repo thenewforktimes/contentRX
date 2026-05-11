@@ -412,14 +412,18 @@ function RailRow({
   value: number;
   tone: "green" | "amber" | "red" | "neutral";
 }) {
+  // Status dots map to the design system's four accent solids. The
+  // neutral fallback uses accent-info-solid (blue) — the only token
+  // that's both distinguishable from the urgency colors and not
+  // already in use elsewhere on the row.
   const dot =
     tone === "green"
-      ? "bg-emerald-500"
+      ? "bg-accent-affirm-solid"
       : tone === "amber"
-        ? "bg-amber-500"
+        ? "bg-accent-caution-solid"
         : tone === "red"
-          ? "bg-rose-500"
-          : "bg-stone-400";
+          ? "bg-accent-concern-solid"
+          : "bg-accent-info-solid";
   return (
     <li className="flex items-center justify-between text-default">
       <span className="flex items-center gap-2">

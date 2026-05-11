@@ -25,6 +25,7 @@ import { resolveAuth } from "@/lib/auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { RationaleFeedbackRequestSchema } from "@/lib/rationale-feedback";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { teamScope } from "@/lib/team-scope";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
@@ -80,10 +81,12 @@ export async function POST(req: Request) {
     source,
   } = parsed.data;
 
-  const teamIdForFeedback =
-    auth.plan === "team"
-      ? (auth.teamOwnerUserId ?? auth.user.id)
-      : null;
+  // Every team-scoped table writer uses teamScope(auth) so readers can
+  // join on a non-null team_id. The free/Pro path used to land NULL
+  // here, which made calibration / refinement-log aggregations silently
+  // miss every rationale-feedback row from non-Team plans (same bug
+  // class as the violations.team_id fix in PR-198).
+  const teamIdForFeedback = teamScope(auth);
 
   const db = getDb();
   const [row] = await db

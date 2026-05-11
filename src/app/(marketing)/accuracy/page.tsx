@@ -19,7 +19,6 @@
  */
 
 import type { Metadata } from "next";
-import Link from "next/link";
 import { AuthorBlock } from "@/components/author-block";
 import { Divider } from "@/components/ui/divider";
 import { PageHeader } from "@/components/ui/page-header";

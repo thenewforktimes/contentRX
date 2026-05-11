@@ -8,6 +8,7 @@
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { optionalEnv } from "./require-env";
 
 let _redis: Redis | null = null;
 let _ratelimit: Ratelimit | null = null;
@@ -22,10 +23,16 @@ function getRatelimit(): Ratelimit {
   //                            for backward compat.
   // Identical Redis, different env var keys depending on how the DB was
   // provisioned. Try the native names first, fall back to Vercel Marketplace.
+  // optionalEnv treats `X=""` the same as unset so an empty placeholder
+  // doesn't silently win the ?? chain. Matches redis.ts; previously
+  // ratelimit.ts used raw process.env and a `KV_REST_API_URL` user with
+  // `UPSTASH_REDIS_REST_URL=""` got "credentials not set" instead of
+  // falling through to the Marketplace var.
   const url =
-    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+    optionalEnv("UPSTASH_REDIS_REST_URL") ?? optionalEnv("KV_REST_API_URL");
   const token =
-    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+    optionalEnv("UPSTASH_REDIS_REST_TOKEN") ??
+    optionalEnv("KV_REST_API_TOKEN");
   if (!url || !token) {
     throw new Error(
       "Redis credentials not set. Expected UPSTASH_REDIS_REST_URL + " +

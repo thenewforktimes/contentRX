@@ -105,6 +105,25 @@ export type EvaluateResponse = {
   tokens: EngineTokens;
 };
 
+/**
+ * Thrown when /api/evaluate returns a non-2xx status. The message is
+ * intentionally narrow — just the prefix + status + statusText — so
+ * no upstream response body (which can echo user text from a pydantic
+ * ValidationError or similar) ends up in thrown-error messages, which
+ * eventually land in `logSafeError` truncated at 200 chars. Operators
+ * needing the body should consult Vercel function logs for the engine
+ * side directly.
+ */
+export class UpstreamEvaluatorError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "UpstreamEvaluatorError";
+    this.status = status;
+  }
+}
+
 function internalEvaluateUrl(): string {
   // In production we REQUIRE an explicit INTERNAL_EVAL_URL. Falling back
   // to NEXT_PUBLIC_APP_URL lets a misconfigured hostname leak the
@@ -139,9 +158,9 @@ export async function evaluate(
   });
 
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(
-      `Evaluation failed: ${res.status} ${res.statusText} ${body}`,
+    throw new UpstreamEvaluatorError(
+      `Evaluation failed: ${res.status} ${res.statusText}`,
+      res.status,
     );
   }
 
@@ -175,9 +194,9 @@ export async function classify(text: string): Promise<ClassifyResponse> {
   });
 
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(
-      `Classification failed: ${res.status} ${res.statusText} ${body}`,
+    throw new UpstreamEvaluatorError(
+      `Classification failed: ${res.status} ${res.statusText}`,
+      res.status,
     );
   }
 
@@ -245,9 +264,9 @@ export async function rewriteDocument(
   });
 
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(
-      `Rewrite-document failed: ${res.status} ${res.statusText} ${body}`,
+    throw new UpstreamEvaluatorError(
+      `Rewrite-document failed: ${res.status} ${res.statusText}`,
+      res.status,
     );
   }
 
@@ -276,9 +295,9 @@ export async function suggestFix(
   });
 
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(
-      `Suggest-fix failed: ${res.status} ${res.statusText} ${body}`,
+    throw new UpstreamEvaluatorError(
+      `Suggest-fix failed: ${res.status} ${res.statusText}`,
+      res.status,
     );
   }
 

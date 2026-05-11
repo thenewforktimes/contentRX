@@ -27,7 +27,12 @@ import { redirect } from "next/navigation";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
-import { humanizeMoment } from "@/lib/humanize";
+import {
+  humanizeContentType,
+  humanizeMoment,
+  humanizeSource,
+  humanizeVerdictLabel,
+} from "@/lib/humanize";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 import { RevokeButton } from "./revoke-button";
 
@@ -150,7 +155,7 @@ export default async function SharedChecksPage() {
                       .slice(0, 16)
                       .replace("T", " ")}
                     {" UTC · "}
-                    via {row.source}
+                    via {humanizeSource(row.source)}
                   </div>
                   <Pill tone={tone}>{status}</Pill>
                 </div>
@@ -177,7 +182,7 @@ export default async function SharedChecksPage() {
                   {row.contentType && (
                     <div>
                       <dt className="font-medium text-quiet">Content type</dt>
-                      <dd>{row.contentType}</dd>
+                      <dd>{humanizeContentType(row.contentType)}</dd>
                     </div>
                   )}
                   {row.verdict && (
@@ -185,7 +190,7 @@ export default async function SharedChecksPage() {
                       <dt className="font-medium text-quiet">
                         Engine verdict at share time
                       </dt>
-                      <dd>{row.verdict}</dd>
+                      <dd>{humanizeVerdictLabel(row.verdict)}</dd>
                     </div>
                   )}
                 </dl>

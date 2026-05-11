@@ -207,6 +207,30 @@ def _regex_fallback(files: list[Path]) -> list[Extraction]:
     return out
 
 
+# Major version of the wire format this action is built against. The
+# CLI's response envelope carries `schema_version`; if upstream
+# bumps to 4.x with breaking changes, fail loudly instead of silently
+# rendering the new shape against the old code path.
+_SUPPORTED_SCHEMA_MAJOR = 3
+
+
+def _check_schema_major(response: dict) -> None:
+    sv = response.get("schema_version")
+    if sv is None or not isinstance(sv, str) or "." not in sv:
+        return
+    try:
+        major = int(sv.split(".", 1)[0])
+    except ValueError:
+        return
+    if major != _SUPPORTED_SCHEMA_MAJOR:
+        sys.stderr.write(
+            f"contentrx-action: refusing to parse schema_version={sv}; "
+            f"action was built for major {_SUPPORTED_SCHEMA_MAJOR}. "
+            "Pin the action to a release that matches the deployed engine.\n"
+        )
+        raise SystemExit(2)
+
+
 def run_contentrx(
     text: str,
     content_type: str,
@@ -254,16 +278,20 @@ def run_contentrx(
             f"stderr: {result.stderr[:500]}; "
             f"stdout: {result.stdout[:200]}\n"
         )
+        # Schema 3.0.0 envelope — top-level fields, no `result` wrapper.
+        # The CLI emits this exact shape on success too; we mirror it
+        # here so collect_reports' parser doesn't need to special-case
+        # error responses.
         return {
-            "result": {
-                "overall_verdict": "error",
-                "violations": [],
-                "content_type": content_type,
-                "summary": "CLI error — see action logs.",
-            }
+            "verdict": "error",
+            "violations": [],
+            "content_type": content_type,
+            "summary": "CLI error — see action logs.",
         }
     try:
-        return json.loads(result.stdout)
+        parsed = json.loads(result.stdout)
+        _check_schema_major(parsed)
+        return parsed
     except json.JSONDecodeError:
         # Empty / non-JSON stdout with exit 0 or 1 is also a regression
         # signal. The CLI's contract is that --json always emits a
@@ -275,12 +303,10 @@ def run_contentrx(
             f"stderr={result.stderr[:300]!r}\n"
         )
         return {
-            "result": {
-                "overall_verdict": "error",
-                "violations": [],
-                "content_type": content_type,
-                "summary": "CLI returned unreadable output.",
-            }
+            "verdict": "error",
+            "violations": [],
+            "content_type": content_type,
+            "summary": "CLI returned unreadable output.",
         }
 
 
@@ -295,21 +321,25 @@ def collect_reports(
         response = run_contentrx(
             ext.text, content_type, ext.source_file, run_id=run_id
         )
-        result = response.get("result") or {}
-        # v2 Session 10 — preserve the three-state verdict + reason.
-        # Defaults handle older API versions that don't ship v1.1.0:
-        # if `verdict` is absent, derive a coarse pass/violation from
-        # violation count.
-        verdict = result.get("verdict")
+        # Schema 2.0.0+ — verdict + violations sit at the top level of
+        # the envelope. The pre-2.0.0 `{"result": {...}}` shape this
+        # function used to read no longer matches anything the CLI
+        # emits; reading via response.get("result") returned None on
+        # every happy path and the action falsely reported "all clear"
+        # for every PR. Fixed in the 2026-05-11 audit.
+        verdict = response.get("verdict")
+        violations = response.get("violations") or []
         if not verdict:
-            verdict = "violation" if (result.get("violations") or []) else "pass"
+            # Older API versions or partial envelopes — fall back to
+            # the coarse "any violations means violation" derivation.
+            verdict = "violation" if violations else "pass"
         entry = {
             "text": ext.text,
             "line": ext.line,
             "kind": ext.kind,
-            "violations": result.get("violations") or [],
+            "violations": violations,
             "verdict": verdict,
-            "review_reason": result.get("review_reason"),
+            "review_reason": response.get("review_reason"),
         }
         by_file.setdefault(ext.source_file, []).append(entry)
 

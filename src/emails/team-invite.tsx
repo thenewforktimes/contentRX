@@ -26,7 +26,7 @@ export function TeamInviteEmail({
       <Text>
         {teamOwnerEmail} added you to their ContentRX Team workspace. You
         can use the team's content standards, custom rules, and shared
-        check quota.
+        monthly check limit.
       </Text>
       <Text style={{ marginTop: 20 }}>
         <Button href={acceptUrl} style={primaryButton}>

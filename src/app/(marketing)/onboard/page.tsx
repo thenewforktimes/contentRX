@@ -61,7 +61,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     description:
       "Gate every PR on content quality. Drop a YAML snippet into .github/workflows/.",
     href: "/install#action",
-    cta: "Set up Action",
+    cta: "Set up the GitHub Action",
   },
   {
     key: "figma",
@@ -69,7 +69,7 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     description:
       "Catch strings during design, before they land in code. Per-frame verdicts in the side panel.",
     href: "/install#figma",
-    cta: "Set up Figma",
+    cta: "Set up the Figma plugin",
   },
   {
     key: "cli",
@@ -96,7 +96,7 @@ export default async function OnboardPage() {
         </h1>
         <p className="mt-4 text-lg text-default">
           Pick the surface you&apos;ll start with. You can use the others
-          later. One API key covers them all, and your 20 free checks
+          later. One API key covers them all, and your 10 free checks
           a month are shared across every surface.
         </p>
       </header>
@@ -106,11 +106,11 @@ export default async function OnboardPage() {
           <Link
             key={option.key}
             href={option.href}
-            className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950 rounded-lg"
+            className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
           >
             <Card
               padding="lg"
-              className="flex h-full flex-col gap-3 transition group-hover:border-stone-400 dark:group-hover:border-stone-600"
+              className="flex h-full flex-col gap-3 transition group-hover:border-line-strong"
             >
               <h2 className="text-base font-semibold">{option.name}</h2>
               <p className="flex-1 text-sm text-default">

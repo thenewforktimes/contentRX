@@ -4,34 +4,32 @@ export const metadata = {
 
 # Custom examples
 
-Team-plan teams ship product copy with voice quirks — phrasings that
-are intentionally different from the defaults. ContentRX's default
-rules sometimes flag these. Disabling the rule globally via team
-rules loses the protection everywhere else. **Custom examples** are
-the surgical alternative: mark the specific string as correct (or
-known-bad) for your team, and ContentRX short-circuits the LLM on
-every subsequent evaluation of it.
+Teams ship product copy with intentional voice quirks — phrasings
+that intentionally read differently from the defaults. ContentRX's
+default rules sometimes flag these. **Custom examples** are the
+surgical alternative to globally disabling a rule: mark the specific
+string as correct (or known-bad) for your team, and ContentRX
+short-circuits the LLM on every subsequent evaluation of it.
 
 One example usually makes it land:
 
 > Your team ships `Let's go.` on confirmation banners. ContentRX's
-> `PRF-03` flags trailing periods on headings, which catches this.
-> Disabling `PRF-03` would lose the rule globally. Adding `Let's go.`
-> as a custom example (verdict = `pass`) means ContentRX stops
-> questioning that specific string without touching `PRF-03`
-> anywhere else.
+> default mechanics rules flag trailing periods on heading-style
+> microcopy, which catches this. Disabling the rule globally would
+> lose its protection elsewhere. Adding `Let's go.` as a custom
+> example (verdict = `pass`) means ContentRX stops questioning that
+> specific string without touching the rule anywhere else.
 
 ## Ingestion lives in MCP and the CLI
 
-Custom examples are admin-managed from the surfaces where your team
+Custom examples are managed from the surfaces where your team
 already authors copy — Claude Code, Cursor, your terminal — not from
-a web form. This matches ContentRX's generation-layer positioning:
-the content decision happens during authoring, so the "save this"
-action should happen there too.
+a web form. The content decision happens during authoring, so the
+"save this" action happens there too.
 
 ### From Claude Code or Cursor (MCP)
 
-The `contentrx-mcp` server (v0.5+) exposes four tools:
+The `contentrx-mcp` server exposes four tools:
 
 - `custom_example_add` — mark a string as correct or known-bad
 - `custom_example_list` — list the team's current set
@@ -52,7 +50,7 @@ In practice:
 
 ### From the terminal (CLI)
 
-The `contentrx` CLI (v0.3+) exposes the same operations:
+The `contentrx` CLI exposes the same operations:
 
 ```bash
 contentrx example add "Let's go." \
@@ -82,11 +80,9 @@ Every entry carries:
 |---|---|---|
 | `text` | Required | The exact string to short-circuit on. Case + whitespace are normalised at match time, but punctuation is not — `Let's go.` and `Let's go` are distinct entries. |
 | `verdict` | Required | `pass` or `violation`. Use `pass` for "this string is correct for us"; `violation` for "this string is always wrong for us." |
-| `moment` | Optional | Scope the match to one moment (e.g., `confirmation`). When omitted, the entry matches in any moment. |
+| `moment` | Optional | Scope the match to one context (e.g., `confirmation`). When omitted, the entry matches in any context. |
 | `content_type` | Optional | Same idea, scoped to a content type (e.g., `button_cta`). |
-| `standard_id` | Required for `violation` | Names the rule the team asserts fires on this string. |
-| `notes` | Recommended | 1–3 sentences explaining why the entry exists. Surfaced in the rationale chain on match. |
-| `contribute_upstream` | Default `false` | Opt this example into anonymised contribution to ContentRX's core model when Robo reviews. Off by default — no assumptions. |
+| `notes` | Recommended | 1–3 sentences explaining why the entry exists. Surfaced on match so teammates see why the verdict is what it is. |
 
 ## What happens when a match fires
 
@@ -95,34 +91,16 @@ The evaluation returns the stored verdict immediately:
 
 - No LLM tokens spent on the match.
 - Your monthly scan quota still decrements by one (a scan is a scan).
-- The rationale chain (Session 21) gets a one-hop
-  `custom_example_match` entry at confidence 1.0 with the example id
-  and your notes, so team members see why the verdict is what it
-  is — no mystery about whether the LLM got it or the team did.
-- In the Figma plugin, a small "Team custom example" tag appears on
-  the card. Display-only; no new CTA — the team already decided.
-
-## Viewing the full set
-
-[`/dashboard/team/custom-examples`](https://contentrx.io/dashboard/team/custom-examples)
-is the team-owner audit view. Read + delete; no create form —
-ingestion is MCP/CLI as above. This is where you go when:
-
-- You want to see every entry the team has accumulated.
-- You're retiring a phrasing and want to remove its entry.
-- You need to verify which entries have `contribute_upstream`
-  enabled.
+- The Figma plugin shows a small "Team custom example" tag on the
+  card. Display-only; no new CTA — the team already decided.
 
 ## Limits and guardrails
 
 - **500 entries per team**, enforced at create time.
-- **Team admin only.** Members see the short-circuits on their
-  scans but can't add or remove.
-- **Immutable after creation.** The `text`, `verdict`, `moment`,
-  `content_type`, and `standard_id` can't be edited in place. Only
-  `notes` and `contribute_upstream` are updatable. To change what an
-  entry matches, delete it and add the replacement — the audit trail
-  stays clean.
+- **Immutable after creation.** The `text`, `verdict`, `moment`, and
+  `content_type` can't be edited in place. Only `notes` is updatable.
+  To change what an entry matches, delete it and add the replacement
+  — the audit trail stays clean.
 - **Unique per team.** The same normalised text can't exist twice in
   one team's set. Prevents silent conflicts where two entries
   disagree on the verdict.
@@ -130,18 +108,14 @@ ingestion is MCP/CLI as above. This is where you go when:
 ## Privacy
 
 `text` is plaintext, team-authored, team-owned. Scoped by the team
-owner's user id. Nothing in a custom example is derived from a user's
-input — it's a decision your team made and published to the tool.
-
-If you set `contribute_upstream: true` on an entry, it becomes
-eligible for anonymised review by ContentRX's content-design lead
-(Robo). Any contribution back into the core model is explicitly
-reviewed and credited; see [/ethics](/ethics) for the commitment.
+owner's user id. Nothing in a custom example is derived from a
+user's input — it's a decision your team made and published to the
+tool.
 
 ## See also
 
-- [The content model](/model) — the default rules ContentRX evaluates
-  against.
-- [`/accuracy`](https://contentrx.io/accuracy) — calibration reporting
-  for the core model. Custom examples don't affect these numbers;
+- [/accuracy](https://contentrx.io/accuracy) — calibration reporting
+  for the default model. Custom examples don't affect these numbers;
   they're team-scoped short-circuits, not model edits.
+- [/ethics](https://contentrx.io/ethics) — the customer-not-product
+  position. Custom examples never leave your team's scope.

@@ -31,7 +31,12 @@ classifiers = [
 # grammar we walk for string extraction. httpx mirrors the MCP +
 # CLI clients so every surface talks to /api/check the same way.
 dependencies = [
-  "pygls>=1.3.0",
+  # pygls 2.x reorganised modules from `pygls.server.LanguageServer`
+  # to `pygls.lsp.server.LanguageServer`. We use the 2.x path, so the
+  # floor must be 2.0.0 — `>=1.3.0` could resolve a 1.x version in a
+  # constrained environment and crash with ModuleNotFoundError at
+  # import time (`lsp-server/src/contentrx_lsp/server.py:27`).
+  "pygls>=2.0.0",
   "tree-sitter>=0.22.0",
   "tree-sitter-typescript>=0.21.0",
   "httpx>=0.27.0",

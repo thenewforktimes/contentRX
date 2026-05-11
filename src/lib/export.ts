@@ -16,6 +16,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/ratelimit";
 import type { ProvisionedUser } from "@/lib/user-provisioning";
 import { getOrProvisionUser } from "@/lib/user-provisioning";
 
@@ -28,6 +29,12 @@ export type ExportAuth = {
 /**
  * Resolve the requesting user + their team scope. Returns either the
  * auth context or a NextResponse that should be returned as-is.
+ *
+ * Rate-limited at the standard 60/min/user tier so a misbehaving CI
+ * loop or a single noisy customer can't DoS the database via the
+ * unbounded 90-day-window export queries. Added in the 2026-05-11
+ * round-3 audit alongside the matching helpers on the other
+ * dashboard routes.
  */
 export async function requireExportAuth(): Promise<ExportAuth | NextResponse> {
   const { userId: clerkId } = await auth();
@@ -39,6 +46,20 @@ export async function requireExportAuth(): Promise<ExportAuth | NextResponse> {
     return NextResponse.json(
       { error: "User not provisioned yet" },
       { status: 404 },
+    );
+  }
+  const rl = await checkRateLimit(user.id);
+  if (!rl.success) {
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((rl.reset - Date.now()) / 1000),
+    );
+    return NextResponse.json(
+      { error: "Rate limit exceeded", retry_after_seconds: retryAfterSeconds },
+      {
+        status: 429,
+        headers: { "retry-after": String(retryAfterSeconds) },
+      },
     );
   }
   const teamOwnerUserId = user.teamOwnerUserId ?? user.id;

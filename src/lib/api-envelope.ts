@@ -135,6 +135,8 @@
 //         excerpts) now triggers on `text.length > 200` regardless
 //         of caller intent — the wall-of-red-strikethrough
 //         antipattern is no longer reachable from any tier.
+import { isPublicTaxonomyEnabled as publicTaxonomyEnabled } from "./feature-flags";
+
 export const SCHEMA_VERSION = "3.0.0" as const;
 
 /**
@@ -258,18 +260,6 @@ type SubstrateViolation = {
   [key: string]: unknown;
 };
 
-const TRUTHY_PUBLIC_TAXONOMY = new Set(["true", "1", "yes", "on"]);
-
-function publicTaxonomyEnabled(): boolean {
-  // Read at call time, not at import time — request-scoped flips and
-  // test monkeypatches must be visible. Mirrors
-  // `src/lib/feature-flags.ts::isPublicTaxonomyEnabled`; duplicated
-  // locally to avoid a cyclic import (feature-flags imports nothing,
-  // but the hint is to keep this module dependency-free).
-  const raw = process.env.PUBLIC_TAXONOMY;
-  if (raw === undefined) return false;
-  return TRUTHY_PUBLIC_TAXONOMY.has(raw.trim().toLowerCase());
-}
 
 /**
  * Project a substrate Violation down to the schema 2.0.0 public shape.

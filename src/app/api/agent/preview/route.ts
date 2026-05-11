@@ -13,59 +13,62 @@
  * admin review surface with noise. Persistence is the cron's job
  * (POST /api/cron/agent-run).
  *
- * Auth: Clerk session. Anyone with an account can preview their
- * team's digest; the cron itself only runs for team-plan owners,
- * but the preview is free for cold-start customers to see what
- * they'd get if they upgraded.
+ * Auth: Clerk session AND team plan. Preview is a Team-plan feature
+ * (the cron itself only runs for team-plan owners). The earlier
+ * "anyone can preview" stance + no rate-limit was an unmetered
+ * DB-heavy compute path open to free users — closed in the
+ * 2026-05-11 audit. Rate-limited at the standard tier so a buggy
+ * client can't loop the button into a DoS.
  */
 
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getDb, schema } from "@/db";
-import { eq } from "drizzle-orm";
+import { resolveAuth } from "@/lib/auth";
 import { buildAgentRunPayload } from "@/lib/agent/run-agent";
 import { renderDigest } from "@/lib/agent/render-digest";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { teamScope } from "@/lib/team-scope";
 import { logSafeError } from "@/lib/safe-error-log";
 
-export async function POST() {
-  const { userId } = await auth();
-  if (!userId) {
+export async function POST(req: Request) {
+  const auth = await resolveAuth(req);
+  if ("status" in auth) {
     return NextResponse.json(
-      { error: "Authentication required" },
-      { status: 401 },
+      { error: auth.message },
+      { status: auth.status },
+    );
+  }
+
+  if (auth.plan !== "team") {
+    return NextResponse.json(
+      {
+        error:
+          "Agent preview is a Team plan feature. Upgrade your plan to run weekly digests.",
+        plan: auth.plan,
+      },
+      { status: 403 },
+    );
+  }
+
+  const rl = await checkRateLimit(auth.user.id);
+  if (!rl.success) {
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((rl.reset - Date.now()) / 1000),
+    );
+    return NextResponse.json(
+      {
+        error: `Too many preview runs in a short window. Try again in ${retryAfterSeconds}s.`,
+        retry_after_seconds: retryAfterSeconds,
+      },
+      {
+        status: 429,
+        headers: { "retry-after": String(retryAfterSeconds) },
+      },
     );
   }
 
   try {
-    const db = getDb();
-    const [row] = (await db
-      .select({
-        id: schema.users.id,
-        teamOwnerUserId: schema.users.teamOwnerUserId,
-      })
-      .from(schema.users)
-      .where(eq(schema.users.clerkId, userId))
-      .limit(1)) as Array<{
-      id: string;
-      teamOwnerUserId: string | null;
-    }>;
-
-    if (!row) {
-      return NextResponse.json(
-        {
-          error:
-            "We're finishing setting up your account. Refresh in a moment.",
-        },
-        { status: 404 },
-      );
-    }
-
-    const scopeId = teamScope({
-      user: { id: row.id },
-      teamOwnerUserId: row.teamOwnerUserId,
-    });
-
+    const scopeId = teamScope(auth);
     const payload = await buildAgentRunPayload(scopeId);
     const markdown = renderDigest(payload);
 

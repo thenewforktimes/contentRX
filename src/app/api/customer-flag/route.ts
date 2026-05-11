@@ -47,7 +47,7 @@ import { logSafeError } from "@/lib/safe-error-log";
 import { teamScope } from "@/lib/team-scope";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
-import { MOMENTS } from "@/lib/engine-taxonomy";
+import { CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 
 export async function OPTIONS(req: Request) {
   return corsPreflight(req);
@@ -56,8 +56,12 @@ export async function OPTIONS(req: Request) {
 const RequestSchema = z.object({
   // Plaintext that was checked. Stored on consent.
   text: z.string().min(1).max(100_000),
-  // Engine context at the moment of the flag.
-  content_type: z.string().min(1).max(64).optional(),
+  // Engine context at the moment of the flag — enum-validated against
+  // the taxonomy so customer-flag rows can be filtered/aggregated on
+  // the same values /api/check accepts. (Previously a free string,
+  // which let arbitrary substrings into the substrate column visible
+  // on /admin/customer-flags.)
+  content_type: z.enum(CONTENT_TYPES).optional(),
   moment: z.enum(MOMENTS).optional(),
   verdict: z.enum(["pass", "violation", "review_recommended"]).optional(),
   // Optional pointer to an originating violation when the flag came

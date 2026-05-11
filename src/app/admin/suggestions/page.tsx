@@ -23,7 +23,7 @@
  * directly. Customers never see this surface.
  */
 
-import { and, desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { humanizeContentType, humanizeMoment } from "@/lib/humanize";
 import { TriageCluster } from "./triage-cluster";

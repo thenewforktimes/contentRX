@@ -11,7 +11,7 @@
  */
 
 import { auth } from "@clerk/nextjs/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { hashApiKey, isWellFormedApiKey } from "./api-key";
 import { QUOTAS, type Plan } from "./quotas";
@@ -40,7 +40,10 @@ export type AuthResolved = {
 };
 
 export type AuthError = {
-  status: 401 | 403;
+  // 401 = bad credentials, 403 = forbidden, 503 = user row not
+  // provisioned yet (Clerk webhook race on first signup — the
+  // caller should retry shortly).
+  status: 401 | 403 | 503;
   message: string;
 };
 
@@ -77,9 +80,16 @@ export async function resolveAuth(req: Request): Promise<AuthResolved | AuthErro
     .limit(1);
 
   if (!user) {
-    // Webhook didn't fire or races with signup. Fail closed; the client
-    // should retry after signup completes.
-    return { status: 401, message: "User not provisioned yet" };
+    // Webhook didn't fire or races with signup. 503 (not 401) so the
+    // CLI / MCP / LSP can distinguish "your credentials are wrong"
+    // from "your account is still being set up, try again in a
+    // moment." 401 conflated the two and gave first-time users
+    // immediately post-signup a misleading "Invalid API key" error.
+    return {
+      status: 503,
+      message:
+        "We're still setting up your account. Try again in a moment.",
+    };
   }
 
   return await enrichWithSeats(user);
@@ -94,11 +104,14 @@ async function enrichWithSeats(
     return { user, plan, seats: 1, teamOwnerUserId: null };
   }
 
-  // Team member: seats come from the team OWNER's active subscription.
+  // Team member: seats come from the team OWNER's entitled subscription.
   // Team owner's own row has team_owner_user_id = null; members have it set.
-  // Filter on status='active' so a canceled team subscription stops granting
-  // seats immediately — without the filter, historical canceled rows would
-  // continue to enrich members until the row is deleted.
+  // Status filter matches `isEntitled` (active OR trialing) — a trialing
+  // team subscription still grants the paid seat count. Without the
+  // trialing arm, owners in trial silently fell back to seats=1 and
+  // their teammates hit the 1-seat quota despite the org having paid
+  // for more. Canceled / past_due / unpaid subscriptions stop granting
+  // seats immediately.
   const ownerId = user.teamOwnerUserId ?? user.id;
 
   const db = getDb();
@@ -109,7 +122,7 @@ async function enrichWithSeats(
       and(
         eq(schema.subscriptions.userId, ownerId),
         eq(schema.subscriptions.plan, "team"),
-        eq(schema.subscriptions.status, "active"),
+        inArray(schema.subscriptions.status, ["active", "trialing"]),
       ),
     )
     .limit(1);

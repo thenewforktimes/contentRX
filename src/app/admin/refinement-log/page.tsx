@@ -22,6 +22,7 @@ import {
   type RefinementStatus,
 } from "@/lib/admin-refinement-log.server";
 import { LinkifyStandards } from "@/components/admin/linkify-standards";
+import { buttonStyles } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { getStandardsLibrary } from "@/lib/admin-substrate.server";
 import { addRefinement } from "./actions";
@@ -313,7 +314,7 @@ function RefinementForm() {
       />
       <button
         type="submit"
-        className="rounded-md bg-stone-900 px-4 py-2 text-xs font-medium text-white hover:bg-stone-800 dark:bg-white dark:text-black dark:hover:bg-stone-100"
+        className={buttonStyles({ variant: "primary", size: "sm" })}
       >
         Add candidate
       </button>

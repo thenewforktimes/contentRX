@@ -1,12 +1,12 @@
 /**
  * Server-only loader that scans the `reports/` directory.
  *
- * Phase B6 of the post-pivot rolling plan. The generators
- * themselves (accuracy snapshot, weekly calibration log, quarterly
- * scaffold) ship in Phase C; this loader treats whatever's currently
- * on disk as the source of truth, so as soon as Phase C generators
- * land their first output, the /admin/reports page picks it up
- * automatically.
+ * Robert hand-maintains every artifact under `reports/` on a
+ * solo-founder cadence — there is no scheduled generator (the
+ * earlier nightly / weekly / quarterly generators + staleness
+ * watchdog were removed on 2026-05-11). This loader treats whatever
+ * is currently on disk as the source of truth and feeds the
+ * /admin/reports preview-before-publish gate.
  *
  * Each subdirectory has a known shape:
  *
@@ -17,8 +17,9 @@
  * Files starting with `.` (e.g. `.gitkeep`) are ignored.
  *
  * Staleness is computed against the file's mtime. Any report not
- * touched in `STALE_THRESHOLD_DAYS` is flagged so the founder can
- * see at a glance whether a generator has stalled.
+ * touched in `STALE_THRESHOLD_DAYS` is flagged so the founder sees
+ * at a glance which artifacts have aged out of their voluntary
+ * cadence.
  */
 
 import "server-only";
@@ -49,11 +50,14 @@ export interface ReportsByType {
 }
 
 export const STALE_THRESHOLD_DAYS: Record<ReportType, number> = {
-  // Nightly. Anything older than 2 days is stale.
+  // Robert's voluntary cadences. Anything older than these gets an
+  // amber "stale" pill on /admin/reports as a cadence reminder.
+  // Accuracy: refreshed roughly every couple of days.
   accuracy: 2,
-  // Weekly Monday cron. 8 days is one day past expected cadence.
+  // Calibration: one entry per ISO week — 8 days is one day past the
+  // weekly slot.
   calibration: 8,
-  // Quarterly first-Monday cron. 95 days = ~3 months + slack.
+  // Quarterly: ~3 months + slack.
   quarterly: 95,
 };
 

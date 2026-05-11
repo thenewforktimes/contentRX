@@ -39,6 +39,12 @@ SUPPORTED_BATCH_EXTENSIONS = (".json", ".txt")
 
 DASHBOARD_URL = "https://contentrx.io/dashboard"
 
+# Major version of the wire format this CLI is built against. The
+# engine ships `schema_version` on every response; if the upstream
+# bumps to 4.x with breaking changes, fail loudly instead of silently
+# parsing the new shape with old assumptions.
+SUPPORTED_SCHEMA_MAJOR = 3
+
 
 # ---------------------------------------------------------------------------
 # Exit codes — stable so CI configs can pin on them.
@@ -154,7 +160,9 @@ def check_text(
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             raw = resp.read().decode("utf-8")
-            return json.loads(raw)
+            response = json.loads(raw)
+            _check_schema_major(response)
+            return response
     except urllib.error.HTTPError as err:
         _reraise_http(err)
     except urllib.error.URLError as err:
@@ -163,6 +171,30 @@ def check_text(
             f"or the CONTENTRX_API_URL override. ({err.reason})",
             code=EXIT_UPSTREAM,
         ) from err
+
+
+def _check_schema_major(response: dict[str, Any]) -> None:
+    """Fail loud if the engine's schema_version major-bumps past what
+    this CLI was built for. Missing field is tolerated (older responses
+    didn't ship the envelope), but a non-string or wrong-shape value
+    surfaces clearly instead of silently parsing with old assumptions.
+    """
+    sv = response.get("schema_version")
+    if sv is None:
+        return
+    if not isinstance(sv, str) or "." not in sv:
+        return
+    try:
+        major = int(sv.split(".", 1)[0])
+    except ValueError:
+        return
+    if major != SUPPORTED_SCHEMA_MAJOR:
+        raise CliError(
+            f"ContentRX returned schema_version={sv} but this CLI was "
+            f"built for major {SUPPORTED_SCHEMA_MAJOR}. Upgrade with "
+            "`pip install --upgrade contentrx-cli`.",
+            code=EXIT_UPSTREAM,
+        )
 
 
 def _reraise_http(err: urllib.error.HTTPError) -> None:

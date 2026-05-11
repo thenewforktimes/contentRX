@@ -1,10 +1,10 @@
 /**
  * Public accuracy snapshot loader.
  *
- * Phase C5 of the post-pivot rolling plan. Reads the public-safe
- * `reports/accuracy/latest.json` artifact written by
- * `reports/accuracy/generate.py` (Phase C1) and exposes a typed
- * shape for the public `/accuracy` page.
+ * Reads the public-safe `reports/accuracy/latest.json` artifact
+ * (hand-maintained by Robert as a solo founder — there is no
+ * scheduled generator; see CLAUDE.md "Current positioning") and
+ * exposes a typed shape for the public `/accuracy` page.
  *
  * Distinct from `src/lib/accuracy-data.ts`, which loads the
  * substrate (`evals/graduation/readiness.json` + drift reports)
@@ -53,7 +53,7 @@ const SNAPSHOT_PATH = path.join(
 const PENDING_NO_FILE: Kappa = {
   state: "pending_measurement",
   reason:
-    "no reports/accuracy/latest.json — the nightly generator has not run yet",
+    "no reports/accuracy/latest.json — the founder hasn't published a measurement yet",
 };
 
 export function loadPublicAccuracySnapshot(): PublicAccuracySnapshot {
@@ -108,12 +108,10 @@ function emptySnapshot(): PublicAccuracySnapshot {
       autonomous: 0,
     },
     standards_measured: 0,
-    // Fallback denominator for the snapshot-missing case. Mirrors
-    // _FALLBACK_TOTAL_STANDARDS in reports/accuracy/generate.py and
-    // reports/quarterly/generate.py — bump all three together when
-    // the canonical library count changes substantially. Normal
-    // operation reads the count from the snapshot file, which the
-    // Python generator computes dynamically from the library.
+    // Fallback denominator for the snapshot-missing case. Normal
+    // operation reads `standards_total` from `latest.json`; this
+    // value only renders when the file is absent. Bump when the
+    // canonical library count changes substantially.
     standards_total: 49,
   };
 }

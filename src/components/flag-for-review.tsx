@@ -102,7 +102,7 @@ export function FlagForReview({
 
   if (status === "submitted") {
     return (
-      <p className="text-xs text-emerald-700 dark:text-emerald-400">
+      <p className="text-xs text-accent-affirm-text">
         Shared. Visible to you on the Shared checks tab.
       </p>
     );
@@ -303,7 +303,7 @@ export function FlagForReview({
               </label>
 
               {errorMessage && (
-                <p className="text-sm text-rose-700 dark:text-rose-400">
+                <p className="text-sm text-accent-concern-text">
                   {errorMessage}
                 </p>
               )}
