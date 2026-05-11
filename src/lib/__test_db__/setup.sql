@@ -67,7 +67,10 @@ CREATE TABLE usage_events (
   review_reason text,
   violation_count int NOT NULL DEFAULT 0,
   text_hash text,
-  text_preview text
+  text_preview text,
+  text_full text,
+  suggested_rewrite text,
+  suggested_diagnostic text
 );
 
 CREATE INDEX usage_events_user_created_idx
@@ -152,6 +155,7 @@ CREATE TABLE violations (
   rule text,
   issue text,
   suggestion text,
+  category text,
   overall_verdict text,
   review_reason text,
   review_reason_subtype text,

@@ -73,6 +73,17 @@ export interface RecordUsageEventArgs {
   violationCount?: number;
   textHash?: string | null;
   textPreview?: string | null;
+  /** Full input text (capped at MAX_INPUT_CHARS by the route's zod
+   * guard). Persisted so the /dashboard/checks/[id] detail page can
+   * render exactly what was checked and the Re-run CTA can reproduce
+   * the call. Null when the caller doesn't supply it (back-compat). */
+  textFull?: string | null;
+  /** Doc-tier holistic rewrite. Populated only for large inputs that
+   * weren't clean. Null otherwise. */
+  suggestedRewrite?: string | null;
+  /** One-sentence doc-tier diagnostic that pairs with suggestedRewrite.
+   * Same population conditions. */
+  suggestedDiagnostic?: string | null;
 }
 
 export interface ThresholdResult {
@@ -131,6 +142,9 @@ export async function recordUsageEvent(
     violationCount: args.violationCount ?? 0,
     textHash: args.textHash ?? null,
     textPreview: args.textPreview ?? null,
+    textFull: args.textFull ?? null,
+    suggestedRewrite: args.suggestedRewrite ?? null,
+    suggestedDiagnostic: args.suggestedDiagnostic ?? null,
   });
   return { estimatedCostUsd: cost };
 }

@@ -29,6 +29,11 @@ type LoggableViolation = {
   // shape because pre-migration callers may not supply them.
   issue?: string;
   suggestion?: string;
+  // 2026-05-10 detail-page round 3 — schema 2.5.0 customer-facing
+  // category. The detail page renders it as a finding-level chip so
+  // the customer sees "Voice & tone" instead of guessing from the
+  // issue text.
+  category?: string;
 };
 
 type LogParams = {
@@ -96,6 +101,7 @@ export async function logViolations(params: LogParams): Promise<number> {
       runId: params.runId ?? null,
       issue: v.issue ?? null,
       suggestion: v.suggestion ?? null,
+      category: v.category ?? null,
     }));
 
   if (rows.length === 0) return 0;

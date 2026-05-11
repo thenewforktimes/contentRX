@@ -194,6 +194,20 @@ export const usageEvents = pgTable(
     violationCount: integer("violation_count").notNull().default(0),
     textHash: text("text_hash"),
     textPreview: text("text_preview"),
+    // 2026-05-10 detail-page round 3 — the complete check payload
+    // surfaced back to the customer at /dashboard/checks/[id]. Same
+    // retention contract as text_preview (the customer's own data
+    // shown back to the customer, per ADR 2026-04-28). textFull keeps
+    // the full input up to MAX_INPUT_CHARS so the detail view shows
+    // exactly what was checked and Re-run uses the unmangled string.
+    // suggestedRewrite + suggestedDiagnostic are the doc-tier outputs
+    // returned in the response envelope; persisted here so they
+    // survive the round-trip and the detail page can show the rewrite
+    // weeks after the check ran. All three null on pre-migration rows
+    // and on small inputs where the rewrite never fired.
+    textFull: text("text_full"),
+    suggestedRewrite: text("suggested_rewrite"),
+    suggestedDiagnostic: text("suggested_diagnostic"),
   },
   (t) => [
     // Primary access pattern: sum estimated_cost_usd for one user across
@@ -379,6 +393,13 @@ export const violations = pgTable(
     // them populated when the engine returned a finding.
     issue: text("issue"),
     suggestion: text("suggestion"),
+    // 2026-05-10 detail-page round 3 — schema 2.5.0 customer-facing
+    // category ("Voice & tone", "Mechanics", "Structure",
+    // "Accessibility", "Inclusion", "Big picture"). Forwarded as-is
+    // from the engine's public-violation projection so the detail
+    // page can show why each finding fired without consulting the
+    // private taxonomy.
+    category: text("category"),
   },
   (t) => [
     index("violations_user_created_idx").on(t.userId, t.createdAt),

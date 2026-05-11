@@ -57,6 +57,8 @@ export type EvaluationResult = {
     rule: string;
     issue: string;
     suggestion: string;
+    /** Per-violation severity (API v2.0.0+). One of "high"/"medium"/"low". */
+    severity?: string;
     source?: string;
     /** Per-violation confidence (API v1.1.0+). */
     confidence?: number;
@@ -68,6 +70,11 @@ export type EvaluationResult = {
     related_standards?: string[];
     /** Canonical docs URL for the standard on docs.contentrx.io (API v1.7.0+). */
     docs_url?: string;
+    /** Customer-facing category (API v2.5.0+). One of "Voice & tone",
+     *  "Mechanics", "Structure", "Accessibility", "Inclusion",
+     *  "Big picture". Derived in the engine from the substrate
+     *  standard_id; team-rule additions don't carry it. */
+    category?: string;
   }>;
   passes: Array<{ standard_id: string; rule: string }>;
   summary?: string;

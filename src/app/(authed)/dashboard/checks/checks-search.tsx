@@ -677,6 +677,15 @@ function CheckRow({ row }: { row: CheckHistoryRow }) {
   ]
     .filter(Boolean)
     .join(" · ");
+  // Mismatch banner: the verdict chip claims N findings but no
+  // finding-level detail came through. Happens on rows that pre-date
+  // the 2026-05-10 issue/suggestion persistence (#472) or the
+  // 2026-05-08 check_event_id wire (#425). The detail page tells the
+  // same story and offers a Re-run — surface a one-line nudge here
+  // so the customer knows the gap exists at scan time.
+  const findingsDetailMissing =
+    row.violationCount > 0 &&
+    !row.findings.some((f) => f.issue || f.suggestion);
   return (
     <li className="rounded-md border border-line bg-canvas p-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -700,25 +709,45 @@ function CheckRow({ row }: { row: CheckHistoryRow }) {
         </p>
       )}
       {row.findings.length > 0 && <FindingsList findings={row.findings} />}
-      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-        {row.flagged ? (
-          <>
-            <span className="text-xs font-medium text-accent-affirm-text">
-              ✓ Shared for review
-            </span>
-            {row.flagId && <RevokeButton id={row.flagId} />}
-          </>
-        ) : row.textPreview ? (
-          <FlagForReview
-            text={row.textPreview}
-            contentType={row.contentType}
-            moment={row.moment}
-            verdict={normalizeVerdict(row.verdict)}
-            variant="card-action"
-            label="Flag for review"
-            source="dashboard"
-          />
-        ) : null}
+      {findingsDetailMissing && (
+        <p className="mt-2 text-xs text-quiet">
+          Finding detail isn&apos;t available for this check.{" "}
+          <Link
+            href={`/dashboard/checks/${row.id}`}
+            className="underline underline-offset-2 hover:text-strong"
+          >
+            See what we can show
+          </Link>
+          .
+        </p>
+      )}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <Link
+          href={`/dashboard/checks/${row.id}`}
+          className="text-xs font-medium text-quiet underline underline-offset-2 hover:text-strong"
+        >
+          View details →
+        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {row.flagged ? (
+            <>
+              <span className="text-xs font-medium text-accent-affirm-text">
+                ✓ Shared for review
+              </span>
+              {row.flagId && <RevokeButton id={row.flagId} />}
+            </>
+          ) : row.textPreview ? (
+            <FlagForReview
+              text={row.textPreview}
+              contentType={row.contentType}
+              moment={row.moment}
+              verdict={normalizeVerdict(row.verdict)}
+              variant="card-action"
+              label="Flag for review"
+              source="dashboard"
+            />
+          ) : null}
+        </div>
       </div>
     </li>
   );

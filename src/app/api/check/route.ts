@@ -431,6 +431,19 @@ export async function POST(req: Request) {
   const withAdds = applyAddedRules(overridden, text, teamRules.adds);
   const result = recomputeVerdict(withAdds);
 
+  // Hoisted from the response-shaping block below: the doc-tier outputs
+  // are suppressed for clean documents (the LLM was instructed to return
+  // the input largely unchanged when nothing's wrong, so surfacing a
+  // near-identical "rewrite" is noise). Computed once here so both the
+  // recordUsageEvent write and the response envelope reach for the same
+  // values — persisting then re-suppressing in the response would write
+  // rewrites we won't ever surface back to the customer.
+  const isCleanDoc = result.verdict === "pass";
+  const finalSuggestedRewrite =
+    suggestedRewrite !== null && !isCleanDoc ? suggestedRewrite : null;
+  const finalSuggestedDiagnostic =
+    suggestedDiagnostic !== null && !isCleanDoc ? suggestedDiagnostic : null;
+
   // Log + token-usage + cost-event writes are observational — all run
   // in parallel since none depends on the others, and a failure in
   // any should never fail the request. The user already got their
@@ -495,6 +508,14 @@ export async function POST(req: Request) {
       violationCount: result.violations.length,
       textHash: hashText(text),
       textPreview: text.slice(0, 80),
+      // 2026-05-10 detail-page round 3 — store the full input + doc-tier
+      // outputs so /dashboard/checks/[id] can render exactly what the
+      // customer saw at check time, and so the Re-run CTA can re-issue
+      // the same call without depending on the user having the source
+      // text on hand.
+      textFull: text,
+      suggestedRewrite: finalSuggestedRewrite,
+      suggestedDiagnostic: finalSuggestedDiagnostic,
     }),
   ]);
   if (logResult.status === "rejected") {
@@ -544,25 +565,22 @@ export async function POST(req: Request) {
   // controls whether substrate Violation fields surface inline for
   // reversibility — see `decisions/2026-04-25-private-taxonomy-pivot.md`.
   // API-usage telemetry (`latency_ms`, `tokens`, `usage`) is request
-  // metadata, not taxonomy, and lives alongside the envelope.
-  // Suppress the rewrite for clean documents. The LLM was instructed
-  // to return the original largely unchanged when nothing's wrong, so
-  // surfacing a near-identical "rewrite" is noise. Only show when the
-  // post-team-rules verdict has something to act on. The diagnostic
-  // follows the same gate — they ride or hide together.
-  const isCleanDoc = result.verdict === "pass";
-  const finalSuggestedRewrite =
-    suggestedRewrite !== null && !isCleanDoc ? suggestedRewrite : null;
-  const finalSuggestedDiagnostic =
-    suggestedDiagnostic !== null && !isCleanDoc
-      ? suggestedDiagnostic
-      : null;
+  // metadata, not taxonomy, and lives alongside the envelope. The
+  // `finalSuggested*` values were computed above with the persistence
+  // writes so the DB row and the response carry the same suppression
+  // decision.
 
   return json({
     ...publicCheckEnvelope(result, {
       suggestedRewrite: finalSuggestedRewrite,
       suggestedDiagnostic: finalSuggestedDiagnostic,
     }),
+    // 2026-05-10 detail-page round 3 — surface the usage_events row id
+    // so the dashboard's "Run check" / "Re-run" CTAs can deep-link to
+    // /dashboard/checks/[id] after a fresh call. Lives alongside the
+    // envelope (request metadata, not taxonomy) so it doesn't bump
+    // schema_version; existing consumers ignore unknown sibling fields.
+    check_id: checkEventId,
     latency_ms: evalResponse.latency_ms,
     tokens: evalResponse.tokens,
     // Schema 2.1.0: top-level metering block with the tier billed
