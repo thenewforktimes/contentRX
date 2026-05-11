@@ -82,7 +82,6 @@ const SOURCE_LABEL: Record<string, string> = {
   action: "GitHub Action",
   lsp: "Editor (LSP)",
   mcp: "Claude / Cursor",
-  ditto: "Ditto",
 };
 
 // Surface pill order. Matches the surfaces-grid order on the

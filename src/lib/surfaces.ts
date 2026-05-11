@@ -8,7 +8,6 @@
  *   - plugin:    the Figma plugin
  *   - cli:       contentrx-cli (terminal)
  *   - action:    GitHub Action running in CI
- *   - ditto:     Ditto sync writeback
  *   - lsp:       LSP server / editor extensions
  *   - mcp:       MCP server (Claude Code, Cursor, etc.)
  *
@@ -25,7 +24,6 @@ export const SURFACE_SOURCES = [
   "plugin",
   "cli",
   "action",
-  "ditto",
   "lsp",
   "mcp",
 ] as const;

@@ -69,7 +69,6 @@ export const users = pgTable("users", {
   // after a cancellation so the same customer lineage continues if the
   // user re-subscribes later.
   stripeCustomerId: text("stripe_customer_id").unique(),
-  dittoApiKeyEncrypted: text("ditto_api_key_encrypted"),
   // Cost monitor (Phase 1, pre-pilot launch). Daily and monthly thresholds
   // for runaway-script detection. Defaults are anomaly-catching, not
   // normal-usage-capping — Free/Pro at typical Anthropic rates of
@@ -428,27 +427,6 @@ export const violations = pgTable(
     // PR-40: per-run dashboard page query — `WHERE team_id = $1 AND
     // run_id = $2` ordered by createdAt.
     index("violations_team_run_idx").on(t.teamId, t.runId, t.createdAt),
-  ],
-).enableRLS();
-
-export const dittoSyncs = pgTable(
-  "ditto_syncs",
-  {
-    id: cuid(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    projectId: text("project_id").notNull(),
-    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
-    lastStatus: text("last_status"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    // FK index on user_id so "list a user's ditto syncs" hits an index
-    // instead of scanning the table.
-    index("ditto_syncs_user_idx").on(t.userId),
   ],
 ).enableRLS();
 
@@ -1230,7 +1208,6 @@ export type TeamMember = InferSelectModel<typeof teamMembers>;
 export type TeamInvitation = InferSelectModel<typeof teamInvitations>;
 export type TeamRule = InferSelectModel<typeof teamRules>;
 export type Violation = InferSelectModel<typeof violations>;
-export type DittoSync = InferSelectModel<typeof dittoSyncs>;
 export type ViolationOverride = InferSelectModel<typeof violationOverrides>;
 export type SuggestionCandidate = InferSelectModel<typeof suggestionCandidates>;
 export type SuggestionPrecedent = InferSelectModel<typeof suggestionPrecedents>;

@@ -56,7 +56,6 @@ const SOURCE_LABEL: Record<string, string> = {
   action: "GitHub Action",
   lsp: "Editor (LSP)",
   mcp: "Claude / Cursor",
-  ditto: "Ditto",
 };
 
 const CATEGORY_TONE: Record<string, PillTone> = {
