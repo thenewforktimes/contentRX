@@ -120,6 +120,9 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
   async function confirmDisable(standardId: string) {
     setBusyId(standardId);
     setPendingDisable(null);
+    // Clear any leftover error from a prior action so a successful
+    // disable doesn't leave a stale banner visible.
+    setError(null);
     try {
       const res = await fetch("/api/team-rules", {
         method: "POST",
@@ -168,8 +171,30 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
   return (
     <div className="flex flex-col gap-8">
       {error && (
-        <div className="rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-sm text-accent-concern-text">
-          {error}
+        <div className="flex items-start gap-3 rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-sm text-accent-concern-text">
+          <span className="flex-1">{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            aria-label="Dismiss error"
+            className="shrink-0 rounded p-0.5 text-accent-concern-text hover:bg-accent-concern-border/30"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -423,7 +448,8 @@ function AddCustomRuleCard({
 }: {
   disabled: boolean;
   onCreated: (rule: TeamRule) => void;
-  onError: (msg: string) => void;
+  /** Passing null clears the parent banner; passing a string sets it. */
+  onError: (msg: string | null) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -437,6 +463,10 @@ function AddCustomRuleCard({
 
   async function submit() {
     setBusy(true);
+    // Clear any leftover top-level error from a prior action before
+    // we try again. Otherwise a successful submit can land while the
+    // previous failure's banner is still visible upstream.
+    onError(null);
     try {
       const res = await fetch("/api/team-rules", {
         method: "POST",
