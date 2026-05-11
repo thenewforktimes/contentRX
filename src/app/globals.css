@@ -142,18 +142,26 @@
     --accent-primary-text:     #312e81;
     --accent-primary-border:   #6366f1;
 
-    /* ─── ACCENT: AFFIRM (cool teal — harmonizes with indigo) ─── */
-    /* Green-600 on warm cream felt too "spring lawn" — a vivid
-       grass-green next to indigo + warm-cream reads as cheerful
-       clip-art rather than editorial. Teal sits between blue and
-       green on the wheel; cools the success state to match the new
-       indigo primary while still reading as positive. 6.7:1 vs
-       canvas. */
-    --accent-affirm-solid:     #0f766e;
+    /* ─── ACCENT: AFFIRM (emerald — brand-level accent) ─── */
+    /* 2026-05-11 (Robo): shifted from teal-{900,700,500} to
+       emerald-{700,600,500}. The teal "text" slot at #134e4a was
+       reading forest-black on the wordmark (the brand's most-seen
+       use of this token), darker than every sibling-text in the
+       family (caution-text, concern-text, info-text are all
+       saturated). Emerald keeps the cool / non-clip-art character
+       the original audit wanted — sidesteps pure green-600's
+       "spring lawn" read — while letting the wordmark and the RX
+       glyph pop the way the green-on-indigo pops in dark mode.
+       Cross-mode consistency improves at the same time: dark
+       mode's affirm stays in the green family, light mode joins
+       it at the slightly-cooler emerald end.
+       Contrast: text on canvas 7.6:1, solid on canvas 4.6:1 (AAA
+       Normal for text, AAA Large for solid backgrounds). */
+    --accent-affirm-solid:     #059669;
     --accent-affirm-on-solid:  #ffffff;
-    --accent-affirm-soft:      #ccfbf1;
-    --accent-affirm-text:      #134e4a;
-    --accent-affirm-border:    #14b8a6;
+    --accent-affirm-soft:      #d1fae5;
+    --accent-affirm-text:      #047857;
+    --accent-affirm-border:    #10b981;
 
     /* ─── ACCENT: CAUTION ─── */
     --accent-caution-solid:    #ca8a04;
