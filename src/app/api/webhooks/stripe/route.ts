@@ -259,7 +259,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       ]);
     }
   } catch (err) {
-    console.warn("post-checkout email/analytics failed", err);
+    logSafeError("[stripe-webhook] post-checkout email/analytics failed", err);
   }
 }
 
@@ -281,7 +281,7 @@ async function trackUpgradeOnce(args: {
     if (setResult === null) return; // already counted
   } catch (err) {
     // Redis outage: fall through and track. Worst case = double-count.
-    console.warn("upgrade analytics dedupe failed, tracking anyway", err);
+    logSafeError("[stripe-webhook] upgrade analytics dedupe failed, tracking anyway", err);
   }
   await trackEvent("upgrade", {
     userId: args.userId,
@@ -371,10 +371,10 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // shape.
   const parent = (invoice as unknown as InvoiceWithParent).parent;
   const subId = parent?.subscription;
+  // Don't log invoice.customer_email — it's PII. The subscription id is
+  // opaque and sufficient to correlate against subscriptions / users.
   console.warn(
-    `invoice.payment_failed${subId ? ` subscription=${subId}` : ""}${
-      invoice.customer_email ? ` email=${invoice.customer_email}` : ""
-    }`,
+    `invoice.payment_failed${subId ? ` subscription=${subId}` : ""}`,
   );
 
   if (!subId) {
@@ -438,6 +438,17 @@ async function upsertSubscription(args: {
   const { userId, subscription, customerId } = args;
   const db = getDb();
 
+  // Stripe subscription events always carry a customer id in practice; bailing
+  // here keeps an empty-string FK out of subscriptions.stripe_customer_id (the
+  // column is NOT NULL, so the prior `?? ""` fallback was writing junk on the
+  // theoretical no-customer path instead of failing loudly).
+  if (!customerId) {
+    console.warn(
+      `subscription ${subscription.id} has no stripe customer id — skipping upsert`,
+    );
+    return;
+  }
+
   const item = subscription.items.data[0];
   const priceId = item?.price.id;
   if (!priceId) {
@@ -465,12 +476,10 @@ async function upsertSubscription(args: {
 
   // Stripe Customer ID on the users row — set on first successful
   // checkout, preserved thereafter.
-  if (customerId) {
-    await db
-      .update(schema.users)
-      .set({ stripeCustomerId: customerId })
-      .where(eq(schema.users.id, userId));
-  }
+  await db
+    .update(schema.users)
+    .set({ stripeCustomerId: customerId })
+    .where(eq(schema.users.id, userId));
 
   // Upsert the subscription row by stripe_sub_id (unique in schema).
   const [existing] = await db
@@ -487,7 +496,7 @@ async function upsertSubscription(args: {
         plan,
         seats,
         currentPeriodEnd,
-        stripeCustomerId: customerId ?? "",
+        stripeCustomerId: customerId,
       })
       .where(eq(schema.subscriptions.id, existing.id));
   } else {
@@ -513,7 +522,7 @@ async function upsertSubscription(args: {
 
     await db.insert(schema.subscriptions).values({
       userId,
-      stripeCustomerId: customerId ?? "",
+      stripeCustomerId: customerId,
       stripeSubId: subscription.id,
       status: subscription.status,
       plan,
@@ -541,8 +550,8 @@ async function upsertSubscription(args: {
     try {
       await maybeGroupByDomain(userId);
     } catch (err) {
-      console.warn(
-        `domain-grouping check failed for user ${userId}`,
+      logSafeError(
+        `[stripe-webhook] domain-grouping check failed for user ${userId}`,
         err,
       );
     }

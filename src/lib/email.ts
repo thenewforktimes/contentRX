@@ -14,6 +14,7 @@ import { Resend } from "resend";
 import type { ReactElement } from "react";
 import { getRedis } from "./redis";
 import { optionalEnv } from "./require-env";
+import { logSafeError } from "./safe-error-log";
 
 const ONCE_PER_MONTH_TTL_SECONDS = 35 * 24 * 60 * 60;
 
@@ -65,7 +66,7 @@ export async function sendEmail({
       // Redis outage shouldn't block a transactional email — log and
       // proceed. Worst case: a duplicate send (the same dunning email
       // twice in a month), which is recoverable.
-      console.warn("email dedupe lookup failed, sending anyway", err);
+      logSafeError("[email] dedupe lookup failed, sending anyway", err);
     }
   }
 
@@ -89,7 +90,7 @@ export async function sendEmail({
     return { ok: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown send error";
-    console.error(`Resend send failed: ${message}`, err);
+    logSafeError("[email] Resend send failed", err);
     return { ok: false, error: message };
   }
 }
