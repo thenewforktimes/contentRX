@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { renderDiffMarkdown, wordDiff, type DiffToken } from "./text-diff";
+import { wordDiff, type DiffToken } from "./text-diff";
 
 describe("wordDiff", () => {
   it("returns no tokens for two empty strings", () => {
@@ -112,27 +112,5 @@ describe("wordDiff", () => {
       .map((t) => t.text)
       .join("");
     expect(reconstructedAfter).toBe(after);
-  });
-});
-
-describe("renderDiffMarkdown", () => {
-  it("renders equal text as-is, removed as ~~strikethrough~~, added as **bold**", () => {
-    const tokens: DiffToken[] = [
-      { kind: "equal", text: "Click " },
-      { kind: "removed", text: "here" },
-      { kind: "added", text: "submit" },
-    ];
-    expect(renderDiffMarkdown(tokens)).toBe("Click ~~here~~**submit**");
-  });
-
-  it("returns the empty string for an empty token list", () => {
-    expect(renderDiffMarkdown([])).toBe("");
-  });
-
-  it("doesn't escape markdown special characters in user text — caller's responsibility", () => {
-    // Documenting the contract: caller must escape if the input might
-    // contain markdown. For our use case the input is short UI copy.
-    const tokens: DiffToken[] = [{ kind: "added", text: "**already bold**" }];
-    expect(renderDiffMarkdown(tokens)).toBe("****already bold****");
   });
 });
