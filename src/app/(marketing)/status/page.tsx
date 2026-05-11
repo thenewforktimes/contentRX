@@ -34,7 +34,7 @@ export default async function StatusPage() {
     <main className="mx-auto max-w-2xl px-6 py-20">
       <header className="mb-10">
         <Eyebrow>Status</Eyebrow>
-        <h1 className="mt-3 text-3xl font-semibold">
+        <h1 className="mt-3 text-4xl font-bold sm:text-5xl">
           {report.ok ? "All systems operational" : "Degraded"}
         </h1>
         <p className="mt-3 text-sm text-quiet">

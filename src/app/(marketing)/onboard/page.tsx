@@ -90,7 +90,7 @@ export default async function OnboardPage() {
     <main className="mx-auto max-w-4xl px-6 py-16">
       <header className="mb-10">
         <Eyebrow>Welcome to ContentRX</Eyebrow>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
           Where do you want to use it first?
         </h1>
         <p className="mt-4 text-lg text-default">

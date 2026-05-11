@@ -22,17 +22,25 @@
  *
  * This primitive locks the rhythm. Two scales:
  *
- *   page (default)   — text-3xl sm:text-4xl
- *                      For trust pages, install, about, sources,
- *                      calibration, accuracy. Standard authoritative
- *                      page heading.
+ *   page (default)   — text-4xl sm:text-5xl, font-bold
+ *                      For trust pages, install, sources, calibration,
+ *                      accuracy. Standard authoritative page heading.
  *
- *   display          — text-4xl sm:text-5xl lg:text-6xl
+ *   display          — text-5xl sm:text-6xl lg:text-7xl, font-bold
  *                      For commercial pages where the header has to
  *                      land alongside the landing's hero. Pricing
  *                      uses this; future product-tier pages would too.
  *                      Landing is its own thing — has the wordmark,
  *                      doesn't use PageHeader.
+ *
+ * 2026-05-10 display-type bump: prior values were `text-3xl sm:text-4xl`
+ * (page) and `text-4xl sm:text-5xl lg:text-6xl` (display) at
+ * `font-semibold`. The marketing surfaces read reserved next to peers
+ * who commit harder to display type (Ditto, Linear, Vercel). Bumped
+ * one Tailwind step at every breakpoint and shifted weight from 600 to
+ * 700. No tokens changed — same colors, same tracking, just bigger and
+ * heavier. Dashboard h1s use the `<Heading>` primitive (text-2xl), so
+ * panel headers are unaffected.
  *
  * Slots: `lede` (the supporting paragraph), `meta` (smaller text after
  * the lede, e.g. "Snapshot generated 2026-05-06" or "Effective date").
@@ -50,9 +58,9 @@ import { Eyebrow } from "./eyebrow";
 type PageHeaderScale = "page" | "display";
 
 const titleClasses: Record<PageHeaderScale, string> = {
-  page: "text-3xl font-semibold tracking-tight text-strong sm:text-4xl",
+  page: "text-4xl font-bold tracking-tight text-strong sm:text-5xl",
   display:
-    "text-4xl font-semibold tracking-tight text-strong sm:text-5xl lg:text-6xl",
+    "text-5xl font-bold tracking-tight text-strong sm:text-6xl lg:text-7xl",
 };
 
 export function PageHeader({
