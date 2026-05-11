@@ -52,9 +52,11 @@ const RULES: ReadonlyArray<PatternRule> = [
   // false-positive surface (zip+4, order numbers, etc.).
   { type: "ssn", regex: /\b\d{3}-\d{2}-\d{4}\b/ },
 
-  // Credit / debit card. 13–19 digits with optional spaces or hyphens
-  // between groups, Luhn-validated to filter random number runs.
-  { type: "credit_card", regex: /\b(?:\d[ -]?){12,18}\d\b/, needsLuhn: true },
+  // Credit / debit card. 13–19 digits with optional whitespace or hyphen
+  // between groups (e.g. `4242 4242-4242 4242`), Luhn-validated to
+  // filter random number runs. Using `[\s-]` (not `[ -]`) so tabs and
+  // newlines pasted mid-number still count as separators.
+  { type: "credit_card", regex: /\b(?:\d[\s-]?){12,18}\d\b/, needsLuhn: true },
 
   // AWS Access Key ID — `AKIA` + 16 base32 chars.
   { type: "aws_key", regex: /\bAKIA[0-9A-Z]{16}\b/ },

@@ -1,6 +1,14 @@
 #!/bin/bash
 # fix_stale_tests.sh — Updates test expectations for v4.5.1
 #
+# ARCHIVED — this is a one-shot patch script from the v4.5.1 cutover.
+# Current engine version is 4.7.6 (see src/content_checker/__init__.py).
+# Kept on disk as a reference for the upgrade pattern (sed-replace the
+# stale count assertions across the test suite). When the standards
+# library count next changes, copy this file, bump the from/to numbers,
+# run, delete. Don't run this file as-is — the v4.5.1 deltas have long
+# been baked into the tests.
+#
 # Fixes 13 stale assertions across 7 test files.
 # Run from the project root (content-standards-checker/).
 #

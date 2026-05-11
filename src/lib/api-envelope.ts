@@ -339,10 +339,21 @@ export function publicCheckEnvelope(
     typeof result.moment === "string" && result.moment.length > 0
       ? result.moment
       : null;
+  // CLAUDE.md non-negotiable: "Every verdict is one of
+  // `violation | review_recommended | pass`." The Verdict enum still
+  // has "error" as a private substrate value; whitelist before we ship
+  // the envelope so no internal verdict ever reaches a user-facing
+  // surface (any unrecognised value falls back to "pass").
+  const PUBLIC_VERDICTS = ["pass", "violation", "review_recommended"] as const;
+  const safeVerdict =
+    typeof result.verdict === "string" &&
+    (PUBLIC_VERDICTS as ReadonlyArray<string>).includes(result.verdict)
+      ? result.verdict
+      : "pass";
   return {
     schema_version: SCHEMA_VERSION,
     violations,
-    verdict: typeof result.verdict === "string" ? result.verdict : "pass",
+    verdict: safeVerdict,
     review_reason:
       typeof result.review_reason === "string" ? result.review_reason : null,
     warnings: opts.warnings ?? [],
