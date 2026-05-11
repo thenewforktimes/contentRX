@@ -24,20 +24,19 @@ export function PaymentFailedEmail({
 }) {
   return (
     <EmailShell
-      preview={`Your ContentRX ${planLabel} payment didn't go through.`}
+      preview={`Update your card to keep ContentRX ${planLabel}.`}
     >
       <Heading as="h1" style={headingStyle}>
-        Your ContentRX payment didn't go through.
+        Update your card to keep ContentRX {planLabel}.
       </Heading>
       <Text style={bodyStyle}>
-        Stripe couldn't charge your card for your ContentRX{" "}
-        {planLabel} subscription. Most often this is a card that
-        needs renewing, not anything you did wrong.
+        Stripe couldn&apos;t charge your card for your ContentRX{" "}
+        {planLabel} subscription. Update your payment method to keep
+        access.
       </Text>
       <Text style={bodyStyle}>
-        Stripe will retry the charge a few times automatically. To
-        avoid losing access, update your payment method when you get
-        a chance.
+        Stripe will retry the charge a few times automatically. Open
+        the dashboard to update your card before the retries run out.
       </Text>
       <Text style={{ marginTop: 20 }}>
         <Button href={`${appUrl}/dashboard/settings`} style={primaryButton}>
@@ -45,7 +44,7 @@ export function PaymentFailedEmail({
         </Button>
       </Text>
       <Text style={{ ...bodyStyle, marginTop: 24, fontSize: 12 }}>
-        Questions? Reply to this email — we read every message.
+        Questions? Reply to this email. We read every message.
       </Text>
     </EmailShell>
   );

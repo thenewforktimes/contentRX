@@ -39,11 +39,11 @@ export function RenewalReminderEmail({
       </Heading>
       <Text style={bodyStyle}>
         Your ContentRX {planLabel} subscription renews on {renewalDate}{" "}
-        for {amountLabel}. This is a reminder, not a charge — billing
+        for {amountLabel}. This is a reminder, not a charge. Billing
         runs through Stripe on the renewal date.
       </Text>
       <Text style={bodyStyle}>
-        Want to keep going? You don't need to do anything. Access
+        Want to keep going? You don&apos;t need to do anything. Access
         continues without interruption.
       </Text>
       <Text style={bodyStyle}>

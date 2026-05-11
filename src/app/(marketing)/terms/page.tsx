@@ -59,9 +59,9 @@ export default function TermsPage() {
         }
         meta={
           <>
-            Effective date pending. Last updated pending. Phase A stub
-            shipped 2026-05-11 — final attorney-reviewed copy arrives
-            in Phase B.
+            Effective date pending. Last updated pending. This page
+            is a structural stub. Final attorney-reviewed copy
+            arrives later this week.
           </>
         }
       />
@@ -97,22 +97,23 @@ export default function TermsPage() {
 
       <Section number="4" title="Flag for Review opt-in">
         <p>
-          Placeholder. Attorney copy: the most ContentRX-specific
-          clause. Customer strings join the calibration corpus only
-          when you affirmatively flag them via the Flag for Review
-          feature, per string, per event, with a consent modal
-          naming what gets stored and how to revoke. Final wording
-          will mirror across the consent modal, this section, and
-          the /dashboard/shared page.
+          Placeholder. Attorney copy will land here. The most
+          ContentRX-specific clause. Your checks join the calibration
+          corpus only when you affirmatively flag them via the Flag
+          for Review feature. One flag per check, with a consent
+          modal naming what gets stored. Revoke any time. Final
+          wording mirrors across the consent modal, this section,
+          and the /dashboard/shared page.
         </p>
       </Section>
 
       <Section number="5" title="No training on your content">
         <p>
-          Placeholder. Attorney copy: ContentRX does not use customer
-          strings to train, fine-tune, or otherwise develop our or
-          any third party&apos;s machine learning models, except as
-          expressly opted-in via Flag for Review (Section 4).
+          Placeholder. Attorney copy will land here. ContentRX does
+          not use your checks to train, fine-tune, or otherwise
+          develop our or any third party&apos;s machine learning
+          models. The one exception is the per-check opt-in via Flag
+          for Review described in Section 4.
         </p>
       </Section>
 
@@ -135,14 +136,14 @@ export default function TermsPage() {
 
       <Section number="8" title="Privacy and subprocessors">
         <p>
-          The privacy commitments — what ContentRX collects, retains,
-          and shares — live at{" "}
+          The privacy commitments live at{" "}
           <Link href="/privacy" className="underline underline-offset-2">
             /privacy
           </Link>
-          . The subprocessor list and change-notice policy are
-          published there as well. This page does not duplicate that
-          content.
+          . That page covers what ContentRX collects, what gets
+          retained, and which subprocessors receive customer data.
+          The subprocessor change-notice policy is published there
+          as well. This page does not duplicate that content.
         </p>
       </Section>
 
