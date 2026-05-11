@@ -56,7 +56,10 @@ export async function POST(req: Request) {
       Math.ceil((rl.reset - Date.now()) / 1000),
     );
     return NextResponse.json(
-      { error: "Rate limit exceeded", retry_after_seconds: retryAfterSeconds },
+      {
+        error: `Too many preview runs in a short window. Try again in ${retryAfterSeconds}s.`,
+        retry_after_seconds: retryAfterSeconds,
+      },
       {
         status: 429,
         headers: { "retry-after": String(retryAfterSeconds) },

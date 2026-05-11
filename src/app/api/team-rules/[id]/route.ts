@@ -95,7 +95,8 @@ export async function PATCH(req: Request, context: RouteContext) {
   if (!fieldsParsed.success) {
     return NextResponse.json(
       {
-        error: "Invalid rule fields",
+        error:
+          "Some rule fields didn't validate. Check the details below and try again.",
         issues: sanitizeZodIssues(fieldsParsed.error.issues),
       },
       { status: 400 },
