@@ -30,9 +30,8 @@ export function PaymentFailedEmail({
         Update your card to keep ContentRX {planLabel}.
       </Heading>
       <Text style={bodyStyle}>
-        Stripe couldn&apos;t charge your card for your ContentRX{" "}
-        {planLabel} subscription. Update your payment method to keep
-        access.
+        Stripe couldn&apos;t charge your card. Update your payment
+        method in the dashboard to keep access to your subscription.
       </Text>
       <Text style={bodyStyle}>
         Stripe will retry the charge a few times automatically. Open

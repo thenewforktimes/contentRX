@@ -112,8 +112,8 @@ export default function TermsPage() {
           Placeholder. Attorney copy will land here. ContentRX does
           not use your checks to train, fine-tune, or otherwise
           develop our or any third party&apos;s machine learning
-          models. The one exception is the per-check opt-in via Flag
-          for Review described in Section 4.
+          models. The only exception is the per-check opt-in via
+          Flag for Review described in Section 4.
         </p>
       </Section>
 
