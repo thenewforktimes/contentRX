@@ -239,8 +239,8 @@ export default async function CheckDetailPage({ params }: PageProps) {
             {row.suggestedRewrite}
           </p>
           <p className="mt-3 text-xs text-quiet">
-            One holistic pass through the input. Treat it as a starting
-            draft — keep what reads better, ignore what doesn&apos;t.
+            A holistic pass through your input. Treat it as a starting
+            draft. Keep what reads better, ignore what doesn&apos;t.
           </p>
         </section>
       )}
@@ -287,7 +287,7 @@ export default async function CheckDetailPage({ params }: PageProps) {
                   <div className="mt-2 flex items-start justify-between gap-2">
                     <p className="text-sm text-default">
                       <span className="font-medium text-strong">
-                        Consider.
+                        Consider:
                       </span>{" "}
                       {f.suggestion}
                     </p>
@@ -354,7 +354,9 @@ export default async function CheckDetailPage({ params }: PageProps) {
             />
           ) : (
             <span className="text-sm text-quiet">
-              Flag-for-review unavailable — text not retained.
+              We can&apos;t flag this for review because the original
+              text wasn&apos;t saved. Run a fresh check to get this
+              content reviewed.
             </span>
           )}
         </div>

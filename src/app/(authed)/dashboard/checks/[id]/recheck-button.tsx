@@ -111,7 +111,7 @@ export function RecheckButton({
     >
       {status === "submitting" ? "Running…" : "Re-run this check"}
       <span className="text-xs text-quiet">
-        (uses one check from your monthly limit)
+        (uses 1 check from your monthly limit)
       </span>
     </button>
   );
