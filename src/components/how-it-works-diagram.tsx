@@ -37,6 +37,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Pill } from "@/components/ui/pill";
+import { StepBadge } from "@/components/ui/step-badge";
 
 interface Stage {
   /** Short imperative — one full thought per stage. */
@@ -184,9 +185,7 @@ function StageCard({
         "data-[state=complete]:border-accent-affirm-border/60 data-[state=complete]:bg-accent-affirm-soft/40",
       ].join(" ")}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-quiet">
-        Stage {index + 1}
-      </p>
+      <StepBadge index={index + 1} state={state} />
       {/* Reserve 2 lines of vertical space for the label even when the
           text fits on one ("You decide"). Without this, single-line
           labels collapse the column and the output below them sits
