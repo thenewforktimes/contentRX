@@ -23,6 +23,12 @@ type ViolationSource =
 type LoggableViolation = {
   standard_id?: string;
   severity?: string;
+  // 2026-05-10 dashboard round 2: the public-envelope issue +
+  // suggestion text. Persisted so /dashboard/checks can render each
+  // finding's content alongside its metadata. Optional on the input
+  // shape because pre-migration callers may not supply them.
+  issue?: string;
+  suggestion?: string;
 };
 
 type LogParams = {
@@ -88,6 +94,8 @@ export async function logViolations(params: LogParams): Promise<number> {
       checkEventId,
       reviewReasonSubtype: params.reviewReasonSubtype ?? null,
       runId: params.runId ?? null,
+      issue: v.issue ?? null,
+      suggestion: v.suggestion ?? null,
     }));
 
   if (rows.length === 0) return 0;

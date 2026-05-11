@@ -3,9 +3,10 @@
 /**
  * URL-driven browse + filter island for /dashboard/checks.
  *
- * The page is server-rendered; this component owns the controls and
- * updates the URL via router.push. Every change triggers a server
- * re-render with the new params.
+ * Round 2 (2026-05-10): the page reads search-first per Robert's
+ * call. Search up top, then time chips, then filter pills (verdict
+ * + Shared toggle + surface pills with icons), then a one-line
+ * stats caption, then the day-grouped list.
  *
  * URL params:
  *   - ?q=<text>        search substring
@@ -17,10 +18,11 @@
  *   - ?to=<iso>        custom end date (overrides ?range)
  *   - ?page=<n>        pagination
  *
- * Why so many filters: the dashboard is the customer's home base.
- * Robert's six jobs-to-be-done (browse, find, flag, revoke, time-
- * slice, surface-attribute) each need one control. They share the URL
- * so any view is shareable / bookmarkable.
+ * Per-row layout: verdict chip with finding count baked in on the
+ * top line, secondary metadata line below (source · content-type
+ * · moment · units), text preview, findings list (issue + suggestion
+ * per finding when present), Flag-for-review or Remove-this-check
+ * CTA on its own line.
  */
 
 import Link from "next/link";
@@ -30,12 +32,20 @@ import { FlagForReview } from "@/components/flag-for-review";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import {
+  CliIcon,
+  FigmaIcon,
+  GitHubIcon,
+  McpIcon,
+  PasteModeIcon,
+  VsCodeIcon,
+} from "@/components/surface-icons";
+import {
   humanizeChecks,
   humanizeContentType,
   humanizeMoment,
 } from "@/lib/humanize";
 import { RevokeButton } from "../shared/revoke-button";
-import type { CheckHistoryRow } from "./page";
+import type { CheckHistoryRow, CheckHistoryFinding } from "./page";
 
 type DateRange = "day" | "week" | "month" | "30d" | "all";
 
@@ -74,6 +84,22 @@ const SOURCE_LABEL: Record<string, string> = {
   mcp: "Claude / Cursor",
   ditto: "Ditto",
 };
+
+// Surface pill order. Matches the surfaces-grid order on the
+// landing page so the customer's mental map across product
+// surfaces stays consistent.
+const SURFACE_ORDER: ReadonlyArray<{
+  key: string;
+  label: string;
+  Glyph: React.ComponentType<{ className?: string }>;
+}> = [
+  { key: "dashboard", label: "Paste", Glyph: PasteModeIcon },
+  { key: "mcp", label: "Claude / Cursor", Glyph: McpIcon },
+  { key: "action", label: "GitHub Action", Glyph: GitHubIcon },
+  { key: "cli", label: "CLI", Glyph: CliIcon },
+  { key: "lsp", label: "Editor", Glyph: VsCodeIcon },
+  { key: "plugin", label: "Figma", Glyph: FigmaIcon },
+];
 
 interface ChecksSearchProps {
   rows: CheckHistoryRow[];
@@ -127,7 +153,6 @@ export function ChecksSearch({
       verdict?: string;
       source?: string;
       filter?: string | null;
-      // "" clears the range param so a custom date range can take over.
       range?: DateRange | "";
       from?: string;
       to?: string;
@@ -142,7 +167,6 @@ export function ChecksSearch({
       setOrClear("q", overrides.q);
       setOrClear("verdict", overrides.verdict);
       setOrClear("source", overrides.source);
-      // ?filter=flagged is a presence-only key. Passing null clears.
       if (overrides.filter !== undefined) {
         if (overrides.filter === null) next.delete("filter");
         else next.set("filter", overrides.filter);
@@ -150,7 +174,6 @@ export function ChecksSearch({
       setOrClear("range", overrides.range);
       setOrClear("from", overrides.from);
       setOrClear("to", overrides.to);
-      // Any control change resets pagination unless explicit.
       if (overrides.page !== undefined) {
         if (overrides.page <= 1) next.delete("page");
         else next.set("page", String(overrides.page));
@@ -176,7 +199,6 @@ export function ChecksSearch({
 
   const onRangeChange = useCallback(
     (next: DateRange) => {
-      // Selecting a named range clears any ?from/?to override.
       router.push(buildUrl({ range: next, from: "", to: "" }));
       setCustomOpen(false);
     },
@@ -197,11 +219,13 @@ export function ChecksSearch({
     [router, buildUrl],
   );
 
-  const onSourceChange = useCallback(
+  const onSourceToggle = useCallback(
     (next: string) => {
-      router.push(buildUrl({ source: next }));
+      // Clicking the active source clears the filter. Clicking another
+      // pill switches to it. Single-select keeps the URL clean.
+      router.push(buildUrl({ source: source === next ? "" : next }));
     },
-    [router, buildUrl],
+    [router, buildUrl, source],
   );
 
   const onFlaggedToggle = useCallback(() => {
@@ -211,38 +235,10 @@ export function ChecksSearch({
   const totalChecks = counts.all;
   const totalFindings = counts.violation;
 
-  // Caption text describes the active filter shape. The "Shared for
-  // review" caption explicitly names /dashboard/shared as the
-  // canonical privacy mirror so the relationship between the two
-  // surfaces is discoverable without hover.
-  const caption = useMemo(() => {
-    const windowLabel =
-      customFrom || customTo
-        ? `${customFrom || "..."} → ${customTo || "..."}`
-        : RANGE_LABEL[range].toLowerCase();
-    if (flaggedOnly) {
-      return (
-        <>
-          Showing checks you shared via Flag for Review,{" "}
-          {windowLabel}. The full list lives at{" "}
-          <Link
-            href="/dashboard/shared"
-            className="underline underline-offset-2"
-          >
-            /dashboard/shared
-          </Link>
-          .
-        </>
-      );
-    }
-    const verdictPart =
-      verdict.length > 0
-        ? ` filtered to ${VERDICT_LABEL[verdict].toLowerCase()}`
-        : "";
-    const sourcePart =
-      source.length > 0 ? ` from ${SOURCE_LABEL[source] ?? source}` : "";
-    return `Showing checks ${windowLabel}${verdictPart}${sourcePart}.`;
-  }, [flaggedOnly, range, customFrom, customTo, verdict, source]);
+  const captionWindow =
+    customFrom || customTo
+      ? `${customFrom || "..."} → ${customTo || "..."}`
+      : RANGE_LABEL[range].toLowerCase();
 
   // Group rows by ISO date (yyyy-mm-dd). The query is already sorted
   // DESC by created_at, so each group's order is preserved as we
@@ -262,6 +258,25 @@ export function ChecksSearch({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* ──────────────── Search ──────────────── */}
+      <section className="flex flex-col gap-2">
+        <label
+          htmlFor="checks-search"
+          className="text-xs font-medium text-default"
+        >
+          Search across every check
+        </label>
+        <Input
+          id="checks-search"
+          type="text"
+          value={localQuery}
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder="Try a phrase you remember writing"
+          autoComplete="off"
+          className="text-base"
+        />
+      </section>
+
       {/* ──────────────── Time-window chips ──────────────── */}
       <section
         role="radiogroup"
@@ -303,52 +318,12 @@ export function ChecksSearch({
         />
       )}
 
-      {/* ──────────────── Stats strip ──────────────── */}
+      {/* ──────────────── Verdict + Shared filter row ──────────────── */}
       <section
-        aria-label="Summary stats"
-        className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-line bg-overlay px-3 py-2 text-xs text-default"
+        aria-label="Filter by verdict and review status"
+        className="flex flex-wrap items-center gap-2 text-xs"
       >
-        <span>
-          <span className="font-medium text-strong">{totalChecks}</span>{" "}
-          {humanizeChecks(totalChecks)}
-        </span>
-        <span>
-          <span className="font-medium text-strong">{totalFindings}</span>{" "}
-          {totalFindings === 1 ? "finding" : "findings"}
-        </span>
-        <span>
-          <span className="font-medium text-strong">{flaggedCount}</span>{" "}
-          shared for review
-        </span>
-        <span>
-          <span className="font-medium text-strong">
-            {sourcesPresent.length}
-          </span>{" "}
-          {sourcesPresent.length === 1 ? "surface" : "surfaces"}
-        </span>
-      </section>
-
-      {/* ──────────────── Search ──────────────── */}
-      <section className="flex flex-col gap-2">
-        <label
-          htmlFor="checks-search"
-          className="text-xs font-medium text-default"
-        >
-          Search across every check
-        </label>
-        <Input
-          id="checks-search"
-          type="text"
-          value={localQuery}
-          onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Try a phrase you remember writing"
-          autoComplete="off"
-          className="text-base"
-        />
-      </section>
-
-      {/* ──────────────── Filter row ──────────────── */}
-      <section className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="text-xs text-quiet">Verdict</span>
         <div
           role="radiogroup"
           aria-label="Verdict filter"
@@ -371,9 +346,6 @@ export function ChecksSearch({
             );
           })}
         </div>
-        <span aria-hidden="true" className="text-quiet">
-          ·
-        </span>
         <button
           type="button"
           onClick={onFlaggedToggle}
@@ -382,31 +354,46 @@ export function ChecksSearch({
         >
           Shared for review · {flaggedCount}
         </button>
-        {sourcesPresent.length > 1 && (
-          <>
-            <span aria-hidden="true" className="text-quiet">
-              ·
-            </span>
-            <label className="flex items-center gap-2">
-              <span className="sr-only">Source filter</span>
-              <select
-                value={source}
-                onChange={(e) => onSourceChange(e.target.value)}
-                className="rounded-md border border-line-strong bg-raised px-2 py-1 text-xs text-default"
-              >
-                <option value="">All surfaces</option>
-                {sourcesPresent.map((s) => (
-                  <option key={s} value={s}>
-                    {SOURCE_LABEL[s] ?? s}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </>
-        )}
       </section>
 
-      <p className="text-xs text-default">{caption}</p>
+      {/* ──────────────── Surface filter pills ──────────────── */}
+      {sourcesPresent.length > 1 && (
+        <section
+          aria-label="Filter by surface"
+          className="flex flex-wrap items-center gap-2 text-xs"
+        >
+          <span className="text-xs text-quiet">Surface</span>
+          {SURFACE_ORDER.filter((s) => sourcesPresent.includes(s.key)).map(
+            (s) => {
+              const active = source === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => onSourceToggle(s.key)}
+                  aria-pressed={active}
+                  className={`${chipClass(active)} inline-flex items-center gap-1.5`}
+                >
+                  <s.Glyph className="h-3.5 w-3.5" />
+                  <span>{s.label}</span>
+                </button>
+              );
+            },
+          )}
+        </section>
+      )}
+
+      {/* ──────────────── Caption + inline stats ──────────────── */}
+      <CaptionLine
+        flaggedOnly={flaggedOnly}
+        captionWindow={captionWindow}
+        verdict={verdict}
+        source={source}
+        totalChecks={totalChecks}
+        totalFindings={totalFindings}
+        flaggedCount={flaggedCount}
+        sourcesPresent={sourcesPresent}
+      />
 
       {/* ──────────────── List ──────────────── */}
       {rows.length === 0 ? (
@@ -471,6 +458,62 @@ function chipClass(active: boolean): string {
   return active
     ? "rounded-full bg-stone-900 px-3 py-1 font-medium text-white dark:bg-stone-100 dark:text-stone-900"
     : "rounded-full bg-sunken px-3 py-1 font-medium text-default transition hover:bg-hover disabled:opacity-50 disabled:hover:bg-sunken";
+}
+
+function CaptionLine({
+  flaggedOnly,
+  captionWindow,
+  verdict,
+  source,
+  totalChecks,
+  totalFindings,
+  flaggedCount,
+  sourcesPresent,
+}: {
+  flaggedOnly: boolean;
+  captionWindow: string;
+  verdict: string;
+  source: string;
+  totalChecks: number;
+  totalFindings: number;
+  flaggedCount: number;
+  sourcesPresent: string[];
+}) {
+  if (flaggedOnly) {
+    return (
+      <p className="text-xs text-default">
+        Showing checks you shared via Flag for Review, {captionWindow}.
+        The full list lives at{" "}
+        <Link
+          href="/dashboard/shared"
+          className="underline underline-offset-2"
+        >
+          /dashboard/shared
+        </Link>
+        .
+      </p>
+    );
+  }
+  const verdictPart =
+    verdict.length > 0 ? ` (${VERDICT_LABEL[verdict].toLowerCase()})` : "";
+  const sourcePart =
+    source.length > 0 ? ` from ${SOURCE_LABEL[source] ?? source}` : "";
+  return (
+    <p className="text-xs text-default">
+      Showing <strong className="font-medium text-strong">{totalChecks}</strong>{" "}
+      {humanizeChecks(totalChecks)} {captionWindow}
+      {verdictPart}
+      {sourcePart}.{" "}
+      <strong className="font-medium text-strong">{totalFindings}</strong>{" "}
+      {totalFindings === 1 ? "finding" : "findings"} ·{" "}
+      <strong className="font-medium text-strong">{flaggedCount}</strong>{" "}
+      shared for review ·{" "}
+      <strong className="font-medium text-strong">
+        {sourcesPresent.length}
+      </strong>{" "}
+      {sourcesPresent.length === 1 ? "surface" : "surfaces"}.
+    </p>
+  );
 }
 
 function CustomRangeInputs({
@@ -575,6 +618,9 @@ function DayGroup({
   rows: CheckHistoryRow[];
   defaultOpen: boolean;
 }) {
+  // Counts reflect the FILTERED rows (the body), not the unfiltered
+  // server counts. Fixes the day-header / body mismatch where "2
+  // checks" was reported but only 1 row appeared.
   const findingsInDay = rows.reduce(
     (n, r) => n + (r.violationCount ?? 0),
     0,
@@ -617,29 +663,31 @@ function DayGroup({
 
 function CheckRow({ row }: { row: CheckHistoryRow }) {
   const sourceLabel = row.source ? SOURCE_LABEL[row.source] ?? row.source : null;
+  // Verdict chip carries the finding count inline so the top line
+  // reads as one unit, not three tags.
+  const verdictChipText =
+    row.violationCount > 0
+      ? `${row.verdictLabel} · ${row.violationCount} finding${row.violationCount === 1 ? "" : "s"}`
+      : row.verdictLabel;
+  const metaLine = [
+    sourceLabel,
+    row.contentType ? humanizeContentType(row.contentType) : null,
+    row.moment ? humanizeMoment(row.moment) : null,
+    `${row.unitsConsumed} ${humanizeChecks(row.unitsConsumed)}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <li className="rounded-md border border-line bg-canvas p-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-quiet">
-          <Pill tone={toneFor(row.verdict)}>{row.verdictLabel}</Pill>
-          {row.violationCount > 0 && (
-            <span className="text-default">
-              {row.violationCount} finding
-              {row.violationCount === 1 ? "" : "s"}
-            </span>
-          )}
-          {sourceLabel && <Pill tone="neutral">{sourceLabel}</Pill>}
-          {row.flagged && (
-            <Pill tone="emerald">Shared for review</Pill>
-          )}
-        </div>
-        <div className="text-right text-xs text-quiet">
-          <p>{formatRelative(new Date(row.createdAt))}</p>
-          <p>
-            {row.unitsConsumed} {humanizeChecks(row.unitsConsumed)}
-          </p>
-        </div>
+        <Pill tone={toneFor(row.verdict)}>{verdictChipText}</Pill>
+        <span className="text-right text-xs text-quiet">
+          {formatRelative(new Date(row.createdAt))}
+        </span>
       </div>
+      {metaLine.length > 0 && (
+        <p className="mt-1 text-xs text-quiet">{metaLine}</p>
+      )}
       {row.textPreview ? (
         <p className="mt-2 whitespace-pre-wrap font-mono text-sm text-default">
           {row.textPreview}
@@ -651,18 +699,15 @@ function CheckRow({ row }: { row: CheckHistoryRow }) {
           this one matters.
         </p>
       )}
-      {(row.contentType || row.moment) && (
-        <p className="mt-1 text-xs text-quiet">
-          {row.contentType && (
-            <span>{humanizeContentType(row.contentType)}</span>
-          )}
-          {row.contentType && row.moment && <span> · </span>}
-          {row.moment && <span>{humanizeMoment(row.moment)}</span>}
-        </p>
-      )}
-      <div className="mt-3 flex flex-wrap justify-end gap-2">
-        {row.flagged && row.flagId ? (
-          <RevokeButton id={row.flagId} />
+      {row.findings.length > 0 && <FindingsList findings={row.findings} />}
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {row.flagged ? (
+          <>
+            <span className="text-xs font-medium text-accent-affirm-text">
+              ✓ Shared for review
+            </span>
+            {row.flagId && <RevokeButton id={row.flagId} />}
+          </>
         ) : row.textPreview ? (
           <FlagForReview
             text={row.textPreview}
@@ -670,11 +715,39 @@ function CheckRow({ row }: { row: CheckHistoryRow }) {
             moment={row.moment}
             verdict={normalizeVerdict(row.verdict)}
             variant="card-action"
+            label="Flag for review"
             source="dashboard"
           />
         ) : null}
       </div>
     </li>
+  );
+}
+
+function FindingsList({ findings }: { findings: CheckHistoryFinding[] }) {
+  // Render the issue + suggestion per finding. The block uses the
+  // small uppercase "FINDINGS" eyebrow so it reads as a labeled
+  // section, not a continuation of the metadata above.
+  const renderable = findings.filter((f) => f.issue || f.suggestion);
+  if (renderable.length === 0) return null;
+  return (
+    <section className="mt-3 rounded-md border border-line bg-sunken px-3 py-2 text-xs">
+      <p className="text-[10px] font-medium uppercase tracking-wider text-quiet">
+        Findings
+      </p>
+      <ul className="mt-1 flex flex-col gap-2">
+        {renderable.map((f, i) => (
+          <li key={i} className="text-default">
+            {f.issue && <p>{f.issue}</p>}
+            {f.suggestion && (
+              <p className="mt-0.5 text-quiet">
+                <span className="font-medium">Suggested</span>. {f.suggestion}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -713,8 +786,6 @@ function normalizeVerdict(
 }
 
 function formatDayHeader(iso: string): string {
-  // iso is yyyy-mm-dd. Add midday so the Date constructor doesn't pick
-  // the previous day in negative-offset timezones.
   const d = new Date(`${iso}T12:00:00.000Z`);
   const today = new Date();
   const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);

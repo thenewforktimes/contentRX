@@ -46,6 +46,15 @@ import { ChecksSearch } from "./checks-search";
 
 const PAGE_SIZE = 100;
 
+export interface CheckHistoryFinding {
+  /** Severity from the engine envelope: high / medium / low. */
+  severity: string;
+  /** Public-envelope issue text. Null on pre-2026-05-10 rows. */
+  issue: string | null;
+  /** Public-envelope suggestion text. Null on pre-2026-05-10 rows. */
+  suggestion: string | null;
+}
+
 export interface CheckHistoryRow {
   id: string;
   createdAt: string;
@@ -66,6 +75,10 @@ export interface CheckHistoryRow {
   /** When flagged, the customer_flagged_reviews.id so the row's
    * Revoke action can call DELETE /api/customer-flag/[id]. */
   flagId: string | null;
+  /** Per-finding issue + suggestion text (post-migration writes
+   * only). Empty array when the check returned no findings or when
+   * the row pre-dates the persistence change. */
+  findings: CheckHistoryFinding[];
 }
 
 interface PageProps {
@@ -273,6 +286,38 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
     flagByHash.set(f.textHash, f.id);
   }
 
+  // Pull findings (issue + suggestion + severity) for every visible
+  // row's check_event_id. usage_events.id == violations.check_event_id
+  // for /api/check writes (PR-40), so the join is direct. One query
+  // for all visible rows. Pre-2026-05-10 violation rows have null
+  // issue/suggestion; the renderer falls back to severity-only.
+  const visibleIds = visibleRows.map((r) => r.id);
+  const findingRows =
+    visibleIds.length > 0
+      ? await db
+          .select({
+            checkEventId: schema.violations.checkEventId,
+            severity: schema.violations.severity,
+            issue: schema.violations.issue,
+            suggestion: schema.violations.suggestion,
+            createdAt: schema.violations.createdAt,
+          })
+          .from(schema.violations)
+          .where(inArray(schema.violations.checkEventId, visibleIds))
+          .orderBy(schema.violations.createdAt)
+      : [];
+  const findingsByCheckId = new Map<string, CheckHistoryFinding[]>();
+  for (const f of findingRows) {
+    if (!f.checkEventId) continue;
+    const bucket = findingsByCheckId.get(f.checkEventId) ?? [];
+    bucket.push({
+      severity: f.severity,
+      issue: f.issue,
+      suggestion: f.suggestion,
+    });
+    findingsByCheckId.set(f.checkEventId, bucket);
+  }
+
   // Counts for the filter pills. Scoped to team + time-window only —
   // ignores q + verdict + source + flagged so the pills always show
   // the totals within the chosen time window.
@@ -352,6 +397,7 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
       textHash: r.textHash,
       flagged: flagId !== null,
       flagId,
+      findings: findingsByCheckId.get(r.id) ?? [],
     };
   });
 
@@ -366,12 +412,6 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
         </Link>
         <Eyebrow>Check history</Eyebrow>
         <h1 className="mt-2 text-2xl font-semibold">Recent checks</h1>
-        <p className="mt-1 text-sm text-default">
-          Every check from every surface lands here. Filter by time
-          window, verdict, or source. Flag any check for review with
-          one click. The Flag CTA on a row is the same one that fires
-          from the paste panel.
-        </p>
       </header>
 
       <ChecksSearch
