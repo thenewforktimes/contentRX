@@ -2,7 +2,7 @@
  * /dashboard — account overview. Server-rendered so we can hit the DB
  * inline without a round-trip to a separate API endpoint.
  *
- * Section order (Apr 2026 IA refresh per design critique):
+ * Section order (last reshuffle: 2026-04 IA refresh, design critique cycle):
  *   1. Header (email + plan pill)
  *   2. Try a check (inline ExplainClient, the hero)
  *   3. Usage this month (amber at ≥80%)

@@ -240,7 +240,19 @@ export default function PricingPage() {
           />
           <FaqRow
             q="Can I cancel anytime?"
-            a="Yes. Stripe-hosted Customer Portal. Your team setup stays put for 90 days after cancellation."
+            a={
+              <>
+                Yes. Cancellation runs through the{" "}
+                <Link
+                  href="/dashboard"
+                  className="underline decoration-quiet underline-offset-2 hover:decoration-strong"
+                >
+                  Stripe-hosted Customer Portal
+                </Link>
+                , linked from the Subscription section of your dashboard.
+                Your team setup stays put for 90 days after cancellation.
+              </>
+            }
           />
           <FaqRow
             q="Do I need a credit card to try ContentRX?"

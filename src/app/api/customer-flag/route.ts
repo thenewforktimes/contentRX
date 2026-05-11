@@ -153,6 +153,12 @@ export async function POST(req: Request) {
         flagReason: parsed.data.flag_reason,
         customerNote: parsed.data.customer_note ?? null,
         source: parsed.data.source,
+        // Audit trail: stamp consent at the write site instead of relying
+        // on the schema's defaultNow(). If the default is ever dropped
+        // the column would silently start storing NULL; an explicit value
+        // here makes the consent moment load-bearing on the route, not
+        // the schema.
+        consentRecordedAt: new Date(),
       })
       .returning({ id: schema.customerFlaggedReviews.id });
 
