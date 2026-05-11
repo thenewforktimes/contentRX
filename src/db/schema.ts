@@ -370,6 +370,15 @@ export const violations = pgTable(
     // dashboard view survives). Nullable: plugin/CLI/MCP/LSP/inline
     // checks have no run grouping.
     runId: text("run_id"),
+    // 2026-05-10 dashboard round 2: persist the public-envelope
+    // `issue` and `suggestion` text so /dashboard/checks can render
+    // each finding's actual content, not just severity metadata.
+    // Same retention semantics as `usage_events.text_preview` (the
+    // customer's own check results, surfaced back to the customer
+    // only). Nullable on pre-migration rows; new rows always have
+    // them populated when the engine returned a finding.
+    issue: text("issue"),
+    suggestion: text("suggestion"),
   },
   (t) => [
     index("violations_user_created_idx").on(t.userId, t.createdAt),

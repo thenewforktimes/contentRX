@@ -53,6 +53,11 @@ export interface FlagForReviewProps {
   /** Variant: a small text button (default) or a per-finding button
    * styled like the surrounding finding-card actions. */
   variant?: "link" | "card-action";
+  /** Explicit button label override. Wins over the variant default
+   * when provided. Used on /dashboard/checks where the row has
+   * room for the full "Flag for review" string even on the
+   * card-action variant. */
+  label?: string;
   /** Source surface — defaults to "dashboard" when omitted. */
   source?: "dashboard" | "plugin" | "cli" | "action" | "lsp" | "mcp";
 }
@@ -67,6 +72,7 @@ export function FlagForReview({
   violationId,
   contextLine,
   variant = "link",
+  label,
   source = "dashboard",
 }: FlagForReviewProps) {
   const [open, setOpen] = useState(false);
@@ -116,7 +122,7 @@ export function FlagForReview({
       ? "shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover"
       : "shrink-0 rounded-md border border-line bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover";
   const triggerLabel =
-    variant === "card-action" ? "Flag" : "Flag for review";
+    label ?? (variant === "card-action" ? "Flag" : "Flag for review");
 
   return (
     <>
