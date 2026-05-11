@@ -3,8 +3,9 @@
  *
  * The renderer's JSX output is exercised at the page level (visual);
  * this suite pins the pure parser logic — block extraction, the
- * timestamp pull, and inline-token splitting — against the templated
- * shape `reports/calibration/generate.py` emits.
+ * timestamp pull, and inline-token splitting — against the
+ * templated shape Robert hand-maintains in
+ * `reports/calibration/<YYYY-WW>.md`.
  */
 
 import { describe, expect, it } from "vitest";

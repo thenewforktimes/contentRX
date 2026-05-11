@@ -61,12 +61,12 @@ const PUBLIC_SURFACES: PublicSurface[] = [
   {
     dir: "reports/calibration",
     filePattern: /^\d{4}-\d{2}\.md$/,
-    rendersAt: "/calibration/[week]",
+    rendersAt: "/accuracy#calibration-log",
   },
   {
     dir: "reports/quarterly",
     filePattern: /^\d{4}-Q\d\.md$/,
-    rendersAt: "/reports/quarterly/[id] (when wired)",
+    rendersAt: "/accuracy#quarterly-reports",
   },
   {
     dir: "reports/accuracy",
@@ -74,9 +74,12 @@ const PUBLIC_SURFACES: PublicSurface[] = [
     rendersAt: "/accuracy",
   },
   {
+    // The drift JSON files Robert maintains by hand as input to the
+    // accuracy snapshot. Same vocab gate applies — anything Robert
+    // pastes in must not leak internal terms.
     dir: "evals/drift/reports",
     filePattern: /^\d{4}-q\d\.json$/,
-    rendersAt: "(input to /accuracy via reports/accuracy/generate.py)",
+    rendersAt: "(input substrate Robert merges into reports/accuracy/latest.json)",
   },
 ];
 
@@ -195,10 +198,9 @@ describe("public-surface internal vocabulary scan", () => {
                 `\n  ${rel}:${leak.line} contains '${term.term}'.\n` +
                   `  Line: ${leak.snippet}\n` +
                   `  Reason: ${term.reason}\n` +
-                  `  Fix: if this file comes from a generator, the ` +
-                  `template at the generator source needs updating ` +
-                  `(grep for the leaking phrase in reports/*/generate.py). ` +
-                  `If hand-edited, replace with customer-facing language.`,
+                  `  Fix: replace with customer-facing language. The ` +
+                  `reports/ artifacts are hand-maintained by Robert ` +
+                  `(no scheduled generators).`,
               );
             }
             expect(leak).toBeNull();

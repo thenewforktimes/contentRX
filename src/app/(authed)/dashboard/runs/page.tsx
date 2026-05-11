@@ -190,9 +190,9 @@ function EmptyState() {
         Runs show up here after any of the engine surfaces flag at
         least one finding under a shared run id. That includes the
         GitHub Action on a PR, the CLI in a CI job, the MCP server
-        in your editor, and the LSP via diagnostics. All-clear
-        checks don&apos;t create rows because there&apos;s no audit
-        content to record.
+        in your editor, and the LSP via diagnostics. Clean passes
+        (verdict &quot;All clear&quot;) don&apos;t create rows
+        because there&apos;s no audit content to record.
       </p>
       <p className="mt-3 text-default">
         Install any surface, run a check on copy that has a finding,

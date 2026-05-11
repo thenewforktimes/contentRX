@@ -194,7 +194,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
         title="Revoke this API key?"
         description="The Figma plugin and any CLI sessions using this key will stop working immediately. You'll need to generate a new key to sign in again."
         confirmLabel="Revoke key"
-        cancelLabel="Cancel"
+        cancelLabel="Keep key"
         tone="danger"
         onConfirm={revoke}
         onCancel={() => setConfirmingRevoke(false)}

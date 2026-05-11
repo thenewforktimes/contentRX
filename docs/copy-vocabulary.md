@@ -385,10 +385,15 @@ Rules of thumb, not strings.
   link. Buttons that submit forms or initiate flows: *"Save changes"*,
   *"Send invite"*, *"Continue to checkout"*. Never *"Submit"*, *"OK"*,
   or *"Click here"*.
-- **Modal confirm/cancel.** Confirm verb-the-object, cancel says
-  *"Cancel"*. *"Disable rule"* / *"Cancel"*. Not *"Disable"* / *"Keep
-  it on"*. (The api-key revoke modal used to say *"Keep key"*; that
-  divergence was closed in the 2026-05-11 round-4 audit.)
+- **Modal confirm/cancel.** Confirm verb-the-object. Cancel usually
+  says *"Cancel"* — but the noun matters. *"Disable rule"* /
+  *"Cancel"* reads cleanly because "cancel" sits against an
+  abstraction (the dialog), not against the resource. *"Revoke key"*
+  / *"Cancel"* misreads: "cancel" sits against the noun "key" and
+  the user momentarily parses "cancel the key." For destructive
+  modals where the object is a tangible resource (key, account,
+  subscription), the cancel button names the absence-of-action —
+  *"Keep key"*, *"Keep account"* — instead of the dialog verb.
 - **Loading states on async buttons.** *"Verbing…"*. So *"Saving…"*,
   *"Joining…"*, *"Generating…"*, *"Redirecting to Stripe…"*. Not
   *"Loading…"* on a specific action.

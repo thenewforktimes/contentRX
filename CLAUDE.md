@@ -62,29 +62,39 @@ substrate modules; they are never rendered to product users.
 The public surface — what customers and prospects actually see — is:
 
 - `/accuracy` — measured system kappa with 95% CI, measured self-drift
-  kappa with 95% CI, target ceiling stated separately. Generated nightly.
-  Hosts two anchored sections:
+  kappa with 95% CI, target ceiling stated separately. **Hand-maintained
+  by Robert as a solo founder; not auto-generated.** Source artifact:
+  `reports/accuracy/latest.json`. Hosts two anchored sections:
   - `#calibration-log` — weekly calibration log entries (kappa
     movement, drift signals, override count, refinement-log
-    activity). The bare `/calibration` route 308s here (consolidated
-    2026-05-11 round-4).
-  - `#quarterly-reports` — quarterly accuracy reports. Generated
-    scaffold + hand-edited narrative. The bare `/reports` route 308s
-    here (consolidated 2026-05-11 round-4). Raw quarterly markdown
-    still lives at `reports/quarterly/<YYYY-Q>.md` for the founder
-    to edit and for `/admin/reports` to render.
+    activity). The bare `/calibration` route 308s here. Source
+    markdown: `reports/calibration/<YYYY-WW>.md`.
+  - `#quarterly-reports` — quarterly accuracy reports.
+    The bare `/reports` route 308s here. Source markdown:
+    `reports/quarterly/<YYYY-Q>.md`. Rendered for the founder at
+    `/admin/reports`.
 
-The substrate (private taxonomy + override stream + refinement log) produces
-the report (public artifacts) through scheduled generators in `reports/`.
-Nothing outside reads substrate. This separation is the load-bearing
-architectural choice; the substrate-vs-report contract is documented in
-`_private/architecture.md` (gitignored), and
+The reports are **not automated**. Earlier rounds of this codebase
+shipped nightly / weekly / quarterly generators + a staleness watchdog;
+those were removed on 2026-05-11 because Robert maintains the artifacts
+manually on his own time as a solo founder with a day job. The lib
+loaders (`src/lib/accuracy-snapshot.server.ts`,
+`src/lib/calibration-loader.server.ts`, `src/lib/admin-reports.server.ts`)
+read the on-disk JSON/markdown as-is; if a file is stale, the loaders
+say so in their fallback path. The `/accuracy` page is the source of
+truth — keep it honest.
+
+The substrate (private taxonomy + override stream + refinement log)
+still produces the published artifacts through the founder's manual
+workflow. Nothing outside `reports/` reads substrate. This separation
+is the load-bearing architectural choice; the substrate-vs-report
+contract is documented in `_private/architecture.md` (gitignored), and
 [decisions/2026-04-25-private-taxonomy-pivot.md](decisions/2026-04-25-private-taxonomy-pivot.md)
 records the rationale and rejected alternatives.
 
-**The moat is operational, not architectural.** If the calibration log goes
-stale for a quarter, the moat decays in public. The `reports/` module's
-staleness monitoring is P0 infrastructure, not marketing nice-to-have.
+**The moat is operational, not architectural.** If the published
+artifacts go stale, the moat decays in public — Robert's cadence
+discipline (and not any automated guard) is what keeps it fresh.
 
 ## Wire format — schema_version 3.0.0
 
@@ -516,7 +526,9 @@ every API change, every new surface, every code review going forward.
   `standards_library.json`, override stream, refinement log) lives in
   `src/content_checker/`, `evals/`, `src/db/`. Report (public, kappa
   numbers, narrative) lives in `reports/`. Substrate produces report
-  through scheduled generators. Nothing outside reads substrate.
+  through Robert's manual founder workflow (no scheduled generators
+  as of 2026-05-11; see "Current positioning" above). Nothing outside
+  reads substrate.
 - BUILD_PLAN_v2 sessions 7, 19, 20 (and Phase 6 in full) are DEFERRED.
   Don't re-activate them without an ADR superseding the 2026-04-25 pivot.
   Deferred-section index lives in the internal build plan
