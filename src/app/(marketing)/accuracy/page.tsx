@@ -27,6 +27,7 @@ import {
   loadPublicAccuracySnapshot,
   type Kappa,
 } from "@/lib/accuracy-snapshot.server";
+import { listCalibrationLogs } from "@/lib/calibration-loader.server";
 
 export const metadata: Metadata = {
   title: "Accuracy. ContentRX",
@@ -36,6 +37,7 @@ export const metadata: Metadata = {
 
 export default function AccuracyPage() {
   const snap = loadPublicAccuracySnapshot();
+  const calibrationEntries = listCalibrationLogs();
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-20">
@@ -134,13 +136,53 @@ export default function AccuracyPage() {
           measurement-in-progress honestly is the whole point.
         </p>
         <p className="mt-3 text-sm text-quiet">
-          The weekly{" "}
-          <Link href="/calibration" className="underline underline-offset-2">
-            calibration log
-          </Link>
-          {" "}tracks κ movement, drift signals, and active refinement
-          candidates.
+          The weekly calibration log below tracks κ movement, drift
+          signals, and active refinement candidates.
         </p>
+      </section>
+
+      {/* Calibration log. Folded in from the retired /calibration
+          page 2026-05-11 per Robo's footer-cleanup pass. Each entry
+          links to its raw markdown on GitHub so the public log
+          stays auditable without re-implementing per-week routes. */}
+      <section className="mt-10" id="calibration-log">
+        <h2 className="text-lg font-semibold">Weekly calibration log</h2>
+        <p className="mt-2 text-sm text-quiet">
+          Every Monday a new entry is generated. Each entry covers
+          the previous week&rsquo;s measured κ movement, drift
+          signals, override counts, and active refinement
+          candidates. The format is templated on purpose. Consistency
+          week to week is what makes drift in the writing detectable.
+        </p>
+        {calibrationEntries.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-line-strong bg-raised px-4 py-6 text-center text-sm text-quiet">
+            No calibration log entries yet. The Monday cron generator
+            publishes new entries as they land.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {calibrationEntries.map((entry) => (
+              <li key={entry.week}>
+                <a
+                  href={`https://github.com/thenewforktimes/contentRX/blob/main/reports/calibration/${entry.filename}`}
+                  className="block rounded-lg border border-line bg-raised p-4 transition hover:border-line-strong"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="font-mono text-base font-semibold">
+                      Week {entry.week}
+                    </h3>
+                    <span className="font-mono text-[10px] text-quiet">
+                      {formatIso(entry.modified_at)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-quiet">
+                    {extractHeadline(entry.contents)}
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* Named-byline. The accuracy methodology is the named-
@@ -253,4 +295,29 @@ function formatIso(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+/** Pull a one-line summary from a calibration markdown — the first
+ * non-empty non-header line under "## Measured system κ". Falls
+ * back to the first non-empty non-header line in the doc. Lifted
+ * verbatim from the retired /calibration index page. */
+function extractHeadline(md: string): string {
+  const lines = md.split("\n");
+  let inSection = false;
+  for (const line of lines) {
+    if (line.startsWith("## Measured system κ")) {
+      inSection = true;
+      continue;
+    }
+    if (inSection) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      return trimmed.replace(/^[-*]\s*/, "").replace(/\*\*/g, "");
+    }
+  }
+  for (const line of lines) {
+    const t = line.trim();
+    if (t && !t.startsWith("#")) return t;
+  }
+  return "";
 }

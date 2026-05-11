@@ -37,12 +37,17 @@ const productLinks = [
   { href: "/dashboard", label: "Dashboard" },
 ];
 
+// Trust column order (2026-05-11 Robo): Ethics → Privacy → Security
+// → Accuracy. Position-by-trust-shape, not alphabetical: ethics is
+// the position-level commitment, privacy and security are the
+// contracts that fall out of it, accuracy is the measurement that
+// proves it. Calibration log folded into /accuracy as a section —
+// no separate trust link.
 const trustLinks = [
-  { href: "/accuracy", label: "Accuracy" },
-  { href: "/calibration", label: "Calibration log" },
   { href: "/ethics", label: "Ethics" },
   { href: "/privacy", label: "Privacy" },
   { href: "/security", label: "Security" },
+  { href: "/accuracy", label: "Accuracy" },
 ];
 
 const legalLinks = [

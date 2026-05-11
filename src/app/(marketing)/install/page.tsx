@@ -234,8 +234,8 @@ export CONTENTRX_API_KEY=cx_...
         <p className="mt-3 text-sm text-quiet">
           Figma Community publication is in review. We&apos;ll
           announce on{" "}
-          <Link href="/calibration" className="underline underline-offset-2">
-            /calibration
+          <Link href="/accuracy" className="underline underline-offset-2">
+            /accuracy
           </Link>
           {" "}when the plugin lands and email everyone on the
           waitlist.

@@ -95,6 +95,23 @@ const nextConfig: NextConfig = {
         destination: "/ethics",
         permanent: true,
       },
+      {
+        // /calibration retired 2026-05-11. The weekly calibration log
+        // folded into /accuracy as a dedicated section (#calibration-log)
+        // and per-week deep-links now point at the raw markdown on
+        // GitHub. Footer simplified to four Trust links. Both the
+        // index and the per-week routes land on /accuracy — old deep
+        // links find the weekly list there. 308 because the routes are
+        // gone for good.
+        source: "/calibration",
+        destination: "/accuracy#calibration-log",
+        permanent: true,
+      },
+      {
+        source: "/calibration/:week",
+        destination: "/accuracy#calibration-log",
+        permanent: true,
+      },
     ];
   },
 };

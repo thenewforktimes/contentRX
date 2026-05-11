@@ -28,13 +28,10 @@ describe("site footer (src/components/site-footer.tsx)", () => {
   const source = fs.readFileSync(FOOTER_PATH, "utf-8");
 
   it("carries the Trust column with every accountability surface", () => {
-    for (const href of [
-      "/accuracy",
-      "/calibration",
-      "/ethics",
-      "/privacy",
-      "/security",
-    ]) {
+    // 2026-05-11: Trust column reordered to Ethics → Privacy →
+    // Security → Accuracy per Robo's footer-cleanup pass. Calibration
+    // log folded into /accuracy as a section — no separate Trust link.
+    for (const href of ["/ethics", "/privacy", "/security", "/accuracy"]) {
       expect(source).toContain(`href: "${href}"`);
     }
   });
@@ -44,6 +41,13 @@ describe("site footer (src/components/site-footer.tsx)", () => {
     // /ethics#no-stolen-content; the footer link must not return —
     // a stray re-add would imply the route is back.
     expect(source).not.toContain(`href: "/sources"`);
+  });
+
+  it("does not carry a /calibration link (folded into /accuracy 2026-05-11)", () => {
+    // /calibration retired 2026-05-11. The weekly calibration log
+    // folded into /accuracy as a dedicated section; the route 308s
+    // to /accuracy#calibration-log. Footer link must not return.
+    expect(source).not.toContain(`href: "/calibration"`);
   });
 
   it("carries the Product column with the buyable surfaces", () => {

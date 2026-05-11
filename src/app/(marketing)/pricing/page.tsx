@@ -266,18 +266,14 @@ export default function PricingPage() {
             q="Is ContentRX accurate?"
             a={
               <>
-                Every Monday, the{" "}
-                <Link href="/calibration" className="underline underline-offset-2">
-                  calibration log
+                Every Monday, the calibration log on{" "}
+                <Link href="/accuracy" className="underline underline-offset-2">
+                  /accuracy
                 </Link>
                 {" "}publishes the previous week&apos;s measured kappa,
                 drift signals, and which standards were refined. If
                 the number drops, you&apos;ll see it before you feel
-                it.{" "}
-                <Link href="/accuracy" className="underline underline-offset-2">
-                  See the accuracy page
-                </Link>
-                {" "}for the methodology.
+                it. The same page covers the methodology.
               </>
             }
           />
@@ -355,8 +351,8 @@ function PlanCard({
       ) : (
         <p className="text-xs text-quiet">
           We&apos;ll announce availability on{" "}
-          <Link href="/calibration" className="underline underline-offset-2">
-            /calibration
+          <Link href="/accuracy" className="underline underline-offset-2">
+            /accuracy
           </Link>{" "}
           and via email when SOC 2 Type II clears.
         </p>
