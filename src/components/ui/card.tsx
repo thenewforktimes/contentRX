@@ -6,11 +6,17 @@
  *               boxes that should sit visually one level above
  *               default cards.
  *   - accent:   double-weight border in the affirm accent + a soft
- *               tinted background. The "this is the recommended /
- *               differentiated thing in this grid" treatment. Used
+ *               tinted background + drop shadow (light mode) so the
+ *               recommended tier physically lifts above the siblings.
+ *               The Ditto-style "this is the choice" treatment. Used
  *               on the landing's "One approval" card and the Pro
  *               tier on /pricing. Reserve for one card per grid —
  *               two accents in the same grid kills the emphasis.
+ *
+ *               Note on dark mode: drop shadows on dark canvases are
+ *               nearly invisible. The accent border + tinted bg
+ *               carry the hierarchy on dark; the shadow is a light-
+ *               mode bonus that doesn't have to render to do its job.
  *
  * Backed by the design tokens in `src/app/globals.css` so cards
  * automatically follow the canonical dark-mode treatment without
@@ -29,7 +35,8 @@ export type CardPadding = "sm" | "md" | "lg";
 const variantClasses: Record<CardVariant, string> = {
   default: "border border-line bg-raised",
   emphasis: "border border-line-strong bg-overlay",
-  accent: "border-2 border-accent-affirm-border bg-accent-affirm-soft/30",
+  accent:
+    "border-2 border-accent-affirm-border bg-accent-affirm-soft/30 shadow-xl",
 };
 
 const paddingClasses: Record<CardPadding, string> = {
