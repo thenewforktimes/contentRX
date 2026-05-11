@@ -197,7 +197,7 @@ export default async function CheckDetailPage({ params }: PageProps) {
       <header className="flex flex-col gap-2">
         <Link
           href="/dashboard/checks"
-          className="text-xs text-quiet hover:text-strong"
+          className="mb-4 inline-block text-xs text-quiet hover:text-strong"
         >
           ← Back to recent checks
         </Link>

@@ -406,7 +406,7 @@ export default async function DashboardChecksPage({ searchParams }: PageProps) {
       <header>
         <Link
           href="/dashboard"
-          className="text-xs text-quiet hover:text-strong"
+          className="mb-6 inline-block text-xs text-quiet hover:text-strong"
         >
           ← Back to dashboard
         </Link>
