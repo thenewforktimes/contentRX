@@ -35,7 +35,6 @@ export type CheckSource =
   | "plugin"
   | "cli"
   | "action"
-  | "ditto"
   | "lsp"
   | "mcp";
 
