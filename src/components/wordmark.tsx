@@ -2,8 +2,12 @@
  * Wordmark — the ContentRX brand mark with two render modes.
  *
  * Static variant (default, used in <SiteHeader> and <SiteFooter>):
- *   - Mixed-weight typography: "Content" at font-medium, "RX" at
- *     font-bold in the affirm-text accent color.
+ *   - Mixed-weight typography: "Content" at font-semibold, "RX" at
+ *     font-bold in the affirm-text accent color. The 100-weight gap
+ *     is intentional; "Content" is the noun, "RX" is the signature.
+ *     Bumped from font-medium → font-semibold 2026-05-10 alongside
+ *     the marketing h1 weight bump (#477) to keep the wordmark
+ *     visually present against the new h1 weight.
  *   - Tiny circular mark before the text — "RX" in a soft-bordered
  *     pill. Reads as a brand signature without depending on a
  *     custom illustration.
@@ -52,25 +56,25 @@ const sizeClasses: Record<WordmarkSize, {
   gap: string;
 }> = {
   sm: {
-    text: "text-base font-medium tracking-tight",
+    text: "text-base font-semibold tracking-tight",
     mark: "h-5 w-5",
     markText: "text-[9px] font-bold tracking-tight",
     gap: "gap-1.5",
   },
   md: {
-    text: "text-xl font-medium tracking-tight",
+    text: "text-xl font-semibold tracking-tight",
     mark: "h-6 w-6",
     markText: "text-[10px] font-bold tracking-tight",
     gap: "gap-2",
   },
   lg: {
-    text: "text-3xl font-medium tracking-tight",
+    text: "text-3xl font-semibold tracking-tight",
     mark: "h-9 w-9",
     markText: "text-sm font-bold tracking-tight",
     gap: "gap-2.5",
   },
   xl: {
-    text: "text-5xl font-medium tracking-tight sm:text-6xl",
+    text: "text-5xl font-semibold tracking-tight sm:text-6xl",
     mark: "h-12 w-12 sm:h-14 sm:w-14",
     markText: "text-lg font-bold tracking-tight sm:text-xl",
     gap: "gap-3 sm:gap-4",
