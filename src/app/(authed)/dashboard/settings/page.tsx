@@ -27,6 +27,7 @@ import { unstable_cache } from "next/cache";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Pill } from "@/components/ui/pill";
 import { tags } from "@/lib/cache-tags";
+import { mintConsentToken } from "@/lib/consent-token";
 import { asDate } from "@/lib/date-rehydrate";
 import { getDb, schema } from "@/db";
 import { type Plan } from "@/lib/quotas";
@@ -84,6 +85,17 @@ export default async function SettingsPage() {
             : null
         }
         subscriptionStatus={activeSub?.status ?? null}
+        // CARL consent token — same posture as /dashboard. Only free
+        // users see the upgrade checkbox, so non-free users get null.
+        // See src/lib/consent-token.ts.
+        consentToken={
+          plan === "free"
+            ? mintConsentToken({
+                userId: user.id,
+                action: "auto-renewal",
+              })
+            : null
+        }
       />
 
       <ApiKeyPanel
