@@ -31,6 +31,7 @@ import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Pill } from "@/components/ui/pill";
 import { tags } from "@/lib/cache-tags";
+import { mintConsentToken } from "@/lib/consent-token";
 import { asDate, rehydrateMappedDates } from "@/lib/date-rehydrate";
 import { getDb, schema } from "@/db";
 import {
@@ -169,6 +170,19 @@ export default async function DashboardPage() {
               : null
           }
           subscriptionStatus={activeSub?.status ?? null}
+          // CARL consent token. Minted server-side on every /dashboard
+          // render for free users (the only ones who see the upgrade
+          // checkbox). Bound to user.id with a 15-minute TTL; single-use.
+          // /api/checkout verifies it before stamping consent — the
+          // body's "I agree" claim is no longer trusted on its own.
+          consentToken={
+            plan === "free"
+              ? mintConsentToken({
+                  userId: user.id,
+                  action: "auto-renewal",
+                })
+              : null
+          }
         />
 
         <ApiKeyPanel

@@ -110,6 +110,15 @@ export const users = pgTable("users", {
   autoRenewalConsentedAt: timestamp("auto_renewal_consented_at", {
     withTimezone: true,
   }),
+  // CARL non-repudiation: the signed-nonce token that was verified at
+  // the moment consent was stamped. Cryptographically binds the
+  // `autoRenewalConsentedAt` timestamp to a /dashboard render event
+  // for THIS user, so a future dispute can be audited against the
+  // server-side mint record. The nonce is the random component of
+  // the consent-token payload (see src/lib/consent-token.ts); it's
+  // not the full token because the signature side adds nothing to
+  // the audit trail once verified.
+  autoRenewalConsentNonce: text("auto_renewal_consent_nonce"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
