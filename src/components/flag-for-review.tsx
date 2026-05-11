@@ -25,6 +25,7 @@
  */
 
 import { useEffect, useId, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export type FlagReason =
   | "doesnt_match_experience"
@@ -280,7 +281,7 @@ export function FlagForReview({
                   rows={3}
                   maxLength={2000}
                   placeholder="Anything else worth knowing?"
-                  className="mt-1 w-full resize-y rounded-md border border-line-strong bg-raised px-3 py-2 text-sm text-strong focus:border-stone-500 focus:outline-none focus:ring-1 focus:ring-stone-400"
+                  className="mt-1 w-full resize-y rounded-md border border-line-strong bg-raised px-3 py-2 text-sm text-strong focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
 
@@ -315,13 +316,13 @@ export function FlagForReview({
                 >
                   Cancel
                 </button>
-                <button
+                <Button
                   type="submit"
+                  size="sm"
                   disabled={!consent || status === "submitting"}
-                  className="rounded-md bg-stone-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200"
                 >
                   {status === "submitting" ? "Sharing…" : "Confirm and share"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

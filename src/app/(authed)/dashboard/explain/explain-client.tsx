@@ -226,7 +226,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           className={`w-full rounded-md border bg-raised px-3 py-2 font-mono text-sm text-strong focus:outline-none focus:ring-1 ${
             overLimit
               ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"
-              : "border-line-strong focus:border-stone-500 focus:ring-neutral-500"
+              : "border-line-strong focus:ring-ring"
           }`}
         />
         <div className="flex items-center justify-between gap-3 text-xs">

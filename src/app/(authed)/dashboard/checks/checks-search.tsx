@@ -29,6 +29,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlagForReview } from "@/components/flag-for-review";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import {
@@ -455,8 +456,14 @@ export function ChecksSearch({
 }
 
 function chipClass(active: boolean): string {
+  // Active filter chip uses the neutral-inverse pattern (dark in light
+  // mode, light in dark mode). No semantic token covers this case — the
+  // accent-primary orange reads as a CTA, not "this filter is selected."
+  // Keep the raw shades with an explicit reason so the linter rule keeps
+  // catching unintended drift elsewhere.
   return active
-    ? "rounded-full bg-stone-900 px-3 py-1 font-medium text-white dark:bg-stone-100 dark:text-stone-900"
+    ? // eslint-disable-next-line no-restricted-syntax -- neutral-inverse "selected" state, no semantic token equivalent
+      "rounded-full bg-stone-900 px-3 py-1 font-medium text-white dark:bg-stone-100 dark:text-stone-900"
     : "rounded-full bg-sunken px-3 py-1 font-medium text-default transition hover:bg-hover disabled:opacity-50 disabled:hover:bg-sunken";
 }
 
@@ -550,13 +557,13 @@ function CustomRangeInputs({
           className="rounded-md border border-line-strong bg-canvas px-2 py-1 text-strong"
         />
       </label>
-      <button
+      <Button
         type="button"
+        size="sm"
         onClick={() => onApply(from, to)}
-        className="rounded-md bg-stone-900 px-3 py-1 font-medium text-white dark:bg-stone-100 dark:text-stone-900"
       >
         Apply range
-      </button>
+      </Button>
     </section>
   );
 }
