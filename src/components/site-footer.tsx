@@ -39,7 +39,6 @@ const trustLinks = [
 ];
 
 const companyLinks = [
-  { href: "/about", label: "About" },
   { href: "/status", label: "Status" },
   { href: "mailto:hello@contentrx.io", label: "hello@contentrx.io", external: true as const },
 ];

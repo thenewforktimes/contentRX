@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * Copy-pin tests for the landing page + /about page.
+ * Copy-pin tests for the landing page. (/about retired 2026-05-10.)
  *
  * Updated 2026-04-29 for Robert's landing rewrite (cut Grammarly
  * contrast + Stripe Radar frame; rebuilt around the brand promise
@@ -139,10 +139,10 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
 
   it("home page no longer renders the AuthorBlock byline", () => {
     // 2026-05-11: the named-author byline was cut from the landing
-    // page. /about and /accuracy still surface it (those pages are
-    // ABOUT the model, so the byline earns its place). Anti-
-    // regression: the landing should not re-import or re-render
-    // AuthorBlock without an explicit ADR.
+    // page. /accuracy still surfaces it (the methodology binds
+    // tightly to the named author). /about was retired 2026-05-10
+    // → /ethics. Anti-regression: the landing should not re-import
+    // or re-render AuthorBlock without an explicit ADR.
     expect(visible).not.toContain("AuthorBlock");
     expect(visible).not.toMatch(/Robert Ballard/);
   });
@@ -381,48 +381,9 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
 
 });
 
-describe("/about page (src/app/(marketing)/about/page.tsx)", () => {
-  const source = readSource("src/app/(marketing)/about/page.tsx");
-  const visible = visibleCopy(source);
-
-  it("is present and goes to the moat argument (one designer's judgment)", () => {
-    // 2026-05-05: /about was restructured to first-person voice;
-    // the named-expert credentialing moved to the home bio. /about
-    // now goes straight to the philosophical claim — the rules
-    // are looked up, the *judgment* is the moat.
-    expect(source.length).toBeGreaterThan(0);
-    // Bridges the HTML-encoded apostrophe (`&rsquo;`) with `.{1,10}`
-    // so the regex matches both raw `'` and entity-encoded variants.
-    expect(visible).toMatch(/one designer.{1,10}s judgment/i);
-  });
-
-  it("scrubs the bracketed bio placeholder", () => {
-    // 2026-05-05: the {bio: …} placeholder was removed when /about
-    // was rewritten — the home bio now does the credentialing work
-    // and /about goes straight to the moat argument
-    // ("Why one designer's judgment"). This test pins the
-    // anti-regression: the bracket-style placeholder must not
-    // re-enter /about.
-    expect(visible).not.toMatch(/\{[^}]*\bbio\b[^}]*\}/);
-  });
-
-  // 2026-05-05: "How to disagree with the model" was dropped (mechanics
-  // belong on dashboard help, not the trust page). The disagreement
-  // contract now lives implicitly in "Why the model stays honest" via
-  // the override signal + calibration log links.
-
-  it("inline-links at least one accountability surface from the body copy", () => {
-    // The full accountability surface (/accuracy, /calibration,
-    // /ethics) is reachable from the global <SiteFooter> shipped
-    // with the (marketing) route group's layout. /about can be
-    // lighter on inline cross-refs as a result, but at minimum it
-    // should still walk the reader to /accuracy from the body — the
-    // page is "about the model" and the model's measurement is the
-    // load-bearing claim.
-    expect(visible).toMatch(/href="\/(accuracy|calibration)"/);
-  });
-
-  it("does not link to the private /model surface", () => {
-    expect(visible).not.toMatch(/href=["']\/model/);
-  });
-});
+// /about retired 2026-05-10. The page's two paragraphs duplicated
+// /ethics (calibration commitment) and /accuracy (the nightly kappa
+// publication), and the named-byline moat already lives on the
+// homepage via AuthorBlock. The route 308s to /ethics in
+// next.config.ts; the prior describe block is dropped here so the
+// test surface tracks the live page set.

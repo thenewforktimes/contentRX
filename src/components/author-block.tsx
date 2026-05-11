@@ -1,22 +1,12 @@
 /**
- * AuthorBlock — the named-author byline used on /about and /accuracy.
+ * AuthorBlock — the named-author byline.
  *
  * Pre-2026-05-11 this had two render modes (compact + card); the
- * landing dropped the byline 2026-05-11 and the compact variant
- * came out with it, leaving only the card variant in active use on
- * /about (where the byline IS the section) and /accuracy (the
- * methodology binds tightly to the named author).
- *
- * 2026-05-11 polish:
- *   - Body dropped "attributed and published." Robert isn't
- *     publishing or attributing inputs; the calibration log is the
- *     only thing that gets shared.
- *   - "Read the longer story on the about-the-model page" link cut.
- *     The link was self-referential when AuthorBlock rendered on
- *     /about, and the global nav already covers cross-links from
- *     /accuracy.
- *   - "a single designer's" → "one designer's" so the phrasing
- *     matches /about's lede.
+ * landing dropped the byline 2026-05-11 and the compact variant came
+ * out with it, leaving only the card variant in active use. /about
+ * was retired 2026-05-10 (redirect → /ethics); the byline now lives
+ * on /accuracy (where the methodology binds tightly to the named
+ * author) and at the foot of /ethics via inline rendering.
  *
  * No portrait by design — the brand isn't trading on Robert's face,
  * it's trading on the verifiable career arc and the public

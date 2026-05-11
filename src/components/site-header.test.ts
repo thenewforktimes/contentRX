@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
  *
  * The global header carries:
  *   - the ContentRX logo (always linked home)
- *   - the cross-page nav (Pricing, Install, About, Sign in)
+ *   - the cross-page nav (Pricing, Install, Sign in)
  *   - the Try free CTA
  *
  * The link set is structural — pages defer to this surface for
@@ -36,9 +36,12 @@ describe("site header (src/components/site-header.tsx)", () => {
   });
 
   it("carries the primary marketing nav", () => {
-    for (const href of ["/pricing", "/install", "/about"]) {
+    for (const href of ["/pricing", "/install"]) {
       expect(source).toContain(`href="${href}"`);
     }
+    // /about retired 2026-05-10 — redirect to /ethics in
+    // next.config.ts. Pin the absence so the link can't drift back.
+    expect(source).not.toContain(`href="/about"`);
   });
 
   it("carries the auth surfaces (sign in + try free)", () => {

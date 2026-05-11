@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
  * The global footer is the canonical carrier of:
  *   - the accountability surface (Accuracy, Calibration, Ethics)
  *   - the policy surface (Privacy, Security)
- *   - the company surface (About, Status, contact email)
+ *   - the company surface (Status, contact email)
  *   - copyright + license attribution
  *
  * These tests pin the structural set: any future edit that drops a
@@ -52,10 +52,18 @@ describe("site footer (src/components/site-footer.tsx)", () => {
     }
   });
 
-  it("carries the Company column with about + status + contact", () => {
-    expect(source).toContain(`href: "/about"`);
+  it("carries the Company column with status + contact", () => {
     expect(source).toContain(`href: "/status"`);
     expect(source).toContain("mailto:hello@contentrx.io");
+  });
+
+  it("does not carry an /about link (route retired 2026-05-10)", () => {
+    // /about retired 2026-05-10 — its two paragraphs duplicated
+    // /ethics (calibration commitment) and /accuracy (the nightly
+    // kappa publication), and the named-byline moat already lives
+    // on the homepage. The route 308s to /ethics in next.config.ts;
+    // the footer link must not return.
+    expect(source).not.toContain(`href: "/about"`);
   });
 
   it("attributes the source-available license", () => {

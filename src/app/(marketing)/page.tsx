@@ -16,8 +16,9 @@
  * read as chrome. Section spacing (mt-20) handles the rhythm.
  *
  * Author byline cut from the foot 2026-05-11. The named-author
- * block lives on /about and /accuracy where it earns its place;
+ * block lives on /accuracy and /ethics where it earns its place;
  * home page real estate goes to the value-prop quadrant grid.
+ * (/about retired 2026-05-10 — redirect to /ethics.)
  *
  * Cuts across the lower-fold rebuild:
  *   - "Built for your stack" 4-card section
@@ -147,9 +148,9 @@ export default function Home() {
           here from 2026-05-06 → 2026-05-11 as a moat against the
           studiously-anonymous AI tools. Robo's call: home page real
           estate goes further on the value-prop quadrant grid above.
-          The byline still lives on /about and /accuracy via the
-          card variant of <AuthorBlock />, which earns its place on
-          those surfaces (the page IS about the model). */}
+          The byline still lives on /accuracy via the card variant of
+          <AuthorBlock />, where the methodology binds tightly to the
+          named author. (/about retired 2026-05-10 → /ethics.) */}
     </main>
   );
 }

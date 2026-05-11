@@ -82,6 +82,19 @@ const nextConfig: NextConfig = {
         destination: "/ethics",
         permanent: true,
       },
+      {
+        // /about retired 2026-05-10. The page's two paragraphs
+        // duplicated /ethics (calibration commitment) and /accuracy
+        // (the nightly kappa publication), and the named-byline
+        // moat already sits on the homepage via AuthorBlock. /ethics
+        // is the closest substantive landing — it carries the
+        // customer-not-product contract, the calibration commitment,
+        // and the AuthorBlock at the foot. 308 because the route is
+        // gone for good.
+        source: "/about",
+        destination: "/ethics",
+        permanent: true,
+      },
     ];
   },
 };

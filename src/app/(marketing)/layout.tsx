@@ -2,10 +2,10 @@
  * Marketing-route layout.
  *
  * Wraps every public + transactional page (landing, pricing, install,
- * about, the trust surfaces, status, onboard, join) in the global
+ * the trust surfaces, status, onboard, join) in the global
  * <SiteHeader> + <SiteFooter>. The route group `(marketing)` is a
  * URL-transparent grouping — pages still live at `/`, `/pricing`,
- * `/about`, etc.
+ * `/ethics`, etc.
  *
  * Why a group instead of putting the chrome in the root layout:
  *   - The dashboard (`(authed)/dashboard/`) has its own header in

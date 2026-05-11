@@ -2,7 +2,7 @@
  * /privacy — public privacy policy.
  *
  * Plain language first. Legal scaffolding is the minimum needed for
- * GDPR/CCPA. Voice matches /ethics and /about: ContentRX-third-person,
+ * GDPR/CCPA. Voice matches /ethics: ContentRX-third-person,
  * no em dashes, no semicolons, no colons in body sentences, no
  * boilerplate phrases like "your privacy is important to us."
  *

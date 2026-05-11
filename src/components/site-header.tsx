@@ -2,7 +2,7 @@
  * Site header — global chrome for marketing + transactional pages.
  *
  * Renders the ContentRX logo (always links home) plus the primary
- * cross-page nav (Pricing, Install, About, Sign in, Try free). Lives
+ * cross-page nav (Pricing, Install, Sign in, Try free). Lives
  * in the (marketing) route group's layout; doesn't render on the
  * dashboard (which has its own header in (authed)/dashboard/layout)
  * or on /admin (founder voice keeps its own dense layout).
@@ -37,12 +37,6 @@ export function SiteHeader() {
             className="text-quiet hover:text-strong"
           >
             Install
-          </Link>
-          <Link
-            href="/about"
-            className="text-quiet hover:text-strong"
-          >
-            About
           </Link>
           <Link
             href="/sign-in"
