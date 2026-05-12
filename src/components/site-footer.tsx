@@ -1,8 +1,8 @@
 /**
  * Site footer — global chrome for marketing + transactional pages.
  *
- * Four columns of links plus a bottom row with copyright, the DBA
- * disclosure, license, and contact. Replaces the inline
+ * Four columns of links plus a bottom row with copyright, the entity
+ * disclosure, and the FSL license link. Replaces the inline
  * "accountability surface" mini-footers that lived at the bottom of
  * individual pages (each marketing page used to ship its own
  * variation; now there's one canonical footer the whole public site
@@ -12,17 +12,20 @@
  *   - Product:  what you can buy / use
  *   - Trust:    accountability surfaces (accuracy, calibration, ethics)
  *               + privacy/security policies
- *   - Legal:    the binding contract documents (Terms + Privacy).
- *               Privacy appears in both Trust and Legal — it's an
- *               accountability surface AND a legal doc. This mirrors
- *               Ditto's footer pattern (a dedicated Legal column).
+ *   - Legal:    the binding contract documents (Terms + Privacy +
+ *               Disclaimer). Privacy appears in both Trust and Legal,
+ *               which is intentional — it's an accountability surface
+ *               AND a legal doc. Mirrors Ditto's footer pattern (a
+ *               dedicated Legal column).
  *   - Company:  status, contact
  *
- * The bottom row carries copyright, the DBA disclosure (Abstract
- * Nonsense LLC dba ContentRX — exact wording pending attorney
- * confirmation in Phase B), the FSL license link, and a contact
- * email. Trademark notice on ContentRX™ aligns with the LICENSE
- * file's claim.
+ * The bottom row carries copyright, the entity disclosure (ContentRX
+ * LLC, a California limited liability company), and the FSL license
+ * link. Trademark notice on ContentRX™ tracks the LICENSE file's
+ * claim and is on the LLC rather than Robert personally now that the
+ * LLC exists as the operating entity (2026-05-12 pivot from the
+ * earlier Abstract Nonsense LLC dba ContentRX plan to a separate
+ * ContentRX LLC).
  *
  * Same routing scope as SiteHeader: lives in the (marketing) route
  * group's layout; the dashboard and /admin have their own chrome.
@@ -53,6 +56,7 @@ const trustLinks = [
 const legalLinks = [
   { href: "/terms", label: "Terms of Service" },
   { href: "/privacy", label: "Privacy Policy" },
+  { href: "/disclaimer", label: "Disclaimer" },
 ];
 
 const companyLinks = [
@@ -78,16 +82,8 @@ export function SiteFooter() {
         </div>
         <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6 text-xs text-quiet">
           <p>
-            {/*
-              DBA disclosure stub — Phase B replaces with the exact
-              attorney-confirmed wording. Likely shapes:
-                "ContentRX is a service of Abstract Nonsense LLC."
-                "© 2026 Abstract Nonsense LLC dba ContentRX."
-              Trademark line stays separate because the mark is
-              registered to Robert Ballard personally, not the LLC.
-            */}
-            © 2026 Robert Ballard. ContentRX is a service of Abstract
-            Nonsense LLC. ContentRX™ is a trademark of Robert Ballard.
+            © 2026 ContentRX LLC. A California limited liability
+            company. ContentRX™ is a trademark of ContentRX LLC.
           </p>
           <p>
             Source available under{" "}
