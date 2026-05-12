@@ -209,8 +209,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           htmlFor="explain-text"
           className="block text-sm font-medium text-default"
         >
-          Drop short or long-form writing here. ContentRX will help
-          you get it sorted.
+          Your checks are standing by
         </label>
         <textarea
           id="explain-text"
@@ -225,13 +224,14 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           //
           // bg-page + text-page-on (added 2026-05-11) sets the
           // textarea as a true Kindle Paperwhite surface in both
-          // modes. Cream bg + ink text always, regardless of the
+          // modes. Off-white bg + ink text always, regardless of the
           // surrounding chrome. In dark mode the textarea becomes
           // the brightest object on screen — the lightness IS the
           // affordance. caret-color and placeholder color fall out
-          // of currentColor / browser-default, both readable on cream.
+          // of currentColor / page-on/55 opacity, both readable on
+          // off-white.
           rows={10}
-          placeholder="Paste a button label, an error message, a product update email, a security advisory, or any long-form writing your team is shipping."
+          placeholder="Drop short or long-form writing here. ContentRX will help you get it sorted."
           className={`w-full rounded-md border bg-page px-3 py-2 font-mono text-sm text-page-on placeholder:text-page-on/55 focus:outline-none focus:ring-1 ${
             overLimit
               ? "border-accent-concern-border focus:border-accent-concern-border focus:ring-accent-concern-border"

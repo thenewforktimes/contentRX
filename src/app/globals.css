@@ -43,18 +43,18 @@
   --surface-sunken:   #0d0d1f;
   --surface-overlay:  #2a2b50;
   /* `page` is the writing-surface elevation — textareas, paste
-     boxes, anywhere the eye expects to read or write text. Same
-     warm cream value in both light and dark mode: the Kindle
-     Paperwhite metaphor taken literally. In dark mode the cream
-     textarea reads as a lit page in a dim room (paper-on-dark
-     contrast, eye lands immediately on the writing surface). In
-     light mode it reads as an inset cream slip in the white panel.
-     Both modes the textarea is the brightest, warmest object in
-     the panel — the affordance is the lightness itself.
-     `page-on` is the foreground text token that pairs with it.
-     Always dark ink (#1c1a17) because the bg is always cream;
-     it's a single value across modes, not a flipping pair. */
-  --surface-page:     #fdfaf0;
+     boxes, anywhere the eye expects to read or write text. Kindle-
+     screen off-white, not cream: a barely-there warm tilt against
+     near-pure-white. Same value in both light and dark mode so
+     the writing surface always reads as a calm, easy-to-read
+     screen regardless of the surrounding chrome. Dark mode reads
+     it as a lit Kindle in a dim room; light mode reads it as a
+     subtle inset against the white panel.
+     `page-on` is the paired foreground text token. Dark ink in
+     both modes — the bg is always near-white, so the foreground
+     is always near-black. Single value across modes, not a
+     flipping pair. */
+  --surface-page:     #fafaf5;
   --surface-page-on:  #1c1a17;
 
   /* ─── INTERACTIVE STATES ─── */
@@ -140,13 +140,11 @@
     --surface-raised:   #ffffff;
     --surface-sunken:   #f0e9d6;
     --surface-overlay:  #ffffff;
-    /* `page` matches dark mode (#fdfaf0) — the Kindle Paperwhite
-       value lives in both palettes. Light mode reads it as an inset
-       cream slip in the white panel; dark mode reads it as a lit
-       page in a dim room. See the dark block comment for the full
-       rationale. `page-on` is the paired ink-text color, also the
-       same in both modes. */
-    --surface-page:     #fdfaf0;
+    /* `page` matches dark mode (#fafaf5) — Kindle-screen off-white,
+       universal across modes. See the dark block comment for the
+       full rationale. `page-on` is the paired ink-text color, also
+       the same in both modes. */
+    --surface-page:     #fafaf5;
     --surface-page-on:  #1c1a17;
 
     /* ─── INTERACTIVE STATES ─── */

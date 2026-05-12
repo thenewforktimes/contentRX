@@ -218,15 +218,13 @@ function TryACheckPanel({ plan }: { plan: Plan }) {
       <ExplainClient plan={plan} />
       <p className="mt-6 border-t border-line pt-5 text-xs text-quiet">
         Your checks are private until you flag them for review.
-        ContentRX does not sell your checks, track you with cookies,
-        or share your usage data with brokers.{" "}
+        ContentRX does not sell your checks or track you with cookies.{" "}
         <Link
           href="/privacy"
           className="underline underline-offset-2 hover:text-default"
         >
           How ContentRX handles your checks
         </Link>
-        .
       </p>
     </section>
   );

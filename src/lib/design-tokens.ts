@@ -34,13 +34,14 @@ export const tokens = {
       raised: "#ffffff",
       sunken: "#f0e9d6",
       overlay: "#ffffff",
-      // `page` — writing-surface elevation. Warm Kindle Paperwhite,
-      // used by textareas + paste boxes. Same hex in dark mode below:
-      // the cream value is universal so the writing surface always
-      // reads as paper, regardless of surrounding chrome.
-      page: "#fdfaf0",
+      // `page` — writing-surface elevation. Kindle-screen off-white
+      // (very faint warm tilt against near-pure-white). Same hex in
+      // dark mode below: the off-white value is universal so the
+      // writing surface always reads as a calm reading screen,
+      // regardless of surrounding chrome.
+      page: "#fafaf5",
       // `pageOn` — paired ink-text color for content on `page`.
-      // Dark in both modes (the bg is always cream).
+      // Dark in both modes (the bg is always near-white).
       pageOn: "#1c1a17",
     },
     text: {
@@ -112,12 +113,13 @@ export const tokens = {
       raised: "#22224a",
       sunken: "#0d0d1f",
       overlay: "#2a2b50",
-      // `page` — same cream as the light palette. Reads as a lit
-      // page in a dim room — the textarea becomes the brightest
-      // object on screen, which is the affordance.
-      page: "#fdfaf0",
+      // `page` — same Kindle-screen off-white as the light palette.
+      // Reads as a lit reading screen in a dim room — the textarea
+      // becomes the brightest object on screen, which is the
+      // affordance.
+      page: "#fafaf5",
       // `pageOn` — paired ink-text color for content on `page`.
-      // Dark in both modes (the bg is always cream).
+      // Dark in both modes (the bg is always near-white).
       pageOn: "#1c1a17",
     },
     text: {
