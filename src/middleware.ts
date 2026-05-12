@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 const isProtected = createRouteMatcher([
   "/dashboard(.*)",
@@ -23,21 +24,121 @@ const acceptsApiKey = createRouteMatcher([
   "/api/violations/(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isProtected(req)) return;
+// Geo-block scope (2026-05-12 launch decision):
+//   - Allowed: United States + U.S. territories + Canada except Quebec.
+//   - Quebec is geo-blocked specifically because Quebec Law 25 has
+//     operational requirements (French-language notice, in-province
+//     privacy officer, automated-decision PIAs) that ContentRX has not
+//     built coverage for yet.
+//   - EU/EEA/UK are geo-blocked until an Article 27 representative is
+//     appointed.
+// The country/region values come from Vercel edge headers (Next.js 15
+// removed req.geo). In local dev or self-hosted deployments where these
+// headers are absent, the geo check no-ops (allow) so localhost works.
+const ALLOWED_COUNTRIES = new Set([
+  "US", // United States
+  "PR", // Puerto Rico
+  "VI", // U.S. Virgin Islands
+  "GU", // Guam
+  "AS", // American Samoa
+  "MP", // Northern Mariana Islands
+  "UM", // U.S. Minor Outlying Islands
+  "CA", // Canada (Quebec excluded below by region check)
+]);
+const QUEBEC_REGION = "QC";
 
-  // CORS preflight requests never carry auth headers; browsers will strip
-  // them. Letting OPTIONS through avoids a 401 that breaks the plugin.
+// Paths that bypass the geo-block entirely. These are legal-transparency
+// and waitlist-funnel surfaces. /sign-in is included so returning
+// customers from blocked regions can still log into the account they
+// created when they were in an allowed region — once they have a Clerk
+// session, the geo-block doesn't run anyway, but the sign-in page
+// itself has to be reachable.
+const isAlwaysAllowed = createRouteMatcher([
+  "/waitlist(.*)",
+  "/api/waitlist(.*)",
+  "/privacy(.*)",
+  "/terms(.*)",
+  "/ethics(.*)",
+  "/disclaimer(.*)",
+  "/security(.*)",
+  "/accuracy(.*)",
+  "/legal/(.*)",
+  "/sign-in(.*)",
+]);
+
+function checkGeoBlock(req: NextRequest): NextResponse | null {
+  const country = req.headers.get("x-vercel-ip-country") ?? "";
+  const region = req.headers.get("x-vercel-ip-country-region") ?? "";
+
+  // No country header = local dev, self-hosted, or non-Vercel deploy.
+  // Don't enforce geo when we have no signal. Production traffic
+  // through Vercel's edge always carries this header.
+  if (!country) return null;
+
+  const isQuebec = country === "CA" && region === QUEBEC_REGION;
+  const isAllowed = !isQuebec && ALLOWED_COUNTRIES.has(country);
+  if (isAllowed) return null;
+
+  // For API routes, return 451 Unavailable For Legal Reasons with a
+  // JSON body. A redirect to /waitlist on an API endpoint would break
+  // any client that follows redirects automatically and lands on HTML.
+  if (req.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.json(
+      {
+        error: "Service not available in your region",
+        waitlist_url: new URL("/waitlist", req.url).toString(),
+      },
+      { status: 451 },
+    );
+  }
+
+  // For page routes, redirect to /waitlist with the detected region
+  // captured as a query param. The waitlist page reads this to
+  // personalise the message ("ContentRX will email you when [region]
+  // opens").
+  const waitlistUrl = new URL("/waitlist", req.url);
+  const regionTag = region ? `${country}-${region}` : country;
+  waitlistUrl.searchParams.set("region", regionTag);
+  return NextResponse.redirect(waitlistUrl);
+}
+
+export default clerkMiddleware(async (auth, req) => {
+  // Always-allow paths skip geo + auth checks entirely. Legal pages,
+  // the waitlist itself, the DPA download, and the sign-in page must
+  // be reachable from any region.
+  if (isAlwaysAllowed(req)) return;
+
+  // CORS preflight requests never carry auth headers; browsers will
+  // strip them. Letting OPTIONS through avoids a 401 that breaks the
+  // plugin. Pre-empts both the geo-block and the auth check.
   if (req.method === "OPTIONS") return;
 
+  // Resolve auth state once. Used to skip the geo-block for already
+  // authenticated users (they signed up when they were in an allowed
+  // region; they can travel) and to short-circuit the protected-route
+  // auth fallback below.
+  const { userId } = await auth();
   const authHeader = req.headers.get("authorization");
-  if (
-    acceptsApiKey(req) &&
-    authHeader &&
-    /^Bearer\s+cx_/i.test(authHeader)
-  ) {
-    return;
+  const hasApiKey = !!(authHeader && /^Bearer\s+cx_/i.test(authHeader));
+  const isAuthenticated = !!userId || hasApiKey;
+
+  // Geo block applies only to unauthenticated visitors. The whole
+  // point is to gate new signups from blocked regions — existing
+  // customers should keep working from anywhere.
+  if (!isAuthenticated) {
+    const blocked = checkGeoBlock(req);
+    if (blocked) return blocked;
   }
+
+  // Below here is the original protected-route enforcement, unchanged.
+  if (!isProtected(req)) return;
+
+  // Bearer cx_ on an API-key-accepting route: let the handler call
+  // resolveAuth() rather than forcing a Clerk session here.
+  if (acceptsApiKey(req) && hasApiKey) return;
+
+  // Clerk session present: pass through.
+  if (userId) return;
 
   // Differentiate API routes from page routes when auth is missing.
   // `auth.protect()` defaults to `notFound()` (HTML 404), which is
@@ -47,9 +148,6 @@ export default clerkMiddleware(async (auth, req) => {
   //   - APIs: an integrator's CLI/curl client gets HTML at a JSON
   //     endpoint, breaks parsing, makes the failure mode opaque.
   // Branching here gives each audience the response they expect.
-  const { userId } = await auth();
-  if (userId) return;
-
   if (req.nextUrl.pathname.startsWith("/api/")) {
     return NextResponse.json(
       { error: "Authentication required" },
@@ -73,7 +171,11 @@ export const config = {
     // (api/webhooks, api/cron) or are gated by INTERNAL_EVAL_SECRET
     // (api/evaluate). Skipping clerk middleware on these saves the
     // auth-resolution cost on every probe + every webhook delivery.
-    "/((?!_next|\\.well-known/|api/(?:webhooks|cron|evaluate|status)|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // The pdf extension is added so /legal/dpa.pdf and any other
+    // public PDF asset bypasses middleware entirely (it would
+    // otherwise be subject to the geo-block; legal docs must remain
+    // globally accessible).
+    "/((?!_next|\\.well-known/|api/(?:webhooks|cron|evaluate|status)|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|pdf|zip|webmanifest)).*)",
     "/trpc(.*)",
   ],
 };

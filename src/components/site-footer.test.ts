@@ -79,7 +79,12 @@ describe("site footer (src/components/site-footer.tsx)", () => {
   });
 
   it("carries the trademark + copyright line", () => {
-    expect(source).toMatch(/©\s*2026 Robert Ballard/);
+    // The operating entity is ContentRX LLC, a California LLC. The
+    // trademark notice tracks the LICENSE file and sits on the LLC
+    // rather than Robert personally now that the LLC is the operating
+    // entity (2026-05-12 legal launch pivot from Abstract Nonsense
+    // LLC dba ContentRX to a separate ContentRX LLC).
+    expect(source).toMatch(/©\s*2026 ContentRX LLC/);
     expect(source).toContain("ContentRX™");
   });
 });
