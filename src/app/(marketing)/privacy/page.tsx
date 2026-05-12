@@ -150,8 +150,8 @@ export default function PrivacyPage() {
             duration of the rate-limit window.
           </li>
           <li>
-            <strong>Commercial information</strong>. Subscription plan,
-            billing history, check counts per month.
+            <strong>Commercial information</strong>. This includes
+            subscription plan, billing history, and monthly check counts.
           </li>
           <li>
             <strong>Internet or other electronic network activity</strong>.

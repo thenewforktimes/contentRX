@@ -98,7 +98,7 @@ export default function TermsPage() {
         meta={
           <>
             Effective <time>{EFFECTIVE_DATE}</time>. Material changes
-            get a new effective date, an email notice at least thirty
+            get a new effective date, an email notice at least 30
             days in advance, and a note in the changelog.
           </>
         }
@@ -123,8 +123,8 @@ export default function TermsPage() {
         </p>
         <p className="mt-3">
           ContentRX may revise pricing for future renewal periods by
-          giving you at least thirty (30) days notice via email and
-          in the dashboard. Revised pricing takes effect at your next
+          giving you at least 30-day notice via email and in the
+          dashboard. Revised pricing takes effect at your next
           renewal. You can cancel before that renewal if you do not
           accept the revised pricing.
         </p>
@@ -203,7 +203,7 @@ export default function TermsPage() {
           relying on the Service for any regulated content.
         </p>
         <p className="mt-3">
-          <strong>Ownership.</strong> You own the content you submit
+          <strong>Ownership</strong>. You own the content you submit
           (Customer Content) and the review feedback ContentRX
           generates for it (Service Output). You can use Service
           Output however you want, including modifying it, publishing
@@ -236,7 +236,7 @@ export default function TermsPage() {
           </li>
           <li>
             Retain them for the duration of your Subscription plus
-            twelve (12) months.
+            12 months.
           </li>
         </ul>
         <p className="mt-3">
@@ -265,9 +265,8 @@ export default function TermsPage() {
           </a>
           {" "}for assisted removal. ContentRX will use commercially
           reasonable efforts to remove the flagged content from
-          active use within thirty (30) days. Aggregated,
-          de-identified evaluation results derived prior to revocation
-          will persist.
+          active use within 30 days. Aggregated, de-identified
+          evaluation results derived prior to revocation will persist.
         </p>
         <p className="mt-3">
           The Flag for Review feature is the only mechanism by which
@@ -302,7 +301,7 @@ export default function TermsPage() {
           call. Anthropic
           processes the call under the terms of its API service
           agreement with ContentRX. Anthropic&apos;s standard policy
-          retains API logs for a short window (currently thirty days)
+          retains API logs for a short window (currently 30 days)
           for abuse monitoring. ContentRX is in the process of
           confirming zero-data-retention status at the account level.
           The status of that work is recorded at{" "}
@@ -354,8 +353,8 @@ export default function TermsPage() {
           prorated refunds.
         </p>
         <p className="mt-3">
-          ContentRX sends a renewal reminder email at least fifteen
-          (15) days before each automatic renewal date, as required
+          ContentRX sends a renewal reminder email at least 15 days
+          before each automatic renewal date, as required
           by California&apos;s Automatic Renewal Law. The reminder
           names the renewal date, the amount that will be charged,
           and the cancellation path. You can opt out of marketing
@@ -376,9 +375,9 @@ export default function TermsPage() {
         <p className="mt-3">
           To the maximum extent permitted by law, ContentRX&apos;s
           total liability arising from or relating to your use of the
-          Service is capped at the fees you paid ContentRX in the
-          twelve (12) months immediately preceding the event giving
-          rise to the claim. ContentRX is not liable for any indirect,
+          Service is capped at the fees you paid ContentRX in the 12
+          months immediately preceding the event giving rise to the
+          claim. ContentRX is not liable for any indirect,
           incidental, special, consequential, exemplary, or punitive
           damages, including lost profits, lost data, or loss of
           goodwill, even if ContentRX has been advised of the
@@ -430,9 +429,9 @@ export default function TermsPage() {
           ContentRX may revise these Terms from time to time. When
           ContentRX makes a material change, the new effective date
           is recorded at the top of this page and notice is sent to
-          the email address associated with your account at least
-          thirty (30) days before the change takes effect. The notice
-          names the sections that changed.
+          the email address associated with your account at least 30
+          days before the change takes effect. The notice names the
+          sections that changed.
         </p>
         <p className="mt-3">
           Trivial cleanups (typo fixes, link updates, formatting
@@ -451,10 +450,9 @@ export default function TermsPage() {
         <p>
           These Terms are governed by the laws of the State of
           California, without regard to conflict-of-laws principles.
-          Any dispute arising from or relating to these Terms or the
-          Service is subject to the exclusive jurisdiction of the
-          state and federal courts located in Sacramento County,
-          California. You and ContentRX consent to that jurisdiction.
+          Sacramento County, California has exclusive jurisdiction
+          over disputes under these Terms. The parties consent to
+          that jurisdiction.
         </p>
         <p className="mt-3">
           Nothing in this section prevents either party from seeking

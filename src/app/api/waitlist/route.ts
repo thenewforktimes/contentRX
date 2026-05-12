@@ -59,7 +59,10 @@ export async function POST(req: Request) {
     body = await req.json();
   } catch {
     return NextResponse.json(
-      { error: "Body must be valid JSON" },
+      {
+        error:
+          "The request body was not valid JSON. Resubmit from the form on /waitlist, or email hello@contentrx.io if the form keeps failing.",
+      },
       { status: 400 },
     );
   }
@@ -67,7 +70,11 @@ export async function POST(req: Request) {
   const parsed = RequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid request", details: parsed.error.flatten() },
+      {
+        error:
+          "The submitted email or region failed validation. Check that the email is well-formed and resubmit, or email hello@contentrx.io if the form keeps rejecting a valid address.",
+        details: parsed.error.flatten(),
+      },
       { status: 400 },
     );
   }

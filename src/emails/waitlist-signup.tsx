@@ -34,13 +34,13 @@ export function WaitlistSignupEmail({
         the ContentRX waitlist page.
       </Text>
       <Text style={bodyStyle}>
-        <strong>Email.</strong> {email}
+        <strong>Email</strong> {email}
         <br />
-        <strong>Region.</strong> {region || "(none detected)"}
+        <strong>Region</strong> {region || "(none detected)"}
         <br />
-        <strong>User agent.</strong> {userAgent}
+        <strong>User agent</strong> {userAgent}
         <br />
-        <strong>Submitted at.</strong> {submittedAt}
+        <strong>Submitted at</strong> {submittedAt}
       </Text>
       <Text style={bodyStyle}>
         When ContentRX opens this region, drop them a note. The
