@@ -256,7 +256,7 @@ function Field({
           mono ? "font-mono text-xs" : "text-sm"
         } ${
           highlight
-            ? "rounded bg-amber-50 px-2 py-1 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+            ? "rounded bg-accent-caution-soft px-2 py-1 text-accent-caution-text"
             : "text-default"
         }`}
       >
@@ -343,7 +343,7 @@ function FormField({
     <label className="block text-xs">
       <span className="font-semibold text-default">
         {label}
-        {required && <span className="ml-1 text-rose-500">*</span>}
+        {required && <span className="ml-1 text-accent-concern-text">*</span>}
       </span>
       {textarea ? (
         <Textarea

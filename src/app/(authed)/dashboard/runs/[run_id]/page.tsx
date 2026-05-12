@@ -334,7 +334,7 @@ export default async function RunPage({ params }: RunParams) {
       </section>
 
       {truncated && (
-        <p className="rounded-md border border-amber-300 bg-amber-50/60 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+        <p className="rounded-md border border-accent-caution-border bg-accent-caution-soft p-3 text-xs text-accent-caution-text">
           Showing the first {rows.length.toLocaleString()} findings of{" "}
           {stats.total.toLocaleString()}. Earlier findings on the same files
           aren&apos;t listed below. Totals above remain accurate.
@@ -368,7 +368,7 @@ function Stat({
 }) {
   const valueClasses =
     tone === "high"
-      ? "text-rose-700 dark:text-rose-400"
+      ? "text-accent-concern-text"
       : tone === "muted"
         ? "text-default"
         : "text-strong";

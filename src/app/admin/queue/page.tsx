@@ -254,7 +254,7 @@ function FilterTab({
   return (
     <Link href={href} className={`${cls} px-3 py-1.5 text-xs font-medium`}>
       {label}
-      <span className="ml-2 inline-flex min-w-[1.5rem] justify-center rounded bg-black/10 px-1 font-mono text-[10px] dark:bg-white/10">
+      <span className="ml-2 inline-flex min-w-[1.5rem] justify-center rounded bg-strong/10 px-1 font-mono text-[10px]">
         {count}
       </span>
     </Link>
@@ -305,9 +305,9 @@ function QueueRow({
             <span
               className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                 row.severity === "high"
-                  ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                  ? "bg-accent-concern-soft text-accent-concern-text"
                   : row.severity === "medium"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                    ? "bg-accent-caution-soft text-accent-caution-text"
                     : "bg-sunken text-default"
               }`}
             >
@@ -323,8 +323,8 @@ function QueueRow({
             <span
               className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                 decidedStance === "agree"
-                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                  : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                  ? "bg-accent-affirm-soft text-accent-affirm-text"
+                  : "bg-accent-concern-soft text-accent-concern-text"
               }`}
             >
               {decidedStance === "agree" ? "✓ Agreed" : "✗ Disagreed"}
@@ -394,9 +394,9 @@ function DecisionForm({
 }) {
   const cls =
     stance === "agree"
-      ? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900"
+      ? "border-accent-affirm-border bg-accent-affirm-soft text-accent-affirm-text hover:bg-accent-affirm-border/30"
       : stance === "disagree"
-        ? "border-rose-300 bg-rose-50 text-rose-900 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900"
+        ? "border-accent-concern-border bg-accent-concern-soft text-accent-concern-text hover:bg-accent-concern-border/30"
         : "border-line-strong bg-raised text-default hover:bg-hover";
 
   async function handle() {

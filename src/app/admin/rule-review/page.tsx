@@ -257,7 +257,7 @@ function ThresholdForm({
       />
       <button
         type="submit"
-        className="rounded-md bg-black px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 dark:bg-white dark:text-black"
+        className="rounded-md bg-strong px-3 py-1.5 text-xs font-medium text-canvas hover:opacity-90"
       >
         Apply
       </button>

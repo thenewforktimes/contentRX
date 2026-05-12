@@ -90,8 +90,8 @@ function CheckRow({ label, check }: { label: string; check: CheckResult }) {
           aria-hidden
           className={
             check.ok
-              ? "inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"
-              : "inline-block h-2.5 w-2.5 rounded-full bg-rose-500"
+              ? "inline-block h-2.5 w-2.5 rounded-full bg-accent-affirm-border"
+              : "inline-block h-2.5 w-2.5 rounded-full bg-accent-concern-border"
           }
         />
         <span className="text-sm font-medium">{label}</span>
@@ -103,8 +103,8 @@ function CheckRow({ label, check }: { label: string; check: CheckResult }) {
         <span
           className={
             check.ok
-              ? "text-sm text-emerald-700 dark:text-emerald-400"
-              : "text-sm text-rose-700 dark:text-rose-400"
+              ? "text-sm text-accent-affirm-text"
+              : "text-sm text-accent-concern-text"
           }
         >
           {check.ok ? "Operational" : "Degraded"}

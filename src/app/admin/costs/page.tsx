@@ -111,8 +111,8 @@ export default async function AdminCostsPage() {
       </header>
 
       {pausedUsers.length > 0 && (
-        <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
-          <h2 className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+        <section className="rounded-lg border border-accent-caution-border bg-accent-caution-soft p-4">
+          <h2 className="text-sm font-semibold text-accent-caution-text">
             {pausedUsers.length} user
             {pausedUsers.length === 1 ? "" : "s"} paused
           </h2>

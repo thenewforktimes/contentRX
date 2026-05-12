@@ -713,6 +713,11 @@ function SuggestedRewriteBlock({
  */
 function RewriteDiffView({ before, after }: { before: string; after: string }) {
   const tokens = wordDiff(before, after);
+  // Diff highlighting: removed words use the concern-tone soft+text
+  // pairing (red family by design); added words use affirm-tone (green
+  // family). Tokens not raw shades, so the diff tracks palette updates
+  // — including the May-11 grass-green flip — automatically and stays
+  // AAA-verified in both modes.
   return (
     <pre className="whitespace-pre-wrap break-words font-sans text-sm text-strong">
       {tokens.map((t, i) => {
@@ -721,7 +726,7 @@ function RewriteDiffView({ before, after }: { before: string; after: string }) {
           return (
             <span
               key={i}
-              className="bg-red-100 text-red-900 line-through dark:bg-red-950/60 dark:text-red-300"
+              className="bg-accent-concern-soft text-accent-concern-text line-through"
             >
               {t.text}
             </span>
@@ -730,7 +735,7 @@ function RewriteDiffView({ before, after }: { before: string; after: string }) {
         return (
           <span
             key={i}
-            className="bg-green-100 text-green-900 dark:bg-green-950/60 dark:text-green-300"
+            className="bg-accent-affirm-soft text-accent-affirm-text"
           >
             {t.text}
           </span>
@@ -1113,14 +1118,14 @@ function DiffSpan({
   }
   if (token.kind === "removed" && side === "before") {
     return (
-      <span className="bg-red-100 text-red-900 line-through dark:bg-red-950/60 dark:text-red-300">
+      <span className="bg-accent-concern-soft text-accent-concern-text line-through">
         {token.text}
       </span>
     );
   }
   if (token.kind === "added" && side === "after") {
     return (
-      <span className="bg-green-100 text-green-900 dark:bg-green-950/60 dark:text-green-300">
+      <span className="bg-accent-affirm-soft text-accent-affirm-text">
         {token.text}
       </span>
     );
