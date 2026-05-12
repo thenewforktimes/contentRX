@@ -54,6 +54,11 @@ type Props = {
    *  on "active" through that grace window, so we need the separate
    *  flag to render the right copy ("Ends" not "Renews"). */
   cancelAtPeriodEnd: boolean;
+  /** Signed-nonce CARL consent token minted server-side when the
+   *  page rendered for a free user. Forwarded into the /api/checkout
+   *  POST body. Null for non-free users (they never see the upgrade
+   *  checkbox). See src/lib/consent-token.ts for the protocol. */
+  consentToken: string | null;
 };
 
 type Interval = "monthly" | "annual";
@@ -68,9 +73,10 @@ export function SubscriptionPanel({
   currentPeriodEnd,
   subscriptionStatus,
   cancelAtPeriodEnd,
+  consentToken,
 }: Props) {
   if (plan === "free") {
-    return <UpgradeCard />;
+    return <UpgradeCard consentToken={consentToken} />;
   }
   return (
     <PaidCard
@@ -83,7 +89,7 @@ export function SubscriptionPanel({
   );
 }
 
-function UpgradeCard() {
+function UpgradeCard({ consentToken }: { consentToken: string | null }) {
   const [selectedPlan, setSelectedPlan] = useState<"pro" | "team">("pro");
   const [interval, setInterval] = useState<Interval>("monthly");
   const [seats, setSeats] = useState(TEAM_MIN_SEATS);
@@ -103,6 +109,16 @@ function UpgradeCard() {
       );
       return;
     }
+    if (!consentToken) {
+      // Shouldn't happen — free users always get a token from
+      // the server render. If somehow it's missing, fail safe
+      // with a refresh prompt rather than POSTing a body the
+      // server is going to reject anyway.
+      setError(
+        "We couldn't initialise the consent token. Refresh the page and try again.",
+      );
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -113,10 +129,11 @@ function UpgradeCard() {
           plan: selectedPlan,
           interval,
           ...(selectedPlan === "team" ? { seats } : {}),
-          // Server persists `users.auto_renewal_consented_at` when
-          // this is true. /api/checkout refuses to create a Stripe
-          // Checkout Session without a consent timestamp on the row.
-          autoRenewalConsented: true,
+          // Signed-nonce CARL consent token. /api/checkout verifies
+          // the signature, time window, user-binding, and replay
+          // state before stamping consent. See
+          // src/lib/consent-token.ts.
+          consentToken,
         }),
       });
       if (!res.ok) {
@@ -140,7 +157,7 @@ function UpgradeCard() {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Upgrade</h2>
+        <h2 className="text-base font-semibold text-strong">Upgrade</h2>
         <span className="text-xs text-quiet">
           Billed monthly or annually. Cancel anytime.
         </span>
@@ -278,7 +295,7 @@ function PaidCard({
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Subscription</h2>
+        <h2 className="text-base font-semibold text-strong">Subscription</h2>
         <span className="text-xs text-quiet">
           Billing handled by Stripe
         </span>
@@ -337,8 +354,8 @@ function PlanOption({
       onClick={onSelect}
       className={`flex flex-col rounded-md border p-3 text-left transition ${
         selected
-          ? "border-black bg-sunken dark:border-white"
-          : "border-line hover:border-stone-400 dark:hover:border-stone-600"
+          ? "border-accent-primary-border bg-sunken"
+          : "border-line hover:border-line-strong"
       }`}
     >
       <div className="mb-1 flex items-baseline justify-between">
@@ -374,7 +391,7 @@ function IntervalToggle({
           onClick={() => onChange(opt)}
           className={`rounded-[5px] px-3 py-1 text-xs font-medium transition ${
             value === opt
-              ? "bg-black text-white dark:bg-white dark:text-black"
+              ? "bg-strong text-canvas"
               : "text-quiet hover:text-strong"
           }`}
         >

@@ -69,7 +69,6 @@ export const users = pgTable("users", {
   // after a cancellation so the same customer lineage continues if the
   // user re-subscribes later.
   stripeCustomerId: text("stripe_customer_id").unique(),
-  dittoApiKeyEncrypted: text("ditto_api_key_encrypted"),
   // Cost monitor (Phase 1, pre-pilot launch). Daily and monthly thresholds
   // for runaway-script detection. Defaults are anomaly-catching, not
   // normal-usage-capping — Free/Pro at typical Anthropic rates of
@@ -111,6 +110,15 @@ export const users = pgTable("users", {
   autoRenewalConsentedAt: timestamp("auto_renewal_consented_at", {
     withTimezone: true,
   }),
+  // CARL non-repudiation: the signed-nonce token that was verified at
+  // the moment consent was stamped. Cryptographically binds the
+  // `autoRenewalConsentedAt` timestamp to a /dashboard render event
+  // for THIS user, so a future dispute can be audited against the
+  // server-side mint record. The nonce is the random component of
+  // the consent-token payload (see src/lib/consent-token.ts); it's
+  // not the full token because the signature side adds nothing to
+  // the audit trail once verified.
+  autoRenewalConsentNonce: text("auto_renewal_consent_nonce"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -437,27 +445,12 @@ export const violations = pgTable(
     // PR-40: per-run dashboard page query — `WHERE team_id = $1 AND
     // run_id = $2` ordered by createdAt.
     index("violations_team_run_idx").on(t.teamId, t.runId, t.createdAt),
-  ],
-).enableRLS();
-
-export const dittoSyncs = pgTable(
-  "ditto_syncs",
-  {
-    id: cuid(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    projectId: text("project_id").notNull(),
-    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
-    lastStatus: text("last_status"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    // FK index on user_id so "list a user's ditto syncs" hits an index
-    // instead of scanning the table.
-    index("ditto_syncs_user_idx").on(t.userId),
+    // Audit 2026-05-11 round 3: rollback-monitor + admin standard-
+    // activity loaders filter `WHERE standard_id = $1 AND created_at
+    // >= $2`. The first time this matters is at ~10K rows — well within
+    // beta-volume range once CI runs land. Pre-fix, both queries were
+    // full-table scans per standard (49+ scans per nightly cron).
+    index("violations_standard_created_idx").on(t.standardId, t.createdAt),
   ],
 ).enableRLS();
 
@@ -597,6 +590,16 @@ export const violationOverrides = pgTable(
       t.standardId,
       t.moment,
     ),
+    // Audit 2026-05-11 round 3: rollback-monitor cron filters
+    // `WHERE standard_id = $1 AND created_at >= $2` per standard.
+    // The existing (team_id, standard_id) index doesn't satisfy this
+    // because there's no leading team scope. Adds the missing
+    // (standard_id, created_at) covering index so the per-standard
+    // rollup stops full-table-scanning at every nightly cron run.
+    index("violation_overrides_standard_created_idx").on(
+      t.standardId,
+      t.createdAt,
+    ),
     // FK index on violation_id. When a violation is deleted, PG has to
     // find all overrides pointing at it to apply ON DELETE SET NULL —
     // without this, that's a table scan.
@@ -618,9 +621,9 @@ export const violationOverrides = pgTable(
 //
 // Engine-output popularity signal: when a customer copies a suggestion
 // the engine produced, a row lands here with the engine's own
-// `candidateText` and `shareUpstream = false`. No customer input
-// strings ever land in this table; that path is `customer_flagged_reviews`,
-// reached only through the Flag-for-Review consent flow.
+// `candidateText`. No customer input strings ever land in this table;
+// that path is `customer_flagged_reviews`, reached only through the
+// Flag-for-Review consent flow.
 //
 // The founder /admin queue can promote rows into PRECEDENTS (the curated
 // set the runtime LLM context reads). Only Robert's curation reaches the
@@ -628,9 +631,11 @@ export const violationOverrides = pgTable(
 //
 // Privacy: per ADR 2026-04-28 and ADR 2026-05-11, every text-bearing field
 // is PII-screened before write (handled at the route layer via
-// src/lib/pii-screen.ts). `shareUpstream` is hardcoded false for the
-// remaining writer; the field stays for substrate-side queries that
-// historically gated on it.
+// src/lib/pii-screen.ts). Visibility is uniform — every candidate row is
+// readable by the founder at /admin and by the writing team's analytics.
+// The earlier two-tier opt-in (`share_upstream`) was retired with the
+// Flag-for-Review pivot; that explicit consent flow now owns the
+// "customer-input-into-substrate" path.
 //
 // Substrate context (moment, contentType, standardId) is server-side-
 // correlated at write time by joining against the violations table via
@@ -659,9 +664,10 @@ export const suggestionCandidates = pgTable(
     sourceUserId: text("source_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
-    // Team scope for opt-out tracking. When a row's team_owner_user_id
-    // is set, it's visible to that team's admins regardless of
-    // share_upstream. share_upstream additionally exposes it to /admin.
+    // Team scope. When set, the row is visible to that team's analytics
+    // (per-team rollups). Every row is also visible to the founder at
+    // /admin regardless of team scope — the earlier `share_upstream`
+    // gating was retired by ADR 2026-05-11.
     sourceTeamOwnerUserId: text("source_team_owner_user_id").references(
       () => users.id,
       { onDelete: "set null" },
@@ -677,10 +683,6 @@ export const suggestionCandidates = pgTable(
     // Carries the public-envelope `issue` field for customer-source
     // rows; null otherwise. PII-screened.
     issueContext: text("issue_context"),
-    // Customer's explicit opt-in, per ADR 2026-04-28. Default FALSE.
-    // FALSE = team-private. TRUE = eligible for /admin triage and
-    // (after approval) promotion to suggestion_precedents.
-    shareUpstream: boolean("share_upstream").notNull().default(false),
     // Triage state. Pending = unreviewed; Approved = promoted to
     // suggestion_precedents (Block 2a); Rejected = slop, kept for
     // metrics; Merged = combined into an existing precedent.
@@ -707,9 +709,8 @@ export const suggestionCandidates = pgTable(
       t.standardId,
       t.status,
     ),
-    // Team-private slice: when a customer's row is share_upstream=false,
-    // it still surfaces to that team's analytics. This index supports
-    // "show me my team's candidates."
+    // Team-scope slice: supports "show me my team's candidates" rollups
+    // for per-team analytics.
     index("suggestion_candidates_team_idx").on(t.sourceTeamOwnerUserId),
     // FK index on source_user_id for the deletion cascade.
     index("suggestion_candidates_user_idx").on(t.sourceUserId),
@@ -1130,6 +1131,14 @@ export const customerFlaggedReviews = pgTable(
     // Cross-reference with violation_overrides via text_hash so the
     // founder can see "this string was flagged AND overridden."
     index("customer_flagged_reviews_text_hash_idx").on(t.textHash),
+    // FK-perf indexes — added in the 2026-05-11 round-3 audit. Both
+    // columns are nullable `.references()`, so on user-delete /
+    // violation-delete PG has to find rows pointing here to apply
+    // ON DELETE SET NULL. Without these, that's a full-table scan
+    // (same fix the audit comment on
+    // `violation_overrides_violation_idx` calls out).
+    index("customer_flagged_reviews_triaged_by_idx").on(t.triagedBy),
+    index("customer_flagged_reviews_violation_idx").on(t.violationId),
   ],
 ).enableRLS();
 
@@ -1239,7 +1248,6 @@ export type TeamMember = InferSelectModel<typeof teamMembers>;
 export type TeamInvitation = InferSelectModel<typeof teamInvitations>;
 export type TeamRule = InferSelectModel<typeof teamRules>;
 export type Violation = InferSelectModel<typeof violations>;
-export type DittoSync = InferSelectModel<typeof dittoSyncs>;
 export type ViolationOverride = InferSelectModel<typeof violationOverrides>;
 export type SuggestionCandidate = InferSelectModel<typeof suggestionCandidates>;
 export type SuggestionPrecedent = InferSelectModel<typeof suggestionPrecedents>;

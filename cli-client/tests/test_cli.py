@@ -192,7 +192,7 @@ class _FakeResponse:
 def test_main_pass_returns_zero(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
     # Schema 2.0.0 — top-level shape, no `result` wrapper.
     payload = {
-        "schema_version": "2.0.0",
+        "schema_version": "3.0.0",
         "verdict": "pass",
         "review_reason": None,
         "violations": [],
@@ -210,7 +210,7 @@ def test_main_pass_returns_zero(monkeypatch: pytest.MonkeyPatch, capsys) -> None
 
 def test_main_fail_returns_violations_code(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
     payload = {
-        "schema_version": "2.0.0",
+        "schema_version": "3.0.0",
         "verdict": "violation",
         "review_reason": None,
         "violations": [
@@ -238,7 +238,7 @@ def test_main_fail_returns_violations_code(monkeypatch: pytest.MonkeyPatch, caps
 
 def test_main_json_mode_emits_raw_response(monkeypatch: pytest.MonkeyPatch, capsys) -> None:
     payload = {
-        "schema_version": "2.0.0",
+        "schema_version": "3.0.0",
         "verdict": "pass",
         "review_reason": None,
         "violations": [],
@@ -253,7 +253,7 @@ def test_main_json_mode_emits_raw_response(monkeypatch: pytest.MonkeyPatch, caps
     out = capsys.readouterr().out.strip()
     parsed = json.loads(out)
     assert parsed["verdict"] == "pass"
-    assert parsed["schema_version"] == "2.0.0"
+    assert parsed["schema_version"] == "3.0.0"
 
 
 def test_main_missing_api_key_reports_auth(
@@ -291,7 +291,7 @@ def test_main_batch_mode_iterates_strings(
     responses = iter(
         [
             {
-                "schema_version": "2.0.0",
+                "schema_version": "3.0.0",
                 "verdict": "pass",
                 "review_reason": None,
                 "violations": [],
@@ -299,7 +299,7 @@ def test_main_batch_mode_iterates_strings(
                 "usage": {},
             },
             {
-                "schema_version": "2.0.0",
+                "schema_version": "3.0.0",
                 "verdict": "violation",
                 "review_reason": None,
                 "violations": [
@@ -329,7 +329,7 @@ def test_main_batch_mode_iterates_strings(
 def test_print_result_returns_true_for_pass() -> None:
     buf = io.StringIO()
     payload = {
-        "schema_version": "2.0.0",
+        "schema_version": "3.0.0",
         "verdict": "pass",
         "review_reason": None,
         "violations": [],
@@ -345,7 +345,7 @@ def test_print_result_renders_severity_and_issue_only() -> None:
     user sees severity + issue + suggestion."""
     buf = io.StringIO()
     payload = {
-        "schema_version": "2.0.0",
+        "schema_version": "3.0.0",
         "verdict": "violation",
         "review_reason": None,
         "violations": [
@@ -371,7 +371,7 @@ def test_print_result_renders_severity_and_issue_only() -> None:
 def test_print_result_verbose_includes_usage() -> None:
     buf = io.StringIO()
     payload = {
-        "schema_version": "2.0.0",
+        "schema_version": "3.0.0",
         "verdict": "pass",
         "review_reason": None,
         "violations": [],
@@ -391,7 +391,7 @@ def test_print_result_review_recommended_shows_humanized_reason() -> None:
     customer sees plain language, not engine-pipeline vocabulary."""
     buf = io.StringIO()
     payload = {
-        "schema_version": "2.0.0",
+        "schema_version": "3.0.0",
         "verdict": "review_recommended",
         "review_reason": "low_confidence",
         "violations": [],
@@ -525,7 +525,7 @@ def test_main_batch_yes_skips_confirm(
         "urllib.request.urlopen",
         lambda req, timeout=None: _FakeResponse(
             {
-                "schema_version": "2.0.0",
+                "schema_version": "3.0.0",
                 "verdict": "pass",
                 "review_reason": None,
                 "violations": [],

@@ -1,12 +1,21 @@
 /**
- * POST /api/feedback/rationale — capture a user's rationale-chain correction.
+ * POST /api/feedback/moment — capture a customer's moment-misdetection
+ * correction.
  *
- * Human-eval build plan Session 21. When a user expands the rationale
- * chain on a verdict and disagrees with one of the hops (primarily
- * moment-detection), clicking the "Not <value>?" button lands here.
- * The row persists into `rationale_feedback` with the matching
- * review_reason subtype so Session 8's review queue (and future
- * moment-classifier retraining) can aggregate them.
+ * The customer-facing surfaces (Figma plugin's moment banner, the
+ * dashboard's check detail) show the detected moment alongside each
+ * check — e.g., "Detected as: destructive_action". The "Not
+ * <moment>?" button next to that banner POSTs here so the customer
+ * can flag the classifier got it wrong.
+ *
+ * The row persists into `rationale_feedback` with `correction_type =
+ * situation_ambiguity` so the founder's review queue and any future
+ * moment-classifier retraining can aggregate them. The DB table
+ * keeps the historical name (`rationale_feedback`) because it
+ * predates the schema 2.0.0 substrate strip; the URL was renamed in
+ * the 2026-05-11 cruft cleanup from `/api/feedback/rationale` once
+ * the rationale-chain corrections it originally accepted were
+ * removed per ADR 2026-04-25.
  *
  * Auth: Clerk session OR Bearer cx_<api_key>. Same pattern as
  * /api/violations/override. Rate-limited at the same tier so a buggy
@@ -25,6 +34,7 @@ import { resolveAuth } from "@/lib/auth";
 import { corsJson, corsPreflight } from "@/lib/cors";
 import { RationaleFeedbackRequestSchema } from "@/lib/rationale-feedback";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { teamScope } from "@/lib/team-scope";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
 
@@ -80,10 +90,12 @@ export async function POST(req: Request) {
     source,
   } = parsed.data;
 
-  const teamIdForFeedback =
-    auth.plan === "team"
-      ? (auth.teamOwnerUserId ?? auth.user.id)
-      : null;
+  // Every team-scoped table writer uses teamScope(auth) so readers can
+  // join on a non-null team_id. The free/Pro path used to land NULL
+  // here, which made calibration / refinement-log aggregations silently
+  // miss every rationale-feedback row from non-Team plans (same bug
+  // class as the violations.team_id fix in PR-198).
+  const teamIdForFeedback = teamScope(auth);
 
   const db = getDb();
   const [row] = await db

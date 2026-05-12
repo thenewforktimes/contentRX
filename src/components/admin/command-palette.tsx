@@ -211,7 +211,7 @@ export function CommandPalette() {
 
             <div className="max-h-[60vh] overflow-y-auto">
               {error && (
-                <p className="px-4 py-3 text-sm text-rose-700 dark:text-rose-400">
+                <p className="px-4 py-3 text-sm text-accent-concern-text">
                   {error}
                 </p>
               )}
@@ -298,7 +298,7 @@ function ResultRow({
       aria-selected={active}
       onMouseEnter={onHover}
       className={`border-b border-line last:border-b-0 ${
-        active ? "bg-stone-50 dark:bg-stone-800" : ""
+        active ? "bg-hover" : ""
       }`}
     >
       <Link

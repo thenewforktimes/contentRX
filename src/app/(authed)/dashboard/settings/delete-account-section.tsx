@@ -149,7 +149,7 @@ export function DeleteAccountSection() {
           type="button"
           onClick={onSubmit}
           disabled={!canSubmit}
-          className="inline-flex items-center rounded-md bg-accent-concern-solid px-3 py-1.5 text-xs font-medium text-accent-concern-on hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center rounded-md bg-accent-concern px-3 py-1.5 text-xs font-medium text-accent-concern-on hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitting ? "Deleting…" : "Delete account permanently"}
         </button>

@@ -1,13 +1,13 @@
 name: JS/Python preprocessor parity
 
-# Runs three parity gates on every PR and every push to main:
+# Runs four parity gates on every PR and every push to main:
 #
 #   1. `tools/parity_check.py` — JS preprocessor (figma-plugin/ui.html)
 #      vs. Python preprocessor (src/content_checker/preprocess.py).
 #      v2 Session 2 deliverable.
 #
 #   2. `scripts/check-display-labels-parity.py` — DISPLAY_LABELS map
-#      mirrored across four packages (engine, MCP, CLI, web TS). Fails
+#      mirrored across three packages (engine, MCP, web TS). Fails
 #      if any sibling drifts from the engine canonical.
 #
 #   3. `scripts/check-humanize-parity.py` — humanize_verdict /
@@ -16,6 +16,13 @@ name: JS/Python preprocessor parity
 #      Compares outputs across 36 input cases per function rather
 #      than byte-identity (docstrings legitimately diverge per
 #      package).
+#
+#   4. `tests/test_engine_taxonomy_ts_mirror.py` — pins
+#      src/lib/engine-taxonomy.ts CONTENT_TYPES / MOMENTS / AUDIENCES
+#      against the Python canonicals (standards_library.json,
+#      moments.py, audience.py). Catches the exact drift class that
+#      hid `native_mobile` from every product surface for the entire
+#      beta-prep window before the gate landed (2026-05-11).
 
 on:
   push:
@@ -48,10 +55,10 @@ jobs:
           node-version: "20"
 
       - name: Install Python dependencies
-        # The parity check only needs the engine package itself —
-        # no Anthropic SDK, no test extras. Editable install keeps the
+        # The parity checks need the engine package + pytest for the
+        # engine-taxonomy mirror gate. Editable install keeps the
         # JSON standards loader pointed at the in-tree library.
-        run: pip install -e .
+        run: pip install -e ".[dev]"
 
       - name: Fetch substrate
         # parity_check.py loads the standards library to drive the
@@ -78,3 +85,10 @@ jobs:
         # and asserts they return identical outputs across 36 input
         # cases × 3 functions. Stdlib only.
         run: python3 scripts/check-humanize-parity.py
+
+      - name: Run engine-taxonomy mirror gate
+        # Pins src/lib/engine-taxonomy.ts against the Python canonicals.
+        # Pytest because the assertion includes useful diff output;
+        # the test file is stdlib-only at runtime (regex parse + JSON
+        # read + Audience enum + MOMENT_TAXONOMY).
+        run: pytest tests/test_engine_taxonomy_ts_mirror.py -v

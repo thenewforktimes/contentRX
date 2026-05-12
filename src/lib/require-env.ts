@@ -42,6 +42,11 @@ const REQUIRED_IN_PRODUCTION = [
   "RESEND_API_KEY",
   "EMAIL_FROM",
   "NEXT_PUBLIC_APP_URL",
+  // Signs / verifies CARL auto-renewal consent tokens minted at
+  // /dashboard render time and verified at /api/checkout. Without it
+  // the signed-nonce protocol fails closed — checkout 500s until the
+  // var is set. Generate with `openssl rand -base64 32`.
+  "CONSENT_HMAC_SECRET",
 ] as const;
 
 /**

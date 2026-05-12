@@ -119,7 +119,7 @@ export function SurfacesGrid() {
       className="mt-20 scroll-mt-16 rounded-3xl border border-accent-info-border/40 bg-accent-info-soft/30 p-8 sm:p-12"
     >
       <Eyebrow>Where it runs</Eyebrow>
-      <h2 className="mt-2 text-2xl font-semibold text-strong">
+      <h2 className="mt-2 text-2xl font-semibold text-strong sm:text-3xl">
         Where you ship content.
       </h2>
       <p className="mt-4 max-w-2xl text-base text-default">

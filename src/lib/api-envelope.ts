@@ -135,6 +135,8 @@
 //         excerpts) now triggers on `text.length > 200` regardless
 //         of caller intent — the wall-of-red-strikethrough
 //         antipattern is no longer reachable from any tier.
+import { isPublicTaxonomyEnabled as publicTaxonomyEnabled } from "./feature-flags";
+
 export const SCHEMA_VERSION = "3.0.0" as const;
 
 /**
@@ -258,18 +260,6 @@ type SubstrateViolation = {
   [key: string]: unknown;
 };
 
-const TRUTHY_PUBLIC_TAXONOMY = new Set(["true", "1", "yes", "on"]);
-
-function publicTaxonomyEnabled(): boolean {
-  // Read at call time, not at import time — request-scoped flips and
-  // test monkeypatches must be visible. Mirrors
-  // `src/lib/feature-flags.ts::isPublicTaxonomyEnabled`; duplicated
-  // locally to avoid a cyclic import (feature-flags imports nothing,
-  // but the hint is to keep this module dependency-free).
-  const raw = process.env.PUBLIC_TAXONOMY;
-  if (raw === undefined) return false;
-  return TRUTHY_PUBLIC_TAXONOMY.has(raw.trim().toLowerCase());
-}
 
 /**
  * Project a substrate Violation down to the schema 2.0.0 public shape.
@@ -339,10 +329,21 @@ export function publicCheckEnvelope(
     typeof result.moment === "string" && result.moment.length > 0
       ? result.moment
       : null;
+  // CLAUDE.md non-negotiable: "Every verdict is one of
+  // `violation | review_recommended | pass`." The Verdict enum still
+  // has "error" as a private substrate value; whitelist before we ship
+  // the envelope so no internal verdict ever reaches a user-facing
+  // surface (any unrecognised value falls back to "pass").
+  const PUBLIC_VERDICTS = ["pass", "violation", "review_recommended"] as const;
+  const safeVerdict =
+    typeof result.verdict === "string" &&
+    (PUBLIC_VERDICTS as ReadonlyArray<string>).includes(result.verdict)
+      ? result.verdict
+      : "pass";
   return {
     schema_version: SCHEMA_VERSION,
     violations,
-    verdict: typeof result.verdict === "string" ? result.verdict : "pass",
+    verdict: safeVerdict,
     review_reason:
       typeof result.review_reason === "string" ? result.review_reason : null,
     warnings: opts.warnings ?? [],

@@ -83,7 +83,7 @@ export function MembersPanel({
   return (
     <div className="flex flex-col gap-8">
       <section className="rounded-lg border border-line p-5">
-        <h2 className="text-sm font-semibold">Invite a teammate</h2>
+        <h2 className="text-base font-semibold text-strong">Invite a teammate</h2>
         <p className="mt-1 text-xs text-default">
           They&apos;ll get an email with a link that&apos;s good for 7 days.
           {seatsAvailable === 0 && (
@@ -114,13 +114,13 @@ export function MembersPanel({
         {error && (
           <p
             role="alert"
-            className="mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300"
+            className="mt-3 rounded-md border border-accent-concern-border bg-accent-concern-soft px-3 py-2 text-xs text-accent-concern-text"
           >
             {error}
           </p>
         )}
         {state === "success" && (
-          <p className="mt-3 text-xs text-green-700 dark:text-green-400">
+          <p className="mt-3 text-xs text-accent-affirm-text">
             Invite sent.
           </p>
         )}
@@ -128,7 +128,7 @@ export function MembersPanel({
 
       {pendingInvitations.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold">Pending invitations</h2>
+          <h2 className="mb-3 text-base font-semibold text-strong">Pending invitations</h2>
           <ul className="flex flex-col gap-2">
             {pendingInvitations.map((p) => (
               <li
@@ -157,7 +157,7 @@ export function MembersPanel({
       )}
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold">Members</h2>
+        <h2 className="mb-3 text-base font-semibold text-strong">Members</h2>
         {members.length === 1 && members[0]?.isOwner ? (
           // Solo team — owner only, no invites accepted yet. The form
           // above (Invite a teammate) IS the empty-state CTA, so this

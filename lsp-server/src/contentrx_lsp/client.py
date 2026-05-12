@@ -128,6 +128,7 @@ async def check(
             )
 
     body = response.json()
+    _check_schema_major(body)
     result = body.get("result", body)  # envelope or raw
     return CheckResult(
         verdict=result.get("verdict", "pass"),
@@ -204,9 +205,32 @@ async def suggest_fix(
             )
 
     body = response.json()
+    _check_schema_major(body)
     result = body.get("result", body)
     return SuggestFixResult(
         rewritten=result.get("rewritten", "") or "",
     )
+
+
+# Major version of the wire format this LSP server is built against.
+# A 4.x bump with breaking changes will fail loudly via this check
+# instead of silently parsing the new shape with old assumptions.
+_SUPPORTED_SCHEMA_MAJOR = 3
+
+
+def _check_schema_major(body: dict[str, Any]) -> None:
+    sv = body.get("schema_version")
+    if sv is None or not isinstance(sv, str) or "." not in sv:
+        return
+    try:
+        major = int(sv.split(".", 1)[0])
+    except ValueError:
+        return
+    if major != _SUPPORTED_SCHEMA_MAJOR:
+        raise ContentRXError(
+            f"ContentRX returned schema_version={sv} but this LSP "
+            f"server was built for major {_SUPPORTED_SCHEMA_MAJOR}. "
+            "Upgrade `contentrx-lsp` to a compatible release."
+        )
 
 

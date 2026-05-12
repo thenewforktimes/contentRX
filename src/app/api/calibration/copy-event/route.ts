@@ -12,10 +12,11 @@
  *   - Lower trust than customer-rewrite. The user copied the LLM's
  *     suggestion as-is; that's a passive positive signal but not a
  *     hand-curated rewrite.
- *   - share_upstream is ALWAYS false on copy-event rows. There's
- *     no opt-in for passive signal — the row stays team-private
- *     by design. /admin/suggestions only ever sees customer-rewrite
- *     candidates. Aligns with ADR 2026-04-28 default-OFF.
+ *   - No customer input strings are written. The row carries the
+ *     ENGINE'S OWN suggestion text (candidateText) plus engine-emitted
+ *     issue context — both come from the LLM, not the customer. The
+ *     customer-input path lives at customer_flagged_reviews under the
+ *     Flag-for-Review consent flow (ADR 2026-05-11).
  *   - Failure is non-fatal. The customer's clipboard write already
  *     happened client-side; this endpoint exists for substrate
  *     accounting only.
@@ -115,10 +116,8 @@ export async function POST(req: Request) {
 
     // Server-side correlation: recover substrate context by joining
     // against violations on (userId, textHash). When correlation
-    // misses, the bucket axes stay null (Robert's /admin triage
-    // can't backfill copy-source rows since they're never visible
-    // to /admin — share_upstream=false — but null bucket axes are
-    // still recorded for team-internal accounting).
+    // misses, the bucket axes stay null (Robert's /admin triage can
+    // backfill at review time).
     const correlated = await db
       .select({
         moment: schema.violations.moment,
@@ -151,10 +150,6 @@ export async function POST(req: Request) {
       inputHash: textHash,
       candidateText: parsed.data.suggestion,
       issueContext: parsed.data.issue,
-      // Always FALSE for copy-source. There's no opt-in for passive
-      // signal; the row stays team-private. /admin only sees rows
-      // where share_upstream = true.
-      shareUpstream: false,
       status: "pending",
     });
 

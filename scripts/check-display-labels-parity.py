@@ -31,11 +31,14 @@ SOURCES: dict[str, Path] = {
         ROOT / "src" / "content_checker" / "labels.py",
     "mcp (display_labels.py)":
         ROOT / "mcp-server" / "src" / "contentrx_mcp" / "display_labels.py",
-    "cli (display_labels.py)":
-        ROOT / "cli-client" / "contentrx" / "display_labels.py",
     "ts (standard-display-names.ts)":
         ROOT / "src" / "lib" / "standard-display-names.ts",
 }
+# cli-client/contentrx/display_labels.py was a fourth mirror but is no
+# longer needed — the CLI strips substrate per ADR 2026-04-25 and never
+# renders standard_id, so the labels map was dead code that was kept
+# in parity with the live consumers above. Removed in the 2026-05-11
+# audit.
 
 # Each line: `"GRM-01": "Punctuation",` — same syntax in Python and TS.
 ENTRY_RE = re.compile(r'"([A-Z]+-\d+)":\s*"([^"]+)"')
@@ -115,7 +118,7 @@ def main() -> int:
     if ok:
         sample = ", ".join(list(canonical)[:3])
         print(
-            f"[parity] OK — all four DISPLAY_LABELS maps match "
+            f"[parity] OK — all three DISPLAY_LABELS maps match "
             f"({len(canonical)} entries; sample: {sample}, …)"
         )
         return 0

@@ -90,7 +90,7 @@ export default async function OveragePage() {
       </header>
 
       <section className="rounded-lg border border-line p-5">
-        <h2 className="text-sm font-semibold">Opt in to overage</h2>
+        <h2 className="text-base font-semibold text-strong">Opt in to overage</h2>
         <p className="mt-2 text-sm text-default">
           When enabled, checks past your monthly limit of {quota.toLocaleString()}{" "}
           bill at $0.10 per check. We charge it on your next Stripe
@@ -109,7 +109,7 @@ export default async function OveragePage() {
       </section>
 
       <section className="rounded-lg border border-line p-5">
-        <h2 className="text-sm font-semibold">This month</h2>
+        <h2 className="text-base font-semibold text-strong">This month</h2>
         <dl className="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
           <div>
             <dt className="text-xs text-quiet">Overage checks</dt>

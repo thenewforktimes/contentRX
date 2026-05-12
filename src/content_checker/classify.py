@@ -147,12 +147,18 @@ def classify_llm(
 def classify(
     text: str,
     content_types: dict[str, str] | None = None,
-    model: str = "claude-sonnet-4-20250514",
+    model: str | None = None,
     use_llm: bool = True,
 ) -> tuple[str, float, TokenUsage]:
     """Classify content type. Main entry point.
 
     Returns (content_type_id, latency_seconds, token_usage).
+
+    `model=None` (the default) lets `classify_llm` fall through to
+    `MODEL_CLASSIFY` (Haiku) — the per-stage routing in `api_utils`
+    is the single source of truth for which model handles which stage.
+    Pass an explicit model only when a caller has a reason to override
+    that routing.
     """
     if not use_llm or content_types is None:
         return classify_heuristic(text), 0.0, TokenUsage()

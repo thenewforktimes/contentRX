@@ -36,6 +36,7 @@ import {
   type FlagReason,
   type FlagStatus,
 } from "@/lib/admin/customer-flag-inbox";
+import { isContentRXAdmin } from "@/lib/graduation";
 import { humanizeContentType, humanizeMoment } from "@/lib/humanize";
 
 export const metadata = {
@@ -108,6 +109,9 @@ async function triageAction(formData: FormData) {
 
   const { userId: clerkId } = await auth();
   if (!clerkId) return;
+  // Defense-in-depth: server-action boundary auth re-check.
+  // See admin/reports/actions.ts:74-80 for the canonical pattern.
+  if (!isContentRXAdmin(clerkId)) return;
   const db = getDb();
   const [user] = await db
     .select({ id: schema.users.id })

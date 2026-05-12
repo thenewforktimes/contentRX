@@ -121,12 +121,16 @@ export async function POST(req: Request) {
 
   if (parsed.data.action === "add") {
     // Validate the regex is compilable up front so a broken pattern
-    // doesn't silently live in the DB and skip every evaluation.
+    // doesn't silently live in the DB and skip every evaluation. The
+    // compile error message can leak engine-internal detail (JS regex
+    // grammar nuances vary by Node version); return a generic 400 so
+    // the caller knows it's a pattern problem without echoing the raw
+    // error back.
     try {
       new RegExp(parsed.data.rule_json.pattern);
-    } catch (err) {
+    } catch {
       return NextResponse.json(
-        { error: "Invalid regex pattern", detail: String(err) },
+        { error: "Invalid regex pattern. Check the pattern syntax and try again." },
         { status: 400 },
       );
     }

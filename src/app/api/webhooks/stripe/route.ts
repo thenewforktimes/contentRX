@@ -5,11 +5,20 @@
  * the raw request body; the STRIPE_WEBHOOK_SECRET env var must match
  * the endpoint's signing secret from the Stripe Dashboard.
  *
- * Idempotency: Stripe retries failed deliveries with the same `event.id`.
- * We SET NX into Redis with a 24h TTL before processing — if the key
- * already exists the event is a replay and we short-circuit with 200
- * so Stripe stops retrying. (Returning non-2xx would keep the retry
- * loop going against an already-applied change.)
+ * Idempotency: every Stripe handler in this file is idempotent —
+ * `upsertSubscription` is a true upsert, status / plan / cancelledAt
+ * updates are last-write-wins, and the side effects (welcome email,
+ * upgrade analytics, payment-failed email) each carry their own
+ * per-(userId, subscription | invoice) Redis dedupe. So Stripe's
+ * retries are safe to run end-to-end; we don't need (and used to
+ * have a buggy version of) a top-level event-id dedupe.
+ *
+ * The earlier top-level dedupe set the event-id key BEFORE running
+ * any work. When a handler crashed mid-flight (DB outage, Stripe API
+ * timeout), we returned 500 → Stripe retried → the retry saw the
+ * key and short-circuited as `deduplicated: true` without re-running
+ * the handler, silently dropping the upsert. Matches the same fix
+ * the Clerk webhook landed on 2026-04-25.
  *
  * Handlers (locked per BUILD_PLAN §8):
  *   - checkout.session.completed       → link subscription, set plan
@@ -37,10 +46,8 @@ import {
   type PaidPlan,
 } from "@/lib/stripe";
 import { PaymentFailedEmail } from "@/emails/payment-failed";
+import { SubscriptionCancelledEmail } from "@/emails/subscription-cancelled";
 import { SubscriptionConfirmationEmail } from "@/emails/subscription-confirmation";
-
-const DEDUPE_PREFIX = "stripe_event:";
-const DEDUPE_TTL_SECONDS = 24 * 60 * 60;
 
 /**
  * Stripe SDK shapes that vary by API version. The `Stripe.Invoice` and
@@ -111,23 +118,13 @@ async function handleStripeWebhook(req: Request): Promise<Response> {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // Dedupe. If this event.id has already been processed, ACK the replay
-  // so Stripe quiets down — don't re-apply the change.
-  try {
-    const redis = getRedis();
-    const setResult = await redis.set(DEDUPE_PREFIX + event.id, "1", {
-      nx: true,
-      ex: DEDUPE_TTL_SECONDS,
-    });
-    if (setResult === null) {
-      return NextResponse.json({ received: true, deduplicated: true });
-    }
-  } catch (err) {
-    // Redis outage shouldn't block a valid webhook — log and proceed.
-    // Worst case: we double-apply an event, which each handler is
-    // written to tolerate (upserts, not inserts).
-    logSafeError("[stripe-webhook] dedupe lookup failed, proceeding without", err);
-  }
+  // No top-level event-id dedupe. Each handler's DB writes are
+  // idempotent and the side effects (welcome email, upgrade
+  // analytics, payment-failed email) carry their own per-action
+  // Redis dedupe keys. The header comment block has the longer
+  // rationale; the short version is that pre-claiming the event-id
+  // key turned mid-handler crashes into silent permanent failures
+  // on retry.
 
   try {
     switch (event.type) {
@@ -259,7 +256,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       ]);
     }
   } catch (err) {
-    console.warn("post-checkout email/analytics failed", err);
+    logSafeError("[stripe-webhook] post-checkout email/analytics failed", err);
   }
 }
 
@@ -281,7 +278,7 @@ async function trackUpgradeOnce(args: {
     if (setResult === null) return; // already counted
   } catch (err) {
     // Redis outage: fall through and track. Worst case = double-count.
-    console.warn("upgrade analytics dedupe failed, tracking anyway", err);
+    logSafeError("[stripe-webhook] upgrade analytics dedupe failed, tracking anyway", err);
   }
   await trackEvent("upgrade", {
     userId: args.userId,
@@ -356,6 +353,36 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .set({ plan: "free" })
     .where(eq(schema.users.id, userId));
   revalidateSubscription(userId);
+
+  // Send the cancellation confirmation. Dedupe per (userId, subscription)
+  // so Stripe replaying the deletion event doesn't fan out duplicate
+  // emails. Per-action dedupe key matches the welcome-email + upgrade-
+  // analytics patterns earlier in this file. Best-effort — a Resend
+  // outage shouldn't 500 the webhook.
+  try {
+    const [cancelledUser] = await db
+      .select({ email: schema.users.email })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+    if (cancelledUser?.email) {
+      const resolved = planFromPriceId(
+        subscription.items.data[0]?.price.id ?? "",
+      );
+      const planLabel = resolved?.plan === "team" ? "Team" : "Pro";
+      await sendEmail({
+        to: cancelledUser.email,
+        subject: `Your ContentRX ${planLabel} subscription is cancelled`,
+        react: SubscriptionCancelledEmail({
+          appUrl: appUrl(),
+          planLabel,
+        }),
+        dedupeKey: `cancellation_email:${userId}:${subscription.id}`,
+      });
+    }
+  } catch (err) {
+    logSafeError("[stripe-webhook] post-cancel email failed", err);
+  }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
@@ -371,10 +398,10 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // shape.
   const parent = (invoice as unknown as InvoiceWithParent).parent;
   const subId = parent?.subscription;
+  // Don't log invoice.customer_email — it's PII. The subscription id is
+  // opaque and sufficient to correlate against subscriptions / users.
   console.warn(
-    `invoice.payment_failed${subId ? ` subscription=${subId}` : ""}${
-      invoice.customer_email ? ` email=${invoice.customer_email}` : ""
-    }`,
+    `invoice.payment_failed${subId ? ` subscription=${subId}` : ""}`,
   );
 
   if (!subId) {
@@ -438,6 +465,17 @@ async function upsertSubscription(args: {
   const { userId, subscription, customerId } = args;
   const db = getDb();
 
+  // Stripe subscription events always carry a customer id in practice; bailing
+  // here keeps an empty-string FK out of subscriptions.stripe_customer_id (the
+  // column is NOT NULL, so the prior `?? ""` fallback was writing junk on the
+  // theoretical no-customer path instead of failing loudly).
+  if (!customerId) {
+    console.warn(
+      `subscription ${subscription.id} has no stripe customer id — skipping upsert`,
+    );
+    return;
+  }
+
   const item = subscription.items.data[0];
   const priceId = item?.price.id;
   if (!priceId) {
@@ -466,12 +504,10 @@ async function upsertSubscription(args: {
 
   // Stripe Customer ID on the users row — set on first successful
   // checkout, preserved thereafter.
-  if (customerId) {
-    await db
-      .update(schema.users)
-      .set({ stripeCustomerId: customerId })
-      .where(eq(schema.users.id, userId));
-  }
+  await db
+    .update(schema.users)
+    .set({ stripeCustomerId: customerId })
+    .where(eq(schema.users.id, userId));
 
   // Upsert the subscription row by stripe_sub_id (unique in schema).
   const [existing] = await db
@@ -489,7 +525,7 @@ async function upsertSubscription(args: {
         seats,
         currentPeriodEnd,
         cancelAtPeriodEnd,
-        stripeCustomerId: customerId ?? "",
+        stripeCustomerId: customerId,
       })
       .where(eq(schema.subscriptions.id, existing.id));
   } else {
@@ -515,7 +551,7 @@ async function upsertSubscription(args: {
 
     await db.insert(schema.subscriptions).values({
       userId,
-      stripeCustomerId: customerId ?? "",
+      stripeCustomerId: customerId,
       stripeSubId: subscription.id,
       status: subscription.status,
       plan,
@@ -544,8 +580,8 @@ async function upsertSubscription(args: {
     try {
       await maybeGroupByDomain(userId);
     } catch (err) {
-      console.warn(
-        `domain-grouping check failed for user ${userId}`,
+      logSafeError(
+        `[stripe-webhook] domain-grouping check failed for user ${userId}`,
         err,
       );
     }

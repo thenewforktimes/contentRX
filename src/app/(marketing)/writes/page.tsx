@@ -6,10 +6,32 @@
  *   F3a (day 1): product update, security advisory, internal announcement
  *   F3b (day 2): all-hands pre-read, incident update, policy notice
  *
- * Each example renders the writer's draft, the engine's flags, and the
- * suggested rewrite. Substrate-clean (ADR 2026-04-25): customer-facing
- * vocabulary only, no `standard_id`, no `rule_version`, no engine
- * snake_case enums leak through.
+ * 2026-05-11 redesign (Robert): the stacked single-column layout
+ * read as a wall of text — six 800px-tall cards with input → flags
+ * → rewrite in a vertical chain. Hard to scan, hard to compare
+ * before vs after.
+ *
+ * New shape:
+ *
+ *   1. Chip nav above the fold — six labels, one click to anchor.
+ *      The reader sees what's covered without scrolling. The chip
+ *      that matches their use case is the one that matters; the
+ *      others are credibility.
+ *   2. Per-example side-by-side: "What you wrote" | "Suggested
+ *      rewrite" in a 2-col grid at lg+. The before/after comparison
+ *      IS the value-prop; making it the first thing the eye lands on
+ *      teaches the product faster than any prose.
+ *   3. Flags collapsed into a <details> with a severity-count summary
+ *      visible by default. Curious readers expand; casual readers
+ *      get the comparison and move on. SEO unaffected — all content
+ *      ships in the markup.
+ *
+ * Each example shrinks from ~800px to ~450px collapsed (~700px when
+ * flags expanded). Six examples = ~2,700px instead of 4,800px. The
+ * page reads as a scannable showcase, not a wall.
+ *
+ * Substrate-clean (ADR 2026-04-25): customer-facing vocabulary only,
+ * no `standard_id`, no `rule_version`, no engine snake_case enums.
  *
  * Voice: calm, confident, charming per docs/copy-vocabulary.md. The
  * draft inputs deliberately demonstrate corporate / hedged / cloying
@@ -294,9 +316,22 @@ const EXAMPLES: readonly Example[] = [
   },
 ] as const;
 
+/** Severity rollup for the per-example summary line above each flags
+ * disclosure. Tells the reader what kind of trouble the example
+ * teaches before they choose whether to expand the details. */
+function severityCounts(flags: readonly Flag[]) {
+  const counts = { high: 0, medium: 0, low: 0 };
+  for (const f of flags) counts[f.severity]++;
+  return counts;
+}
+
 export default function WritesPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-20">
+    // Widened to max-w-6xl to give the side-by-side input/rewrite
+    // grid room to breathe at lg+. The prior max-w-3xl forced the
+    // two panels under each other even on wide screens, which
+    // defeated the before/after comparison the redesign exists for.
+    <main className="mx-auto max-w-6xl px-6 py-20">
       <PageHeader
         eyebrow="Long-form review"
         title="The longer-form writing your team sends to itself."
@@ -313,15 +348,36 @@ export default function WritesPage() {
         meta={
           <>
             Six examples below. Each shows what the writer started
-            with, the content model&apos;s flags, and the suggested
-            rewrite. The
+            with, the cleaned rewrite, and why each flag fired. The
             engine is calibrated for product and internal writing; for
             persuasive marketing copy expect more &lsquo;worth a look&rsquo;
             flags than usual.
           </>
         }
       />
-      <div className="space-y-12">
+
+      {/* Chip nav — six labels, click to jump. Border-y rule reads as a
+          contents shelf above the examples, mirrors the home page
+          IntegrationRow's role between hero and animation. */}
+      <nav
+        aria-label="Examples"
+        className="mt-12 flex flex-wrap items-center gap-2 border-y border-line py-4"
+      >
+        <span className="mr-2 text-xs font-semibold uppercase tracking-wider text-quiet">
+          Jump to
+        </span>
+        {EXAMPLES.map((ex) => (
+          <a
+            key={ex.id}
+            href={`#${ex.id}`}
+            className="inline-flex h-7 items-center rounded-full border border-line bg-raised px-3 text-xs font-medium text-default transition hover:border-line-strong hover:text-strong"
+          >
+            {ex.label}
+          </a>
+        ))}
+      </nav>
+
+      <div className="mt-12 space-y-20">
         {EXAMPLES.map((example) => (
           <ExampleCard key={example.id} example={example} />
         ))}
@@ -331,9 +387,16 @@ export default function WritesPage() {
 }
 
 function ExampleCard({ example }: { example: Example }) {
+  const counts = severityCounts(example.flags);
+  const worthAdjusting = counts.high + counts.medium;
+  const quickPolish = counts.low;
+
   return (
-    <article className="rounded-2xl border border-line bg-raised p-6 sm:p-8">
-      <div className="flex flex-wrap items-center gap-2">
+    // No outer card chrome — the page itself frames the example
+    // (border-b on header + space-y-20 between siblings). One frame
+    // per example reads tighter than nested borders.
+    <article id={example.id} className="scroll-mt-16">
+      <header className="flex flex-wrap items-baseline gap-3 border-b border-line pb-3">
         <Eyebrow>{example.label}</Eyebrow>
         <Pill tone="stone" size="xs">
           Moment: {example.momentLabel}
@@ -341,62 +404,87 @@ function ExampleCard({ example }: { example: Example }) {
         <Pill tone="stone" size="xs">
           {example.contentTypeLabel}
         </Pill>
-      </div>
+      </header>
+
       <p className="mt-4 text-base text-default">{example.intro}</p>
 
-      <div className="mt-6 rounded-lg border border-line bg-canvas p-5">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
-          What you wrote
-        </p>
-        <p className="mt-2 whitespace-pre-line text-sm text-strong">
-          {example.inputText}
-        </p>
+      {/* Side-by-side input vs rewrite. Stack on mobile, 2-col at lg+
+          so the comparison is the first thing the eye lands on at
+          desktop widths. */}
+      <div className="mt-8 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-lg border border-line bg-canvas p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
+            What you wrote
+          </p>
+          <p className="mt-2 whitespace-pre-line text-sm text-strong">
+            {example.inputText}
+          </p>
+        </div>
+        <div className="rounded-lg border-2 border-accent-affirm-border bg-accent-affirm-soft/40 p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
+            Suggested rewrite
+          </p>
+          <p className="mt-2 whitespace-pre-line text-sm text-strong">
+            {example.rewrite}
+          </p>
+        </div>
       </div>
 
-      <p className="mt-6 text-[10px] font-semibold uppercase tracking-wider text-quiet">
-        Flags
-      </p>
-      <ul className="mt-2 space-y-3">
-        {example.flags.map((flag, i) => (
-          <li
-            key={i}
-            className="rounded-lg border border-line bg-canvas p-4 sm:p-5"
-          >
-            <div className="flex items-center gap-2">
-              <Pill
-                tone={flag.severity === "low" ? "stone" : "amber"}
-                size="xs"
-              >
-                {flag.severityLabel}
-              </Pill>
-              <span className="text-[10px] font-medium uppercase tracking-wider text-quiet">
-                ✦ AI
+      {/* Flag summary — visible by default so the reader gets the
+          severity story without expanding. Curious readers open the
+          disclosure for the per-flag reasoning. */}
+      <details className="mt-4 rounded-lg border border-line bg-raised">
+        <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-5 py-3 hover:bg-hover">
+          <span className="text-sm font-medium text-strong">
+            {example.flags.length} flags applied
+            {worthAdjusting > 0 && (
+              <span className="ml-1 font-normal text-default">
+                · {worthAdjusting} worth adjusting
               </span>
-              <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-quiet">
-                {flag.category}
+            )}
+            {quickPolish > 0 && (
+              <span className="ml-1 font-normal text-default">
+                · {quickPolish} quick polish
               </span>
-            </div>
-            <p className="mt-2 text-sm font-medium text-strong">
-              {flag.issue}
-            </p>
-            <div className="mt-2 rounded-md bg-sunken p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
-                Suggested
+            )}
+          </span>
+          <span className="text-xs text-quiet">
+            See the per-flag reasoning <span aria-hidden>▾</span>
+          </span>
+        </summary>
+        <ul className="space-y-2 border-t border-line bg-canvas p-4">
+          {example.flags.map((flag, i) => (
+            <li
+              key={i}
+              className="rounded-md border border-line bg-raised p-4"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Pill
+                  tone={flag.severity === "low" ? "stone" : "amber"}
+                  size="xs"
+                >
+                  {flag.severityLabel}
+                </Pill>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-quiet">
+                  ✦ AI
+                </span>
+                <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-quiet">
+                  {flag.category}
+                </span>
+              </div>
+              <p className="mt-2 text-sm font-medium text-strong">
+                {flag.issue}
               </p>
-              <p className="mt-1 text-sm text-default">{flag.suggestion}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-6 rounded-lg border-2 border-accent-affirm-border bg-accent-affirm-soft/30 p-5 sm:p-6">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
-          Suggested rewrite
-        </p>
-        <p className="mt-2 whitespace-pre-line text-sm text-strong">
-          {example.rewrite}
-        </p>
-      </div>
+              <div className="mt-2 rounded-md bg-sunken p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
+                  Suggested
+                </p>
+                <p className="mt-1 text-sm text-default">{flag.suggestion}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </details>
     </article>
   );
 }

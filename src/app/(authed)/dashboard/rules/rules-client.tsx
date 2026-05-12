@@ -120,6 +120,9 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
   async function confirmDisable(standardId: string) {
     setBusyId(standardId);
     setPendingDisable(null);
+    // Clear any leftover error from a prior action so a successful
+    // disable doesn't leave a stale banner visible.
+    setError(null);
     try {
       const res = await fetch("/api/team-rules", {
         method: "POST",
@@ -168,8 +171,30 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
   return (
     <div className="flex flex-col gap-8">
       {error && (
-        <div className="rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-sm text-accent-concern-text">
-          {error}
+        <div className="flex items-start gap-3 rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-sm text-accent-concern-text">
+          <span className="flex-1">{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            aria-label="Dismiss error"
+            className="shrink-0 rounded p-0.5 text-accent-concern-text hover:bg-accent-concern-border/30"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
       )}
 
@@ -187,7 +212,7 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
 
       {customRules.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold">Custom team rules</h2>
+          <h2 className="mb-3 text-base font-semibold text-strong">Custom team rules</h2>
           <ul className="flex flex-col gap-2">
             {customRules.map((rule) => (
               <CustomRuleRow
@@ -204,7 +229,7 @@ export function TeamRulesClient({ categories, rules, isAdmin }: Props) {
 
       {categories.map((category) => (
         <section key={category.id}>
-          <h2 className="mb-3 text-sm font-semibold">{category.name}</h2>
+          <h2 className="mb-3 text-base font-semibold text-strong">{category.name}</h2>
           <ul className="flex flex-col gap-2">
             {category.standards.map((std) => {
               const rulesForThis = byStandardId(std.id);
@@ -369,10 +394,10 @@ function CustomRuleRow({
     severity?: string;
   };
   return (
-    <li className="flex items-start gap-3 rounded-md border border-blue-200 bg-blue-50/40 p-3 dark:border-blue-900 dark:bg-blue-950/30">
+    <li className="flex items-start gap-3 rounded-md border border-accent-info-border bg-accent-info-soft p-3">
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <code className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-xs text-blue-900 dark:bg-blue-900 dark:text-blue-100">
+          <code className="rounded bg-accent-info-border/30 px-1.5 py-0.5 font-mono text-xs text-accent-info-text">
             {rule.standardId}
           </code>
           <span className="text-xs font-medium">{fields.title}</span>
@@ -390,7 +415,7 @@ function CustomRuleRow({
             type="button"
             disabled={busy}
             onClick={() => setConfirming(true)}
-            className="rounded-md border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950"
+            className="rounded-md border border-accent-concern-border px-2 py-1 text-xs font-medium text-accent-concern-text hover:bg-accent-concern-soft disabled:opacity-50"
           >
             Remove
           </button>
@@ -423,7 +448,8 @@ function AddCustomRuleCard({
 }: {
   disabled: boolean;
   onCreated: (rule: TeamRule) => void;
-  onError: (msg: string) => void;
+  /** Passing null clears the parent banner; passing a string sets it. */
+  onError: (msg: string | null) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -437,6 +463,10 @@ function AddCustomRuleCard({
 
   async function submit() {
     setBusy(true);
+    // Clear any leftover top-level error from a prior action before
+    // we try again. Otherwise a successful submit can land while the
+    // previous failure's banner is still visible upstream.
+    onError(null);
     try {
       const res = await fetch("/api/team-rules", {
         method: "POST",
@@ -479,7 +509,7 @@ function AddCustomRuleCard({
 
   return (
     <section className="rounded-lg border border-line p-4">
-      <h2 className="mb-3 text-sm font-semibold">New custom rule</h2>
+      <h2 className="mb-3 text-base font-semibold text-strong">New custom rule</h2>
       <div className="flex flex-col gap-3">
         <label className="text-xs">
           <span className="mb-1 block text-default">

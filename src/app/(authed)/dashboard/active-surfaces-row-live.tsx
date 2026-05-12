@@ -80,7 +80,7 @@ export function ActiveSurfacesRowLive({
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold">Active surfaces</h2>
+      <h2 className="mb-3 text-base font-semibold text-strong">Active surfaces</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {surfaces.map((s) => (
           <SurfaceCard
@@ -119,7 +119,7 @@ function SurfaceCard({
           aria-hidden
           className={
             connected
-              ? "inline-block h-2 w-2 rounded-full bg-emerald-500"
+              ? "inline-block h-2 w-2 rounded-full bg-accent-affirm-border"
               : "inline-block h-2 w-2 rounded-full border border-line-strong"
           }
         />

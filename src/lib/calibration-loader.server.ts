@@ -1,13 +1,14 @@
 /**
  * Public calibration log loader.
  *
- * Phase C6 of the post-pivot rolling plan. Walks the
- * `reports/calibration/` directory and returns each weekly markdown
- * file's metadata + raw contents for the public `/calibration` page.
+ * Walks the `reports/calibration/` directory and returns each weekly
+ * markdown file's metadata + raw contents for the
+ * /accuracy#calibration-log section (the bare /calibration route
+ * 308s into the anchor).
  *
- * The Phase C2 generator emits one file per ISO week named
- * `YYYY-WW.md`. Files starting with `.` are filtered out so the
- * `.gitkeep` sentinel doesn't show up as an entry.
+ * Robert hand-maintains one file per ISO week named `YYYY-WW.md`.
+ * Files starting with `.` are filtered out so the `.gitkeep`
+ * sentinel doesn't show up as an entry.
  */
 
 import "server-only";

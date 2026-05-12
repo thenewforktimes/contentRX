@@ -1430,18 +1430,24 @@ def run_preprocess(
     results = preprocess(text, content_type, audience=audience)
     suppressed = get_suppressed_standards(results)
 
-    try:
-        from content_checker.models import Violation
-    except ImportError:
-        violations = get_preprocess_violations(results)
-        return violations
+    # `content_checker.models` is part of the same package; the prior
+    # try/except ImportError fallback was unreachable AND returned the
+    # wrong type (list[dict] instead of list[Violation]) — the caller
+    # in pipeline.py reads `.standard_id` as an attribute, which would
+    # crash on a dict. Import directly and let any real ImportError
+    # surface loudly.
+    from content_checker.models import Violation
 
+    # `Violation.rule` is the canonical rule text from the standards
+    # library; the pipeline's `_stamp_rule_text` pass populates it
+    # after construction. Leaving it empty here keeps the preprocessor
+    # decoupled from the standards loader.
     violations = []
     for r in results:
         if r.is_violation:
             violations.append(Violation(
                 standard_id=r.standard_id,
-                rule=r.issue or "",
+                rule="",
                 issue=r.issue or "",
                 suggestion=r.suggestion or "",
                 source="deterministic",

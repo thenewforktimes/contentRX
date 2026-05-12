@@ -29,6 +29,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlagForReview } from "@/components/flag-for-review";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import {
@@ -82,7 +83,6 @@ const SOURCE_LABEL: Record<string, string> = {
   action: "GitHub Action",
   lsp: "Editor (LSP)",
   mcp: "Claude / Cursor",
-  ditto: "Ditto",
 };
 
 // Surface pill order. Matches the surfaces-grid order on the
@@ -455,8 +455,14 @@ export function ChecksSearch({
 }
 
 function chipClass(active: boolean): string {
+  // Active filter chip uses the neutral-inverse pattern (dark fill in
+  // light mode, light fill in dark mode). bg-strong (the strongest
+  // text token, repurposed as fill) + text-canvas (the canvas token
+  // used as foreground) gives the inverse contrast without reaching
+  // for raw stone-900 shades. Same pattern as the subscription-panel
+  // interval toggle and the usage-panel ok bar.
   return active
-    ? "rounded-full bg-stone-900 px-3 py-1 font-medium text-white dark:bg-stone-100 dark:text-stone-900"
+    ? "rounded-full bg-strong px-3 py-1 font-medium text-canvas"
     : "rounded-full bg-sunken px-3 py-1 font-medium text-default transition hover:bg-hover disabled:opacity-50 disabled:hover:bg-sunken";
 }
 
@@ -550,13 +556,13 @@ function CustomRangeInputs({
           className="rounded-md border border-line-strong bg-canvas px-2 py-1 text-strong"
         />
       </label>
-      <button
+      <Button
         type="button"
+        size="sm"
         onClick={() => onApply(from, to)}
-        className="rounded-md bg-stone-900 px-3 py-1 font-medium text-white dark:bg-stone-100 dark:text-stone-900"
       >
         Apply range
-      </button>
+      </Button>
     </section>
   );
 }

@@ -93,13 +93,19 @@ export default function Home() {
       {/* How it works — same animated diagram, with a subtle dot-
           grid backdrop to break the otherwise-flat section flow. The
           radial-gradient is one of two repeating visual punctuation
-          marks on the page (the other is the agent section panel). */}
+          marks on the page (the other is the agent section panel).
+          The dot color is --decoration-dot (defined in globals.css)
+          — sits below the border contrast floor on purpose so the
+          dots read as texture, not as content the eye has to parse.
+          The 2026-05-11 audit bumped --color-line for card edges,
+          which dragged dot opacity up with it; --decoration-dot
+          lets the dots stay subtle while borders stay assertive. */}
       <section
         id="how-it-works"
         className="mt-20 rounded-3xl border border-line bg-raised/40 p-8 sm:p-12"
         style={{
           backgroundImage:
-            "radial-gradient(circle, var(--color-line) 1px, transparent 1px)",
+            "radial-gradient(circle, var(--decoration-dot) 1px, transparent 1px)",
           backgroundSize: "24px 24px",
         }}
       >

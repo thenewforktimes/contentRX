@@ -40,7 +40,7 @@ export function RulesDisclosurePanel({
     <details className="group rounded-lg border border-line p-5">
       <summary className="flex cursor-pointer items-center justify-between gap-3 list-none">
         <div>
-          <h2 className="text-sm font-semibold">
+          <h2 className="text-base font-semibold text-strong">
             What your team&apos;s rules check for
           </h2>
           <p className="mt-1 text-xs text-quiet">

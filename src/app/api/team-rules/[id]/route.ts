@@ -94,7 +94,11 @@ export async function PATCH(req: Request, context: RouteContext) {
   const fieldsParsed = schemaForAction.safeParse(parsed.data.rule_json);
   if (!fieldsParsed.success) {
     return NextResponse.json(
-      { error: "Invalid rule fields", issues: fieldsParsed.error.issues },
+      {
+        error:
+          "Some rule fields didn't validate. Check the details below and try again.",
+        issues: sanitizeZodIssues(fieldsParsed.error.issues),
+      },
       { status: 400 },
     );
   }
@@ -103,9 +107,15 @@ export async function PATCH(req: Request, context: RouteContext) {
     const pattern = (fieldsParsed.data as { pattern: string }).pattern;
     try {
       new RegExp(pattern);
-    } catch (err) {
+    } catch {
+      // Matches the sister POST route's message so both endpoints
+      // give the same guidance. Echoing the raw compile error
+      // leaked engine-internal regex grammar detail to the client;
+      // the trade is the engine-voice gate flagged "Invalid regex
+      // pattern" alone as not actionable enough — adding "Check
+      // the pattern syntax and try again." names the next step.
       return NextResponse.json(
-        { error: "Invalid regex pattern", detail: String(err) },
+        { error: "Invalid regex pattern. Check the pattern syntax and try again." },
         { status: 400 },
       );
     }

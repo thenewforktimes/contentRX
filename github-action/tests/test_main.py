@@ -34,22 +34,31 @@ def event_file(tmp_path: Path) -> Path:
     return p
 
 
-def _violation_response(verdict: str = "fail") -> dict:
+def _violation_response(verdict: str = "violation") -> dict:
+    """Schema 3.0.0 envelope — top-level fields, no `result` wrapper.
+
+    The CLI emits this exact shape via `json.dump(response, sys.stdout)`
+    of the /api/check envelope. The pre-audit version of this fixture
+    used the obsolete `{"result": {...}}` shape, which gave the tests
+    false confidence while production silently broke (see audit
+    2026-05-11 finding #2).
+    """
     return {
-        "result": {
-            "content_type": "button_cta",
-            "overall_verdict": verdict,
-            "violations": [
-                {
-                    "standard_id": "ACC-01",
-                    "issue": "Avoid 'click here' link text.",
-                    "suggestion": "Use descriptive link text.",
-                }
-            ]
-            if verdict == "fail"
-            else [],
-            "summary": "Accessibility issue.",
-        },
+        "schema_version": "3.0.0",
+        "verdict": verdict,
+        "content_type": "button_cta",
+        "violations": [
+            {
+                "issue": "Avoid 'click here' link text.",
+                "suggestion": "Use descriptive link text.",
+                "severity": "high",
+                "confidence": 0.9,
+                "category": "Accessibility",
+            }
+        ]
+        if verdict == "violation"
+        else [],
+        "warnings": [],
         "usage": {"used": 1, "quota": 25},
     }
 
@@ -144,21 +153,20 @@ def test_fail_on_review_fails_when_review_recommended(
     """`fail-on: review` fails on REVIEW-only results, not just violations."""
     def review_response(text: str, ct: str, fp: str, run_id: str | None = None) -> dict:
         return {
-            "result": {
-                "content_type": "button_cta",
-                "overall_verdict": "fail",
-                "verdict": "review_recommended",
-                "review_reason": "low_confidence",
-                "violations": [
-                    {
-                        "standard_id": "VT-01",
-                        "issue": "Possibly passive voice.",
-                        "suggestion": "Consider active voice.",
-                        "confidence": 0.5,
-                    }
-                ],
-                "summary": "Worth a second look.",
-            },
+            "schema_version": "3.0.0",
+            "verdict": "review_recommended",
+            "review_reason": "low_confidence",
+            "content_type": "button_cta",
+            "violations": [
+                {
+                    "issue": "Possibly passive voice.",
+                    "suggestion": "Consider active voice.",
+                    "severity": "low",
+                    "confidence": 0.5,
+                    "category": "Voice & tone",
+                }
+            ],
+            "warnings": [],
             "usage": {"used": 1, "quota": 25},
         }
 
@@ -195,15 +203,19 @@ def test_fail_on_violation_default_passes_on_review_only(
     """Default fail-on=violation does NOT fail on review_recommended only."""
     def review_response(text: str, ct: str, fp: str, run_id: str | None = None) -> dict:
         return {
-            "result": {
-                "content_type": "button_cta",
-                "overall_verdict": "fail",
-                "verdict": "review_recommended",
-                "violations": [
-                    {"standard_id": "VT-01", "issue": "?", "suggestion": "?", "confidence": 0.5}
-                ],
-                "summary": "",
-            },
+            "schema_version": "3.0.0",
+            "verdict": "review_recommended",
+            "content_type": "button_cta",
+            "violations": [
+                {
+                    "issue": "?",
+                    "suggestion": "?",
+                    "severity": "low",
+                    "confidence": 0.5,
+                    "category": "Voice & tone",
+                }
+            ],
+            "warnings": [],
             "usage": {"used": 1, "quota": 25},
         }
 

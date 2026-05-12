@@ -40,6 +40,7 @@ import { auth } from "@clerk/nextjs/server";
 import { inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 import { isContentRXAdmin } from "@/lib/graduation";
 import {
   detectSensitivePatterns,
@@ -55,8 +56,14 @@ const RequestSchema = z
     action: z.enum(["approve", "reject"]),
     candidate_ids: z.array(z.string().min(1).max(64)).min(1).max(200),
     approved_text: z.string().min(1).max(100_000).optional(),
-    moment: z.string().min(1).max(64).optional(),
-    content_type: z.string().min(1).max(64).optional(),
+    // Enum-validate the bucket axes against the engine taxonomy. The
+    // route is founder-auth so this isn't a security boundary, but a
+    // mistyped moment / content_type silently corrupts the
+    // suggestion_precedents bucket and feeds bad precedents back into
+    // the engine until manually deleted. Matches /api/check + /api/
+    // violations/override which already enum-validate the same fields.
+    moment: z.enum(MOMENTS).optional(),
+    content_type: z.enum(CONTENT_TYPES).optional(),
     standard_id: z.string().min(1).max(64).optional(),
   })
   .refine(

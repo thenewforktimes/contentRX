@@ -47,7 +47,7 @@ import { logSafeError } from "@/lib/safe-error-log";
 import { teamScope } from "@/lib/team-scope";
 import { sanitizeZodIssues } from "@/lib/zod-errors";
 import { getDb, schema } from "@/db";
-import { MOMENTS } from "@/lib/engine-taxonomy";
+import { CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 
 export async function OPTIONS(req: Request) {
   return corsPreflight(req);
@@ -56,8 +56,12 @@ export async function OPTIONS(req: Request) {
 const RequestSchema = z.object({
   // Plaintext that was checked. Stored on consent.
   text: z.string().min(1).max(100_000),
-  // Engine context at the moment of the flag.
-  content_type: z.string().min(1).max(64).optional(),
+  // Engine context at the moment of the flag — enum-validated against
+  // the taxonomy so customer-flag rows can be filtered/aggregated on
+  // the same values /api/check accepts. (Previously a free string,
+  // which let arbitrary substrings into the substrate column visible
+  // on /admin/customer-flags.)
+  content_type: z.enum(CONTENT_TYPES).optional(),
   moment: z.enum(MOMENTS).optional(),
   verdict: z.enum(["pass", "violation", "review_recommended"]).optional(),
   // Optional pointer to an originating violation when the flag came
@@ -153,6 +157,12 @@ export async function POST(req: Request) {
         flagReason: parsed.data.flag_reason,
         customerNote: parsed.data.customer_note ?? null,
         source: parsed.data.source,
+        // Audit trail: stamp consent at the write site instead of relying
+        // on the schema's defaultNow(). If the default is ever dropped
+        // the column would silently start storing NULL; an explicit value
+        // here makes the consent moment load-bearing on the route, not
+        // the schema.
+        consentRecordedAt: new Date(),
       })
       .returning({ id: schema.customerFlaggedReviews.id });
 

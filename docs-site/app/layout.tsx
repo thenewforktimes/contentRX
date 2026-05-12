@@ -3,9 +3,9 @@ import { Sidebar } from "@/components/sidebar";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ContentRX docs — content model spec",
+  title: "ContentRX docs — engineer's guide to the content evaluator",
   description:
-    "The 47 content standards, 13 moments, and 8 content types behind the ContentRX evaluator.",
+    "Setup guides, integration patterns, and methodology notes for ContentRX — the content-design evaluator that runs in your editor, your CI, and your design tool.",
 };
 
 export default function RootLayout({

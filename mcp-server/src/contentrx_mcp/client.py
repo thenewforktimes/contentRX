@@ -130,6 +130,7 @@ class ContentRXClient:
         resp = await self._client.post("/api/check", json=body)
         self._raise_for_typed_status(resp)
         data = resp.json()
+        self._check_schema_major(data)
         # Schema 2.0.0 — top-level shape. No `result` wrapper; violations,
         # verdict, review_reason, warnings live alongside schema_version
         # at the top of the response. See `src/lib/api-envelope.ts`.
@@ -145,11 +146,32 @@ class ContentRXClient:
         resp = await self._client.post("/api/classify", json={"text": text})
         self._raise_for_typed_status(resp)
         data = resp.json()
+        self._check_schema_major(data)
         result = data.get("result", {})
         return ClassifyResult(
             content_type=result.get("content_type", "unknown"),
             moment=result.get("moment", "unknown"),
         )
+
+    # Major version of the wire format this MCP server is built
+    # against. A 4.x bump with breaking changes will fail loudly here
+    # instead of silently parsing the new shape with old assumptions.
+    _SUPPORTED_SCHEMA_MAJOR = 3
+
+    def _check_schema_major(self, response: dict[str, Any]) -> None:
+        sv = response.get("schema_version")
+        if sv is None or not isinstance(sv, str) or "." not in sv:
+            return
+        try:
+            major = int(sv.split(".", 1)[0])
+        except ValueError:
+            return
+        if major != self._SUPPORTED_SCHEMA_MAJOR:
+            raise ContentRXError(
+                f"ContentRX returned schema_version={sv} but this MCP "
+                f"server was built for major {self._SUPPORTED_SCHEMA_MAJOR}. "
+                "Upgrade `contentrx-mcp` to a compatible release."
+            )
 
     # ------------------------------------------------------------------
     # Team rules (CRUD on /api/team-rules)

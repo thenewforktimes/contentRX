@@ -44,8 +44,6 @@ type RawLibrary = {
 
 const raw = library as RawLibrary;
 
-export const STANDARDS_LIBRARY_VERSION = raw.version;
-
 export const CATEGORIES: CategorySummary[] = raw.categories.map((cat) => ({
   id: cat.id,
   name: cat.name,
@@ -65,8 +63,6 @@ export const STANDARDS_BY_ID: Record<string, StandardSummary> = (() => {
   }
   return out;
 })();
-
-export const STANDARD_IDS: readonly string[] = Object.keys(STANDARDS_BY_ID);
 
 export function isKnownStandardId(id: string): boolean {
   return Object.prototype.hasOwnProperty.call(STANDARDS_BY_ID, id);

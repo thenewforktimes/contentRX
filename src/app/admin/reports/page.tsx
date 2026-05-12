@@ -1,15 +1,16 @@
 /**
  * `/admin/reports` — preview-before-publish gate.
  *
- * Phase B6 of the post-pivot rolling plan. Lists every artifact in
- * `reports/` (accuracy / calibration / quarterly) and shows when each
- * was last touched. The architecture's operational discipline calls
- * for the founder to gate publication; this surface is where that
- * gate lives.
+ * Lists every artifact in `reports/` (accuracy / calibration /
+ * quarterly) and shows when each was last touched. Robert maintains
+ * these artifacts manually as a solo founder — there is no
+ * scheduled generator. This surface is the founder's "what does the
+ * public surface look like right now?" review pane and the place
+ * where the publication-ready sentinel is toggled.
  *
- * The generators themselves ship in Phase C. Until they do, the page
- * shows empty states explaining what each subdirectory will hold
- * once the generators run.
+ * The stale threshold per type still drives the amber "stale" pill
+ * so the founder sees at-a-glance which artifacts have aged out of
+ * their voluntary cadence.
  *
  * Auth handled by `src/app/admin/layout.tsx`.
  */
@@ -31,26 +32,26 @@ const TYPE_INFO: Record<
   accuracy: {
     title: "Accuracy snapshot",
     description:
-      "Nightly. Per-standard kappa with 95% CI + system-level kappa. Consumed by the public /accuracy page. Numbers only — no narrative.",
-    cadence: "Nightly cron",
+      "Per-standard kappa with 95% CI + system-level kappa. Consumed by the public /accuracy page. Numbers only — no narrative. Hand-maintained.",
+    cadence: "Founder cadence",
     emptyHint:
-      "No accuracy/latest.json yet. Phase C ships reports/accuracy/ generator that emits this file.",
+      "No accuracy/latest.json on disk yet. Publish one by hand-editing reports/accuracy/latest.json — the public /accuracy page reads it as-is.",
   },
   calibration: {
     title: "Weekly calibration log",
     description:
-      "Monday 14:00 UTC. Kappa movement vs prior week, drift signals, override count by subtype, most active refinement-log entries.",
-    cadence: "Weekly cron",
+      "Kappa movement vs prior week, drift signals, override count by subtype, most active refinement-log entries. Hand-maintained.",
+    cadence: "Founder cadence",
     emptyHint:
-      "No weekly markdown yet. Phase C ships reports/calibration/ generator that emits 2026-WW.md files.",
+      "No weekly markdown on disk yet. Drop a 2026-WW.md into reports/calibration/ when you're ready to publish a week.",
   },
   quarterly: {
     title: "Quarterly accuracy report",
     description:
-      "First Monday of each quarter. Generated scaffold with numbers populated; the founder hand-edits the narrative before publishing.",
-    cadence: "Quarterly cron",
+      "Numbers + hand-edited narrative for the closing quarter. Hand-maintained.",
+    cadence: "Founder cadence",
     emptyHint:
-      "No quarterly scaffold yet. Phase C ships reports/quarterly/ generator that emits YYYY-Q.md files.",
+      "No quarterly scaffold on disk yet. Drop a YYYY-Q.md into reports/quarterly/ when you're ready to publish a quarter.",
   },
 };
 
@@ -72,9 +73,10 @@ export default function AdminReportsPage() {
         </h1>
         <p className="mt-1 text-sm text-quiet">
           Preview-before-publish gate for the public credibility surface.
-          Generated reports surface here before the docs site picks them up.
-          Stale entries (older than the cadence threshold) are flagged so
-          a missing generator run is visible at a glance.
+          Robert hand-maintains every artifact under <code>reports/</code> on
+          a solo-founder cadence — there is no scheduled generator. Stale
+          entries (older than the per-type threshold below) get an amber
+          pill so a slipped cadence is visible at a glance.
         </p>
       </header>
 

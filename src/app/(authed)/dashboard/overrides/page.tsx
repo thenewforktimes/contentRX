@@ -262,7 +262,7 @@ export default async function OverridesPage() {
         <>
           {pushbacks.length > 0 && (
             <section>
-              <h2 className="mb-1 text-sm font-semibold">Pushbacks</h2>
+              <h2 className="mb-1 text-base font-semibold text-strong">Pushbacks</h2>
               <p className="mb-3 text-xs text-default">
                 Clusters of 3+ overrides on the same rule inside a
                 single session (scan, CI run, dashboard session).
@@ -279,7 +279,7 @@ export default async function OverridesPage() {
                 {pushbacks.map((p) => (
                   <li
                     key={p.key}
-                    className="flex items-start justify-between gap-4 rounded-md border border-amber-300 bg-amber-50/60 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/40"
+                    className="flex items-start justify-between gap-4 rounded-md border border-accent-caution-border bg-accent-caution-soft p-3 text-sm"
                   >
                     <div>
                       <p className="text-xs font-medium">
@@ -305,7 +305,7 @@ export default async function OverridesPage() {
           )}
 
           <section>
-            <h2 className="mb-3 text-sm font-semibold">
+            <h2 className="mb-3 text-base font-semibold text-strong">
               Most-overridden categories
             </h2>
             <table className="w-full border-collapse text-sm">
@@ -336,7 +336,7 @@ export default async function OverridesPage() {
           </section>
 
           <section>
-            <h2 className="mb-3 text-sm font-semibold">By dismissal type</h2>
+            <h2 className="mb-3 text-base font-semibold text-strong">By dismissal type</h2>
             <ul className="flex flex-col gap-2">
               {byType.map((t) => (
                 <li
@@ -353,7 +353,7 @@ export default async function OverridesPage() {
           </section>
 
           <section>
-            <h2 className="mb-1 text-sm font-semibold">
+            <h2 className="mb-1 text-base font-semibold text-strong">
               How your team engaged
             </h2>
             <p className="mb-3 text-xs text-default">
@@ -423,7 +423,7 @@ function Stat({
 }) {
   const valueColor =
     tone === "warn"
-      ? "text-amber-700 dark:text-amber-300"
+      ? "text-accent-caution-text"
       : "text-strong";
   return (
     <div className="rounded-lg border border-line p-4">

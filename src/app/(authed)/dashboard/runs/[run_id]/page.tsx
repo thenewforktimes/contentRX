@@ -334,7 +334,7 @@ export default async function RunPage({ params }: RunParams) {
       </section>
 
       {truncated && (
-        <p className="rounded-md border border-amber-300 bg-amber-50/60 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+        <p className="rounded-md border border-accent-caution-border bg-accent-caution-soft p-3 text-xs text-accent-caution-text">
           Showing the first {rows.length.toLocaleString()} findings of{" "}
           {stats.total.toLocaleString()}. Earlier findings on the same files
           aren&apos;t listed below. Totals above remain accurate.
@@ -368,7 +368,7 @@ function Stat({
 }) {
   const valueClasses =
     tone === "high"
-      ? "text-rose-700 dark:text-rose-400"
+      ? "text-accent-concern-text"
       : tone === "muted"
         ? "text-default"
         : "text-strong";
@@ -518,12 +518,17 @@ function humanizeSeverityLabel(severity: string): string {
 }
 
 function SeverityDot({ severity }: { severity: string }) {
+  // Severity dots map to the design system's three "urgency" accents:
+  // concern (red) for high, caution (amber) for medium, info (blue)
+  // for low. All three solids pair with -on text and meet WCAG AAA;
+  // pre-token the dots used raw shades (rose/amber/stone) that didn't
+  // verify against the contrast checker.
   const tone =
     severity === "high"
-      ? "bg-rose-500"
+      ? "bg-accent-concern"
       : severity === "medium"
-        ? "bg-amber-500"
-        : "bg-stone-400";
+        ? "bg-accent-caution"
+        : "bg-accent-info";
   return (
     <span
       className={`mt-1.5 inline-block h-2 w-2 flex-none rounded-full ${tone}`}

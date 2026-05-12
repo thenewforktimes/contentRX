@@ -48,7 +48,7 @@ async def test_check_success():
         return httpx.Response(
             200,
             json={
-                "schema_version": "2.0.0",
+                "schema_version": "3.0.0",
                 "verdict": "violation",
                 "review_reason": None,
                 "violations": [
@@ -88,7 +88,7 @@ async def test_check_review_recommended_passes_review_reason():
         return httpx.Response(
             200,
             json={
-                "schema_version": "2.0.0",
+                "schema_version": "3.0.0",
                 "verdict": "review_recommended",
                 "review_reason": "situation_ambiguity",
                 "violations": [],
@@ -109,7 +109,7 @@ async def test_check_pass_verdict():
         return httpx.Response(
             200,
             json={
-                "schema_version": "2.0.0",
+                "schema_version": "3.0.0",
                 "verdict": "pass",
                 "review_reason": None,
                 "violations": [],

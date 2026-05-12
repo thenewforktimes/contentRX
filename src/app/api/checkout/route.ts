@@ -1,7 +1,13 @@
 /**
  * POST /api/checkout — create a Stripe Checkout Session for a paid plan.
  *
- * Body: { plan: "pro" | "team", interval: "monthly" | "annual", seats?: number }
+ * Body: {
+ *   plan: "pro" | "team",
+ *   interval: "monthly" | "annual",
+ *   seats?: number,
+ *   consentToken: string  // signed-nonce CARL consent token, minted at
+ *                         // /dashboard render and bound to the user
+ * }
  *
  * Team plans require seats >= TEAM_MIN_SEATS (1). Pro plans ignore seats
  * (quantity is always 1). The signed-in Clerk user is resolved to a
@@ -13,6 +19,15 @@
  * `subscriptions.seats`. Relying on `subscription_data.metadata` (not
  * session metadata) means the data follows the subscription forever,
  * including through Customer Portal plan changes.
+ *
+ * CARL compliance (ADR 2026-05-12). The consent claim is no longer a
+ * trust-the-body boolean; it's a signed, single-use, time-bound token
+ * minted server-side when /dashboard rendered SubscriptionPanel for
+ * this user. /api/checkout verifies the token before stamping consent
+ * — a forged body without a valid token returns 400 and never reaches
+ * Stripe. The verified nonce is persisted on `users.auto_renewal_consent_nonce`
+ * so a future dispute can audit-trail the consent moment back to a
+ * specific UI render. See src/lib/consent-token.ts for the protocol.
  */
 
 import { auth } from "@clerk/nextjs/server";
@@ -20,6 +35,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb, schema } from "@/db";
+import { verifyConsentToken } from "@/lib/consent-token";
 import { appUrl } from "@/lib/email";
 import { checkRateLimit } from "@/lib/ratelimit";
 import {
@@ -35,13 +51,14 @@ const RequestSchema = z.object({
   plan: z.enum(["pro", "team"]),
   interval: z.enum(["monthly", "annual"]),
   seats: z.number().int().min(1).max(500).optional(),
-  // California Automatic Renewal Law (CARL / AB 2863, 2025-07-01)
-  // requires affirmative consent to auto-renewal that is separate
-  // from agreement to the Terms of Service. The client sets this to
-  // `true` only after the customer ticks the dedicated checkbox in
-  // <SubscriptionPanel>. We refuse to create a Stripe Checkout
-  // Session without it.
-  autoRenewalConsented: z.literal(true),
+  // CARL (AB 2863, 2025-07-01) requires affirmative consent to
+  // auto-renewal that is separate from ToS agreement. The body now
+  // carries an HMAC-signed token (minted at /dashboard render for
+  // this user, single-use, 15 minute TTL) rather than a plain
+  // boolean. /api/checkout verifies the signature, time window,
+  // user-binding, action, and nonce-replay state before stamping
+  // consent. See src/lib/consent-token.ts.
+  consentToken: z.string().min(20).max(2048),
 });
 
 export async function POST(req: Request) {
@@ -103,13 +120,40 @@ export async function POST(req: Request) {
     );
   }
 
-  // CARL: stamp the auto-renewal consent timestamp before we create
-  // the Stripe Checkout Session. Idempotent — if the user re-runs
-  // checkout (cancelled, came back), the latest consent overwrites
-  // the prior one. Retention: keep the row for ≥3 years per CARL.
+  // CARL: verify the signed-nonce consent token BEFORE creating the
+  // Stripe Checkout Session. A failure here means the body claim
+  // wasn't bound to a /dashboard render for this user — refuse the
+  // request. Map structured failure reasons to customer-facing copy
+  // that tells the customer how to recover.
+  const consent = await verifyConsentToken({
+    token: parsed.data.consentToken,
+    expectedUserId: user.id,
+    expectedAction: "auto-renewal",
+  });
+  if (!consent.ok) {
+    const message =
+      consent.reason === "expired"
+        ? "Your session expired before checkout completed. Refresh the dashboard and try again."
+        : consent.reason === "replayed"
+          ? "This checkout attempt has already been processed. Refresh the dashboard to start a new one."
+          : "Couldn't verify your consent. Refresh the dashboard and try again.";
+    return NextResponse.json(
+      { error: message, reason: consent.reason },
+      { status: 400 },
+    );
+  }
+
+  // Stamp the consent moment AND the verified nonce. The nonce is a
+  // non-repudiation audit record — a future CARL dispute can be
+  // traced to a specific /dashboard render event for this user.
+  // Idempotent: a re-checkout (cancelled, came back) overwrites
+  // with the new render's nonce. Retention: ≥3 years per CARL.
   await db
     .update(schema.users)
-    .set({ autoRenewalConsentedAt: new Date() })
+    .set({
+      autoRenewalConsentedAt: new Date(),
+      autoRenewalConsentNonce: consent.nonce,
+    })
     .where(eq(schema.users.id, user.id));
 
   const stripe = getStripe();

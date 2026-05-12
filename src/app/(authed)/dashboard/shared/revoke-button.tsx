@@ -58,7 +58,7 @@ export function RevokeButton({ id }: { id: string }) {
           type="button"
           onClick={onConfirm}
           disabled={state === "submitting"}
-          className="rounded-md bg-accent-concern-solid px-2.5 py-1 font-medium text-accent-concern-on hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-accent-concern px-2.5 py-1 font-medium text-accent-concern-on hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {state === "submitting" ? "Removing…" : "Yes, remove"}
         </button>

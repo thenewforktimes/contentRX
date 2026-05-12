@@ -42,6 +42,16 @@ const PRICE_LABEL: Record<string, string> = {
 };
 
 export async function POST(req: Request) {
+  return handle(req);
+}
+
+// Vercel Cron issues GET requests against the path. Aliasing to POST
+// keeps a single implementation; without this export, the daily
+// Vercel cron 405s and no CARL reminder is ever sent (audit
+// 2026-05-11 round 2).
+export const GET = POST;
+
+async function handle(req: Request) {
   const authFail = requireCronAuth(req);
   if (authFail) return authFail;
 

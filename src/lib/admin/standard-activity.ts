@@ -13,7 +13,6 @@
  *   - customerFlagsOpen      customer_flagged_reviews where status='open',
  *                             joined to violations to get standard_id
  *   - suggestionCandidates   suggestion_candidates where status='pending'
- *                             AND share_upstream=true
  *
  * Refinements live in `taxonomy_refinement_log.md` but are keyed at the
  * proposal level (current_category), not standard level — they don't
@@ -130,16 +129,16 @@ export async function getAllStandardsActivity(): Promise<
     upsert(r.standardId).customerFlagsOpen = Number(r.count);
   }
 
-  // Suggestion candidates pending + share-upstream
+  // Suggestion candidates: every pending row across the table.
+  // The earlier `share_upstream` two-tier opt-in was retired by
+  // ADR 2026-05-11.
   const suggestionRows = await db
     .select({
       standardId: schema.suggestionCandidates.standardId,
       count: sql<number>`count(*)::int`,
     })
     .from(schema.suggestionCandidates)
-    .where(
-      sql`${schema.suggestionCandidates.status} = 'pending' AND ${schema.suggestionCandidates.shareUpstream} = true`,
-    )
+    .where(sql`${schema.suggestionCandidates.status} = 'pending'`)
     .groupBy(schema.suggestionCandidates.standardId);
   for (const r of suggestionRows) {
     if (!r.standardId) continue;

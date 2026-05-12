@@ -225,17 +225,17 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
           placeholder="Paste a button label, an error message, a product update email, a security advisory, or any long-form writing your team is shipping."
           className={`w-full rounded-md border bg-raised px-3 py-2 font-mono text-sm text-strong focus:outline-none focus:ring-1 ${
             overLimit
-              ? "border-rose-500 focus:border-rose-500 focus:ring-rose-500"
-              : "border-line-strong focus:border-stone-500 focus:ring-neutral-500"
+              ? "border-accent-concern-border focus:border-accent-concern-border focus:ring-accent-concern-border"
+              : "border-line-strong focus:ring-ring"
           }`}
         />
         <div className="flex items-center justify-between gap-3 text-xs">
           <span
             className={`tabular-nums ${
               overLimit
-                ? "text-rose-600 dark:text-rose-400"
+                ? "text-accent-concern-text"
                 : text.length > MAX_INPUT_CHARS * 0.9
-                  ? "text-amber-600 dark:text-amber-400"
+                  ? "text-accent-caution-text"
                   : "text-default"
             }`}
           >
@@ -251,7 +251,7 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
             )}
           </span>
           {overLimit ? (
-            <span className="text-right text-rose-600 dark:text-rose-400">
+            <span className="text-right text-accent-concern-text">
               Too long. Split into pieces ≤{" "}
               {MAX_INPUT_CHARS.toLocaleString()} chars, or use{" "}
               <Link href="/install" className="underline underline-offset-2">
@@ -678,8 +678,8 @@ function SuggestedRewriteBlock({
               "shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-opacity",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
               copyState === "error"
-                ? "bg-accent-caution-solid text-accent-caution-on"
-                : "bg-accent-affirm-solid text-accent-affirm-on hover:opacity-90",
+                ? "bg-accent-caution text-accent-caution-on"
+                : "bg-accent-affirm text-accent-affirm-on hover:opacity-90",
             ].join(" ")}
           >
             {copyLabel}
@@ -713,6 +713,11 @@ function SuggestedRewriteBlock({
  */
 function RewriteDiffView({ before, after }: { before: string; after: string }) {
   const tokens = wordDiff(before, after);
+  // Diff highlighting: removed words use the concern-tone soft+text
+  // pairing (red family by design); added words use affirm-tone (green
+  // family). Tokens not raw shades, so the diff tracks palette updates
+  // — including the May-11 grass-green flip — automatically and stays
+  // AAA-verified in both modes.
   return (
     <pre className="whitespace-pre-wrap break-words font-sans text-sm text-strong">
       {tokens.map((t, i) => {
@@ -721,7 +726,7 @@ function RewriteDiffView({ before, after }: { before: string; after: string }) {
           return (
             <span
               key={i}
-              className="bg-red-100 text-red-900 line-through dark:bg-red-950/60 dark:text-red-300"
+              className="bg-accent-concern-soft text-accent-concern-text line-through"
             >
               {t.text}
             </span>
@@ -730,7 +735,7 @@ function RewriteDiffView({ before, after }: { before: string; after: string }) {
         return (
           <span
             key={i}
-            className="bg-green-100 text-green-900 dark:bg-green-950/60 dark:text-green-300"
+            className="bg-accent-affirm-soft text-accent-affirm-text"
           >
             {t.text}
           </span>
@@ -1113,14 +1118,14 @@ function DiffSpan({
   }
   if (token.kind === "removed" && side === "before") {
     return (
-      <span className="bg-red-100 text-red-900 line-through dark:bg-red-950/60 dark:text-red-300">
+      <span className="bg-accent-concern-soft text-accent-concern-text line-through">
         {token.text}
       </span>
     );
   }
   if (token.kind === "added" && side === "after") {
     return (
-      <span className="bg-green-100 text-green-900 dark:bg-green-950/60 dark:text-green-300">
+      <span className="bg-accent-affirm-soft text-accent-affirm-text">
         {token.text}
       </span>
     );
@@ -1289,7 +1294,7 @@ function FindingCard({
       )}
 
       {savedState?.verdictRecorded && (
-        <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-300">
+        <p className="mt-3 text-xs text-accent-affirm-text">
           Recorded. The dismissal is on your dashboard.
         </p>
       )}
@@ -1369,8 +1374,9 @@ function CopySuggestionButton({
       // Block 3a (calibration plan): also fire-and-forget a POST so
       // the substrate gets a customer_copy row. Failure is silent —
       // the clipboard already succeeded; substrate accounting is
-      // best-effort. The row is always share_upstream=false (passive
-      // signal, no opt-in), so it stays team-private.
+      // best-effort. The row carries the engine's own suggestion text,
+      // not customer input — customer-input substrate flows through
+      // Flag-for-Review per ADR 2026-05-11.
       void fetch("/api/calibration/copy-event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1404,9 +1410,9 @@ function CopySuggestionButton({
       className={[
         "shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
         state === "copied"
-          ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+          ? "border-accent-affirm-border bg-accent-affirm-soft text-accent-affirm-text"
           : state === "error"
-            ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+            ? "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text"
             : "border-line-strong bg-raised text-default hover:bg-hover",
       ].join(" ")}
     >

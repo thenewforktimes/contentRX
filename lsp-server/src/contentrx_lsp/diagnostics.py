@@ -47,9 +47,6 @@ class LspDiagnostic:
     data: dict[str, Any]  # carries the raw violation for code actions
 
 
-_STANDARDS_URL_BASE = "https://docs.contentrx.io/model/standards"
-
-
 def _build_diagnostic_message(
     *, issue: str, suggestion: str, original: str
 ) -> str:

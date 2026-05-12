@@ -27,6 +27,7 @@ import { unstable_cache } from "next/cache";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Pill } from "@/components/ui/pill";
 import { tags } from "@/lib/cache-tags";
+import { mintConsentToken } from "@/lib/consent-token";
 import { asDate } from "@/lib/date-rehydrate";
 import { getDb, schema } from "@/db";
 import { type Plan } from "@/lib/quotas";
@@ -85,6 +86,17 @@ export default async function SettingsPage() {
         }
         subscriptionStatus={activeSub?.status ?? null}
         cancelAtPeriodEnd={activeSub?.cancelAtPeriodEnd ?? false}
+        // CARL consent token — same posture as /dashboard. Only free
+        // users see the upgrade checkbox, so non-free users get null.
+        // See src/lib/consent-token.ts.
+        consentToken={
+          plan === "free"
+            ? mintConsentToken({
+                userId: user.id,
+                action: "auto-renewal",
+              })
+            : null
+        }
       />
 
       <ApiKeyPanel
@@ -103,7 +115,7 @@ function AccountPanel({ email }: { email: string }) {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Account</h2>
+        <h2 className="text-base font-semibold text-strong">Account</h2>
         <span className="text-xs text-quiet">
           Managed by Clerk
         </span>
@@ -123,7 +135,7 @@ function PrivacyPanel({ email }: { email: string }) {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Privacy</h2>
+        <h2 className="text-base font-semibold text-strong">Privacy</h2>
         <span className="text-xs text-quiet">
           See <Link href="/privacy" className="underline underline-offset-2">/privacy</Link>
         </span>

@@ -1,18 +1,20 @@
 /**
  * Taxonomy constants mirrored from the Python engine.
  *
- * The Python engine (python/content_checker/) embeds these in the LLM
+ * The Python engine (src/content_checker/) embeds these in the LLM
  * system prompt. If a caller supplies a value outside these sets, the
  * engine will template arbitrary text into the prompt — a clean
  * prompt-injection vector. Zod-validate against these lists at every
  * public entry point.
  *
- * Source:
- *   content types → python/content_checker/standards/standards_library.json
- *   moments        → python/content_checker/moments.py :: MOMENT_TAXONOMY
+ * Source of truth:
+ *   content types → src/content_checker/standards/private/standards_library.json :: content_types
+ *   moments       → src/content_checker/moments.py :: MOMENT_TAXONOMY
+ *   audiences     → src/content_checker/audience.py :: Audience enum
  *
- * Sync: if the Python side gains or renames an entry, update this file.
- * A lightweight CI check could assert these match; not wired in yet.
+ * Drift between this file and the Python sources is caught by
+ * `tests/test_engine_taxonomy_ts_mirror.py` (wired into
+ * `.github/workflows/parity.yml` as the fourth parity gate).
  */
 
 export const CONTENT_TYPES = [
@@ -46,5 +48,5 @@ export const MOMENTS = [
 
 export type Moment = (typeof MOMENTS)[number];
 
-export const AUDIENCES = ["product_ui", "general"] as const;
+export const AUDIENCES = ["product_ui", "general", "native_mobile"] as const;
 export type Audience = (typeof AUDIENCES)[number];

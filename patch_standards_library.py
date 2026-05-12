@@ -1,5 +1,13 @@
 """Surgical patch for standards_library.json.
 
+ARCHIVED — this is a one-shot patch script from the v4.5.1 cutover. The
+GRM-06 standard and CLR-01 global note it adds have long since been
+folded into the canonical standards library. Re-running it on the current
+library is a no-op (the "already exists" guards short-circuit), but
+that's coincidence, not the intended use. Kept on disk as a reference
+for the patch pattern; when the library next needs a similar surgical
+addition, copy this file, swap in the new entry, run, delete.
+
 Adds:
   1. GRM-06 standard entry (compound modifier hyphenation)
   2. CLR-01 content_type_notes._global (jargon/non-standard/vacuous guidance)

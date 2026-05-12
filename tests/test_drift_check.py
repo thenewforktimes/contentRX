@@ -447,11 +447,13 @@ class TestDriftReportAnonymization:
 
 
 class TestDriftReportTopLevelKappaFields:
-    """Schema contract with `reports/accuracy/generate.py`. The
-    accuracy generator's `_drift_to_kappa` reads `kappa`,
-    `kappa_ci_low`, `kappa_ci_high`, `sample_size` from the top
-    level — drift_check.py mirrors them out of `kappa_summary` so
-    that consumer doesn't have to descend into the summary dict.
+    """Schema contract with the hand-maintained
+    `reports/accuracy/latest.json`. Robert merges drift kappa from
+    the drift_check output into that snapshot by hand; the merge
+    expects `kappa`, `kappa_ci_low`, `kappa_ci_high`, `sample_size`
+    at the top level — drift_check.py mirrors them out of
+    `kappa_summary` so Robert doesn't have to descend into the
+    summary dict during a manual merge.
     """
 
     def test_top_level_kappa_mirrors_summary(self):
@@ -479,9 +481,9 @@ class TestDriftReportTopLevelKappaFields:
         responses = [{"case_id": "1", "human_verdict": "pass"}]
         report = dc.compute_drift_report(panel, responses)
         # Even on a 1-case run where κ is undefined, the top-level
-        # fields exist (None when κ is undefined). The accuracy
-        # generator's `_drift_to_kappa` falls back to "pending"
-        # when the value is non-numeric.
+        # fields exist (None when κ is undefined). The hand-merge
+        # workflow into reports/accuracy/latest.json treats a
+        # non-numeric value as "pending."
         assert "kappa" in report
         assert "kappa_ci_low" in report
         assert "kappa_ci_high" in report

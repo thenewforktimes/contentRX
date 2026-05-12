@@ -1,22 +1,23 @@
 /**
  * Idempotency tests for the Stripe webhook handler.
  *
- * Audit 2026-04-26 P0: the dedupe path Stripe uses (`SET NX` on
- * event.id with 24h TTL) had zero regression coverage. This suite
- * exercises the replay scenarios — first delivery processes the
- * event, second delivery short-circuits with deduplicated:true,
- * Redis outage falls through.
+ * Audit 2026-05-11: the previous top-level event-id dedupe was racy —
+ * a mid-handler crash would set the dedupe key and silently drop the
+ * subsequent retry. The handler now relies on:
+ *
+ *   - DB writes that are upserts / last-write-wins (idempotent under
+ *     replay)
+ *   - Per-action dedupes inside `sendEmail` (`dedupeKey:` arg) and
+ *     `trackUpgradeOnce` (its own Redis `SET NX`)
+ *
+ * This suite locks both properties: a replay re-runs the DB writes
+ * without breaking anything, and the side effects only fire on the
+ * first delivery.
  *
  * Mocking strategy:
  *   - getDb() → pglite harness (real Postgres semantics)
- *   - getRedis() → in-process Redis stub
+ *   - getRedis() → in-process Redis stub (used by sendEmail + analytics)
  *   - stripe.webhooks.constructEventAsync → returns the canned event
- *
- * What's NOT covered here (out of scope — separate concerns):
- *   - per-handler side effects (handleCheckoutCompleted etc.); those
- *     are unit-tested separately or rely on Drizzle for correctness.
- *   - webhook signature validity; mocked.
- *   - Stripe SDK shape changes; mocked.
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -44,8 +45,6 @@ vi.mock("@/lib/redis", () => ({
   },
 }));
 
-// Track side-effect calls so we can assert "fires once on first
-// delivery, not on replay".
 const sentEmails: Array<{ to: string; subject: string }> = [];
 const trackedEvents: Array<{ name: string; props?: object }> = [];
 
@@ -55,10 +54,24 @@ vi.mock("@/lib/email", async () => {
   );
   return {
     ...actual,
-    sendEmail: vi.fn(async (args: { to: string; subject: string }) => {
-      sentEmails.push({ to: args.to, subject: args.subject });
-      return { ok: true as const };
-    }),
+    sendEmail: vi.fn(
+      async (args: { to: string; subject: string; dedupeKey?: string }) => {
+        // Replicate the dedupe behaviour of the real sendEmail so the
+        // per-action dedupe path is exercised in tests too.
+        if (args.dedupeKey && redisRef.current) {
+          const ok = await redisRef.current.set(
+            `email:${args.dedupeKey}`,
+            "1",
+            { nx: true, ex: 60 },
+          );
+          if (ok === null) {
+            return { ok: true as const, deduplicated: true };
+          }
+        }
+        sentEmails.push({ to: args.to, subject: args.subject });
+        return { ok: true as const };
+      },
+    ),
   };
 });
 
@@ -68,17 +81,16 @@ vi.mock("@/lib/analytics", () => ({
   }),
 }));
 
-// Email JSX templates would force vitest to enable JSX transform.
-// The handler only passes `react: <Email .../>` to sendEmail (which
-// is already mocked), so a stub component-shape is sufficient.
 vi.mock("@/emails/subscription-confirmation", () => ({
   SubscriptionConfirmationEmail: () => null,
+}));
+vi.mock("@/emails/payment-failed", () => ({
+  PaymentFailedEmail: () => null,
 }));
 vi.mock("@/emails/welcome", () => ({
   WelcomeEmail: () => null,
 }));
 
-// Stripe SDK mock — canned events keyed by ID.
 const stripeEvents = new Map<string, unknown>();
 vi.mock("@/lib/stripe", async () => {
   const actual = await vi.importActual<typeof import("@/lib/stripe")>(
@@ -89,8 +101,6 @@ vi.mock("@/lib/stripe", async () => {
     getStripe: () => ({
       webhooks: {
         constructEventAsync: vi.fn(async () => {
-          // Return whichever event was queued for this delivery.
-          // Tests call `queueEvent(...)` before each POST.
           const next = stripeEvents.get("next");
           if (!next) {
             throw new Error("stripe stub: no event queued");
@@ -152,7 +162,7 @@ describe("Stripe webhook idempotency", () => {
     expect(res.status).toBe(400);
   });
 
-  it("processes the first delivery and writes the dedupe key", async () => {
+  it("processes the first delivery and ACKs with 200", async () => {
     queueEvent({
       id: "evt_first",
       type: "invoice.payment_failed",
@@ -162,13 +172,16 @@ describe("Stripe webhook idempotency", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.received).toBe(true);
-    expect(body.deduplicated).toBeUndefined();
-    // The dedupe key was set with the event.id prefix.
-    expect(redisRef.current!.store.has("stripe_event:evt_first")).toBe(true);
+    // No top-level dedupe key is written — idempotency is the
+    // handler's responsibility, not the route's.
+    expect(redisRef.current!.store.has("stripe_event:evt_first")).toBe(false);
   });
 
-  it("short-circuits a replay of the same event.id with deduplicated:true", async () => {
-    // First delivery
+  it("ACKs replays with 200; DB writes re-run idempotently", async () => {
+    // Same event delivered twice — Stripe replay semantics. Both calls
+    // must succeed because the DB writes are upserts. The route no
+    // longer short-circuits with `deduplicated: true`; the per-handler
+    // side effects own that responsibility.
     queueEvent({
       id: "evt_replay",
       type: "invoice.payment_failed",
@@ -177,9 +190,8 @@ describe("Stripe webhook idempotency", () => {
     const first = await POST(makeReq());
     expect(first.status).toBe(200);
     const firstBody = await first.json();
-    expect(firstBody.deduplicated).toBeUndefined();
+    expect(firstBody.received).toBe(true);
 
-    // Second delivery — same event.id
     queueEvent({
       id: "evt_replay",
       type: "invoice.payment_failed",
@@ -189,48 +201,41 @@ describe("Stripe webhook idempotency", () => {
     expect(second.status).toBe(200);
     const secondBody = await second.json();
     expect(secondBody.received).toBe(true);
-    expect(secondBody.deduplicated).toBe(true);
   });
 
-  it("isolates dedupe keys across distinct event.ids", async () => {
+  it("does not pre-claim a dedupe key (so retry after handler crash still works)", async () => {
+    // Regression guard for the 2026-05-11 audit. Earlier code did
+    // SET NX `stripe_event:<id>` BEFORE the handler; a crash mid-handler
+    // returned 500 → Stripe retried → retry saw the key → returned
+    // `deduplicated: true` without re-running. Confirm the key never
+    // gets written on a normal happy path.
+    queueEvent({
+      id: "evt_no_key",
+      type: "invoice.payment_failed",
+      data: { object: { customer: "cus_x" } },
+    });
+    await POST(makeReq());
+    // No `stripe_event:*` key should ever land in Redis.
+    for (const key of redisRef.current!.store.keys()) {
+      expect(key.startsWith("stripe_event:")).toBe(false);
+    }
+  });
+
+  it("isolated event.ids both ACK 200", async () => {
     queueEvent({
       id: "evt_a",
       type: "invoice.payment_failed",
       data: { object: { customer: "cus_x" } },
     });
-    await POST(makeReq());
+    const a = await POST(makeReq());
+    expect(a.status).toBe(200);
+
     queueEvent({
       id: "evt_b",
       type: "invoice.payment_failed",
       data: { object: { customer: "cus_x" } },
     });
-    const res = await POST(makeReq());
-    const body = await res.json();
-    // Distinct event.id → no dedupe → both processed.
-    expect(body.deduplicated).toBeUndefined();
-    expect(redisRef.current!.store.has("stripe_event:evt_a")).toBe(true);
-    expect(redisRef.current!.store.has("stripe_event:evt_b")).toBe(true);
-  });
-
-  it("falls through and processes the event when Redis throws", async () => {
-    // Prod policy: Redis outage shouldn't drop a valid webhook;
-    // double-applying is safer than missing one. The handler logs
-    // and proceeds.
-    redisRef.current!.failNext();
-    queueEvent({
-      id: "evt_redis_outage",
-      type: "invoice.payment_failed",
-      data: { object: { customer: "cus_x" } },
-    });
-    const res = await POST(makeReq());
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.received).toBe(true);
-    expect(body.deduplicated).toBeUndefined();
-    // The dedupe key was never set (the failure short-circuited it),
-    // so a literal replay would re-process. Acceptable trade-off.
-    expect(redisRef.current!.store.has("stripe_event:evt_redis_outage")).toBe(
-      false,
-    );
+    const b = await POST(makeReq());
+    expect(b.status).toBe(200);
   });
 });

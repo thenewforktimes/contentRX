@@ -109,7 +109,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">API key</h2>
+        <h2 className="text-base font-semibold text-strong">API key</h2>
         <span className="text-xs text-quiet">
           Used by the Figma plugin, CLI, and GitHub Action
         </span>

@@ -2,7 +2,7 @@
  * /dashboard — account overview. Server-rendered so we can hit the DB
  * inline without a round-trip to a separate API endpoint.
  *
- * Section order (Apr 2026 IA refresh per design critique):
+ * Section order (last reshuffle: 2026-04 IA refresh, design critique cycle):
  *   1. Header (email + plan pill)
  *   2. Try a check (inline ExplainClient, the hero)
  *   3. Usage this month (amber at ≥80%)
@@ -31,6 +31,7 @@ import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Pill } from "@/components/ui/pill";
 import { tags } from "@/lib/cache-tags";
+import { mintConsentToken } from "@/lib/consent-token";
 import { asDate, rehydrateMappedDates } from "@/lib/date-rehydrate";
 import { getDb, schema } from "@/db";
 import {
@@ -170,6 +171,19 @@ export default async function DashboardPage() {
           }
           subscriptionStatus={activeSub?.status ?? null}
           cancelAtPeriodEnd={activeSub?.cancelAtPeriodEnd ?? false}
+          // CARL consent token. Minted server-side on every /dashboard
+          // render for free users (the only ones who see the upgrade
+          // checkbox). Bound to user.id with a 15-minute TTL; single-use.
+          // /api/checkout verifies it before stamping consent — the
+          // body's "I agree" claim is no longer trusted on its own.
+          consentToken={
+            plan === "free"
+              ? mintConsentToken({
+                  userId: user.id,
+                  action: "auto-renewal",
+                })
+              : null
+          }
         />
 
         <ApiKeyPanel
@@ -193,9 +207,16 @@ export default async function DashboardPage() {
 
 function TryACheckPanel({ plan }: { plan: Plan }) {
   return (
+    // ExplainClient internally lays its sections out with space-y-6
+    // (24px). The trailing privacy footnote previously sat at `mt-3`
+    // (12px), which read smooshed against the inner rhythm — the
+    // eye landed on a narrower-than-expected gap and read the
+    // privacy line as crammed in. Bumped to mt-6 + a divider so the
+    // privacy line reads as a deliberate footer outside the work
+    // surface, not glued to the result block above it.
     <section className="rounded-lg border border-line p-5">
       <ExplainClient plan={plan} />
-      <p className="mt-3 text-xs text-quiet">
+      <p className="mt-6 border-t border-line pt-5 text-xs text-quiet">
         Your checks are private until you flag them for review.
         ContentRX does not sell your checks, track you with cookies,
         or share your usage data with brokers.{" "}
@@ -283,7 +304,7 @@ function InsightsPanel({
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">This week</h2>
+        <h2 className="text-base font-semibold text-strong">This week</h2>
         <span className="text-xs text-default">Last 7 days</span>
       </header>
       {!hasActivity ? (
@@ -402,7 +423,7 @@ function MembersLink() {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Members</h2>
+        <h2 className="text-base font-semibold text-strong">Members</h2>
       </header>
       <p className="mb-3 text-sm text-default">
         Invite teammates by email. They&apos;ll share the team&apos;s
@@ -422,7 +443,7 @@ function OverridesLink() {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Rule patterns</h2>
+        <h2 className="text-base font-semibold text-strong">Rule patterns</h2>
         <span className="text-xs text-default">Last 30 days</span>
       </header>
       <p className="mb-3 text-sm text-default">
@@ -443,7 +464,7 @@ function TeamRulesLink() {
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Team rules</h2>
+        <h2 className="text-base font-semibold text-strong">Team rules</h2>
       </header>
       <p className="mb-3 text-sm text-default">
         Disable a built-in rule or add your own. Changes apply to every

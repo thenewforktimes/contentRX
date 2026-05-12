@@ -63,9 +63,9 @@ export function FirstCallBanner({ source }: { source: SurfaceKey | null }) {
   return (
     <section
       role="status"
-      className="flex items-start justify-between gap-3 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm dark:border-emerald-800 dark:bg-emerald-950"
+      className="flex items-start justify-between gap-3 rounded-lg border border-accent-affirm-border bg-accent-affirm-soft px-4 py-3 text-sm"
     >
-      <p className="text-emerald-900 dark:text-emerald-200">
+      <p className="text-accent-affirm-text">
         <span aria-hidden className="mr-1.5 font-semibold">
           ✓
         </span>
@@ -76,7 +76,7 @@ export function FirstCallBanner({ source }: { source: SurfaceKey | null }) {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss"
-        className="shrink-0 rounded-md px-2 py-0.5 text-xs text-emerald-800 hover:bg-emerald-100 dark:text-emerald-300 dark:hover:bg-emerald-900"
+        className="shrink-0 rounded-md px-2 py-0.5 text-xs text-accent-affirm-text hover:bg-accent-affirm-border/20"
       >
         Dismiss
       </button>

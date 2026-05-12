@@ -86,6 +86,7 @@ describe("validateRequiredEnvAtStartup", () => {
       RESEND_API_KEY: "x",
       EMAIL_FROM: "hello@example.com",
       NEXT_PUBLIC_APP_URL: "https://example.com",
+      CONSENT_HMAC_SECRET: "x",
       UPSTASH_REDIS_REST_URL: "https://x",
       UPSTASH_REDIS_REST_TOKEN: "x",
       KV_REST_API_URL: "",

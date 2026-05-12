@@ -140,9 +140,14 @@ export async function POST(req: Request) {
     // call invalidates the team-owner usage row that loadCurrentUsage
     // reads (matches the team-pooling fix in /api/check, PR #403).
     revalidateDashboard({ userId: teamScope(auth) });
+    // ADR 2026-04-25: strip `standard_id` from the public response.
+    // The engine returns it under `result` for substrate consumers,
+    // but every user-facing surface — LSP, plugin, MCP, CLI, web
+    // dashboard — must not see it. We drop the field here rather
+    // than at /api/evaluate so internal callers retain access.
     return json(
       envelope({
-        result: response.result,
+        result: { rewritten: response.result.rewritten },
         latency_ms: response.latency_ms,
         tokens: response.tokens,
         usage: {

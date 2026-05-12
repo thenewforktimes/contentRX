@@ -15,9 +15,11 @@
  */
 
 import { revalidatePath } from "next/cache";
+import { auth } from "@clerk/nextjs/server";
 import { Button } from "@/components/ui/button";
 import { getDb, schema } from "@/db";
 import { clearCostPause, dailyCostRollup } from "@/lib/cost-monitor";
+import { isContentRXAdmin } from "@/lib/graduation";
 
 export const metadata = {
   title: "Costs · ContentRX admin",
@@ -57,6 +59,16 @@ async function loadAllUsers(): Promise<UserSummary[]> {
 
 async function resumeUser(formData: FormData) {
   "use server";
+  // Defense-in-depth: server-action boundary auth re-check.
+  // The /admin layout enforces founder-only on render, but Server
+  // Actions are independently POSTable RPCs. Resuming a cost-paused
+  // user un-pauses /api/check for them, removing a billing
+  // safeguard — must be founder-only at this boundary too. See
+  // admin/reports/actions.ts:74-80 for the canonical pattern.
+  const { userId: clerkId } = await auth();
+  if (!clerkId) return;
+  if (!isContentRXAdmin(clerkId)) return;
+
   const userId = formData.get("userId");
   if (typeof userId !== "string" || userId.length === 0) {
     return;
@@ -99,8 +111,8 @@ export default async function AdminCostsPage() {
       </header>
 
       {pausedUsers.length > 0 && (
-        <section className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
-          <h2 className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+        <section className="rounded-lg border border-accent-caution-border bg-accent-caution-soft p-4">
+          <h2 className="text-sm font-semibold text-accent-caution-text">
             {pausedUsers.length} user
             {pausedUsers.length === 1 ? "" : "s"} paused
           </h2>

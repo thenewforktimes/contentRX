@@ -122,7 +122,9 @@ describe("sendEmail dedupe (Phase 3 idempotency)", () => {
 
   it("does not block the email send if Redis fails to set the dedupe key", async () => {
     redisRef.current!.failNext(new Error("simulated upstash outage"));
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    // logSafeError writes via console.error (and forwards to Sentry, no-op
+    // in tests). We spy on console.error to confirm the outage was logged.
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const result = await sendEmail({
       to: "abc@test.local",
@@ -133,6 +135,6 @@ describe("sendEmail dedupe (Phase 3 idempotency)", () => {
 
     expect(result.ok).toBe(true);
     expect(result.deduplicated).toBeUndefined();
-    expect(consoleWarn).toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalled();
   });
 });

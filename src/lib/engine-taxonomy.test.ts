@@ -49,7 +49,17 @@ describe("engine-taxonomy", () => {
     );
   });
 
-  it("AUDIENCES is the expected 2-entry set", () => {
-    expect([...AUDIENCES].sort()).toEqual(["general", "product_ui"]);
+  it("AUDIENCES is the expected 3-entry set", () => {
+    // `native_mobile` landed in PR #338 (Python `Audience` enum)
+    // with dedicated engine logic (ACC-08 passes unconditionally
+    // when audience=native_mobile). The TS list was missing it
+    // through the entire beta-prep window — caught + fixed in the
+    // 2026-05-11 audit follow-up alongside the new
+    // tests/test_engine_taxonomy_ts_mirror.py parity gate.
+    expect([...AUDIENCES].sort()).toEqual([
+      "general",
+      "native_mobile",
+      "product_ui",
+    ]);
   });
 });

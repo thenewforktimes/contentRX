@@ -2,13 +2,13 @@ export const metadata = {
   title: "Next.js + shadcn/ui buttons · ContentRX guides",
 };
 
-# Catching CTA violations in a Next.js + shadcn/ui app
+# Catching CTA findings in a Next.js + shadcn/ui app
 
-Buttons are the single most common place content-design standards
-get broken. They're short, they pass lint, they compile fine, they
-just don't read well. "Click here" ships. "Submit" ships. "Learn
-more" ships three times on the same page pointing at three different
-places.
+Buttons are the single most common place content-design quality
+breaks down. They're short, they pass lint, they compile fine,
+they just don't read well. "Click here" ships. "Submit" ships.
+"Learn more" ships three times on the same page pointing at three
+different places.
 
 This guide shows what ContentRX catches on a typical shadcn/ui
 `<Button>` in a Next.js App Router app, using real code you'd find
@@ -24,7 +24,7 @@ Assumed stack:
 
 Two ways to wire up ContentRX for this stack:
 
-**Option 1 — catch violations in PRs** via the GitHub Action. One
+**Option 1 — catch findings in PRs** via the GitHub Action. One
 workflow file, reports on every PR touching `.tsx` files:
 
 ```yaml
@@ -47,7 +47,7 @@ jobs:
           api-key: ${{ secrets.CONTENTRX_API_KEY }}
 ```
 
-**Option 2 — catch violations at write-time** via the MCP server in
+**Option 2 — catch findings at write-time** via the MCP server in
 Claude Code or Cursor. Claude consults ContentRX before writing
 button labels:
 
@@ -80,27 +80,27 @@ export function Hero() {
 }
 ```
 
-ContentRX flags these components against the `decision_point`
-moment and raises three violations:
+ContentRX evaluates these CTAs in a decision-point context and raises
+three findings:
 
-### Violation 1 — `<Button>Click here to learn more</Button>`
+### Finding 1 — `<Button>Click here to learn more</Button>`
 
-- **[ACC-01](/spec/standards/ACC-01)** `[block]` — "Click here" is
-  explicitly called out: _"Never use 'click here' or 'learn more' as
-  standalone links."_ Both phrases appear here, in the same label.
-- **[ACT-02](/spec/standards/ACT-02)** `[warn]` — "Learn more" is
-  the canonical vague CTA. The rule prefers specific verbs like
-  "save," "send," "export." Apply the same pattern: **"Read the
-  case studies"** (specific object) or **"See pricing"** (specific
+- **Accessibility** `[block]` — link and CTA text needs to describe
+  the destination on its own. "Click here" and "learn more" are the
+  two phrases the voice guide singles out as never-acceptable
+  standalone link text, and both appear here in the same label.
+- **Voice & tone** `[warn]` — "Learn more" is the canonical vague
+  CTA. Specific verbs and objects beat it: **"Read the case
+  studies"** (specific object) or **"See pricing"** (specific
   destination).
 
-### Violation 2 — `<Button variant="outline">Submit</Button>`
+### Finding 2 — `<Button variant="outline">Submit</Button>`
 
-- **[ACT-02](/spec/standards/ACT-02)** `[block]` — "Submit" is the
-  single most common violation of this rule. The standard literally
-  cites it: _"Prefer 'save,' 'send,' 'export' over 'submit' or
-  'process.'"_ Suggested rewrite: **"Create account"** or
-  **"Send message"** — whichever matches the form's actual purpose.
+- **Voice & tone** `[block]` — "Submit" is the single most common
+  finding of this type. Voice guidance is explicit: prefer "save,"
+  "send," or "export" over "submit" or "process." Suggested rewrite:
+  **"Create account"** or **"Send message"** — whichever matches
+  the form's actual purpose.
 
 ## Why these matter
 
@@ -131,7 +131,7 @@ export function Hero() {
 }
 ```
 
-Two-word changes, zero remaining violations on the next PR run.
+Two-word changes, zero remaining findings on the next PR run.
 
 ## What ContentRX doesn't do here
 
@@ -141,15 +141,13 @@ Two-word changes, zero remaining violations on the next PR run.
 - **It won't flag every short button.** "Save," "Send," "Cancel" all
   pass — they're specific verbs. "Submit," "Process," "Go" fail
   because they're vague.
-- **Context matters.** `ACT-01` has an explicit exclusion for
-  confirmation and status messages: "Project created" and "Payment
-  sent" are not CTAs, so they don't need to start with a verb.
+- **Context matters.** Confirmation and status messages aren't CTAs:
+  "Project created" and "Payment sent" don't need to start with a
+  verb, and ContentRX won't push back on them.
 
-## Related standards
+## Categories on the public envelope
 
-- [ACC-01](/spec/standards/ACC-01) — Descriptive link text (no "click
-  here," no "learn more")
-- [ACT-01](/spec/standards/ACT-01) — Button text starts with a verb
-- [ACT-02](/spec/standards/ACT-02) — Specific verbs beat vague ones
-- [Decision point moment](/spec/moments) — the moment most `<Button>`
-  clicks occur in
+ContentRX returns each finding under a customer-facing category —
+**Voice & tone**, **Mechanics**, **Structure**, **Accessibility**,
+**Inclusion**, **Big picture**. CTA findings most commonly land in
+Voice & tone or Accessibility, as above.

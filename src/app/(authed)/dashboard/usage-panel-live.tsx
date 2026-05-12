@@ -92,16 +92,20 @@ export function UsagePanelLive({
     quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0;
   const tone = classifyTone(used, quota);
 
+  // ok stays neutral (text-strong-as-fill) so the bar reads as fill,
+  // not status — fine until ≥80% used. warn + exhausted use the
+  // caution + concern solid tokens so the color tracks the semantic
+  // alert family and follows palette updates automatically.
   const barClasses: Record<UsageTone, string> = {
-    ok: "bg-black dark:bg-white",
-    warn: "bg-amber-500",
-    exhausted: "bg-rose-500",
+    ok: "bg-strong",
+    warn: "bg-accent-caution",
+    exhausted: "bg-accent-concern",
   };
 
   return (
     <section className="rounded-lg border border-line p-5">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Usage this month</h2>
+        <h2 className="text-base font-semibold text-strong">Usage this month</h2>
         <span className="text-xs text-default">
           {currentMonth()}
         </span>

@@ -94,6 +94,26 @@ def _build_rule_version_map(standards_data: dict) -> dict[str, str]:
     return versions
 
 
+def _build_rule_text_map(standards_data: dict) -> dict[str, str]:
+    """Snapshot standard_id → canonical rule text from the loaded library.
+
+    `Violation.rule` is documented as "the literal rule text from the
+    standard." The LLM scan path used to pass through whatever the
+    model emitted, and the preprocessor path stamped the violation's
+    issue text into `rule` — both wrong. This map drives the
+    `_stamp_rule_text` pass so every violation carries the same
+    canonical rule string regardless of who produced it.
+    """
+    rules: dict[str, str] = {}
+    for cat in standards_data.get("categories", []):
+        for std in cat.get("standards", []):
+            sid = std.get("id")
+            rule = std.get("rule")
+            if sid and rule:
+                rules[sid] = rule
+    return rules
+
+
 def _stamp_rule_versions(
     violations: list[Violation],
     rule_versions: dict[str, str],
@@ -102,6 +122,25 @@ def _stamp_rule_versions(
     for v in violations:
         if v.rule_version is None:
             v.rule_version = rule_versions.get(v.standard_id)
+
+
+def _stamp_rule_text(
+    violations: list[Violation],
+    rule_text_map: dict[str, str],
+) -> None:
+    """Populate Violation.rule from the canonical library text.
+
+    Always overwrites — the library is the source of truth for rule
+    text. Preprocessor emissions leave `rule` empty and rely on this
+    pass; LLM emissions get their (paraphrased or accurate) rule
+    string replaced with the canonical version so substrate consumers
+    see consistent text. Standards not in the map (legacy IDs, team
+    rules) keep whatever rule text they came in with.
+    """
+    for v in violations:
+        canonical = rule_text_map.get(v.standard_id)
+        if canonical:
+            v.rule = canonical
 
 
 def _build_system_intro(
@@ -403,12 +442,19 @@ def _llm_scan(
     try:
         result = parse_scan_response(llm_response.text)
     except ParseError:
+        # Fail-closed. The summary used to include the first 200 chars
+        # of the raw LLM output for debugging, but that echo can carry
+        # back snippets of user input (the threat documented in
+        # api_utils.py's `wrap_user_text` block). Substrate logs see this
+        # field even though the public envelope strips it, so we keep
+        # the diagnostic generic and rely on stderr traces for the raw
+        # text when an operator needs to reproduce.
         result = {
             "content_type": content_type or "unknown",
             "overall_verdict": "error",
             "violations": [],
             "passes": [],
-            "summary": f"Failed to parse response: {llm_response.text[:200]}",
+            "summary": "engine: scan response failed to parse",
         }
 
     return result, latency, tokens
@@ -417,9 +463,10 @@ def _llm_scan(
 def _parse_llm_violations(raw_violations: list[dict]) -> list[Violation]:
     """Convert raw LLM violation dicts to Violation objects.
 
-    Optional `confidence` from the LLM response (added in v1.1.0; absent
-    today since the scan prompt doesn't yet request it) is parsed when
-    present, falling back to DEFAULT_CONFIDENCE_LLM.
+    Optional `confidence` from the LLM response (added in v1.1.0) is
+    parsed when present, falling back to DEFAULT_CONFIDENCE_LLM. The
+    scan prompt requests `"confidence": 0.85` per the JSON contract
+    in `_build_scan_system_prompt`.
     """
     out: list[Violation] = []
     for v in raw_violations:
@@ -494,6 +541,7 @@ def check(
 
     standards_data = load_standards()
     rule_versions = _build_rule_version_map(standards_data)
+    rule_text_map = _build_rule_text_map(standards_data)
     total_latency = 0.0
     total_tokens = TokenUsage()
 
@@ -584,6 +632,7 @@ def check(
         text, detected_type, audience=audience,
     )
     _stamp_rule_versions(list(preprocess_violations), rule_versions)
+    _stamp_rule_text(list(preprocess_violations), rule_text_map)
     preprocess_ids = {v.standard_id for v in preprocess_violations}
     suppressed_ids = getattr(preprocess_violations, 'suppressed_ids', set())
     chain.append(RationaleHop(
@@ -617,6 +666,7 @@ def check(
     llm_violations = _parse_llm_violations(scan_result.get("violations", []))
     llm_passes = _parse_llm_passes(scan_result.get("passes", []))
     _stamp_rule_versions(llm_violations, rule_versions)
+    _stamp_rule_text(llm_violations, rule_text_map)
     llm_scan_ids = sorted({v.standard_id for v in llm_violations})
     chain.append(RationaleHop(
         step=HOP_SCAN,
@@ -651,6 +701,8 @@ def check(
         )
         _stamp_rule_versions(confirmed, rule_versions)
         _stamp_rule_versions(rejected, rule_versions)
+        _stamp_rule_text(confirmed, rule_text_map)
+        _stamp_rule_text(rejected, rule_text_map)
         total_latency += val_latency
         total_tokens += val_tokens
     else:
@@ -739,7 +791,15 @@ def check(
     # at least one — richest source for taxonomy refinement.
     scan_validate_disagreement = len(rejected) > 0
 
-    overall = "fail" if final_violations else "pass"
+    # Fail-closed: if `_llm_scan` returned overall_verdict="error"
+    # (parse failure of the scan response), surface that error verdict
+    # to the caller instead of deriving "pass" from an empty violations
+    # list. Without this, an unparseable LLM response with no
+    # preprocessor hit silently looks like a clean evaluation.
+    if scan_result.get("overall_verdict") == "error":
+        overall = "error"
+    else:
+        overall = "fail" if final_violations else "pass"
     verdict, review_reason = derive_verdict(
         overall_verdict=overall,
         violations=final_violations,
@@ -811,11 +871,13 @@ def check_unfiltered(
 
     standards_data = load_standards()
     rule_versions = _build_rule_version_map(standards_data)
+    rule_text_map = _build_rule_text_map(standards_data)
     chain: list[RationaleHop] = []
 
     # Deterministic preprocess
     preprocess_violations = run_preprocess(text)
     _stamp_rule_versions(list(preprocess_violations), rule_versions)
+    _stamp_rule_text(list(preprocess_violations), rule_text_map)
     preprocess_ids = {v.standard_id for v in preprocess_violations}
     suppressed_ids = getattr(preprocess_violations, 'suppressed_ids', set())
     chain.append(RationaleHop(
@@ -841,6 +903,7 @@ def check_unfiltered(
     llm_violations = _parse_llm_violations(scan_result.get("violations", []))
     llm_passes = _parse_llm_passes(scan_result.get("passes", []))
     _stamp_rule_versions(llm_violations, rule_versions)
+    _stamp_rule_text(llm_violations, rule_text_map)
     llm_scan_ids = sorted({v.standard_id for v in llm_violations})
     chain.append(RationaleHop(
         step=HOP_SCAN,

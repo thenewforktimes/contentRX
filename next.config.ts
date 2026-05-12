@@ -112,6 +112,25 @@ const nextConfig: NextConfig = {
         destination: "/accuracy#calibration-log",
         permanent: true,
       },
+      {
+        // /reports retired 2026-05-11 (round-4 audit). The quarterly
+        // accuracy report content is folded into /accuracy alongside
+        // the calibration log — same consolidation pattern as
+        // /calibration. The raw quarterly markdown still lives at
+        // `reports/quarterly/<YYYY-Q>.md` for the founder to hand-edit
+        // and for /admin/reports to render. 308 because the public
+        // route is gone for good; CLAUDE.md updated in the same PR
+        // so the "/reports is a public surface" claim no longer
+        // promises a route that 404s.
+        source: "/reports",
+        destination: "/accuracy#quarterly-reports",
+        permanent: true,
+      },
+      {
+        source: "/reports/:quarter",
+        destination: "/accuracy#quarterly-reports",
+        permanent: true,
+      },
     ];
   },
 };

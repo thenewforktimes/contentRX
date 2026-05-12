@@ -21,7 +21,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { Button } from "@/components/ui/button";
+import { Button, buttonStyles } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getDb, schema } from "@/db";
 import {
@@ -30,6 +30,7 @@ import {
   triageOverride,
   type OverrideStatus,
 } from "@/lib/admin/override-inbox";
+import { isContentRXAdmin } from "@/lib/graduation";
 import { humanizeMoment } from "@/lib/humanize";
 
 export const metadata = {
@@ -68,6 +69,13 @@ async function triageAction(formData: FormData) {
 
   const { userId: clerkId } = await auth();
   if (!clerkId) return;
+  // Defense-in-depth: re-check the founder gate at the action
+  // boundary. The /admin layout enforces it on render, but Server
+  // Actions are independently POSTable RPCs so we cannot rely on
+  // the layout alone (see admin/reports/actions.ts:74-80 for the
+  // canonical pattern). Round 3 audit caught three actions
+  // missing this — overrides, customer-flags, costs.
+  if (!isContentRXAdmin(clerkId)) return;
   const db = getDb();
   const [user] = await db
     .select({ id: schema.users.id })
@@ -260,7 +268,7 @@ function TriageForm({
         type="submit"
         name="newStatus"
         value="not_actionable"
-        className="rounded-md bg-stone-200 px-3 py-1 text-xs font-medium text-strong hover:bg-stone-300 dark:bg-stone-700 dark:hover:bg-stone-600"
+        className={buttonStyles({ variant: "secondary", size: "sm" })}
       >
         Not actionable
       </button>
@@ -278,7 +286,7 @@ function FilterPill({
   active: boolean;
 }) {
   const tone = active
-    ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
+    ? "bg-accent-primary text-accent-primary-on"
     : "bg-sunken text-default hover:bg-hover";
   return (
     <a
