@@ -85,6 +85,7 @@ export default async function SettingsPage() {
             : null
         }
         subscriptionStatus={activeSub?.status ?? null}
+        cancelAtPeriodEnd={activeSub?.cancelAtPeriodEnd ?? false}
         // CARL consent token — same posture as /dashboard. Only free
         // users see the upgrade checkbox, so non-free users get null.
         // See src/lib/consent-token.ts.
@@ -194,6 +195,7 @@ async function loadActiveSubscription(
 ): Promise<{
   status: string;
   currentPeriodEnd: Date | null;
+  cancelAtPeriodEnd: boolean;
 } | null> {
   const ownerId = teamOwnerUserId ?? userId;
   const cached = await unstable_cache(
@@ -203,6 +205,7 @@ async function loadActiveSubscription(
         .select({
           status: schema.subscriptions.status,
           currentPeriodEnd: schema.subscriptions.currentPeriodEnd,
+          cancelAtPeriodEnd: schema.subscriptions.cancelAtPeriodEnd,
         })
         .from(schema.subscriptions)
         .where(
@@ -225,5 +228,6 @@ async function loadActiveSubscription(
   return {
     status: cached.status,
     currentPeriodEnd: asDate(cached.currentPeriodEnd),
+    cancelAtPeriodEnd: cached.cancelAtPeriodEnd ?? false,
   };
 }

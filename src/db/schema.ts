@@ -255,6 +255,15 @@ export const subscriptions = pgTable(
     plan: text("plan", { enum: ["pro", "team"] }).notNull(),
     seats: integer("seats").notNull().default(1),
     currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+    // Captures Stripe's `subscription.cancel_at_period_end` so the
+    // dashboard can show "Ends YYYY-MM-DD" instead of "Renews YYYY-MM-DD"
+    // during the grace period between the customer clicking Cancel in
+    // the Stripe Portal and the period actually ending. Defaults to
+    // false; the Stripe webhook overwrites it on every subscription
+    // update.
+    cancelAtPeriodEnd: boolean("cancel_at_period_end")
+      .notNull()
+      .default(false),
     // PR-03 (pricing-and-unit-of-value-strategy 2026-04-26): launch SKU
     // additions. Coexist with `plan` until PR-07 reconciles. `plan` stays
     // the legacy 2-value enum; `pricingTier` is the forward-looking

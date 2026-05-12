@@ -90,6 +90,7 @@ CREATE TABLE subscriptions (
   plan text NOT NULL,
   seats int NOT NULL DEFAULT 1,
   current_period_end timestamptz,
+  cancel_at_period_end boolean NOT NULL DEFAULT false,
   pricing_tier text NOT NULL DEFAULT 'free',
   soft_cap_usd int NOT NULL DEFAULT 50,
   domain_group_id text,

@@ -170,6 +170,7 @@ export default async function DashboardPage() {
               : null
           }
           subscriptionStatus={activeSub?.status ?? null}
+          cancelAtPeriodEnd={activeSub?.cancelAtPeriodEnd ?? false}
           // CARL consent token. Minted server-side on every /dashboard
           // render for free users (the only ones who see the upgrade
           // checkbox). Bound to user.id with a 15-minute TTL; single-use.
@@ -535,6 +536,7 @@ async function loadActiveSubscription(
 ): Promise<{
   status: string;
   currentPeriodEnd: Date | null;
+  cancelAtPeriodEnd: boolean;
 } | null> {
   const ownerId = teamOwnerUserId ?? userId;
   const cached = await unstable_cache(
@@ -544,6 +546,7 @@ async function loadActiveSubscription(
         .select({
           status: schema.subscriptions.status,
           currentPeriodEnd: schema.subscriptions.currentPeriodEnd,
+          cancelAtPeriodEnd: schema.subscriptions.cancelAtPeriodEnd,
         })
         .from(schema.subscriptions)
         .where(
@@ -570,6 +573,7 @@ async function loadActiveSubscription(
   return {
     status: cached.status,
     currentPeriodEnd: asDate(cached.currentPeriodEnd),
+    cancelAtPeriodEnd: cached.cancelAtPeriodEnd ?? false,
   };
 }
 
