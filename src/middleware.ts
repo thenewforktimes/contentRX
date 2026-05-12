@@ -7,8 +7,6 @@ const isProtected = createRouteMatcher([
   "/api/classify(.*)",
   "/api/dashboard(.*)",
   "/api/team-rules(.*)",
-  "/api/team-analytics(.*)",
-  "/api/integrations/(.*)",
   "/api/portal(.*)",
   "/api/checkout(.*)",
   "/api/violations/(.*)",
@@ -22,8 +20,6 @@ const acceptsApiKey = createRouteMatcher([
   "/api/check(.*)",
   "/api/classify(.*)",
   "/api/team-rules(.*)",
-  "/api/team-analytics(.*)",
-  "/api/integrations/(.*)",
   "/api/violations/(.*)",
 ]);
 

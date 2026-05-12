@@ -2807,7 +2807,7 @@ async function runBatchScan(nodes, onProgress) {
       // shape below survives because the "Not <moment>?" feedback
       // POST still uses them.
       // sha256 of the text, filled below. Used by the "Not <moment>?"
-      // feedback button so the POST to /api/feedback/rationale can
+      // feedback button so the POST to /api/feedback/moment can
       // reference the evaluation without shipping plaintext.
       textHash: "",
       // Human-eval build plan Session 30 PR B — populated when the
@@ -3185,7 +3185,7 @@ function renderBatchResults(results) {
       sendBtn.disabled = true;
       sendBtn.textContent = "Sending…";
       try {
-        const res = await fetch(`${API_BASE_URL}/api/feedback/rationale`, {
+        const res = await fetch(`${API_BASE_URL}/api/feedback/moment`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -3218,7 +3218,7 @@ function renderBatchResults(results) {
   });
 
   // Human-eval build plan Session 21 — rationale-chain moment-
-  // misdetection feedback. Clicks POST to /api/feedback/rationale with
+  // misdetection feedback. Clicks POST to /api/feedback/moment with
   // correction_type = situation_ambiguity; same bearer token as
   // /api/check so no extra auth plumbing.
   area.querySelectorAll(".btn-moment-feedback").forEach(btn => {
@@ -3235,7 +3235,7 @@ function renderBatchResults(results) {
       btn.disabled = true;
       btn.textContent = "Sending…";
       try {
-        const res = await fetch(`${API_BASE_URL}/api/feedback/rationale`, {
+        const res = await fetch(`${API_BASE_URL}/api/feedback/moment`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

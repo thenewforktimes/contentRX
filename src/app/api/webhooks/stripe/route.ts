@@ -46,6 +46,7 @@ import {
   type PaidPlan,
 } from "@/lib/stripe";
 import { PaymentFailedEmail } from "@/emails/payment-failed";
+import { SubscriptionCancelledEmail } from "@/emails/subscription-cancelled";
 import { SubscriptionConfirmationEmail } from "@/emails/subscription-confirmation";
 
 /**
@@ -352,6 +353,36 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .set({ plan: "free" })
     .where(eq(schema.users.id, userId));
   revalidateSubscription(userId);
+
+  // Send the cancellation confirmation. Dedupe per (userId, subscription)
+  // so Stripe replaying the deletion event doesn't fan out duplicate
+  // emails. Per-action dedupe key matches the welcome-email + upgrade-
+  // analytics patterns earlier in this file. Best-effort — a Resend
+  // outage shouldn't 500 the webhook.
+  try {
+    const [cancelledUser] = await db
+      .select({ email: schema.users.email })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+    if (cancelledUser?.email) {
+      const resolved = planFromPriceId(
+        subscription.items.data[0]?.price.id ?? "",
+      );
+      const planLabel = resolved?.plan === "team" ? "Team" : "Pro";
+      await sendEmail({
+        to: cancelledUser.email,
+        subject: `Your ContentRX ${planLabel} subscription is cancelled`,
+        react: SubscriptionCancelledEmail({
+          appUrl: appUrl(),
+          planLabel,
+        }),
+        dedupeKey: `cancellation_email:${userId}:${subscription.id}`,
+      });
+    }
+  } catch (err) {
+    logSafeError("[stripe-webhook] post-cancel email failed", err);
+  }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
