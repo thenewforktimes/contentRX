@@ -53,14 +53,16 @@ describe("explain-client.tsx (F2 paste-mode banner)", () => {
     expect(source).toMatch(/rows=\{10\}/);
   });
 
-  it("placeholder mentions the long-form examples the gallery covers", () => {
-    // The placeholder is the second invitation surface (after the
-    // page header) for the long-form use case. /writes carries the
-    // gallery; the placeholder names the same kinds of writing in a
-    // single line so the connection is obvious.
-    expect(source).toMatch(/product update email/i);
-    expect(source).toMatch(/security advisory/i);
-    expect(source).toMatch(/announcement/i);
+  it("placeholder invites short + long-form writing with an assurance", () => {
+    // 2026-05-11 (Robert): the example-rich placeholder ("Paste a
+    // button label, an error message, a product update email, a
+    // security advisory, ...") was replaced with a warmer single-
+    // line frame. The previous test pinned the gallery examples; the
+    // new copy intentionally drops them — the placeholder now names
+    // the action + the assurance instead.
+    expect(source).toMatch(
+      /placeholder="Drop short or long-form writing here\. ContentRX will help you get it sorted\."/,
+    );
   });
 });
 
