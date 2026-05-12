@@ -27,6 +27,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { Pill } from "@/components/ui/pill";
+import { Wordmark } from "@/components/wordmark";
 import { isContentRXAdmin } from "@/lib/graduation";
 import { loadSidebarCounts } from "@/lib/admin/sidebar-counts";
 
@@ -63,15 +64,21 @@ export default async function AdminLayout({
     <div className="min-h-screen bg-canvas">
       <div className="mx-auto flex max-w-7xl">
         <aside className="hidden w-60 shrink-0 border-r border-line bg-raised px-4 py-6 md:block">
-          <Link
-            href="/admin"
-            className="block px-2 text-sm font-semibold text-strong"
-          >
-            ContentRX · Admin
-          </Link>
+          {/*
+            Wordmark + small "Admin" suffix replaces the plain-text
+            "ContentRX · Admin" link. Founder dashboard now shares
+            the same brand chrome as customer surfaces; the suffix
+            disambiguates without breaking visual identity.
+          */}
+          <div className="flex items-baseline gap-1.5 px-2">
+            <Wordmark size="sm" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-quiet">
+              Admin
+            </span>
+          </div>
           <Link
             href="/dashboard"
-            className="mt-1 block px-2 text-xs text-quiet hover:text-strong"
+            className="mt-2 block px-2 text-xs text-quiet hover:text-strong"
           >
             ← Dashboard
           </Link>

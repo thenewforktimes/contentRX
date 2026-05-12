@@ -348,10 +348,9 @@ export default function WritesPage() {
         meta={
           <>
             Six examples below. Each shows what the writer started
-            with, the cleaned rewrite, and why each flag fired. The
-            engine is calibrated for product and internal writing; for
-            persuasive marketing copy expect more &lsquo;worth a look&rsquo;
-            flags than usual.
+            with, the cleaned rewrite, and why each flag fired.
+            Calibrated for product and internal writing. Persuasive
+            marketing draws more &lsquo;worth a look&rsquo; flags.
           </>
         }
       />

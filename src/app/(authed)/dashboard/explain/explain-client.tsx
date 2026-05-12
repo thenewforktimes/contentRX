@@ -1029,7 +1029,7 @@ function MarketingCopyBanner() {
       className="rounded-md border border-accent-info-border bg-accent-info-soft p-4"
     >
       <p className="text-sm text-accent-info-text">
-        This looks like persuasive marketing copy. ContentRX is
+        This looks like persuasive marketing writing. ContentRX is
         calibrated for product and internal writing; expect more
         &lsquo;worth a look&rsquo; flags than usual.
       </p>

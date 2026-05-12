@@ -33,15 +33,13 @@ export default async function ExplainPage() {
           Paste-mode review
         </p>
         <h1 className="mt-2 text-2xl font-semibold">
-          Run a check. Short copy or long-form writing.
+          Run a check. Short or long-form writing.
         </h1>
         <p className="mt-3 text-sm text-default">
           Paste a button label, an error message, a product update
           email, a security advisory, or any long-form writing your
           team is shipping. ContentRX returns the document-level
           diagnostic, a clean rewrite, and the categorized flags.
-          Same engine, same content-design judgment, regardless of
-          length.
         </p>
         <p className="mt-3 text-xs text-quiet">
           Each check counts against your{" "}

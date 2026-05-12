@@ -60,7 +60,7 @@ export default function TermsPage() {
         meta={
           <>
             Effective date pending. Last updated pending. This page
-            is a structural stub. Final attorney-reviewed copy
+            is a structural stub. Final attorney-reviewed text
             arrives later this week.
           </>
         }
@@ -68,7 +68,7 @@ export default function TermsPage() {
 
       <Section number="1" title="Subscription Agreement">
         <p>
-          Placeholder. Attorney copy: commercial terms (plan + price +
+          Placeholder. Attorney text: commercial terms (plan + price +
           interval + seats), term + termination, payment, refund
           posture, automatic renewal, the Stripe Customer Portal as
           the cancellation path.
@@ -77,7 +77,7 @@ export default function TermsPage() {
 
       <Section number="2" title="Acceptable Use">
         <p>
-          Placeholder. Attorney copy: prohibited uses, no model
+          Placeholder. Attorney text: prohibited uses, no model
           extraction or use of outputs to train competitive AI
           services, no scraping, no abuse, suspension and termination
           rights.
@@ -86,7 +86,7 @@ export default function TermsPage() {
 
       <Section number="3" title="AI output disclaimers + ownership">
         <p>
-          Placeholder. Attorney copy: you own your inputs and the
+          Placeholder. Attorney text: you own your inputs and the
           review outputs ContentRX generates for them. ContentRX owns
           the Service, the engine, and the taxonomy. Outputs are
           provided AS IS. The Service is not legal, regulatory,
@@ -97,7 +97,7 @@ export default function TermsPage() {
 
       <Section number="4" title="Flag for Review opt-in">
         <p>
-          Placeholder. Attorney copy will land here. The most
+          Placeholder. Attorney text will land here. The most
           ContentRX-specific clause. Your checks join the calibration
           corpus only when you affirmatively flag them via the Flag
           for Review feature. One flag per check, with a consent
@@ -109,7 +109,7 @@ export default function TermsPage() {
 
       <Section number="5" title="No training on your content">
         <p>
-          Placeholder. Attorney copy will land here. ContentRX does
+          Placeholder. Attorney text will land here. ContentRX does
           not use your checks to train, fine-tune, or otherwise
           develop our or any third party&apos;s machine learning
           models. The only exception is the per-check opt-in via
@@ -119,7 +119,7 @@ export default function TermsPage() {
 
       <Section number="6" title="Refunds and cancellation">
         <p>
-          Placeholder. Attorney copy: cancel anytime via the Stripe
+          Placeholder. Attorney text: cancel anytime via the Stripe
           Customer Portal. Access continues through the end of your
           paid period. No prorated refunds. Industry-standard for
           SaaS at this price point. Stripe-compliant.
@@ -128,7 +128,7 @@ export default function TermsPage() {
 
       <Section number="7" title="Warranty disclaimer + liability cap">
         <p>
-          Placeholder. Attorney copy: AS-IS warranty disclaimer,
+          Placeholder. Attorney text: AS-IS warranty disclaimer,
           consequential-damages exclusion, liability cap at fees paid
           in prior 12 months.
         </p>
@@ -149,7 +149,7 @@ export default function TermsPage() {
 
       <Section number="9" title="Changes to these terms">
         <p>
-          Placeholder. Attorney copy: how ContentRX notifies of
+          Placeholder. Attorney text: how ContentRX notifies of
           material changes (email + dashboard banner), notice
           window, continued use as acceptance.
         </p>
@@ -157,7 +157,7 @@ export default function TermsPage() {
 
       <Section number="10" title="Governing law and venue">
         <p>
-          Placeholder. Attorney copy: governing law (default
+          Placeholder. Attorney text: governing law (default
           California pending attorney call) and venue.
         </p>
       </Section>

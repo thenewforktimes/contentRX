@@ -153,13 +153,14 @@ export default function PricingPage() {
               2. What kind of writing...      (fit)
               3. What's the weekly review...  (feature)
               4. Does ContentRX have monthly limits?  (boundaries)
-              5. Can I cancel anytime?        (commitment)
-              6. Do I need a credit card...   (friction)
-              7. Do I need an Anthropic...    (friction)
-              8. Where do I install it?       (next step)
-              9. Is ContentRX accurate?       (proof, the closer)
-            Mechanic → fit → feature → boundaries → commitment →
-            friction × 2 → install → proof. Reads as a buyer's
+              5. Why $39?                     (pricing rationale)
+              6. Can I cancel anytime?        (commitment)
+              7. Do I need a credit card...   (friction)
+              8. Do I need an Anthropic...    (friction)
+              9. Where do I install it?       (next step)
+             10. Is ContentRX accurate?       (proof, the closer)
+            Mechanic → fit → feature → boundaries → pricing → commitment
+            → friction × 2 → install → proof. Reads as a buyer's
             mental walkthrough, ending on the moat link. */}
         <ul className="mt-4 divide-y divide-line border-y border-line">
           <FaqRow
@@ -175,13 +176,12 @@ export default function PricingPage() {
             q="What kind of writing does ContentRX handle?"
             a={
               <>
-                Short-form UI copy (button labels, error messages,
+                Short-form UI writing (button labels, error messages,
                 tooltips) and long-form internal writing (product
                 update emails, security advisories, all-hands
-                pre-reads, policy notices). The engine is calibrated
-                for product and internal writing. For persuasive
-                marketing copy, expect more &lsquo;worth a
-                look&rsquo; flags than usual.{" "}
+                pre-reads, policy notices). Calibrated for product
+                and internal writing. Persuasive marketing draws more
+                &lsquo;worth a look&rsquo; flags.{" "}
                 <Link href="/writes" className="underline underline-offset-2">
                   See six worked examples
                 </Link>
@@ -239,6 +239,23 @@ export default function PricingPage() {
             }
           />
           <FaqRow
+            q="Why $39?"
+            a={
+              <>
+                The engine costs real money to run. Each check fans
+                out to multiple LLM passes (classify, filter,
+                preprocess, evaluate, validate) before a verdict
+                lands. Subscription pricing covers those passes plus
+                the calibration work that keeps the engine honest.
+                There&apos;s no second revenue model.{" "}
+                <Link href="/ethics" className="underline underline-offset-2">
+                  /ethics
+                </Link>
+                {" "}is the long version.
+              </>
+            }
+          />
+          <FaqRow
             q="Can I cancel anytime?"
             a={
               <>
@@ -278,14 +295,14 @@ export default function PricingPage() {
             q="Is ContentRX accurate?"
             a={
               <>
-                Every Monday, the calibration log on{" "}
+                The calibration log on{" "}
                 <Link href="/accuracy" className="underline underline-offset-2">
                   /accuracy
                 </Link>
-                {" "}publishes the previous week&apos;s measured kappa,
-                drift signals, and which standards were refined. If
-                the number drops, you&apos;ll see it before you feel
-                it. The same page covers the methodology.
+                {" "}tracks measured kappa, drift signals, and which
+                standards were refined. If the number drops, the page
+                shows it before customers feel it. The same page covers
+                the methodology.
               </>
             }
           />

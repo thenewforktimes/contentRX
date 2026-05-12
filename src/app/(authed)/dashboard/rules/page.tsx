@@ -84,7 +84,7 @@ export default async function DashboardRulesPage() {
         <p className="mt-1 text-sm text-default">
           {isTeamPlan
             ? "Disable standards, override the wording shown to your team, or add custom rules as regex patterns. Changes apply to every evaluation your team runs."
-            : "The patterns ContentRX checks every string against. Plain-language summary so you know what's being reviewed before you ship copy. Team-plan owners can disable individual standards or override their wording."}
+            : "The patterns ContentRX checks every string against. Plain-language summary so you know what's being reviewed before you ship. Team-plan owners can disable individual standards or override their wording."}
         </p>
       </header>
 

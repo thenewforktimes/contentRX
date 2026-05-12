@@ -195,8 +195,8 @@ function EmptyState() {
         because there&apos;s no audit content to record.
       </p>
       <p className="mt-3 text-default">
-        Install any surface, run a check on copy that has a finding,
-        and it&apos;ll start writing rows here.
+        Install any surface, run a check on writing that has a finding,
+        and rows will start landing here.
       </p>
       <Link
         href="/install"

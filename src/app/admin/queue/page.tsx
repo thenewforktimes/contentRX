@@ -54,15 +54,15 @@ const SUBTYPE_DESCRIPTION: Record<Subtype, string> = {
   low_confidence:
     "LLM confidence below the review threshold (0.7). Often calibration drift on a known standard.",
   standards_conflict:
-    "Two or more standards fired with conflicting verdicts on the same string. Highest-priority subtype — fixing the taxonomy clears the downstream signal.",
+    "Two or more standards fired with conflicting verdicts on the same string. Highest-priority subtype. Fixing the taxonomy clears the downstream signal.",
   ensemble_disagreement:
-    "Scan and validate disagreed. First-pass ensemble disagreeing with itself — usually a prompt-layer issue or a content_type_notes gap.",
+    "Scan and validate disagreed. First-pass ensemble disagreeing with itself. Usually a prompt-layer issue or a content_type_notes gap.",
   situation_ambiguity:
     "Moment classifier uncertain (confidence < 0.6). Upstream routing question.",
   out_of_distribution:
     "Novel input the classifier hasn't seen confidently before. Routes to the new-moment backlog.",
   novel_pattern:
-    "Override rate climbing on a previously-stable rule. Drift signal — investigate before the rule's authority erodes.",
+    "Override rate climbing on a previously-stable rule. Drift signal. Investigate before the rule's authority erodes.",
 };
 
 const DEFAULT_WINDOW_DAYS = 30;

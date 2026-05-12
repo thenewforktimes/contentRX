@@ -42,14 +42,13 @@ export default function AccuracyPage() {
     <main className="mx-auto max-w-4xl px-6 py-20">
       <PageHeader
         eyebrow="Accuracy"
-        title="How I measure accuracy"
+        title="How ContentRX measures accuracy"
         lede={
           <p className="text-sm text-quiet">
             Three numbers describe how ContentRX scores against a fixed
             bar. They&rsquo;re kept separate on purpose. A single
             &ldquo;accuracy score&rdquo; would hide the self-drift
-            ceiling and overstate what the system can know about
-            itself. The reporting format (measured numbers, 95%
+            ceiling. The reporting format (measured numbers, 95%
             intervals, pending cells named honestly) follows the Model
             Cards pattern from Mitchell et al., 2019.
           </p>
@@ -57,8 +56,8 @@ export default function AccuracyPage() {
         meta={
           <>
             {snap.generated_at
-              ? `Snapshot generated ${formatIso(snap.generated_at)}.`
-              : "Snapshot pending. The nightly generator has not run yet."}
+              ? `Snapshot updated ${formatIso(snap.generated_at)}.`
+              : "Snapshot pending."}
           </>
         }
       />
@@ -66,12 +65,12 @@ export default function AccuracyPage() {
       <section className="grid gap-4 sm:grid-cols-3">
         <MetricBlock
           label="Measured system κ"
-          sublabel="The engine vs my blind labels on the held-out set"
+          sublabel="The engine vs the held-out blind-labeled set"
           kappa={snap.measured_system}
         />
         <MetricBlock
           label="Measured self-drift κ"
-          sublabel="Me vs past me, on the same panel, blind"
+          sublabel="Same panel relabeled blind, weeks apart"
           kappa={snap.measured_self_drift}
         />
         <MetricBlock
@@ -92,7 +91,7 @@ export default function AccuracyPage() {
         <h2 className="text-lg font-semibold">Coverage</h2>
         <p className="mt-2 text-sm text-quiet">
           ContentRX evaluates against {snap.standards_total} standards.
-          As a standard collects enough labelled cases, it moves up
+          As a standard collects enough labelled cases it moves up
           the ladder: every verdict reviewed, then sampled review,
           then no per-verdict review. The per-standard numbers stay
           internal; this page reports the aggregate.
@@ -118,16 +117,16 @@ export default function AccuracyPage() {
       </section>
 
       <section className="mt-10 rounded-lg border border-line-strong bg-overlay p-6">
-        <h2 className="text-lg font-semibold">How I measure</h2>
+        <h2 className="text-lg font-semibold">How the numbers are produced</h2>
         <p className="mt-2 text-sm text-quiet">
           Each weekday the engine evaluates checks against the
-          standards library and the held-out cases I&rsquo;ve blind-
-          labelled. The system κ is how often the engine and I agree
-          on the same input. The self-drift κ is how often I agree
-          with a past version of myself on the same panel. That number
-          is the ceiling: the system can&rsquo;t exceed how well I
-          agree with me. The 0.90 design target is a stated
-          assumption, not a measurement.
+          standards library and the held-out blind-labeled cases. The
+          system κ is the agreement rate between the engine and those
+          held-out labels. The self-drift κ is the agreement rate when
+          the same panel is relabeled blind, weeks apart, by the same
+          rater. That number is the ceiling: the engine can&rsquo;t
+          score higher than a human scores against themselves. The
+          0.90 design target is a stated assumption, not a measurement.
         </p>
         <p className="mt-3 text-sm text-quiet">
           Pending cells render as &ldquo;pending&rdquo;: never zero,
@@ -135,8 +134,8 @@ export default function AccuracyPage() {
           measurement-in-progress honestly is the whole point.
         </p>
         <p className="mt-3 text-sm text-quiet">
-          The weekly calibration log below tracks κ movement, drift
-          signals, and active refinement candidates.
+          The calibration log below tracks κ movement, drift signals,
+          and active refinement candidates.
         </p>
       </section>
 
@@ -145,18 +144,17 @@ export default function AccuracyPage() {
           links to its raw markdown on GitHub so the public log
           stays auditable without re-implementing per-week routes. */}
       <section className="mt-10" id="calibration-log">
-        <h2 className="text-lg font-semibold">Weekly calibration log</h2>
+        <h2 className="text-lg font-semibold">Calibration log</h2>
         <p className="mt-2 text-sm text-quiet">
-          Every Monday a new entry is generated. Each entry covers
-          the previous week&rsquo;s measured κ movement, drift
-          signals, override counts, and active refinement
-          candidates. The format is templated on purpose. Consistency
-          week to week is what makes drift in the writing detectable.
+          New entries land roughly weekly. Each one covers the most
+          recent κ movement, drift signals, override counts, and
+          active refinement candidates. The format is templated on
+          purpose. Week-to-week consistency is what makes drift in
+          the writing detectable.
         </p>
         {calibrationEntries.length === 0 ? (
           <p className="mt-4 rounded-lg border border-dashed border-line-strong bg-raised px-4 py-6 text-center text-sm text-quiet">
-            No calibration log entries yet. The Monday cron generator
-            publishes new entries as they land.
+            No calibration log entries yet.
           </p>
         ) : (
           <ul className="mt-4 space-y-2">
@@ -204,8 +202,8 @@ export default function AccuracyPage() {
           >
             reports/accuracy/latest.json
           </a>
-          , generated nightly by the calibration pipeline. The docs
-          site picks up the file on next deploy. Schema version{" "}
+          . The docs site picks up the file on next deploy. Schema
+          version{" "}
           <code className="font-mono">{snap.schema_version}</code>.
         </p>
       </footer>

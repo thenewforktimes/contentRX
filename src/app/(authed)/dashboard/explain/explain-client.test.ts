@@ -3,13 +3,17 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * Copy + structure pins for /dashboard/explain (Phase F2).
+ * Wording + structure pins for /dashboard/explain (Phase F2).
  *
  * The roadmap (`_private/roadmap-update-2026-05-09.md`) locks the
- * marketing-copy banner wording verbatim. This file pins it. The
- * banner copy lives in three places per the integrity bar (paste-mode
- * banner, install confirmation, PR comment footer) — the latter two
- * land in F4/G3. This test pins the paste-mode placement.
+ * paste-mode banner wording verbatim. This file pins it. The banner
+ * lives in three places per the integrity bar (paste-mode banner,
+ * install confirmation, PR comment footer); the latter two land in
+ * F4/G3.
+ *
+ * 2026-05-11 (Robert): rewording from "marketing copy" to "marketing
+ * writing" as part of the customer-vocabulary sweep — "copy" the
+ * noun was retired sitewide. Banner string here updated to match.
  */
 
 const CLIENT_PATH = path.join(__dirname, "explain-client.tsx");
@@ -18,12 +22,12 @@ const PAGE_PATH = path.join(__dirname, "page.tsx");
 describe("explain-client.tsx (F2 paste-mode banner)", () => {
   const source = fs.readFileSync(CLIENT_PATH, "utf-8");
 
-  it("ships the marketing-copy banner copy verbatim", () => {
+  it("ships the marketing-writing banner verbatim", () => {
     // Roadmap locks the wording. Drift in this string is a regression.
     // The JSX uses &lsquo; and &rsquo; for the inner curly quotes;
     // the assertion targets the pieces around them so the entity-
     // encoded apostrophes don't trip a literal substring match.
-    expect(source).toContain("This looks like persuasive marketing copy.");
+    expect(source).toContain("This looks like persuasive marketing writing.");
     expect(source).toContain(
       "ContentRX is\n        calibrated for product and internal writing",
     );

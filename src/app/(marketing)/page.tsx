@@ -46,9 +46,9 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { Wordmark } from "@/components/wordmark";
 
 export const metadata: Metadata = {
-  title: "ContentRX. Staff-level content design review, in every repo",
+  title: "ContentRX. Staff-level content design review in every repo",
   description:
-    "ContentRX reviews your checks and long-form writing and gives you suggestions and rationale. Before your next PR, before merge.",
+    "ContentRX reviews your checks and long-form writing with the judgment of a staff content designer. Suggestions and rationale. Before your next PR, before merge.",
 };
 
 export default function Home() {
@@ -64,9 +64,9 @@ export default function Home() {
             Staff-level content design review in every repo
           </h1>
           <p className="mt-6 text-lg text-default sm:text-xl">
-            ContentRX reviews your checks and long-form writing and
-            gives you suggestions and rationale. Before your next PR,
-            before merge.
+            ContentRX reviews your checks and long-form writing with
+            the judgment of a staff content designer. Suggestions
+            and rationale. Before your next PR, before merge.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
             <Link href="/sign-up" className={buttonStyles({ variant: "primary" })}>
