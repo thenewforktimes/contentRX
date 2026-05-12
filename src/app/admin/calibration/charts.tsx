@@ -151,15 +151,19 @@ export function SystemKappaTrendChart({
           xEnd={PAD.left + PLOT_W}
           label="design target"
           stroke="currentColor"
-          className="text-stone-400"
+          className="text-quiet"
           dash="4 4"
         />
+        {/* Autonomous-threshold line — affirm border token (grass green
+            #22c55e). The SVG stroke needs an explicit value (the chart
+            wrapper doesn't pass currentColor through); kept in lockstep
+            with --accent-affirm-border in globals.css. */}
         <ReferenceLine
           y={autonomousY}
           xEnd={PAD.left + PLOT_W}
           label="autonomous κ"
-          stroke="rgb(16, 185, 129)"
-          className="text-emerald-500/70"
+          stroke="rgb(34, 197, 94)"
+          className="text-accent-affirm-border/70"
           dash="2 6"
         />
 

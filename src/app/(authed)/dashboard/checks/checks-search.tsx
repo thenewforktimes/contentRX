@@ -455,14 +455,14 @@ export function ChecksSearch({
 }
 
 function chipClass(active: boolean): string {
-  // Active filter chip uses the neutral-inverse pattern (dark in light
-  // mode, light in dark mode). No semantic token covers this case — the
-  // accent-primary orange reads as a CTA, not "this filter is selected."
-  // Keep the raw shades with an explicit reason so the linter rule keeps
-  // catching unintended drift elsewhere.
+  // Active filter chip uses the neutral-inverse pattern (dark fill in
+  // light mode, light fill in dark mode). bg-strong (the strongest
+  // text token, repurposed as fill) + text-canvas (the canvas token
+  // used as foreground) gives the inverse contrast without reaching
+  // for raw stone-900 shades. Same pattern as the subscription-panel
+  // interval toggle and the usage-panel ok bar.
   return active
-    ? // eslint-disable-next-line no-restricted-syntax -- neutral-inverse "selected" state, no semantic token equivalent
-      "rounded-full bg-stone-900 px-3 py-1 font-medium text-white dark:bg-stone-100 dark:text-stone-900"
+    ? "rounded-full bg-strong px-3 py-1 font-medium text-canvas"
     : "rounded-full bg-sunken px-3 py-1 font-medium text-default transition hover:bg-hover disabled:opacity-50 disabled:hover:bg-sunken";
 }
 

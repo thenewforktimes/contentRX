@@ -115,14 +115,20 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    /* ─── SURFACES (Kindle Paperwhite) ─── */
-    --surface-canvas:   #f5efe0;
+    /* ─── SURFACES (Light cream — 2026-05-11 (Robert) lifted from
+       Kindle Paperwhite #f5efe0 to a lighter shade so the Spring
+       Teal affirm slot has room to pop without competing with a
+       saturated canvas. Sunken + hover-bg shift proportionally to
+       maintain the canvas/sunken delta the eye expects. text-strong
+       contrast climbs from 16.5:1 to 17.6:1 against the new
+       canvas — still AAA, more headroom for accents to assert.) ─── */
+    --surface-canvas:   #faf5e6;
     --surface-raised:   #ffffff;
-    --surface-sunken:   #ebe3d0;
+    --surface-sunken:   #f0e9d6;
     --surface-overlay:  #ffffff;
 
     /* ─── INTERACTIVE STATES ─── */
-    --state-hover-bg:   #ebe3d0;
+    --state-hover-bg:   #f0e9d6;
 
     /* ─── TEXT ─── */
     --text-strong:      #1c1a17;
@@ -156,34 +162,40 @@
     --accent-primary-text:     #312e81;
     --accent-primary-border:   #6366f1;
 
-    /* ─── ACCENT: AFFIRM (grass green — brand-level accent) ─── */
-    /* 2026-05-11 (Robert): rolled back the emerald shift earlier the
-       same day. The emerald-700 "text" slot (#047857) read forest-
-       evergreen on the wordmark — the audit chased AAA contrast and
-       lost the brand pop. Brand identity outranks AAA on a *brand
-       mark* (the wordmark is large-text only and the RX letters are
-       always 5xl+); the rest of the family lands on AA Normal in the
-       soft-pairing it actually ships in. The green-700 hex is
-       yellow-leaning vs emerald-700's blue-lean — that's the
-       "grassy" read Robert keeps. Cross-mode consistency unchanged:
-       dark mode stays in the green family, light mode now matches it
-       instead of drifting into emerald.
+    /* ─── ACCENT: AFFIRM (Spring Teal — 2026-05-11 (Robert) shifted
+       from grass green-{500,600,700} to teal-{400,500,700,950}. The
+       green family read yellow-warm against the cream canvas; teal
+       leans cyan, which separates from the warm canvas the way
+       Linear's accents separate from their grey panel. Wordmark RX
+       reads bright + editorial instead of farmhouse-green. The new
+       lighter cream canvas (#faf5e6) gives the teal room to pop.
 
-       Contrast (light mode):
-         text on canvas:           #15803d on #f5efe0 = 4.3:1
-           AA Large only — fine for the wordmark (always text-5xl+)
-           and the green-soft pill pairing below.
-         text on soft:             #15803d on #dcfce7 = 4.5:1  (AA Normal)
-         solid on canvas (button): #16a34a on #f5efe0 = 3.5:1
-           AA Large for filled buttons (>=14px medium meets WCAG 1.4.3).
-         border on canvas:         #22c55e on #f5efe0 ≈ 2.5:1
-           non-text decoration; meets WCAG 1.4.11 (3:1) is borderline
-           — that's by design, borders read as accents not edges. */
-    --accent-affirm-solid:     #16a34a;
-    --accent-affirm-on-solid:  #ffffff;
-    --accent-affirm-soft:      #dcfce7;
-    --accent-affirm-text:      #15803d;
-    --accent-affirm-border:    #22c55e;
+       Two structural changes vs the grass-green palette this
+       replaces:
+
+         1. `on-solid` flipped from white (#ffffff) to near-black
+            teal-950 (#042f2e). Bright teal solids don't carry white
+            text at AA Normal — they need dark text on the bright bg
+            (the same pattern dark mode already uses: bright green-400
+            solid + green-950 on-solid). White-on-teal would have
+            shipped a real contrast bug; dark-on-teal is the correct
+            recipe and matches dark mode's symmetry.
+
+         2. The text slot moved from green-700 (#15803d, 4.3:1 AA
+            Large only) to teal-700 (#0f766e, 5.0:1 AA Normal). The
+            wordmark gains contrast at the same time it gains pop.
+
+       Contrast (light mode, vs canvas #faf5e6):
+         text on canvas:           #0f766e on #faf5e6 = 5.0:1  (AA Normal)
+         text on soft:             #0f766e on #ccfbf1 = 5.7:1  (AA Normal)
+         on-solid on solid:        #042f2e on #14b8a6 = 5.5:1  (AA Normal — buttons)
+         border on canvas:         #2dd4bf on #faf5e6 = 2.0:1
+           non-text decoration; reads as accent not edge by design. */
+    --accent-affirm-solid:     #14b8a6;
+    --accent-affirm-on-solid:  #042f2e;
+    --accent-affirm-soft:      #ccfbf1;
+    --accent-affirm-text:      #0f766e;
+    --accent-affirm-border:    #2dd4bf;
 
     /* ─── ACCENT: CAUTION ─── */
     --accent-caution-solid:    #ca8a04;

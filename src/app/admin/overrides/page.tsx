@@ -286,7 +286,7 @@ function FilterPill({
   active: boolean;
 }) {
   const tone = active
-    ? "bg-accent-primary-solid text-accent-primary-on"
+    ? "bg-accent-primary text-accent-primary-on"
     : "bg-sunken text-default hover:bg-hover";
   return (
     <a

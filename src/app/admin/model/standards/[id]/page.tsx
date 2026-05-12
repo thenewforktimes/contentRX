@@ -245,12 +245,12 @@ function ExampleBlock({
 }) {
   const classes =
     tone === "pass"
-      ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950"
-      : "border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950";
+      ? "border-accent-affirm-border bg-accent-affirm-soft"
+      : "border-accent-concern-border bg-accent-concern-soft";
   const labelTone =
     tone === "pass"
-      ? "text-emerald-800 dark:text-emerald-300"
-      : "text-rose-800 dark:text-rose-300";
+      ? "text-accent-affirm-text"
+      : "text-accent-concern-text";
   return (
     <div className={`rounded-lg border p-3 ${classes}`}>
       <p

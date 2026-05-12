@@ -394,10 +394,10 @@ function CustomRuleRow({
     severity?: string;
   };
   return (
-    <li className="flex items-start gap-3 rounded-md border border-blue-200 bg-blue-50/40 p-3 dark:border-blue-900 dark:bg-blue-950/30">
+    <li className="flex items-start gap-3 rounded-md border border-accent-info-border bg-accent-info-soft p-3">
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <code className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-xs text-blue-900 dark:bg-blue-900 dark:text-blue-100">
+          <code className="rounded bg-accent-info-border/30 px-1.5 py-0.5 font-mono text-xs text-accent-info-text">
             {rule.standardId}
           </code>
           <span className="text-xs font-medium">{fields.title}</span>
@@ -415,7 +415,7 @@ function CustomRuleRow({
             type="button"
             disabled={busy}
             onClick={() => setConfirming(true)}
-            className="rounded-md border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950"
+            className="rounded-md border border-accent-concern-border px-2 py-1 text-xs font-medium text-accent-concern-text hover:bg-accent-concern-soft disabled:opacity-50"
           >
             Remove
           </button>

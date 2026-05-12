@@ -279,7 +279,7 @@ export default async function OverridesPage() {
                 {pushbacks.map((p) => (
                   <li
                     key={p.key}
-                    className="flex items-start justify-between gap-4 rounded-md border border-amber-300 bg-amber-50/60 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/40"
+                    className="flex items-start justify-between gap-4 rounded-md border border-accent-caution-border bg-accent-caution-soft p-3 text-sm"
                   >
                     <div>
                       <p className="text-xs font-medium">
@@ -423,7 +423,7 @@ function Stat({
 }) {
   const valueColor =
     tone === "warn"
-      ? "text-amber-700 dark:text-amber-300"
+      ? "text-accent-caution-text"
       : "text-strong";
   return (
     <div className="rounded-lg border border-line p-4">

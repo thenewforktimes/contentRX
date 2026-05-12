@@ -123,8 +123,8 @@ export function TriageCluster({
 
   if (mode === "done") {
     return (
-      <article className="rounded-md border border-emerald-200 bg-emerald-50/50 px-4 py-3 text-sm dark:border-emerald-900 dark:bg-emerald-950/20">
-        <p className="font-mono text-xs text-emerald-700 dark:text-emerald-300">
+      <article className="rounded-md border border-accent-affirm-border bg-accent-affirm-soft px-4 py-3 text-sm">
+        <p className="font-mono text-xs text-accent-affirm-text">
           {momentLabel} · {contentTypeLabel} · {standardId ?? "—"}
         </p>
         <p className="mt-1 text-default">
@@ -158,7 +158,7 @@ export function TriageCluster({
             type="button"
             onClick={() => onAction("reject")}
             disabled={mode === "submitting"}
-            className="rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200 dark:hover:bg-amber-950/60"
+            className="rounded-md border border-accent-caution-border bg-accent-caution-soft px-2.5 py-1 text-xs font-medium text-accent-caution-text hover:bg-accent-caution-border/30"
           >
             Reject
           </button>
@@ -173,7 +173,7 @@ export function TriageCluster({
                 ? "Cluster missing bucket axes — can't promote until /admin assigns moment + content_type + standard_id"
                 : undefined
             }
-            className="rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-900 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-950/60"
+            className="rounded-md border border-accent-affirm-border bg-accent-affirm-soft px-2.5 py-1 text-xs font-medium text-accent-affirm-text hover:bg-accent-affirm-border/30 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {mode === "submitting" ? "…" : "Approve"}
           </button>
@@ -222,7 +222,7 @@ export function TriageCluster({
       {errorMessage && (
         <p
           role="alert"
-          className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+          className="mt-3 rounded-md border border-accent-caution-border bg-accent-caution-soft px-3 py-2 text-xs text-accent-caution-text"
         >
           {errorMessage}
         </p>

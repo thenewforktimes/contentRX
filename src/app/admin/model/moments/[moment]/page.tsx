@@ -23,9 +23,9 @@ const MODIFIER_ORDER: Modifier[] = ["emphasize", "relax", "suppress"];
 
 const MODIFIER_TONE: Record<Modifier, string> = {
   emphasize:
-    "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200",
+    "border-accent-affirm-border bg-accent-affirm-soft text-accent-affirm-text",
   relax:
-    "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200",
+    "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text",
   suppress:
     "border-line bg-sunken text-default",
 };

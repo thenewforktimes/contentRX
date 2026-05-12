@@ -56,7 +56,12 @@ const STAGES: ReadonlyArray<Stage> = [
     output: <code className="font-mono text-xs text-default">&quot;Click here&quot;</code>,
   },
   {
-    label: "We do the hard eval work",
+    // 2026-05-11 (Robert): shortened from "We do the hard eval work"
+    // (which wrapped to two lines on the visibly-broken card in the
+    // screenshot). The new label matches step's role — the engine's
+    // actual evaluation — without the verbose "we do the hard"
+    // framing, and fits on one line at every breakpoint.
+    label: "ContentRX evaluates",
     output: <ThinkingDots />,
   },
   {

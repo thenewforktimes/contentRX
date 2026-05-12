@@ -27,9 +27,12 @@ export const tokens = {
    */
   light: {
     surface: {
-      canvas: "#f5efe0",
+      // Light cream — lifted from #f5efe0 on 2026-05-11 so the
+      // Spring Teal affirm slot has room to pop. Sunken shifted
+      // proportionally to maintain the canvas/sunken delta.
+      canvas: "#faf5e6",
       raised: "#ffffff",
-      sunken: "#ebe3d0",
+      sunken: "#f0e9d6",
       overlay: "#ffffff",
     },
     text: {
@@ -50,15 +53,19 @@ export const tokens = {
         border: "#6366f1",
       },
       affirm: {
-        // Grass green — matches globals.css light palette. The brand
+        // Spring Teal — matches globals.css light palette. The brand
         // wordmark RX in marketing emails uses the `text` slot; the
         // upgrade/welcome CTA button uses `solid`. Re-sync this when
         // the light palette in globals.css moves.
-        solid: "#16a34a",
-        onSolid: "#ffffff",
-        soft: "#dcfce7",
-        text: "#15803d",
-        border: "#22c55e",
+        //
+        // onSolid is teal-950 (#042f2e) not white — bright teal
+        // solids carry dark text, not white, for AA Normal contrast
+        // (mirrors dark mode's bright-solid + dark-on-solid recipe).
+        solid: "#14b8a6",
+        onSolid: "#042f2e",
+        soft: "#ccfbf1",
+        text: "#0f766e",
+        border: "#2dd4bf",
       },
       caution: {
         solid: "#ca8a04",

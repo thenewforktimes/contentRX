@@ -418,12 +418,12 @@ function RailRow({
   // already in use elsewhere on the row.
   const dot =
     tone === "green"
-      ? "bg-accent-affirm-solid"
+      ? "bg-accent-affirm"
       : tone === "amber"
-        ? "bg-accent-caution-solid"
+        ? "bg-accent-caution"
         : tone === "red"
-          ? "bg-accent-concern-solid"
-          : "bg-accent-info-solid";
+          ? "bg-accent-concern"
+          : "bg-accent-info";
   return (
     <li className="flex items-center justify-between text-default">
       <span className="flex items-center gap-2">

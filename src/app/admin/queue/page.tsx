@@ -28,6 +28,7 @@ import {
   humanizeMoment,
   humanizeReviewReason,
 } from "@/lib/humanize";
+import { loadSidebarCounts } from "@/lib/admin/sidebar-counts";
 
 const SUBTYPES = [
   "low_confidence",
@@ -89,6 +90,16 @@ export default async function AdminQueuePage({
   const since = new Date(Date.now() - windowDays * DAY_MS);
 
   const db = getDb();
+
+  // Customer-flag count for the cross-link banner. Engineers
+  // (Robert) repeatedly land on /queue looking for customer-shared
+  // content; the queue is hash-only by privacy contract. The banner
+  // makes the right next click (Customer flags) obvious instead of
+  // implicit in the left rail.
+  const sidebarCounts = await loadSidebarCounts().catch(() => ({
+    customerFlags: 0,
+  }));
+  const openCustomerFlags = sidebarCounts.customerFlags;
 
   // Counts by subtype within the window. Drives the filter tabs.
   const counts = await db
@@ -171,11 +182,24 @@ export default async function AdminQueuePage({
             Review queue
           </h1>
           <p className="mt-1 text-sm text-quiet">
-            Cases the engine flagged for review in the last {windowDays} days.
-            Filter by subtype to focus the daily 15-minute review rhythm.
+            Engine-flagged cases from the last {windowDays} days,
+            grouped by why the engine wasn&rsquo;t sure.{" "}
+            <strong>Customer text is stored as a sha256 hash on this
+            surface</strong> — the per-row text_hash below is the only
+            identity. For customer-shared content (Flag-for-Review
+            consent), see{" "}
+            <Link
+              href="/admin/customer-flags"
+              className="underline underline-offset-2 hover:text-strong"
+            >
+              Customer flags →
+            </Link>
+            .
+          </p>
+          <p className="mt-2 text-sm text-quiet">
             Click <strong>Agree</strong> to confirm the engine&apos;s
-            review-recommended verdict, <strong>False positive</strong> to
-            mark it as a miscall, or <strong>Skip</strong> to defer.
+            review-recommended verdict, <strong>False positive</strong>{" "}
+            to mark it as a miscall, or <strong>Skip</strong> to defer.
             Decisions persist into the override stream for calibration.
           </p>
         </div>
@@ -184,6 +208,26 @@ export default async function AdminQueuePage({
           pending
         </div>
       </header>
+
+      {openCustomerFlags > 0 && (
+        <aside
+          role="note"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-accent-info-border bg-accent-info-soft p-3 text-sm text-accent-info-text"
+        >
+          <p>
+            <strong>{openCustomerFlags} customer flag
+            {openCustomerFlags === 1 ? "" : "s"}</strong>{" "}
+            awaiting triage. Customer-shared content lands there with
+            plaintext (per-row consent) — not on this surface.
+          </p>
+          <Link
+            href="/admin/customer-flags"
+            className="font-medium underline underline-offset-2"
+          >
+            Open customer flags →
+          </Link>
+        </aside>
+      )}
 
       <nav
         aria-label="Subtype filters"
@@ -249,12 +293,12 @@ function FilterTab({
   count: number;
 }) {
   const cls = active
-    ? "rounded-md bg-accent-primary-solid text-accent-primary-on"
+    ? "rounded-md bg-accent-primary text-accent-primary-on"
     : "rounded-md bg-sunken text-default hover:bg-hover";
   return (
     <Link href={href} className={`${cls} px-3 py-1.5 text-xs font-medium`}>
       {label}
-      <span className="ml-2 inline-flex min-w-[1.5rem] justify-center rounded bg-black/10 px-1 font-mono text-[10px] dark:bg-white/10">
+      <span className="ml-2 inline-flex min-w-[1.5rem] justify-center rounded bg-strong/10 px-1 font-mono text-[10px]">
         {count}
       </span>
     </Link>
@@ -305,9 +349,9 @@ function QueueRow({
             <span
               className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                 row.severity === "high"
-                  ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                  ? "bg-accent-concern-soft text-accent-concern-text"
                   : row.severity === "medium"
-                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                    ? "bg-accent-caution-soft text-accent-caution-text"
                     : "bg-sunken text-default"
               }`}
             >
@@ -323,8 +367,8 @@ function QueueRow({
             <span
               className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                 decidedStance === "agree"
-                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                  : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                  ? "bg-accent-affirm-soft text-accent-affirm-text"
+                  : "bg-accent-concern-soft text-accent-concern-text"
               }`}
             >
               {decidedStance === "agree" ? "✓ Agreed" : "✗ Disagreed"}
@@ -394,9 +438,9 @@ function DecisionForm({
 }) {
   const cls =
     stance === "agree"
-      ? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900"
+      ? "border-accent-affirm-border bg-accent-affirm-soft text-accent-affirm-text hover:bg-accent-affirm-border/30"
       : stance === "disagree"
-        ? "border-rose-300 bg-rose-50 text-rose-900 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300 dark:hover:bg-rose-900"
+        ? "border-accent-concern-border bg-accent-concern-soft text-accent-concern-text hover:bg-accent-concern-border/30"
         : "border-line-strong bg-raised text-default hover:bg-hover";
 
   async function handle() {

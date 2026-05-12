@@ -106,11 +106,11 @@ function RuleCard({ standard }: { standard: PublicStandard }) {
         )}
       </div>
       <dl className="mt-2 grid grid-cols-1 gap-1 text-xs text-quiet sm:grid-cols-[80px_1fr]">
-        <dt className="font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+        <dt className="font-semibold uppercase tracking-wide text-accent-affirm-text">
           Correct
         </dt>
         <dd>{standard.correct}</dd>
-        <dt className="font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-400">
+        <dt className="font-semibold uppercase tracking-wide text-accent-concern-text">
           Avoid
         </dt>
         <dd>{standard.incorrect}</dd>

@@ -308,7 +308,7 @@ export default async function CalibrationCoveragePage() {
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums">
                     {b.precedentCount > 0 ? (
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                      <span className="font-semibold text-accent-affirm-text">
                         {b.precedentCount}
                       </span>
                     ) : (
@@ -319,7 +319,7 @@ export default async function CalibrationCoveragePage() {
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums">
                     {b.pendingCount > 0 ? (
-                      <span className="font-semibold text-amber-700 dark:text-amber-300">
+                      <span className="font-semibold text-accent-caution-text">
                         {b.pendingCount}
                       </span>
                     ) : (
@@ -398,11 +398,11 @@ function Stat({
 }) {
   const toneClass =
     tone === "emerald"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
+      ? "border-accent-affirm-border bg-accent-affirm-soft text-accent-affirm-text"
       : tone === "amber"
-        ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+        ? "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text"
         : tone === "red"
-          ? "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200"
+          ? "border-accent-concern-border bg-accent-concern-soft text-accent-concern-text"
           : "border-line bg-sunken text-default";
   return (
     <span
@@ -441,9 +441,9 @@ function RejectRateCell({
   const pct = Math.round(rate * 100);
   const toneClass =
     rate >= 0.5
-      ? "text-rose-700 dark:text-rose-300"
+      ? "text-accent-concern-text"
       : rate >= 0.25
-        ? "text-amber-700 dark:text-amber-300"
+        ? "text-accent-caution-text"
         : "text-default";
   return (
     <span

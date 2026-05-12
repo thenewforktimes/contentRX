@@ -27,10 +27,16 @@ import type { ReactNode } from "react";
 
 export type StepBadgeState = "pending" | "active" | "complete";
 
+// 2026-05-11 (Robert): dropped the filled pill backgrounds inside the
+// HowItWorksDiagram. The colored blocks visually competed with the
+// stage card's own affirm tinting (the card itself flips green when
+// active/complete), so the badge bg duplicated the signal and made
+// the animation read busier than necessary. Now the number alone
+// carries the position; the surrounding card carries the state.
 const stateClasses: Record<StepBadgeState, string> = {
-  pending: "bg-sunken text-quiet",
-  active: "bg-accent-caution-soft text-accent-caution-text",
-  complete: "bg-accent-affirm-soft text-accent-affirm-text",
+  pending: "text-quiet",
+  active: "text-accent-caution-text",
+  complete: "text-accent-affirm-text",
 };
 
 export function StepBadge({
