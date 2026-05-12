@@ -43,13 +43,19 @@
   --surface-sunken:   #0d0d1f;
   --surface-overlay:  #2a2b50;
   /* `page` is the writing-surface elevation — textareas, paste
-     boxes, anywhere the eye expects to read or write text. Treated
-     as a different material than the surrounding chrome. Dark mode:
-     one step up from raised with a hair of warm tilt vs the cool
-     navy panel — reads as a lit page under a desk lamp. Light mode
-     (below): a hair warmer + brighter than the white panel — reads
-     as a fresh Moleskine page. */
-  --surface-page:     #2d2c5c;
+     boxes, anywhere the eye expects to read or write text. Same
+     warm cream value in both light and dark mode: the Kindle
+     Paperwhite metaphor taken literally. In dark mode the cream
+     textarea reads as a lit page in a dim room (paper-on-dark
+     contrast, eye lands immediately on the writing surface). In
+     light mode it reads as an inset cream slip in the white panel.
+     Both modes the textarea is the brightest, warmest object in
+     the panel — the affordance is the lightness itself.
+     `page-on` is the foreground text token that pairs with it.
+     Always dark ink (#1c1a17) because the bg is always cream;
+     it's a single value across modes, not a flipping pair. */
+  --surface-page:     #fdfaf0;
+  --surface-page-on:  #1c1a17;
 
   /* ─── INTERACTIVE STATES ─── */
   /* Surface colour used for hover / focus background lift on
@@ -134,11 +140,14 @@
     --surface-raised:   #ffffff;
     --surface-sunken:   #f0e9d6;
     --surface-overlay:  #ffffff;
-    /* `page` — writing-surface elevation. A hair warmer + brighter
-       than the pure-white panel; reads as a fresh Moleskine page set
-       into the desk. Used by textareas + paste boxes. See the dark
-       value above for the cross-mode rationale. */
+    /* `page` matches dark mode (#fdfaf0) — the Kindle Paperwhite
+       value lives in both palettes. Light mode reads it as an inset
+       cream slip in the white panel; dark mode reads it as a lit
+       page in a dim room. See the dark block comment for the full
+       rationale. `page-on` is the paired ink-text color, also the
+       same in both modes. */
     --surface-page:     #fdfaf0;
+    --surface-page-on:  #1c1a17;
 
     /* ─── INTERACTIVE STATES ─── */
     --state-hover-bg:   #f0e9d6;
@@ -248,6 +257,7 @@
   --color-sunken:   var(--surface-sunken);
   --color-overlay:  var(--surface-overlay);
   --color-page:     var(--surface-page);
+  --color-page-on:  var(--surface-page-on);
 
   --color-strong:   var(--text-strong);
   --color-default:  var(--text-default);
