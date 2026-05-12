@@ -42,6 +42,14 @@
   --surface-raised:   #22224a;
   --surface-sunken:   #0d0d1f;
   --surface-overlay:  #2a2b50;
+  /* `page` is the writing-surface elevation — textareas, paste
+     boxes, anywhere the eye expects to read or write text. Treated
+     as a different material than the surrounding chrome. Dark mode:
+     one step up from raised with a hair of warm tilt vs the cool
+     navy panel — reads as a lit page under a desk lamp. Light mode
+     (below): a hair warmer + brighter than the white panel — reads
+     as a fresh Moleskine page. */
+  --surface-page:     #2d2c5c;
 
   /* ─── INTERACTIVE STATES ─── */
   /* Surface colour used for hover / focus background lift on
@@ -126,6 +134,11 @@
     --surface-raised:   #ffffff;
     --surface-sunken:   #f0e9d6;
     --surface-overlay:  #ffffff;
+    /* `page` — writing-surface elevation. A hair warmer + brighter
+       than the pure-white panel; reads as a fresh Moleskine page set
+       into the desk. Used by textareas + paste boxes. See the dark
+       value above for the cross-mode rationale. */
+    --surface-page:     #fdfaf0;
 
     /* ─── INTERACTIVE STATES ─── */
     --state-hover-bg:   #f0e9d6;
@@ -234,6 +247,7 @@
   --color-raised:   var(--surface-raised);
   --color-sunken:   var(--surface-sunken);
   --color-overlay:  var(--surface-overlay);
+  --color-page:     var(--surface-page);
 
   --color-strong:   var(--text-strong);
   --color-default:  var(--text-default);
