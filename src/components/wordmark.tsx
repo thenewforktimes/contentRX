@@ -18,9 +18,19 @@
  *     stagger, then "RX" pops in scaled.
  *   - One-shot animation. `prefers-reduced-motion` skips it.
  *
- * The accent color comes from a single token (--color-accent-primary
- * via accent-affirm-text). One change to the token recolors the
- * wordmark everywhere it appears.
+ * The accent color comes from --color-accent-affirm (the bright
+ * solid slot, #14b8a6 teal-500 in light mode / #4ade80 green-400 in
+ * dark mode). One change to the token recolors the wordmark
+ * everywhere it appears.
+ *
+ * 2026-05-11 (Robert): switched the wordmark from the "text" slot
+ * (#0f766e teal-700, the darker variant) to the "solid" slot (#14b8a6
+ * teal-500, bright). The text slot is calibrated for pill captions
+ * on soft backgrounds where AA Normal (4.5:1) has to hold — those
+ * use cases drive the darker hue. The wordmark renders at text-5xl+
+ * always, so it qualifies for AA Large (3:1) at most; the solid slot
+ * at 2.43:1 on cream is below that, but brand marks routinely opt
+ * out of contrast requirements (think IBM, Coca-Cola). The pop wins.
  *
  * Why "RX" lands in the accent color: the cheapest possible visual
  * signature. Customers say "ContentRX" and the eye learns to expect
@@ -162,14 +172,14 @@ function Mark({
           stroke="currentColor"
           strokeWidth="2.5"
           strokeLinecap="round"
-          className="text-accent-affirm-text"
+          className="text-accent-affirm"
           initial={animate ? { pathLength: 0 } : false}
           animate={animate ? { pathLength: 1 } : undefined}
           transition={animate ? { duration: 0.7, ease: "easeOut" } : undefined}
         />
       </svg>
       <motion.span
-        className={`relative z-10 text-accent-affirm-text ${markTextCls}`}
+        className={`relative z-10 text-accent-affirm ${markTextCls}`}
         initial={animate ? { opacity: 0 } : false}
         animate={animate ? { opacity: 1 } : undefined}
         transition={
@@ -196,7 +206,7 @@ function Letters({
   if (!animate) {
     return (
       <span className={`text-strong ${textCls}`} aria-hidden>
-        Content<span className="text-accent-affirm-text">RX</span>
+        Content<span className="text-accent-affirm">RX</span>
       </span>
     );
   }
@@ -219,7 +229,7 @@ function Letters({
         </motion.span>
       ))}
       <motion.span
-        className="inline-block text-accent-affirm-text"
+        className="inline-block text-accent-affirm"
         initial={{ opacity: 0, scale: 0.85 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
