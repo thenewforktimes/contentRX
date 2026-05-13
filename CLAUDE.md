@@ -766,11 +766,17 @@ Before paid customers land:
    `src/components/flag-for-review.tsx`, entity disclosure §11,
    DPA at `/legal/dpa.pdf`. Andrew Bosin LLC or any Cooley GO
    startup lawyer.
-5. **Confirm Anthropic ZDR status.** `/terms` §5 paragraph 3 and
-   `/privacy` "Where the data lives" currently hedge with "in
-   progress." Once ZDR is confirmed live on the account, update
-   both surfaces to remove the hedge and mark the work complete in
-   the "Known limitations" section above.
+5. **Rewrite the ZDR hedge in `/terms` §5 paragraph 3 and `/privacy`
+   "Where the data lives".** ZDR pursuit was decided against on
+   2026-05-12 (PM). Both surfaces currently say the ZDR posture is
+   "in progress" — that's now misleading. Replace with a plain
+   statement of the actual position: customer strings transit
+   Anthropic's API and are subject to Anthropic's standard
+   retention policy; ContentRX does not have a Zero Data Retention
+   agreement with Anthropic. Also update the "Customer data —
+   non-negotiables" section in this file (the subsection titled
+   "The Anthropic ZDR commitment") so the policy statement matches
+   the decision. Must land before paid signups open.
 6. **Set `FOUNDER_EMAIL` env var in Vercel.** Currently falls back
    to `hello@contentrx.io`. Set explicitly to wherever waitlist
    notifications should land.
