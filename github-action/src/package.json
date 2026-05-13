@@ -9,7 +9,7 @@
     "contentrx-extract": "./extract.mjs"
   },
   "dependencies": {
-    "@babel/parser": "^7.25.0",
+    "@babel/parser": "^7.29.3",
     "@babel/traverse": "^7.25.0",
     "@babel/types": "^7.25.0"
   }
