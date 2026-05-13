@@ -100,7 +100,7 @@ export default function DisclaimerPage() {
 
       <Script
         src={`https://policies.termageddon.com/api/embed/${TERMAGEDDON_DISCLAIMER_ID}.js`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
     </main>
   );

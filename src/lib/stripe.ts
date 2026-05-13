@@ -40,7 +40,7 @@ export function getStripe(): Stripe {
   _stripe = new Stripe(secret, {
     // Pin the API version so Stripe doesn't silently change response shapes
     // under us. Bump deliberately after reviewing migration notes.
-    apiVersion: "2026-03-25.dahlia",
+    apiVersion: "2026-04-22.dahlia",
     typescript: true,
   });
   return _stripe;

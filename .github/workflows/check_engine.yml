@@ -65,17 +65,28 @@ jobs:
         run: npm ci
 
       # Restore the engine cache. Key includes the OS so we don't
-      # share a cache across runners that might serialize differently.
-      # The branch name is in the key too: each branch gets its own
-      # cache, but the restore-key falls back to main's cache so a
-      # fresh branch starts hot.
+      # share a cache across runners that might serialize differently,
+      # plus a content hash of the engine code so the cache
+      # auto-invalidates whenever the evaluation logic changes.
+      # Different branches running identical engine code share cache
+      # hits (efficiency). The single prefix restore-key gives a soft
+      # warm-start across engine versions; entries that don't match
+      # the current engine's internal versioning are ignored on read.
+      #
+      # Defense-in-depth note (from the TanStack supply-chain
+      # postmortem audit, 2026-05-13): content-derived keying narrows
+      # the cache-poisoning surface — a maliciously-constructed cache
+      # can't be matched on the exact key without the attacker
+      # knowing the engine code's hash. Forks already can't write
+      # here (this workflow uses pull_request, not
+      # pull_request_target), so this is layered hardening, not a
+      # patched exploit.
       - name: Restore engine cache
         uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf  # v4
         with:
           path: .cache/contentrx-engine
-          key: contentrx-engine-${{ runner.os }}-${{ github.head_ref }}
+          key: contentrx-engine-${{ runner.os }}-${{ hashFiles('src/content_checker/**/*.py', 'scripts/check-copy-with-engine.ts') }}
           restore-keys: |
-            contentrx-engine-${{ runner.os }}-main
             contentrx-engine-${{ runner.os }}-
 
       - name: Run engine check (diff-scoped)
