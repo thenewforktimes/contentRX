@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 393 120" width="393" height="120" role="img" aria-label="ContentRX">
+  <title>ContentRX</title>
+  <style>
+    .wm {
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      font-size: 74px;
+    }
+  </style>
+  <defs>
+    <clipPath id="pill"><rect x="0" y="0" width="393" height="120" rx="60" ry="60"/></clipPath>
+  </defs>
+  <g clip-path="url(#pill)">
+    <rect x="0" y="0" width="267" height="120" fill="#181816"/>
+    <rect x="267" y="0" width="126" height="120" fill="#00B3A4"/>
+  </g>
+  <rect x="2" y="2" width="389" height="116" rx="58" ry="58" fill="none" stroke="#181816" stroke-width="4"/>
+  <text class="wm" x="40" y="86" fill="#F1ECDF">Content</text>
+  <text class="wm" x="267" y="86" fill="#181816">RX</text>
+</svg>

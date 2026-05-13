@@ -333,3 +333,133 @@ body {
     animation: none;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────
+ * Wordmark — brand-locked tokens (v2, 2026-05-13)
+ *
+ * The pill capsule IS the wordmark: "Content" sits on the dark half,
+ * "RX" sits on the bright half, both inside a single rounded pill
+ * with a hairline stroke. Designed by Claude Design as variant 3l.
+ *
+ * These --crx-* tokens are a separate namespace from the three-tier
+ * semantic design system. The wordmark is a logo — its colors are
+ * brand-fixed, not theme-driven by the surrounding palette. The
+ * tokens flip with the rest of the app via prefers-color-scheme
+ * (matching ContentRX's dark-default + light-override pattern), and
+ * can be force-overridden via data-theme="light" / "dark" for
+ * contexts that render against a known background (OG images,
+ * marketing screenshots, print PDFs).
+ *
+ * Font is var(--font-sans-base) — Inter Black (900) via next/font.
+ * The em-based outline + padding means one component renders cleanly
+ * from a 16px nav badge to a 256px hero with no per-size assets.
+ * ───────────────────────────────────────────────────────────────── */
+:root {
+  /* Brand-fixed palette (never theme-flipped) */
+  --crx-cream:        #F1ECDF;
+  --crx-ink:          #181816;
+  --crx-teal:         #00B3A4;
+  --crx-navy:         #11122B;
+  --crx-paper:        #ECECEF;
+  --crx-green:        #3FCF73;
+
+  /* Mode-aware semantic slots — default is DARK to match the app's
+     dark-default posture. Light mode overrides via the media query
+     below. */
+  --crx-pill-left:    var(--crx-paper);
+  --crx-pill-right:   var(--crx-green);
+  --crx-pill-text-l:  var(--crx-navy);
+  --crx-pill-text-r:  var(--crx-navy);
+  --crx-pill-stroke:  var(--crx-paper);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --crx-pill-left:    var(--crx-ink);
+    --crx-pill-right:   var(--crx-teal);
+    --crx-pill-text-l:  var(--crx-cream);
+    --crx-pill-text-r:  var(--crx-ink);
+    --crx-pill-stroke:  var(--crx-ink);
+  }
+}
+
+/* Explicit overrides — force a specific mode regardless of viewer
+   preference. Used by <Wordmark mode="light" /> for marketing
+   surfaces, OG images, light-mode-only emails, etc. */
+[data-theme="light"] {
+  --crx-pill-left:    var(--crx-ink);
+  --crx-pill-right:   var(--crx-teal);
+  --crx-pill-text-l:  var(--crx-cream);
+  --crx-pill-text-r:  var(--crx-ink);
+  --crx-pill-stroke:  var(--crx-ink);
+}
+
+[data-theme="dark"] {
+  --crx-pill-left:    var(--crx-paper);
+  --crx-pill-right:   var(--crx-green);
+  --crx-pill-text-l:  var(--crx-navy);
+  --crx-pill-text-r:  var(--crx-navy);
+  --crx-pill-stroke:  var(--crx-paper);
+}
+
+/* The wordmark — integrated pill with two-tone color split */
+.crx-wordmark {
+  font-family: var(--font-sans-base), Inter, system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 999px;
+  overflow: hidden;
+  white-space: nowrap;
+  /* Outline scales with font-size — stays proportional at any scale */
+  box-shadow: inset 0 0 0 0.0625em var(--crx-pill-stroke);
+  font-size: 64px; /* default; override via size variant or inline */
+}
+.crx-wordmark > .left,
+.crx-wordmark > .right {
+  padding: 0.42em 0 0.46em;
+  display: inline-block;
+}
+.crx-wordmark > .left {
+  background: var(--crx-pill-left);
+  color: var(--crx-pill-text-l);
+  padding-left: 0.62em;
+}
+.crx-wordmark > .right {
+  background: var(--crx-pill-right);
+  color: var(--crx-pill-text-r);
+  padding-right: 0.62em;
+}
+
+/* Size variants */
+.crx-wordmark--sm  { font-size: 24px; }
+.crx-wordmark--md  { font-size: 40px; }
+.crx-wordmark--lg  { font-size: 64px; }
+.crx-wordmark--xl  { font-size: 96px; }
+
+/* Square mark (favicon / app icon) — pill on a rounded square,
+   no inner text. Pure shape, two fills meeting at the centerline. */
+.crx-mark {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background: var(--crx-bg, var(--crx-cream));
+  border-radius: 22%;
+  padding: 18% 12%;
+  box-sizing: border-box;
+  font-size: 64px;
+}
+.crx-mark__pill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--crx-pill-left) 0 50%,
+    var(--crx-pill-right) 50% 100%
+  );
+  box-shadow: inset 0 0 0 0.08em var(--crx-pill-stroke);
+}
