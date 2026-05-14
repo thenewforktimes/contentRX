@@ -94,12 +94,25 @@ export function MembersPanel({
           )}
         </p>
         <form onSubmit={onInvite} className="mt-3 flex flex-wrap gap-2">
+          {/*
+           * Accessible-name pattern: visually-hidden <label> paired
+           * with the Input via htmlFor + id. The placeholder is not a
+           * substitute for a label (WCAG 3.3.2). aria-invalid + the
+           * error block linked via aria-describedby are wired by the
+           * Input primitive itself (see input.tsx — PR 3) once `error`
+           * prop is passed.
+           */}
+          <label htmlFor="invite-email" className="sr-only">
+            Teammate email
+          </label>
           <Input
+            id="invite-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="teammate@example.com"
             required
+            aria-required="true"
             disabled={state === "submitting" || seatsAvailable === 0}
             className="flex-1 min-w-[240px]"
           />
@@ -107,6 +120,7 @@ export function MembersPanel({
             type="submit"
             disabled={state === "submitting" || seatsAvailable === 0 || !email.trim()}
             size="sm"
+            aria-busy={state === "submitting" || undefined}
           >
             {state === "submitting" ? "Sending…" : "Send invite"}
           </Button>
@@ -146,6 +160,10 @@ export function MembersPanel({
                   type="button"
                   onClick={() => onRevoke(p.id)}
                   disabled={revokingId === p.id}
+                  // Per-row aria-label so SR users can distinguish the
+                  // (otherwise identical) Revoke buttons (WCAG 2.4.4).
+                  aria-label={`Revoke invitation for ${p.email}`}
+                  aria-busy={revokingId === p.id || undefined}
                   className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-hover disabled:opacity-50"
                 >
                   {revokingId === p.id ? "Revoking…" : "Revoke"}

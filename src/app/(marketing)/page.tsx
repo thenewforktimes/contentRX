@@ -102,7 +102,13 @@ export default function Home() {
           lets the dots stay subtle while borders stay assertive. */}
       <section
         id="how-it-works"
-        className="mt-20 rounded-3xl border border-line bg-raised/40 p-8 sm:p-12"
+        // tabIndex={-1} lets keyboard focus land inside the section
+        // when the user follows the "See how it works" anchor link;
+        // without it, the page scrolls but focus stays on the now
+        // off-screen trigger (WCAG 2.4.3). outline-none prevents the
+        // default focus ring from showing on the section itself.
+        tabIndex={-1}
+        className="mt-20 rounded-3xl border border-line bg-raised/40 p-8 outline-none sm:p-12"
         style={{
           backgroundImage:
             "radial-gradient(circle, var(--decoration-dot) 1px, transparent 1px)",

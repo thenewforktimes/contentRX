@@ -160,8 +160,14 @@ export function extractPolicyBody(html: string): string | null {
  */
 export function sanitizePolicyHtml(dirty: string): string {
   return sanitizeHtml(dirty, {
+    // h1 intentionally NOT in this allowlist (WCAG 1.3.1 / 2.4.6). The
+    // page already renders an <h1> via <PageHeader title="Disclaimer">.
+    // If Termageddon's response carries its own <h1>, allowing it would
+    // produce a duplicate top-level heading in the document outline.
+    // The transformTags rule below promotes any incoming h1 to h2 so
+    // the content survives without breaking the heading hierarchy.
     allowedTags: [
-      "h1", "h2", "h3", "h4", "h5", "h6",
+      "h2", "h3", "h4", "h5", "h6",
       "p", "br", "hr",
       "ul", "ol", "li",
       "a", "strong", "em", "b", "i", "u",
@@ -172,6 +178,8 @@ export function sanitizePolicyHtml(dirty: string): string {
     },
     allowedSchemes: ["http", "https", "mailto"],
     transformTags: {
+      // Promote h1 to h2 so the rendered outline stays single-rooted.
+      h1: "h2",
       // Force external links to open without leaking referrer or
       // window.opener access. Defense-in-depth; the link set is
       // small and curated, but this is cheap insurance.
