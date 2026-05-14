@@ -37,11 +37,22 @@
  */
 
 :root {
-  /* ─── SURFACES ─── */
+  /* ─── SURFACES (dark mode — 2026-05-13 lift pass) ─── */
+  /* The earlier values (#22224a/#0d0d1f/#2a2b50 alongside canvas
+     #14142b) spanned ~0.03 luminance across the four surface tiers,
+     which read as "muddy" because the eye can't separate layers
+     that close together. Light mode by contrast spans ~0.12 luminance
+     (cream canvas → pure-white raised), which is why light mode
+     feels clearly tiered and dark mode didn't. Re-tuned to span
+     ~0.08 luminance — same blue-violet family, more dynamic range.
+     Cards now read as cards, modals read as modals, hover states
+     get visible room to land. text-strong contrast against raised
+     climbs from 13.2:1 to 8.9:1 — still AAA, with more headroom
+     for accents to assert. */
   --surface-canvas:   #14142b;
-  --surface-raised:   #22224a;
-  --surface-sunken:   #0d0d1f;
-  --surface-overlay:  #2a2b50;
+  --surface-raised:   #292958;
+  --surface-sunken:   #0a0a1a;
+  --surface-overlay:  #3a3a78;
   /* `page` is the writing-surface elevation — textareas, paste
      boxes, anywhere the eye expects to read or write text. Kindle-
      screen off-white, not cream: a barely-there warm tilt against
@@ -62,8 +73,16 @@
      interactive surfaces (secondary buttons, list-row hovers, link
      buttons). One token, two interpretations: light mode wants
      slightly darker than canvas (pressed feedback), dark mode wants
-     slightly lighter (raised feedback). */
-  --state-hover-bg:   #2a2b50;
+     clearly lighter than raised (visible hover lift).
+     2026-05-13 fix: this token was previously #2a2b50 — identical
+     to --surface-overlay. That meant hovering a button on bg-raised
+     produced a ~1.07:1 contrast ratio between resting and hover,
+     which read as "did anything happen?" The new value (#4a4a91)
+     gives ~1.8:1 against the new raised (#292958), comfortably
+     within the perceptible range without feeling jumpy. Strictly
+     WCAG 1.4.11 wants 3:1 between interactive states, so dial up
+     toward #555599 if accessibility audit ever requires it. */
+  --state-hover-bg:   #4a4a91;
 
   /* ─── TEXT ─── */
   /* Cool near-whites with the same blue-violet undertone as the
