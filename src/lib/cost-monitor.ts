@@ -26,7 +26,7 @@
  */
 
 import { and, eq, gte, sql, sum } from "drizzle-orm";
-import { getDb, schema } from "@/db";
+import { getDb, schema, type DbOrTx } from "@/db";
 import type { SizeClass } from "./metering";
 import { estimateCostUsd } from "./pricing/model-rates";
 
@@ -105,11 +105,19 @@ export interface ThresholdResult {
  * INSERT a row into `usage_events` with computed cost. Returns the
  * estimated cost so the caller can surface it (e.g. in a Resend email
  * body).
+ *
+ * Optional `db` parameter lets the caller pass a Drizzle transaction
+ * client so this insert composes inside a larger atomic block. When
+ * omitted, behaviour is unchanged — `getDb()` returns the singleton
+ * client and the insert runs in its own implicit transaction. Used
+ * by /api/check (2026-05-14 audit fix) to wrap `logViolations` +
+ * `recordUsageEvent` in a single transaction so the two-table check
+ * audit trail stays internally consistent under partial failure.
  */
 export async function recordUsageEvent(
   args: RecordUsageEventArgs,
+  db: DbOrTx = getDb(),
 ): Promise<{ estimatedCostUsd: number }> {
-  const db = getDb();
   const cost = estimateCostUsd({
     modelId: args.modelId ?? null,
     inputTokens: args.inputTokens,

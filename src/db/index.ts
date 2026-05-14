@@ -65,4 +65,15 @@ export function getDb() {
 }
 
 export type Db = ReturnType<typeof getDb>;
+
+// The Drizzle transaction client (passed to `db.transaction(async (tx) =>
+// ...)`) is structurally distinct from the top-level Db — it omits
+// `$client` and a few other base-class fields. Helpers that accept
+// "either a db or a tx" should type their parameter as `DbOrTx`. The
+// transaction callback's `tx` argument is captured via Parameters<>
+// without naming the underlying Drizzle generic, which keeps this
+// alias resilient to Drizzle major-version type shape changes.
+export type Tx = Parameters<NonNullable<Parameters<Db["transaction"]>[0]>>[0];
+export type DbOrTx = Db | Tx;
+
 export { schema };
