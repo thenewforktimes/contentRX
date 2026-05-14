@@ -122,25 +122,18 @@ export default async function SharedChecksPage() {
       {rows.length === 0 ? (
         <section className="rounded-lg border border-line bg-overlay p-6">
           <p className="text-sm text-default">
-            Nothing shared yet. ContentRX has no plaintext of any check
-            you have run. To share a specific check, open your check
-            history and tap{" "}
+            You don&rsquo;t have any shared checks yet. Run a check from
+            the dashboard, then tap{" "}
             <span className="font-medium text-strong">Flag for review</span>
             {" "}
-            on any result.
+            on a result to share it with ContentRX.
           </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Link
-              href="/dashboard/checks"
-              className={buttonStyles({ variant: "primary", size: "sm" })}
-            >
-              Open check history
-            </Link>
+          <div className="mt-4">
             <Link
               href="/dashboard"
-              className="text-sm text-quiet underline underline-offset-2 hover:text-strong"
+              className={buttonStyles({ variant: "primary", size: "sm" })}
             >
-              Or run a new check
+              Go to dashboard
             </Link>
           </div>
         </section>
