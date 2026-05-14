@@ -43,6 +43,27 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${geistMono.variable} antialiased`}
       >
+        {/*
+         * Skip-to-content link (WCAG 2.4.1 Bypass Blocks). Visually
+         * hidden until focused; appears as a focus-ring pill in the
+         * top-left for keyboard users. Targets `#main-content`,
+         * which every page-level <main> sets via id+tabIndex={-1}
+         * so focus actually lands inside the content rather than
+         * just scrolling.
+         *
+         * Required because every page renders the same chrome
+         * (Wordmark + 4-12 nav links) before reaching content; a
+         * keyboard user otherwise tabs through that chrome on every
+         * navigation. With this link, the first Tab on any page
+         * surfaces "Skip to content" and one keypress lands focus
+         * in the body.
+         */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-accent-primary-solid focus:px-4 focus:py-2 focus:text-accent-primary-on focus:shadow-lg focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-canvas"
+        >
+          Skip to content
+        </a>
         {children}
         {plausibleDomain && (
           <Script

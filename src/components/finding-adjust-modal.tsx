@@ -19,8 +19,9 @@
  * for substrate-side storage.
  */
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { buttonStyles } from "@/components/ui/button";
+import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 import {
   OVERRIDE_REASON_META,
   type OverrideReasonCode,
@@ -57,6 +58,9 @@ export function FindingAdjustModal({
 }: FindingAdjustModalProps) {
   const reasonId = useId();
   const notesId = useId();
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const reasonSelectRef = useRef<HTMLSelectElement>(null);
 
   const [reasonCode, setReasonCode] = useState<OverrideReasonCode>(
     "not_applicable_here",
@@ -72,6 +76,17 @@ export function FindingAdjustModal({
     setSubmitState("idle");
     setErrorMessage(null);
   }, [open]);
+
+  // Focus management: trap focus inside the dialog, ESC closes,
+  // background goes `inert`, focus restored to trigger on close.
+  // Initial focus lands on the reason select (the first decision
+  // the user has to make).
+  useFocusTrap({
+    active: open,
+    containerRef: dialogRef,
+    onClose,
+    initialFocusRef: reasonSelectRef,
+  });
 
   if (!open) return null;
 
@@ -117,9 +132,10 @@ export function FindingAdjustModal({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
-      aria-label="Adjust this finding"
+      aria-labelledby={titleId}
       className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-4 sm:items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -127,7 +143,7 @@ export function FindingAdjustModal({
     >
       <div className="w-full max-w-lg rounded-lg border border-line bg-raised shadow-xl">
         <header className="border-b border-line px-5 py-4">
-          <h2 className="text-base font-semibold text-strong">
+          <h2 id={titleId} className="text-base font-semibold text-strong">
             Adjust the verdict
           </h2>
           <p className="mt-1 text-sm text-default">
@@ -147,6 +163,7 @@ export function FindingAdjustModal({
               Reason
             </label>
             <select
+              ref={reasonSelectRef}
               id={reasonId}
               value={reasonCode}
               onChange={(e) =>

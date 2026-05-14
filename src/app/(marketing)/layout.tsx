@@ -26,7 +26,15 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <div className="flex-1">{children}</div>
+      {/*
+       * `id="main-content"` is the target for the root layout's
+       * skip-to-content link. `tabIndex={-1}` lets focus actually
+       * land here (without it, focus would scroll-to-anchor but
+       * stay on the link). The role is implicit `<main>`.
+       */}
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+        {children}
+      </main>
       <SiteFooter />
     </div>
   );

@@ -216,12 +216,68 @@ export function SystemKappaTrendChart({
           />
         )}
       </svg>
+
+      {/*
+       * Screen-reader data alternative (WCAG 1.1.1, 1.3.1).
+       *
+       * Earlier draft had a "hover or focus a point" instruction which
+       * is useless to assistive-tech users who can't see the chart.
+       * The verbal summary below names the trend direction + the
+       * latest value; the table provides the row-by-row data. Both
+       * `sr-only` so they don't duplicate the chart visually.
+       */}
       <p id={tooltipId} className="sr-only">
-        System Cohen&apos;s κ across weekly samples. Hover or focus a
-        point to read its value and sample size.
+        {buildKappaSummary(points)}
       </p>
+      <table className="sr-only">
+        <caption>System Cohen&apos;s κ across weekly samples.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Week offset</th>
+            <th scope="col">Cohen&apos;s κ</th>
+            <th scope="col">Sample size</th>
+          </tr>
+        </thead>
+        <tbody>
+          {points.map((p) => (
+            <tr key={`a11y-row-${p.week_offset}`}>
+              <th scope="row">
+                {p.week_offset === 0
+                  ? "Current week"
+                  : `${Math.abs(p.week_offset)} weeks ago`}
+              </th>
+              <td>{p.kappa.toFixed(3)}</td>
+              <td>{p.sample_size}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
+}
+
+/**
+ * Build a one-sentence summary of the kappa trend for screen readers.
+ * Sighted users get the chart; assistive-tech users get this prose plus
+ * the per-week table that follows. Tuned to be short — one breath of
+ * speech — so it lands as a chart caption rather than a paragraph.
+ */
+function buildKappaSummary(points: ReadonlyArray<SystemKappaPoint>): string {
+  if (points.length === 0) {
+    return "No calibration data available.";
+  }
+  const earliest = points[points.length - 1]!;
+  const latest = points[0]!;
+  const delta = latest.kappa - earliest.kappa;
+  const direction =
+    Math.abs(delta) < 0.01
+      ? "holding steady"
+      : delta > 0
+        ? "improving"
+        : "declining";
+  const weeksSpan = Math.abs(earliest.week_offset);
+  const latestLabel = `κ ${latest.kappa.toFixed(2)} on n=${latest.sample_size}`;
+  return `System Cohen's κ across ${weeksSpan} weeks: ${earliest.kappa.toFixed(2)} → ${latest.kappa.toFixed(2)} (${direction}). Latest week: ${latestLabel}.`;
 }
 
 function ReferenceLine({

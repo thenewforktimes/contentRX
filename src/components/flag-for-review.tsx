@@ -36,7 +36,8 @@
  * semicolons, no colons in body sentences, singular they.
  */
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 import { Button } from "@/components/ui/button";
 
 export interface FlagForReviewProps {
@@ -84,20 +85,20 @@ export function FlagForReview({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const dialogRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const noteId = useId();
   const consentId = useId();
 
-  // ESC closes; click outside the dialog closes; trap focus minimally
-  // (autofocus the dialog when it opens).
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    dialogRef.current?.focus();
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open]);
+  // Focus management: trap focus, ESC closes, background inert, focus
+  // restored to trigger on close. Initial focus goes to the textarea
+  // (the user's primary task). Replaces the prior hand-rolled
+  // keydown-only handler which didn't trap Tab and didn't restore focus.
+  useFocusTrap({
+    active: open,
+    containerRef: dialogRef,
+    onClose: () => setOpen(false),
+    initialFocusRef: textareaRef,
+  });
 
   if (status === "submitted") {
     return (
@@ -227,6 +228,7 @@ export function FlagForReview({
                   What&rsquo;s off?
                 </label>
                 <textarea
+                  ref={textareaRef}
                   id={noteId}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
