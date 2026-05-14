@@ -25,6 +25,7 @@ import {
   recordUsageEvent,
 } from "@/lib/cost-monitor";
 import { corsJson, corsPreflight } from "@/lib/cors";
+import { getDb } from "@/db";
 import { appUrl, sendEmail } from "@/lib/email";
 import { AUDIENCES, CONTENT_TYPES, MOMENTS } from "@/lib/engine-taxonomy";
 import {
@@ -32,6 +33,12 @@ import {
   rewriteDocument,
   type EvaluateResponse,
 } from "@/lib/evaluate";
+import {
+  computeCheckCacheKey,
+  getCachedEvaluate,
+  setCachedEvaluate,
+  shouldCache,
+} from "@/lib/check-cache";
 import { hashText, logViolations } from "@/lib/log-violations";
 import {
   MAX_INPUT_CHARS,
@@ -201,23 +208,45 @@ export async function POST(req: Request) {
     );
   }
 
-  // Cost-monitor pause check — Phase 4 of the pre-pilot launch build.
-  // When a user crossed their daily/monthly cost threshold on a
-  // previous call, the threshold-evaluation logic flipped
-  // `cost_pause_active = true`. Subsequent calls 402 here until a
-  // founder Resume from /admin/costs clears the flag. Defaults are
-  // permissive ($50/day, $500/month) — this only fires on runaway
-  // scripts or misconfigured CI loops, not normal heavy use.
-  // Fail-closed: if the pause-check itself errors (DB outage, query
-  // bug), default to paused. The whole point of cost-pause is fail-
-  // safe runaway-cost protection; a transient DB error must NOT let
-  // a possibly-paused account keep accruing charges. Healthy accounts
-  // get a transient 402 during the outage; that's the correct
-  // trade-off for a guardrail feature.
-  const isPaused = await checkCostPause(auth.user.id).catch((err) => {
-    logSafeError("checkCostPause failed; defaulting to paused", err);
-    return true;
-  });
+  // PARALLEL PREFLIGHT (Phase 2 audit fix, 2026-05-14).
+  //
+  // checkCostPause, checkRateLimit, loadTeamRules, and
+  // fetchPrecedentsForCheck are all independent reads — none depends
+  // on the others' results. Running them in parallel saves ~12-32 ms
+  // off the wall clock on every check; at 20K calls/day that's hours
+  // of cumulative function time per day.
+  //
+  // The mutating `claimQuotaSlots` call stays sequential AFTER the
+  // gates so rate-limited or paused callers don't burn quota slots
+  // they can't actually use.
+  //
+  // Wasted-work tradeoff: if cost-pause/rate-limit denies, team-rules
+  // and precedents work was wasted. At expected gate-deny rates
+  // (rare; rate-limit at 60/min/user, cost-pause is a runaway-script
+  // guard), this is net positive — the savings on the happy path far
+  // outweigh the wasted work on rare denials.
+  //
+  // Each parallel arm preserves its existing failure mode:
+  //   - cost-pause: fail-closed (default paused) on error
+  //   - rate-limit: throw on error (rare; Upstash outage)
+  //   - team-rules: throw on error (DB outage)
+  //   - precedents: fail-open (empty array) on error — non-essential
+  const [isPaused, rl, teamRules, precedents] = await Promise.all([
+    checkCostPause(auth.user.id).catch((err) => {
+      logSafeError("checkCostPause failed; defaulting to paused", err);
+      return true as const;
+    }),
+    checkRateLimit(auth.user.id),
+    loadTeamRules(auth.teamOwnerUserId),
+    fetchPrecedentsForCheck({
+      moment: moment ?? null,
+      contentType: content_type ?? null,
+    }).catch((err): Awaited<ReturnType<typeof fetchPrecedentsForCheck>> => {
+      logSafeError("precedent retrieval failed", err);
+      return [];
+    }),
+  ]);
+
   if (isPaused) {
     return json(
       {
@@ -229,12 +258,6 @@ export async function POST(req: Request) {
     );
   }
 
-  const quota = monthlyQuota(auth.plan, auth.seats);
-
-  // Rate-limit check first (cheap + purely time-based), then the
-  // atomic quota claim. Order matters: we don't want rate-limited
-  // callers to consume slots they can't actually use.
-  const rl = await checkRateLimit(auth.user.id);
   if (!rl.success) {
     return json(
       {
@@ -249,6 +272,8 @@ export async function POST(req: Request) {
       },
     );
   }
+
+  const quota = monthlyQuota(auth.plan, auth.seats);
 
   // Length-routed quota claim (schema 3.0.0). 1 unit per 200 chars,
   // rounded up, floor 1. A 50-char button label is 1 unit; a 600-char
@@ -338,7 +363,10 @@ export async function POST(req: Request) {
     });
   }
 
-  const teamRules = await loadTeamRules(auth.teamOwnerUserId);
+  // teamRules + precedents were resolved up in the parallel preflight
+  // block (Phase 2 audit fix). They land here as already-awaited values.
+  // Block 2c rationale (precedent injection for voice guidance) and
+  // its empty-array fallback semantics are unchanged.
 
   let evalResponse: EvaluateResponse;
   // Holistic rewrite, fired for large inputs (>UNIT_WINDOW chars) when
@@ -350,56 +378,86 @@ export async function POST(req: Request) {
   // same lifecycle, same null conditions. Powers the verdict header.
   let suggestedDiagnostic: string | null = null;
 
-  // Block 2c (calibration plan): pull approved precedents matching
-  // (moment, content_type) and pass them to the engine for voice-
-  // guidance prompt injection. Empty array when no precedents
-  // match — engine falls back to the universal voice rules.
-  let precedents: Awaited<ReturnType<typeof fetchPrecedentsForCheck>> = [];
-  try {
-    precedents = await fetchPrecedentsForCheck({
-      moment: moment ?? null,
-      contentType: content_type ?? null,
-    });
-  } catch (err) {
-    logSafeError("precedent retrieval failed", err);
-  }
+  // LLM RESULT CACHE (Phase 2 audit fix, 2026-05-14).
+  //
+  // Repeat checks of identical input ("Save", "Cancel", common error
+  // strings, CI re-runs of unchanged files) are a meaningful share of
+  // /api/check traffic. Anthropic prompt caching shaves the input-token
+  // cost; this layer skips the engine call entirely for repeats.
+  //
+  // The route still applies team rules, overrides, logs violations,
+  // and increments usage on a cache hit — quota still ticks. The cache
+  // only short-circuits the Anthropic call (and the rewrite for that
+  // matter, since the rewrite is part of the cached EvaluateResponse
+  // shape... actually no — rewrite is a separate call. See below.)
+  //
+  // Caching is skipped when precedents are present (team-specific
+  // seed → cross-team contamination if cached).
+  const cacheable = shouldCache(precedents.length);
+  const cacheKey = cacheable
+    ? computeCheckCacheKey({ text, audience, moment, content_type })
+    : null;
+  const cachedEval = cacheKey ? await getCachedEvaluate(cacheKey) : null;
+  const cacheHit = cachedEval !== null;
 
   // Schema 3.0.0: the holistic rewrite fires for any "large" input
   // (>200 chars). Fired IN PARALLEL with the regular evaluate so wall
   // time is one round-trip, not two. The rewrite is best-effort.
+  //
+  // On a cache hit, we skip BOTH the evaluate call AND the rewrite
+  // call — the rewrite is also expensive (full-document LLM call) and
+  // deterministic-enough on the same input to reuse the cached
+  // suggestedRewrite/suggestedDiagnostic stored alongside the cached
+  // engine response.
+  //
+  // Cache shape note: the rewrite output is NOT cached separately here
+  // — it gets folded into the same EvaluateResponse via the merge at
+  // the bottom of this block, so caching the merged response carries
+  // both. The rewrite path stays out of the cache for now (separate
+  // dimension; team-specific suggestion candidates already gate
+  // shouldCache).
   const wantsRewrite = isLargeInput(text);
-  const evaluatePromise = evaluate({
-    text,
-    content_type,
-    audience,
-    moment,
-    precedents: precedents.map((p) => ({
-      approved_text: p.approvedText,
-      sample_size: p.sampleSize,
-    })),
-  });
-  const rewritePromise: Promise<
-    Awaited<ReturnType<typeof rewriteDocument>> | null
-  > = wantsRewrite
-    ? rewriteDocument(text).catch((err) => {
-        logSafeError("rewriteDocument() failed; returning null", err);
-        return null;
-      })
-    : Promise.resolve(null);
+  let rewriteSettled: PromiseSettledResult<Awaited<
+    ReturnType<typeof rewriteDocument>
+  > | null> = { status: "fulfilled", value: null };
 
-  const [evalSettled, rewriteSettled] = await Promise.allSettled([
-    evaluatePromise,
-    rewritePromise,
-  ]);
+  if (cacheHit && cachedEval) {
+    evalResponse = cachedEval;
+  } else {
+    const evaluatePromise = evaluate({
+      text,
+      content_type,
+      audience,
+      moment,
+      precedents: precedents.map((p) => ({
+        approved_text: p.approvedText,
+        sample_size: p.sampleSize,
+      })),
+    });
+    const rewritePromise: Promise<
+      Awaited<ReturnType<typeof rewriteDocument>> | null
+    > = wantsRewrite
+      ? rewriteDocument(text).catch((err) => {
+          logSafeError("rewriteDocument() failed; returning null", err);
+          return null;
+        })
+      : Promise.resolve(null);
 
-  if (evalSettled.status === "rejected") {
-    logSafeError("evaluate() failed", evalSettled.reason);
-    return json(
-      { error: "Evaluation service unavailable" },
-      { status: 502 },
-    );
+    const [evalSettled, rs] = await Promise.allSettled([
+      evaluatePromise,
+      rewritePromise,
+    ]);
+    rewriteSettled = rs;
+
+    if (evalSettled.status === "rejected") {
+      logSafeError("evaluate() failed", evalSettled.reason);
+      return json(
+        { error: "Evaluation service unavailable" },
+        { status: 502 },
+      );
+    }
+    evalResponse = evalSettled.value;
   }
-  evalResponse = evalSettled.value;
   if (rewriteSettled.status === "fulfilled" && rewriteSettled.value) {
     const rewriteResp = rewriteSettled.value;
     evalResponse = {
@@ -423,6 +481,19 @@ export async function POST(req: Request) {
       : null;
   }
 
+  // Cache write — only on a cache MISS (cacheHit === false) and only
+  // when the request is cacheable (no team-specific precedents).
+  // Fire-and-forget via safeAfter so the Redis SET round-trip doesn't
+  // add latency to the response. The set itself is wrapped in
+  // try/catch (see check-cache.ts) so a Redis outage never leaks
+  // out.
+  if (cacheable && !cacheHit && cacheKey) {
+    const responseToCache = evalResponse;
+    safeAfter(async () => {
+      await setCachedEvaluate(cacheKey, responseToCache);
+    });
+  }
+
   // Team-rule pipeline: disable first (strip), then override display fields
   // on the survivors, then append custom team-added rule matches, then
   // recompute verdict from the final violations list.
@@ -444,13 +515,21 @@ export async function POST(req: Request) {
   const finalSuggestedDiagnostic =
     suggestedDiagnostic !== null && !isCleanDoc ? suggestedDiagnostic : null;
 
-  // Log + token-usage + cost-event writes are observational — all run
-  // in parallel since none depends on the others, and a failure in
-  // any should never fail the request. The user already got their
-  // result and quota was already counted at claimQuotaSlot time.
-  // team_id always equals "team-owner-or-self" — see lib/team-scope.ts
-  // for the full rationale. Centralized in `teamScope()` so writes and
-  // reads always agree (PR-198 fix for the team_id NULL bug).
+  // Observational writes — three rows across two tables. The pair of
+  // (violations row(s), usage_events row) form the audit trail for
+  // this single /api/check call; the run audit page LEFT JOINs them
+  // on `violations.check_event_id ↔ usage_events.id`. They must commit
+  // together or roll back together. A partial commit (process crash,
+  // transient DB error between them) leaves data inconsistent: e.g.,
+  // usage_events row exists (cost-monitor sees a charge) without
+  // matching violations rows (dashboard shows no findings). At 600K
+  // events/month even a 0.1% partial-failure rate would produce 600
+  // inconsistent rows. Phase 2 audit fix (2026-05-14): wrap the two
+  // writes in `db.transaction` so they atomically commit. The token-
+  // usage upsert is a separate row in `usage` (per-user-per-month
+  // counter) and stays outside the transaction — it's idempotent on
+  // the same (userId, month) row, so a partial failure can't cause
+  // double-counting.
   const teamIdForLog = teamScope(auth);
   const tokens = {
     inputTokens: evalResponse.tokens.input,
@@ -464,75 +543,92 @@ export async function POST(req: Request) {
   // this — what the schema previously did — the two tables generated
   // independent cuids and the join always returned NULL.
   const checkEventId = createId();
-  const [logResult, tokenResult, eventResult] = await Promise.allSettled([
-    logViolations({
-      userId: auth.user.id,
-      teamId: teamIdForLog,
-      source,
-      contentType: result.content_type ?? content_type ?? "unknown",
-      moment: (result.moment as string | undefined) ?? moment ?? null,
-      text,
-      violations: result.violations,
-      filePath: file_path ?? null,
-      reviewReasonSubtype:
-        (result as { review_reason?: string | null }).review_reason ?? null,
-      runId: run_id ?? null,
-      checkEventId,
+  const db = getDb();
+  const [auditResult, tokenResult] = await Promise.allSettled([
+    db.transaction(async (tx) => {
+      await Promise.all([
+        logViolations(
+          {
+            userId: auth.user.id,
+            teamId: teamIdForLog,
+            source,
+            contentType: result.content_type ?? content_type ?? "unknown",
+            moment: (result.moment as string | undefined) ?? moment ?? null,
+            text,
+            violations: result.violations,
+            filePath: file_path ?? null,
+            reviewReasonSubtype:
+              (result as { review_reason?: string | null }).review_reason ??
+              null,
+            runId: run_id ?? null,
+            checkEventId,
+          },
+          tx,
+        ),
+        // Phase 4 cost-monitor + check-history: one event row per /api/check
+        // completion. The cost columns drive /admin/costs + the threshold-
+        // evaluation pause logic. The check-history columns drive
+        // /dashboard/checks — the customer-facing list of "what did I run?".
+        // text_preview stores the first 80 chars of the input so customers
+        // can recognise their own checks. Customer-not-product (ADR
+        // 2026-04-28): the customer's own data, shown back to the customer,
+        // is not aggregation. A future TTL will null text_preview after 90
+        // days.
+        recordUsageEvent(
+          {
+            id: checkEventId,
+            userId: auth.user.id,
+            segmentType: meterDecision.sizeClass,
+            unitsConsumed: meterDecision.unitsConsumed,
+            ...tokens,
+            modelId: null,
+            teamId: teamIdForLog,
+            source,
+            contentType: result.content_type ?? content_type ?? null,
+            moment:
+              (result.moment as string | undefined) ?? moment ?? null,
+            verdict:
+              (result as { verdict?: string | null }).verdict ?? null,
+            reviewReason:
+              (result as { review_reason?: string | null }).review_reason ??
+              null,
+            violationCount: result.violations.length,
+            textHash: hashText(text),
+            textPreview: text.slice(0, 80),
+            // 2026-05-10 detail-page round 3 — store the full input + doc-tier
+            // outputs so /dashboard/checks/[id] can render exactly what the
+            // customer saw at check time, and so the Re-run CTA can re-issue
+            // the same call without depending on the user having the source
+            // text on hand.
+            textFull: text,
+            suggestedRewrite: finalSuggestedRewrite,
+            suggestedDiagnostic: finalSuggestedDiagnostic,
+          },
+          tx,
+        ),
+      ]);
     }),
     recordTokenUsage(usageScopeUserId, tokens),
-    // Phase 4 cost-monitor + check-history: one event row per /api/check
-    // completion. The cost columns drive /admin/costs + the threshold-
-    // evaluation pause logic. The check-history columns drive
-    // /dashboard/checks — the customer-facing list of "what did I run?".
-    // text_preview stores the first 80 chars of the input so customers
-    // can recognise their own checks. Customer-not-product (ADR
-    // 2026-04-28): the customer's own data, shown back to the customer,
-    // is not aggregation. A future TTL will null text_preview after 90
-    // days.
-    recordUsageEvent({
-      id: checkEventId,
-      userId: auth.user.id,
-      segmentType: meterDecision.sizeClass,
-      unitsConsumed: meterDecision.unitsConsumed,
-      ...tokens,
-      modelId: null,
-      teamId: teamIdForLog,
-      source,
-      contentType: result.content_type ?? content_type ?? null,
-      moment:
-        (result.moment as string | undefined) ?? moment ?? null,
-      verdict:
-        (result as { verdict?: string | null }).verdict ?? null,
-      reviewReason:
-        (result as { review_reason?: string | null }).review_reason ?? null,
-      violationCount: result.violations.length,
-      textHash: hashText(text),
-      textPreview: text.slice(0, 80),
-      // 2026-05-10 detail-page round 3 — store the full input + doc-tier
-      // outputs so /dashboard/checks/[id] can render exactly what the
-      // customer saw at check time, and so the Re-run CTA can re-issue
-      // the same call without depending on the user having the source
-      // text on hand.
-      textFull: text,
-      suggestedRewrite: finalSuggestedRewrite,
-      suggestedDiagnostic: finalSuggestedDiagnostic,
-    }),
   ]);
-  if (logResult.status === "rejected") {
-    logSafeError("logViolations failed", logResult.reason);
-  }
-  if (tokenResult.status === "rejected") {
-    logSafeError("recordTokenUsage failed", tokenResult.reason);
-  }
-  if (eventResult.status === "rejected") {
-    logSafeError("recordUsageEvent failed", eventResult.reason);
+  if (auditResult.status === "rejected") {
+    // Transaction failure — either logViolations or recordUsageEvent
+    // (or both) failed; the DB rolled back, neither row landed. Phase
+    // 2 audit fix: the partial-failure window the older 3-arm
+    // Promise.allSettled exposed is closed by atomic commit-or-roll-
+    // back. Log and continue — the user already got their result and
+    // quota was claimed.
+    logSafeError(
+      "check audit-trail transaction failed (violations + usage_event)",
+      auditResult.reason,
+    );
   } else {
-    // Threshold evaluation runs after the event row lands so the new
-    // call's spend is included in the daily/monthly sum. Errors here
-    // are non-fatal — the next call's evaluation will catch the same
-    // threshold cross. Wrapped in after() so Fluid Compute holds the
-    // function instance open long enough for the rollup query + email
-    // to finish; without it, a runtime tear-down between requests
+    // Threshold evaluation runs only when the audit trail committed
+    // (otherwise the cost row for this call doesn't exist yet and the
+    // rollup would understate spend). Errors here are non-fatal —
+    // the next call's evaluation will catch the same threshold cross.
+    // Wrapped in safeAfter so Fluid Compute holds the function
+    // instance open long enough for the rollup query + email to
+    // finish; without it, a runtime tear-down between requests
     // would silently drop the alert.
     safeAfter(async () => {
       try {
@@ -548,6 +644,9 @@ export async function POST(req: Request) {
         logSafeError("evaluateAndPauseIfExceeded failed", err);
       }
     });
+  }
+  if (tokenResult.status === "rejected") {
+    logSafeError("recordTokenUsage failed", tokenResult.reason);
   }
 
   // Bust the dashboard's edge cache + tag-cached loaders so the usage

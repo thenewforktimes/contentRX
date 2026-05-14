@@ -9,7 +9,7 @@
 
 import { createId } from "@paralleldrive/cuid2";
 import { createHash } from "node:crypto";
-import { getDb, schema } from "@/db";
+import { getDb, schema, type DbOrTx } from "@/db";
 
 type ViolationSource =
   | "dashboard"
@@ -71,7 +71,19 @@ export function hashText(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");
 }
 
-export async function logViolations(params: LogParams): Promise<number> {
+/**
+ * Optional `db` parameter lets the caller pass a Drizzle transaction
+ * client so this insert composes inside a larger atomic block. When
+ * omitted, behaviour is unchanged — `getDb()` returns the singleton
+ * client and the insert runs in its own implicit transaction. Used
+ * by /api/check (2026-05-14 audit fix) to wrap `logViolations` +
+ * `recordUsageEvent` in a single transaction so the two-table check
+ * audit trail stays internally consistent under partial failure.
+ */
+export async function logViolations(
+  params: LogParams,
+  db: DbOrTx = getDb(),
+): Promise<number> {
   if (params.violations.length === 0) return 0;
 
   const textHash = hashText(params.text);
@@ -105,7 +117,6 @@ export async function logViolations(params: LogParams): Promise<number> {
 
   if (rows.length === 0) return 0;
 
-  const db = getDb();
   await db.insert(schema.violations).values(rows);
   return rows.length;
 }
