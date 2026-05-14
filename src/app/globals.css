@@ -94,6 +94,24 @@
   --border-strong:    #7070b4;
   --ring-focus:       #fb923c;
 
+  /* ─── DISABLED STATE (added 2026-05-14) ─────────────────────────
+     Token-driven disabled state replaces the previous `opacity-50`
+     blanket treatment. The audit caught that opacity-50 on a bright
+     filled button (e.g. bg-accent-primary at #fb923c) produces a
+     button that reads as "primary, slightly faded" — the next thing
+     to press, not "this is unavailable." Worse: opacity-50 cuts the
+     primary-on text contrast against the faded primary bg from
+     7.25:1 down to ~3.5:1 (below AA Normal 4.5:1).
+     Disabled tokens shift the visual identity to a NEUTRAL muted
+     surface — the user reads "grayed out" instead of "dimmed
+     primary." Contrast at the disabled state intentionally lands in
+     the 2.5-3:1 range; "low contrast" IS the affordance for
+     unavailable, and WCAG 1.4.3 carves out disabled UI from the
+     contrast minimum. */
+  --surface-disabled: #2c2c52;
+  --text-disabled:    #6464a8;
+  --border-disabled:  #404072;
+
   /* ─── DECORATION ─────────────────────────────────────────────────
      Subtle dot-grid / pattern fills. Decorative-only — never used for
      borders or text. Lives below the border contrast floor on purpose. */
@@ -197,6 +215,11 @@
     --border-default:   #888070;
     --border-strong:    #7e7565;
     --ring-focus:       #4338ca;
+
+    /* ─── DISABLED STATE (added 2026-05-14) — see dark-mode note. */
+    --surface-disabled: #e0d8c5;
+    --text-disabled:    #80776a;
+    --border-disabled:  #c4baa8;
 
     /* ─── DECORATION ─── */
     --decoration-dot:   #d9cfb6;
@@ -325,6 +348,9 @@
   --color-line-strong:    var(--border-strong);
   --color-ring:           var(--ring-focus);
   --color-hover:          var(--state-hover-bg);
+  --color-disabled:       var(--surface-disabled);
+  --color-disabled-on:    var(--text-disabled);
+  --color-disabled-border: var(--border-disabled);
 
   --color-accent-primary:              var(--accent-primary-solid);
   --color-accent-primary-on:           var(--accent-primary-on-solid);
