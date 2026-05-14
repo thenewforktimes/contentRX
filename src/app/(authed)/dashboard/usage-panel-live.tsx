@@ -156,7 +156,7 @@ export function UsagePanelLive({
         {tone === "warn" && (
           <p className="mt-2 text-xs text-strong">
             You&apos;re close to your monthly limit. Upgrade to keep
-            checking before {nextMonthReset()}.
+            checking.
           </p>
         )}
         {tone === "exhausted" && (
