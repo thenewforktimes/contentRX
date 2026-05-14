@@ -142,6 +142,14 @@ export function FolderTabs() {
       >
         {TABS.map((tab) => {
           const isActive = tab.match(pathname);
+          // Focus ring shared on both branches via the constant — keeps
+          // the keyboard cue identical regardless of active state.
+          // ring-offset-canvas because the tab strip sits on bg-canvas
+          // (the active tab's bg-raised is a foreground surface that
+          // hangs into the strip; the offset matches the strip's
+          // continuous surface). WCAG 2.4.7.
+          const focusRing =
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas";
           return (
             <Link
               key={tab.href}
@@ -149,8 +157,8 @@ export function FolderTabs() {
               aria-current={isActive ? "page" : undefined}
               className={
                 isActive
-                  ? "relative z-10 -mb-px whitespace-nowrap rounded-t-md border-x border-t border-line bg-raised px-4 py-2.5 text-sm font-medium text-strong"
-                  : "whitespace-nowrap rounded-t-md border-x border-t border-line bg-canvas px-4 py-2.5 text-sm text-default hover:bg-raised hover:text-strong"
+                  ? `relative z-10 -mb-px whitespace-nowrap rounded-t-md border-x border-t border-line bg-raised px-4 py-2.5 text-sm font-medium text-strong ${focusRing}`
+                  : `whitespace-nowrap rounded-t-md border-x border-t border-line bg-canvas px-4 py-2.5 text-sm text-default hover:bg-raised hover:text-strong ${focusRing}`
               }
             >
               {tab.label}

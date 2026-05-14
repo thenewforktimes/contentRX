@@ -265,7 +265,7 @@ function StandardRow({
 }) {
   const k = standard.kappa;
   return (
-    <tr className="hover:bg-hover /50">
+    <tr className="hover:bg-hover/50">
       <td className="px-3 py-2">
         <Link
           href={`/admin/model/standards/${standard.standard_id}`}

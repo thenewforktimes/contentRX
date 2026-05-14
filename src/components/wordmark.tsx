@@ -99,7 +99,17 @@ export function Wordmark({
 
   if (link) {
     return (
-      <Link href="/" aria-label="ContentRX home" className="inline-flex">
+      <Link
+        href="/"
+        aria-label="ContentRX home"
+        // The wordmark is the first tab stop on every layout (header
+        // chrome). Without a design-system focus ring the browser
+        // default outline is inconsistent across canvas / raised
+        // surfaces — keyboard users couldn't reliably tell they were
+        // focused. `rounded` matches the pill shape so the ring traces
+        // the lockup instead of a hard rectangle. WCAG 2.4.7.
+        className="inline-flex rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+      >
         {content}
       </Link>
     );

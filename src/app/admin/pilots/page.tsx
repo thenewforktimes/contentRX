@@ -119,7 +119,13 @@ function PilotTable({ rows }: { rows: PilotRow[] }) {
         </thead>
         <tbody className="divide-y divide-line">
           {rows.map((row) => (
-            <tr key={row.userId}>
+            // Row hover (transition-colors hover:bg-hover) lets a
+            // founder scan a long pilot list and clearly see which
+            // row is under the cursor — improves admin scan density.
+            <tr
+              key={row.userId}
+              className="transition-colors hover:bg-hover"
+            >
               <td className="px-4 py-2">
                 <Pill tone={STATUS_PILL_TONE[row.status]}>
                   {STATUS_LABEL[row.status]}

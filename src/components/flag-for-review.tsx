@@ -119,10 +119,16 @@ export function FlagForReview({
   // The `card-action` variant matches the rest of the per-finding
   // toolbar so the flag affordance reads as a peer of Adjust + Make a
   // rule on each finding row.
+  // focus-visible ring shared on both variants — without it, keyboard
+  // users tabbing through the per-finding toolbar got no cue at this
+  // important entry point (the only path into the calibration consent
+  // flow per ADR 2026-05-11). WCAG 2.4.7.
+  const triggerFocusRing =
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised";
   const triggerClassName =
     variant === "card-action"
-      ? "shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover"
-      : "shrink-0 rounded-md border border-line bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover";
+      ? `shrink-0 rounded-md border border-line-strong bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover ${triggerFocusRing}`
+      : `shrink-0 rounded-md border border-line bg-raised px-2.5 py-1 text-xs font-medium text-default transition-colors hover:bg-hover ${triggerFocusRing}`;
   const triggerLabel =
     label ?? (variant === "card-action" ? "Flag" : "Flag for review");
 
@@ -293,7 +299,7 @@ export function FlagForReview({
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-1.5 text-sm text-default hover:bg-hover"
+                  className="rounded-md px-3 py-1.5 text-sm text-default hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised"
                 >
                   Cancel
                 </button>

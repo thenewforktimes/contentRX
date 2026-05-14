@@ -296,7 +296,14 @@ function FilterTab({
     ? "rounded-md bg-accent-primary text-accent-primary-on"
     : "rounded-md bg-sunken text-default hover:bg-hover";
   return (
-    <Link href={href} className={`${cls} px-3 py-1.5 text-xs font-medium`}>
+    <Link
+      href={href}
+      // aria-current so AT can announce the active filter (the visual
+      // bg-accent-primary cue is color-only otherwise). WCAG 4.1.2.
+      // focus-visible ring so keyboard users see the active tab stop.
+      aria-current={active ? "page" : undefined}
+      className={`${cls} px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas`}
+    >
       {label}
       <span className="ml-2 inline-flex min-w-[1.5rem] justify-center rounded bg-strong/10 px-1 font-mono text-[10px]">
         {count}

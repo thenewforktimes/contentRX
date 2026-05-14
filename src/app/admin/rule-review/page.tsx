@@ -186,14 +186,22 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
               {rows.map((r) => (
                 <tr
                   key={r.standardId}
-                  className="border-b border-line"
+                  // hover lights up the row so a founder scanning a
+                  // long list can see what they're hovering. Subtle
+                  // bg-hover surface, no border change. WCAG-adjacent
+                  // usability — admin scan density.
+                  className="border-b border-line transition-colors hover:bg-hover"
                 >
                   <td className="py-2 font-mono text-xs">
                     <Link
                       href={`https://docs.contentrx.io/model/standards/${r.standardId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline underline-offset-2"
+                      // visited locked to default so the standard id
+                      // doesn't drop to browser-default purple after
+                      // repeated visits. focus-visible ring so the
+                      // keyboard tab path is visible. WCAG 2.4.7.
+                      className="rounded underline underline-offset-2 visited:text-default hover:text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised"
                     >
                       {r.standardId}
                     </Link>

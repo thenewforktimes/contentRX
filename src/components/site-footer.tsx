@@ -104,7 +104,12 @@ export function SiteFooter({
             Source available under{" "}
             <a
               href="https://github.com/thenewforktimes/contentRX/blob/main/LICENSE"
-              className="underline underline-offset-2 hover:text-default"
+              // visited locked to quiet so the link doesn't drop to
+              // browser-default purple on the sunken footer surface.
+              // focus-visible ring matches the FooterColumn pattern
+              // — bottom-row anchor was missed in the original sweep.
+              // WCAG 2.4.7 + 1.4.3.
+              className="rounded underline underline-offset-2 visited:text-quiet hover:text-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sunken"
             >
               FSL-1.1-MIT
             </a>
@@ -138,14 +143,14 @@ function FooterColumn({
             {link.external ? (
               <a
                 href={link.href}
-                className="rounded text-quiet hover:text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sunken"
+                className="rounded text-quiet visited:text-quiet hover:text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sunken"
               >
                 {link.label}
               </a>
             ) : (
               <Link
                 href={link.href}
-                className="rounded text-quiet hover:text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sunken"
+                className="rounded text-quiet visited:text-quiet hover:text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sunken"
               >
                 {link.label}
               </Link>

@@ -291,7 +291,11 @@ function FilterPill({
   return (
     <a
       href={href}
-      className={`rounded-full px-3 py-1 font-medium transition ${tone}`}
+      // aria-current for AT announcement of the active filter (color-
+      // only otherwise). focus-visible ring for keyboard users. WCAG
+      // 4.1.2 + 2.4.7.
+      aria-current={active ? "page" : undefined}
+      className={`rounded-full px-3 py-1 font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas ${tone}`}
     >
       {label}
     </a>

@@ -26,10 +26,10 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CommandPalette } from "@/components/admin/command-palette";
-import { Pill } from "@/components/ui/pill";
 import { Wordmark } from "@/components/wordmark";
 import { isContentRXAdmin } from "@/lib/graduation";
 import { loadSidebarCounts } from "@/lib/admin/sidebar-counts";
+import { AdminNavLink } from "./admin-nav-link";
 
 export default async function AdminLayout({
   children,
@@ -78,7 +78,7 @@ export default async function AdminLayout({
           </div>
           <Link
             href="/dashboard"
-            className="mt-2 block px-2 text-xs text-quiet hover:text-strong"
+            className="mt-2 inline-block rounded px-2 text-xs text-quiet hover:text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
           >
             ← Dashboard
           </Link>
@@ -89,33 +89,33 @@ export default async function AdminLayout({
 
           <nav aria-label="Admin sections" className="mt-6 space-y-6 text-sm">
             <NavGroup label="Model">
-              <NavLink href="/admin" badge={counts.todayQueue}>
+              <AdminNavLink href="/admin" badge={counts.todayQueue}>
                 Today&rsquo;s queue
-              </NavLink>
-              <NavLink href="/admin/overrides" badge={counts.overrideInbox}>
+              </AdminNavLink>
+              <AdminNavLink href="/admin/overrides" badge={counts.overrideInbox}>
                 Override inbox
-              </NavLink>
-              <NavLink href="/admin/customer-flags" badge={counts.customerFlags}>
+              </AdminNavLink>
+              <AdminNavLink href="/admin/customer-flags" badge={counts.customerFlags}>
                 Customer flags
-              </NavLink>
-              <NavLink href="/admin/queue">Queue (full)</NavLink>
-              <NavLink href="/admin/model" badge={counts.library}>
+              </AdminNavLink>
+              <AdminNavLink href="/admin/queue">Queue (full)</AdminNavLink>
+              <AdminNavLink href="/admin/model" badge={counts.library}>
                 Library
-              </NavLink>
-              <NavLink href="/admin/suggestions">Suggestions</NavLink>
-              <NavLink href="/admin/refinement-log">Refinement</NavLink>
-              <NavLink href="/admin/rule-review">Override rates</NavLink>
-              <NavLink href="/admin/calibration">Calibration</NavLink>
+              </AdminNavLink>
+              <AdminNavLink href="/admin/suggestions">Suggestions</AdminNavLink>
+              <AdminNavLink href="/admin/refinement-log">Refinement</AdminNavLink>
+              <AdminNavLink href="/admin/rule-review">Override rates</AdminNavLink>
+              <AdminNavLink href="/admin/calibration">Calibration</AdminNavLink>
             </NavGroup>
 
             <NavGroup label="Pilots">
-              <NavLink href="/admin/pilots">Tracker</NavLink>
-              <NavLink href="/admin/costs">Costs</NavLink>
-              <NavLink href="/admin/costs/margin">Margin</NavLink>
+              <AdminNavLink href="/admin/pilots">Tracker</AdminNavLink>
+              <AdminNavLink href="/admin/costs">Costs</AdminNavLink>
+              <AdminNavLink href="/admin/costs/margin">Margin</AdminNavLink>
             </NavGroup>
 
             <NavGroup label="Reports">
-              <NavLink href="/admin/reports">Reports</NavLink>
+              <AdminNavLink href="/admin/reports">Reports</AdminNavLink>
             </NavGroup>
           </nav>
         </aside>
@@ -149,31 +149,8 @@ function NavGroup({
   );
 }
 
-function NavLink({
-  href,
-  children,
-  badge,
-}: {
-  href: string;
-  children: React.ReactNode;
-  badge?: number;
-}) {
-  return (
-    <li>
-      <Link
-        href={href}
-        className="flex items-center justify-between rounded-md px-2 py-1 text-default hover:bg-hover hover:text-strong"
-      >
-        <span>{children}</span>
-        {badge && badge > 0 ? (
-          <Pill tone="neutral" size="xs">
-            {badge}
-          </Pill>
-        ) : null}
-      </Link>
-    </li>
-  );
-}
+// NavLink moved to ./admin-nav-link.tsx (client component) on
+// 2026-05-14 so it can drive aria-current="page" from usePathname().
 
 /**
  * Best-effort recovery of the current `/admin/...` URL so the

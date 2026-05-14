@@ -186,7 +186,13 @@ export function CommandPalette() {
         aria-label="Open search palette"
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-2 rounded-md border border-line-strong bg-raised px-3 py-1.5 text-left text-xs text-quiet hover:border-line-strong"
+        // Old className was `hover:border-line-strong` which matched
+        // the rest border — visual no-op on hover (looked broken). Hover
+        // now lifts to bg-overlay so the trigger reads as interactive.
+        // focus-visible ring added — keyboard users opening the palette
+        // via Cmd+K never tab here, but anyone tabbing through the
+        // sidebar did and got nothing. WCAG 2.4.7.
+        className="flex w-full items-center justify-between gap-2 rounded-md border border-line-strong bg-raised px-3 py-1.5 text-left text-xs text-quiet transition-colors hover:bg-overlay focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
       >
         <span>Find a case…</span>
         <kbd className="rounded border border-line-strong bg-sunken px-1.5 py-0.5 font-mono text-[10px] text-quiet">
@@ -242,7 +248,11 @@ export function CommandPalette() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Find a case across overrides, queue, and customer flags…"
-                className="w-full bg-transparent px-4 py-3 text-base text-strong placeholder:text-quiet focus:outline-none"
+                // Inset focus-visible ring: the input fades into the
+                // dialog container, but a user tabbing FROM a result
+                // row back TO the input needs a clear cue that focus
+                // returned to the search field. WCAG 2.4.7.
+                className="w-full bg-transparent px-4 py-3 text-base text-strong placeholder:text-quiet focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset rounded-t-lg"
               />
             </div>
 
@@ -345,7 +355,12 @@ function ResultRow({
       <Link
         href={result.href}
         onClick={onSelect}
-        className="block px-4 py-3"
+        // Inset focus-visible cue on the link itself so keyboard
+        // users tabbing into results (rather than driving via arrow
+        // keys + activedescendant) get a clear focus anchor. The
+        // aria-selected row bg is the arrow-key cue; this is the
+        // direct-tab cue. WCAG 2.4.7.
+        className="block px-4 py-3 focus-visible:outline-none focus-visible:bg-hover"
       >
         <div className="flex items-start gap-3">
           <Pill

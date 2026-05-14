@@ -164,7 +164,7 @@ export function MembersPanel({
                   // (otherwise identical) Revoke buttons (WCAG 2.4.4).
                   aria-label={`Revoke invitation for ${p.email}`}
                   aria-busy={revokingId === p.id || undefined}
-                  className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-hover disabled:opacity-50"
+                  className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised disabled:opacity-50"
                 >
                   {revokingId === p.id ? "Revoking…" : "Revoke"}
                 </button>

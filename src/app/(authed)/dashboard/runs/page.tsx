@@ -135,7 +135,11 @@ export default async function DashboardRunsIndexPage() {
             <li key={r.runId}>
               <Link
                 href={`/dashboard/runs/${r.runId}`}
-                className="flex flex-col gap-1 rounded-lg border border-line p-4 hover:border-line-strong"
+                // Whole-card link — needs an explicit focus ring or the
+                // browser default lands inconsistently against bg-canvas
+                // /raised borders. transition-colors smooths the hover.
+                // WCAG 2.4.7.
+                className="flex flex-col gap-1 rounded-lg border border-line p-4 transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <code className="text-sm font-medium tabular-nums">

@@ -58,7 +58,7 @@ export function RevokeButton({ id }: { id: string }) {
           type="button"
           onClick={onConfirm}
           disabled={state === "submitting"}
-          className="rounded-md bg-accent-concern px-2.5 py-1 font-medium text-accent-concern-on hover:bg-accent-concern-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-accent-concern px-2.5 py-1 font-medium text-accent-concern-on hover:bg-accent-concern-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised disabled:cursor-not-allowed disabled:opacity-50"
         >
           {state === "submitting" ? "Removing…" : "Yes, remove"}
         </button>
@@ -69,7 +69,7 @@ export function RevokeButton({ id }: { id: string }) {
             setErrorMessage(null);
           }}
           disabled={state === "submitting"}
-          className="rounded-md border border-line bg-raised px-2.5 py-1 font-medium text-default hover:bg-hover"
+          className="rounded-md border border-line bg-raised px-2.5 py-1 font-medium text-default hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised"
         >
           Cancel
         </button>
@@ -88,7 +88,7 @@ export function RevokeButton({ id }: { id: string }) {
         type="button"
         onClick={() => setState("confirming")}
         aria-label="Remove this check from the calibration log"
-        className="rounded-md border border-line-strong bg-raised px-2.5 py-1 font-medium text-default hover:bg-hover"
+        className="rounded-md border border-line-strong bg-raised px-2.5 py-1 font-medium text-default hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised"
       >
         Remove this check
       </button>

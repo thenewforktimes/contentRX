@@ -34,12 +34,11 @@
  *   inactive tabs:   bg-canvas (recessed, blends with page)
  */
 
-import Link from "next/link";
-import { SignOutButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { SiteFooter } from "@/components/site-footer";
 import { Wordmark } from "@/components/wordmark";
 import { isContentRXAdmin } from "@/lib/graduation";
+import { DashboardChromeNav } from "./dashboard-chrome-nav";
 import { FolderBody, FolderTabs } from "./folder-tabs";
 
 export default async function DashboardLayout({
@@ -59,30 +58,10 @@ export default async function DashboardLayout({
       <header className="border-b border-line bg-canvas">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-6 px-6 py-5">
           <Wordmark size="xs" />
-          <nav className="flex items-center gap-5 text-xs">
-            {isFounder && (
-              <Link
-                href="/admin"
-                className="rounded-md border border-line-strong px-2 py-0.5 font-medium text-default hover:bg-raised"
-              >
-                Founder dashboard →
-              </Link>
-            )}
-            <Link
-              href="/dashboard/settings"
-              className="text-quiet hover:text-strong"
-            >
-              Settings
-            </Link>
-            <SignOutButton>
-              <button
-                type="button"
-                className="text-quiet hover:text-strong"
-              >
-                Sign out
-              </button>
-            </SignOutButton>
-          </nav>
+          {/* Chrome nav is a client component so `usePathname()` can
+              flip `aria-current="page"` on Settings when the user is
+              on a settings sub-route. WCAG 2.4.8 AAA. */}
+          <DashboardChromeNav isFounder={isFounder} />
         </div>
       </header>
       <main
