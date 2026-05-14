@@ -703,7 +703,7 @@ function SuggestedRewriteBlock({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
               copyState === "error"
                 ? "bg-accent-caution text-accent-caution-on"
-                : "bg-accent-affirm text-accent-affirm-on hover:opacity-90",
+                : "bg-accent-affirm text-accent-affirm-on hover:bg-accent-affirm-hover",
             ].join(" ")}
           >
             {copyLabel}

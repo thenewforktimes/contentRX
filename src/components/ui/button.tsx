@@ -25,6 +25,25 @@
  * inside ANY Button or buttonStyles-wrapped Link without ceremony.
  * `aria-hidden` on the arrow keeps screen readers focused on the
  * label text.
+ *
+ * 2026-05-14 hover-state pass: the filled and soft-outlined variants
+ * previously hovered via `opacity-90`. On a bright accent bg sitting on
+ * a dark canvas, opacity blends the canvas into the button — producing
+ * a ~1.3:1 perceived state change. Invisible as an affordance. Replaced
+ * with explicit `bg-accent-{name}-hover` / `bg-accent-{name}-soft-hover`
+ * tokens (defined in globals.css). Each hover value is AAA-verified
+ * against its on-solid / accent-text text colour.
+ *
+ *   Dark mode (inverse pattern: bright bg, dark text):
+ *     hover LIGHTENS — feels "lit up", text contrast climbs.
+ *   Light mode (standard pattern: dark bg, white text):
+ *     hover DARKENS — feels "pressed", text contrast climbs.
+ *   Light mode (inverse pattern: affirm + caution):
+ *     hover LIGHTENS — preserves the dark-on-bright contrast that
+ *     would otherwise crater if we went darker.
+ *
+ * Opacity-based hover is now reserved for the disabled state only,
+ * where the contrast loss is the desired signal.
  */
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
@@ -40,15 +59,15 @@ export type ButtonSize = "sm" | "md";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent-primary text-accent-primary-on hover:opacity-90",
+    "bg-accent-primary text-accent-primary-on hover:bg-accent-primary-hover",
   secondary:
     "border border-line bg-raised text-default hover:bg-overlay",
   ghost:
     "text-quiet hover:text-strong",
   warning:
-    "border border-accent-caution-border bg-accent-caution-soft text-accent-caution-text hover:opacity-90",
+    "border border-accent-caution-border bg-accent-caution-soft text-accent-caution-text hover:bg-accent-caution-soft-hover",
   danger:
-    "border border-accent-concern-border bg-accent-concern-soft text-accent-concern-text hover:opacity-90",
+    "border border-accent-concern-border bg-accent-concern-soft text-accent-concern-text hover:bg-accent-concern-soft-hover",
 };
 
 // Sizes now carry an explicit `min-h-[…]` so every button meets WCAG
