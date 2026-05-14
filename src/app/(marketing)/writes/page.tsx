@@ -78,7 +78,7 @@ const EXAMPLES: readonly Example[] = [
     intro:
       "An email going out to existing customers about a shipped feature. The most common kind of long-form your team writes; also the most consistently jargon-heavy.",
     inputText:
-      "Hi team! We're absolutely thrilled to announce our newest feature, advanced moment classification. This robust capability leverages cutting-edge AI to facilitate your team's ability to optimize content workflows. The intuitive new dashboard streamlines the review paradigm, empowering you to ideate across departments. We can't wait to see how you'll utilize these world-class enhancements!",
+      "Hi team! We're absolutely thrilled to announce our newest feature, advanced review intelligence. This robust capability leverages cutting-edge AI to facilitate your team's ability to optimize content workflows. The intuitive new dashboard streamlines the review paradigm, empowering you to ideate across departments. We can't wait to see how you'll utilize these world-class enhancements!",
     flags: [
       {
         category: "Plain language",
@@ -105,11 +105,11 @@ const EXAMPLES: readonly Example[] = [
         issue:
           "'The dashboard streamlines the paradigm' hides who built what. Name the team behind the work.",
         suggestion:
-          "'We rebuilt the dashboard so the moment classifier runs on every check.' carries the actor; the original sentence hides it.",
+          "'We rebuilt the dashboard so it adapts the review to the kind of writing.' carries the actor; the original sentence hides it.",
       },
     ],
     rewrite:
-      "Hi team. We shipped advanced moment classification. The dashboard now picks the right register for the kind of writing being reviewed: error message, product email, security disclosure, marketing post. The flag list adapts to match. Same dashboard URL. The rest of your workflow doesn't change.",
+      "Hi team. We made the long-form review smarter. The dashboard now picks the right register for the kind of writing being reviewed: error message, product email, security disclosure, marketing post. The flag list adapts to match. Same dashboard URL. The rest of your workflow doesn't change.",
   },
   {
     id: "security-advisory",

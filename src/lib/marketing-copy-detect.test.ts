@@ -88,7 +88,7 @@ describe("shouldShowMarketingBanner", () => {
   it("returns true on a long input with three or more markers", () => {
     const long =
       "We're absolutely thrilled to announce our newest feature, " +
-      "advanced moment classification. This robust capability " +
+      "advanced review intelligence. This robust capability " +
       "leverages cutting-edge AI to facilitate your team's ability " +
       "to optimize content workflows. The intuitive new dashboard " +
       "streamlines the review paradigm.";

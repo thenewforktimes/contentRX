@@ -186,10 +186,15 @@ function SaveMoneyCell() {
 }
 
 function LongFormCell() {
-  // Pulled from the /writes product update example. The input
-  // excerpt is a real fragment; the finding pill matches one of
-  // the example's flags; the rewrite excerpt is a real fragment
-  // from the rewrite. Honest by source.
+  // The corporate-speak input excerpt is a real fragment from the
+  // /writes product-update example and the pill matches one of that
+  // example's flags. The "Suggested" rewrite, however, is a
+  // hand-tuned exemplar — the full /writes rewrite mentions an
+  // internal feature name and would leak private taxonomy at this
+  // scroll-stopping marketing position. (See `/writes/page.tsx:81–112`
+  // for the source fragment that fed the input excerpt above. That
+  // example also needs a substrate-stripped rewrite — tracked
+  // separately.)
   return (
     <Cell
       eyebrow="Long-form review"
@@ -214,8 +219,7 @@ function LongFormCell() {
               Suggested
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-default">
-              We shipped advanced moment classification. The dashboard
-              picks the register.
+              Makes your workflows faster. Your teams happier.
             </p>
           </div>
         </div>

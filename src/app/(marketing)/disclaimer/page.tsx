@@ -25,6 +25,16 @@
  * fallback link routes the visitor to the canonical Termageddon-
  * hosted version of the same content.
  *
+ * Script strategy = "afterInteractive" (NOT "lazyOnload"): the
+ * Termageddon embed registers its work via
+ * `window.addEventListener("load", …)`. `lazyOnload` injects the
+ * `<script>` tag AFTER `window.onload` has already fired, so the
+ * Termageddon listener attaches to an event that already happened
+ * and never runs — leaving the "Loading the disclaimer..." fallback
+ * visible forever (observed in prod on contentrx.io/disclaimer,
+ * 2026-05-14). `afterInteractive` injects the tag after hydration
+ * but BEFORE the load event, so the listener registers in time.
+ *
  * Maintenance: nothing to do here. Termageddon ships updates when
  * underlying state-law disclaimer requirements change. If the embed
  * ever breaks (Termageddon-side outage, policy retracted, etc.),
@@ -100,7 +110,7 @@ export default function DisclaimerPage() {
 
       <Script
         src={`https://policies.termageddon.com/api/embed/${TERMAGEDDON_DISCLAIMER_ID}.js`}
-        strategy="lazyOnload"
+        strategy="afterInteractive"
       />
     </main>
   );
