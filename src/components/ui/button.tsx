@@ -51,9 +51,14 @@ const variantClasses: Record<ButtonVariant, string> = {
     "border border-accent-concern-border bg-accent-concern-soft text-accent-concern-text hover:opacity-90",
 };
 
+// Sizes now carry an explicit `min-h-[…]` so every button meets WCAG
+// 2.5.5 / 2.5.8 touch-target thresholds. `sm` clears the AA 24×24
+// floor at 36px; `md` clears the AAA 44×44 floor. Without these,
+// `text-xs`/`text-sm` + small padding produced ~24px and ~30px tall
+// buttons — fine visually, painful for motor-impaired users on mobile.
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-xs",
-  md: "px-4 py-2 text-sm",
+  sm: "min-h-[36px] px-3 py-1.5 text-xs",
+  md: "min-h-[44px] px-4 py-2 text-sm",
 };
 
 // `group` is part of the baseline so `<ButtonArrow />` inside any

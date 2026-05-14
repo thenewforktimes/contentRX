@@ -86,8 +86,14 @@ export function Wordmark({
       role="img"
       aria-label="ContentRX"
     >
-      <span className="left">Content</span>
-      <span className="right">RX</span>
+      {/*
+       * Inner spans are decorative — the outer role="img" + aria-label
+       * is what screen readers announce. Without aria-hidden, some
+       * SRs will double-read ("ContentRX" then "Content RX").
+       * Matches the pattern in animated-wordmark.tsx.
+       */}
+      <span className="left" aria-hidden="true">Content</span>
+      <span className="right" aria-hidden="true">RX</span>
     </span>
   );
 
