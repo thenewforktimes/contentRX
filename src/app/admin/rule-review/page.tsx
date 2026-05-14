@@ -259,7 +259,11 @@ function ThresholdForm({
       />
       <button
         type="submit"
-        className="rounded-md bg-strong px-3 py-1.5 text-xs font-medium text-canvas hover:opacity-90"
+        // bg-strong / text-canvas is the monochrome high-contrast admin
+        // pattern (not in the accent system). Hover shifts the bg from
+        // text-strong → text-default, which reads as a slight "muting"
+        // and preserves text-canvas contrast above 9.7:1 in both modes.
+        className="rounded-md bg-strong px-3 py-1.5 text-xs font-medium text-canvas hover:bg-default"
       >
         Apply
       </button>

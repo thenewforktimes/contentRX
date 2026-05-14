@@ -107,6 +107,19 @@
   /* primary-border bumped from #c2410c (2.32:1 vs canvas) to #d97706
      (3.64:1 vs canvas) for UI 1.4.11. */
   --accent-primary-border:   #d97706;
+  /* Hover-state pair (added 2026-05-14). The buttons in dark mode run
+     the inverse pattern (bright bg, dark text), so the hover goes
+     *lighter* (one shade up the warm-orange ramp). That reads as the
+     button "lighting up" and — critically — increases the dark-text
+     contrast at the hover state instead of crushing it the way a
+     blanket `opacity-90` did. on-solid (#1c0f04) on solid-hover
+     (#fdba74) measures 9.82:1, AAA Normal. The previous opacity-90
+     treatment blended the canvas into the button, producing a
+     ~1.3:1 perceived state change — invisible as an affordance.
+     soft-hover lifts the muted background just enough to read as
+     interactive (~1.5× luminance bump). */
+  --accent-primary-solid-hover: #fdba74;
+  --accent-primary-soft-hover:  #3d2014;
 
   /* ─── ACCENT: AFFIRM (green) ─── */
   --accent-affirm-solid:     #4ade80;
@@ -114,6 +127,8 @@
   --accent-affirm-soft:      #14201e;
   --accent-affirm-text:      #86efac;
   --accent-affirm-border:    #22c55e;
+  --accent-affirm-solid-hover: #86efac;
+  --accent-affirm-soft-hover:  #1a2c28;
 
   /* ─── ACCENT: CAUTION (yellow) ─── */
   --accent-caution-solid:    #facc15;
@@ -121,6 +136,8 @@
   --accent-caution-soft:     #2a2410;
   --accent-caution-text:     #fde047;
   --accent-caution-border:   #ca8a04;
+  --accent-caution-solid-hover: #fde047;
+  --accent-caution-soft-hover:  #3a3216;
 
   /* ─── ACCENT: CONCERN (red, AAA tuning) ───────────────────────────
      on-solid darkened from #2c0a0a (6.70:1 against solid #f87171, AAA
@@ -132,6 +149,8 @@
   --accent-concern-soft:     #2c0e0e;
   --accent-concern-text:     #fca5a5;
   --accent-concern-border:   #ef4444;
+  --accent-concern-solid-hover: #fca5a5;
+  --accent-concern-soft-hover:  #3a1414;
 
   /* ─── ACCENT: INFO (violet, AAA tuning) ───────────────────────────
      on-solid darkened from #1e1142 (6.18:1 against solid #a78bfa, AAA
@@ -142,6 +161,8 @@
   --accent-info-soft:        #1e1942;
   --accent-info-text:        #c4b5fd;
   --accent-info-border:      #8b5cf6;
+  --accent-info-solid-hover: #c4b5fd;
+  --accent-info-soft-hover:  #2a2358;
 }
 
 @media (prefers-color-scheme: light) {
@@ -190,6 +211,14 @@
     --accent-primary-soft:     #e0e7ff;
     --accent-primary-text:     #312e81;
     --accent-primary-border:   #6366f1;
+    /* Hover-state pair (added 2026-05-14). Primary uses the standard
+       pattern in light mode (dark bg, white text), so the hover goes
+       *darker* — the canonical "pressed" affordance. on-solid (#ffffff)
+       on solid-hover (#3730a3) measures 9.40:1, AAA Normal. The
+       soft-hover deepens the soft cream toward a stronger indigo wash
+       without losing the alert-soft character. */
+    --accent-primary-solid-hover: #3730a3;
+    --accent-primary-soft-hover:  #c7d2fe;
 
     /* ─── ACCENT: AFFIRM (Spring Teal — AAA-tuned 2026-05-14) ────────
        The previous palette (solid #14b8a6, text #0f766e, border #2dd4bf)
@@ -210,6 +239,13 @@
     --accent-affirm-soft:      #ccfbf1;
     --accent-affirm-text:      #0c4844;
     --accent-affirm-border:    #0d9488;
+    /* Affirm uses the INVERSE pattern in light mode (bright teal bg,
+       dark teal text) — so hover goes *lighter* not darker, mirroring
+       the dark-mode treatment for inverse-pattern buttons. on-solid
+       (#042f2e) on solid-hover (#5eead4) measures 11.25:1, AAA Normal.
+       Going darker would have crushed the dark-on-bright contrast. */
+    --accent-affirm-solid-hover: #5eead4;
+    --accent-affirm-soft-hover:  #99f6e4;
 
     /* ─── ACCENT: CAUTION (AAA-tuned 2026-05-14) ─────────────────────
        The single AA Normal *failure* in the whole palette lived here:
@@ -228,6 +264,13 @@
     --accent-caution-soft:     #fef3c7;
     --accent-caution-text:     #6b3d00;
     --accent-caution-border:   #a16207;
+    /* Caution uses the INVERSE pattern in light mode (gold bg, black
+       text) — so hover goes *lighter* (toward yellow-500). Darker
+       would have dropped black-on-gold from 7.18:1 (AAA pass) to
+       ~4.3:1 (AAA Normal fail). Black on solid-hover (#eab308) measures
+       11.08:1, AAA Normal. */
+    --accent-caution-solid-hover: #eab308;
+    --accent-caution-soft-hover:  #fde68a;
 
     /* ─── ACCENT: CONCERN (AAA-tuned 2026-05-14) ─────────────────────
        solid darkened from #dc2626 (6.03:1 vs white on-solid, AAA fail)
@@ -238,6 +281,11 @@
     --accent-concern-soft:     #fee2e2;
     --accent-concern-text:     #991b1b;
     --accent-concern-border:   #ef4444;
+    /* Concern uses the standard pattern (dark red bg, white text), so
+       hover goes *darker*. White on solid-hover (#7f1d1d) measures
+       9.74:1, AAA Normal. */
+    --accent-concern-solid-hover: #7f1d1d;
+    --accent-concern-soft-hover:  #fecaca;
 
     /* ─── ACCENT: INFO (AAA-tuned 2026-05-14) ────────────────────────
        solid darkened from #7c3aed (5.41:1 vs white on-solid, AAA fail)
@@ -248,6 +296,11 @@
     --accent-info-soft:        #ede9fe;
     --accent-info-text:        #4c1d95;
     --accent-info-border:      #8b5cf6;
+    /* Info uses the standard pattern (dark violet bg, white text), so
+       hover goes *darker*. White on solid-hover (#4c1d95) measures
+       11.10:1, AAA Normal. */
+    --accent-info-solid-hover: #4c1d95;
+    --accent-info-soft-hover:  #ddd6fe;
   }
 }
 
@@ -273,35 +326,45 @@
   --color-ring:           var(--ring-focus);
   --color-hover:          var(--state-hover-bg);
 
-  --color-accent-primary:         var(--accent-primary-solid);
-  --color-accent-primary-on:      var(--accent-primary-on-solid);
-  --color-accent-primary-soft:    var(--accent-primary-soft);
-  --color-accent-primary-text:    var(--accent-primary-text);
-  --color-accent-primary-border:  var(--accent-primary-border);
+  --color-accent-primary:              var(--accent-primary-solid);
+  --color-accent-primary-on:           var(--accent-primary-on-solid);
+  --color-accent-primary-soft:         var(--accent-primary-soft);
+  --color-accent-primary-text:         var(--accent-primary-text);
+  --color-accent-primary-border:       var(--accent-primary-border);
+  --color-accent-primary-hover:        var(--accent-primary-solid-hover);
+  --color-accent-primary-soft-hover:   var(--accent-primary-soft-hover);
 
-  --color-accent-affirm:          var(--accent-affirm-solid);
-  --color-accent-affirm-on:       var(--accent-affirm-on-solid);
-  --color-accent-affirm-soft:     var(--accent-affirm-soft);
-  --color-accent-affirm-text:     var(--accent-affirm-text);
-  --color-accent-affirm-border:   var(--accent-affirm-border);
+  --color-accent-affirm:               var(--accent-affirm-solid);
+  --color-accent-affirm-on:            var(--accent-affirm-on-solid);
+  --color-accent-affirm-soft:          var(--accent-affirm-soft);
+  --color-accent-affirm-text:          var(--accent-affirm-text);
+  --color-accent-affirm-border:        var(--accent-affirm-border);
+  --color-accent-affirm-hover:         var(--accent-affirm-solid-hover);
+  --color-accent-affirm-soft-hover:    var(--accent-affirm-soft-hover);
 
-  --color-accent-caution:         var(--accent-caution-solid);
-  --color-accent-caution-on:      var(--accent-caution-on-solid);
-  --color-accent-caution-soft:    var(--accent-caution-soft);
-  --color-accent-caution-text:    var(--accent-caution-text);
-  --color-accent-caution-border:  var(--accent-caution-border);
+  --color-accent-caution:              var(--accent-caution-solid);
+  --color-accent-caution-on:           var(--accent-caution-on-solid);
+  --color-accent-caution-soft:         var(--accent-caution-soft);
+  --color-accent-caution-text:         var(--accent-caution-text);
+  --color-accent-caution-border:       var(--accent-caution-border);
+  --color-accent-caution-hover:        var(--accent-caution-solid-hover);
+  --color-accent-caution-soft-hover:   var(--accent-caution-soft-hover);
 
-  --color-accent-concern:         var(--accent-concern-solid);
-  --color-accent-concern-on:      var(--accent-concern-on-solid);
-  --color-accent-concern-soft:    var(--accent-concern-soft);
-  --color-accent-concern-text:    var(--accent-concern-text);
-  --color-accent-concern-border:  var(--accent-concern-border);
+  --color-accent-concern:              var(--accent-concern-solid);
+  --color-accent-concern-on:           var(--accent-concern-on-solid);
+  --color-accent-concern-soft:         var(--accent-concern-soft);
+  --color-accent-concern-text:         var(--accent-concern-text);
+  --color-accent-concern-border:       var(--accent-concern-border);
+  --color-accent-concern-hover:        var(--accent-concern-solid-hover);
+  --color-accent-concern-soft-hover:   var(--accent-concern-soft-hover);
 
-  --color-accent-info:            var(--accent-info-solid);
-  --color-accent-info-on:         var(--accent-info-on-solid);
-  --color-accent-info-soft:       var(--accent-info-soft);
-  --color-accent-info-text:       var(--accent-info-text);
-  --color-accent-info-border:     var(--accent-info-border);
+  --color-accent-info:                 var(--accent-info-solid);
+  --color-accent-info-on:              var(--accent-info-on-solid);
+  --color-accent-info-soft:            var(--accent-info-soft);
+  --color-accent-info-text:            var(--accent-info-text);
+  --color-accent-info-border:          var(--accent-info-border);
+  --color-accent-info-hover:           var(--accent-info-solid-hover);
+  --color-accent-info-soft-hover:      var(--accent-info-soft-hover);
 
   --font-sans: var(--font-sans-base);
   --font-mono: var(--font-mono-base);

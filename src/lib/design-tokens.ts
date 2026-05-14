@@ -57,6 +57,10 @@ export const tokens = {
         soft: "#e0e7ff",
         text: "#312e81",
         border: "#6366f1",
+        // Hover-state pair (added 2026-05-14). Standard pattern (dark
+        // bg, white text) — hover darkens. 9.40:1 AAA Normal.
+        solidHover: "#3730a3",
+        softHover: "#c7d2fe",
       },
       affirm: {
         // Spring Teal — AAA-tuned 2026-05-14. solid moved from #14b8a6
@@ -68,6 +72,10 @@ export const tokens = {
         soft: "#ccfbf1",
         text: "#0c4844",
         border: "#0d9488",
+        // Inverse pattern (bright teal bg, dark teal text) — hover
+        // LIGHTENS to preserve contrast. 11.25:1 AAA Normal.
+        solidHover: "#5eead4",
+        softHover: "#99f6e4",
       },
       caution: {
         // onSolid flipped from white to black — was 2.95:1 (AA Normal
@@ -80,6 +88,10 @@ export const tokens = {
         soft: "#fef3c7",
         text: "#6b3d00",
         border: "#a16207",
+        // Inverse pattern (gold bg, black text) — hover LIGHTENS to
+        // preserve contrast. 11.08:1 AAA Normal.
+        solidHover: "#eab308",
+        softHover: "#fde68a",
       },
       concern: {
         // solid darkened from #dc2626 (6.03:1 AAA fail) to #ad1f1f
@@ -89,6 +101,10 @@ export const tokens = {
         soft: "#fee2e2",
         text: "#991b1b",
         border: "#ef4444",
+        // Standard pattern (dark red bg, white text) — hover darkens.
+        // 9.74:1 AAA Normal.
+        solidHover: "#7f1d1d",
+        softHover: "#fecaca",
       },
       info: {
         // solid darkened from #7c3aed (5.41:1 AAA fail) to #5b21b6
@@ -98,6 +114,10 @@ export const tokens = {
         soft: "#ede9fe",
         text: "#4c1d95",
         border: "#8b5cf6",
+        // Standard pattern (dark violet bg, white text) — hover
+        // darkens. 11.10:1 AAA Normal.
+        solidHover: "#4c1d95",
+        softHover: "#ddd6fe",
       },
     },
   },
@@ -140,6 +160,10 @@ export const tokens = {
         // border bumped from #c2410c (2.32:1 vs canvas) to #d97706
         // (3.64:1 pass).
         border: "#d97706",
+        // Inverse pattern (bright bg, dark text) — hover LIGHTENS so
+        // the button "lights up" and contrast climbs. 9.82:1 AAA Normal.
+        solidHover: "#fdba74",
+        softHover: "#3d2014",
       },
       affirm: {
         solid: "#4ade80",
@@ -147,6 +171,8 @@ export const tokens = {
         soft: "#14201e",
         text: "#86efac",
         border: "#22c55e",
+        solidHover: "#86efac",
+        softHover: "#1a2c28",
       },
       caution: {
         solid: "#facc15",
@@ -154,6 +180,8 @@ export const tokens = {
         soft: "#2a2410",
         text: "#fde047",
         border: "#ca8a04",
+        solidHover: "#fde047",
+        softHover: "#3a3216",
       },
       concern: {
         solid: "#f87171",
@@ -165,6 +193,8 @@ export const tokens = {
         // border bumped from #dc2626 (2.74:1 vs canvas) to #ef4444
         // (3.76:1 pass).
         border: "#ef4444",
+        solidHover: "#fca5a5",
+        softHover: "#3a1414",
       },
       info: {
         solid: "#a78bfa",
@@ -176,6 +206,8 @@ export const tokens = {
         // border bumped from #7c3aed (2.59:1 vs canvas) to #8b5cf6
         // (3.68:1 pass).
         border: "#8b5cf6",
+        solidHover: "#c4b5fd",
+        softHover: "#2a2358",
       },
     },
   },
