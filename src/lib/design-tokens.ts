@@ -50,6 +50,15 @@ export const tokens = {
       default: "#888070",
       strong: "#7e7565",
     },
+    disabled: {
+      // Neutral muted surface for disabled controls. The visual identity
+      // shifts from "primary, faded" (opacity-50) to "grayed out, can't
+      // press". Contrast intentionally low; WCAG 1.4.3 carves out
+      // disabled UI from the minimum.
+      surface: "#e0d8c5",
+      text: "#80776a",
+      border: "#c4baa8",
+    },
     accent: {
       primary: {
         solid: "#4338ca",
@@ -150,6 +159,12 @@ export const tokens = {
       // #7575a8 (3.47:1 pass).
       default: "#7575a8",
       strong: "#7070b4",
+    },
+    disabled: {
+      // Neutral muted surface for disabled controls. Dark-mode pairing.
+      surface: "#2c2c52",
+      text: "#6464a8",
+      border: "#404072",
     },
     accent: {
       primary: {

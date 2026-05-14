@@ -44,8 +44,18 @@ import type {
 // Base styles shared by Input / Textarea / Select. `min-h-[44px]`
 // satisfies WCAG 2.5.5 even when `py-2 text-sm` would otherwise
 // produce a ~36px element.
+//
+// 2026-05-14 updates from the affordance audit:
+//   - hover:border-line-strong  → mouse users now see a hover cue
+//     (previously the border was static until focus — no indication
+//     that the field was interactive).
+//   - disabled:bg-disabled etc. → token-driven disabled state
+//     replaces the previous opacity-50. Same finding as Button:
+//     opacity-50 on a placeholder reads as "this field is slightly
+//     faded" rather than "this is locked." The neutral disabled
+//     palette communicates lock-state unambiguously.
 const inputBase =
-  "block w-full rounded-md border border-line bg-raised px-3 py-2 text-sm text-strong placeholder:text-quiet focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-50";
+  "block w-full rounded-md border border-line bg-raised px-3 py-2 text-sm text-strong placeholder:text-quiet transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:border-disabled disabled:bg-disabled disabled:text-disabled-on disabled:placeholder:text-disabled-on disabled:hover:border-disabled";
 const inputSizing = "min-h-[44px]";
 
 // When the field is in error state, the border lifts to the concern
