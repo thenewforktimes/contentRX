@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Pill, type PillTone } from "@/components/ui/pill";
+import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 
 type ResultType = "override" | "queue" | "flag";
 
@@ -64,7 +65,21 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputId = useId();
+  const titleId = useId();
+  const listboxId = useId();
   const router = useRouter();
+
+  // Focus management: trap focus inside the palette, ESC closes,
+  // background inert, focus restored to the trigger on close.
+  // Initial focus goes to the search input (the user's primary
+  // action). Replaces the prior partial implementation that didn't
+  // trap Tab and didn't restore focus.
+  useFocusTrap({
+    active: open,
+    containerRef: dialogRef,
+    onClose: () => setOpen(false),
+    initialFocusRef: inputRef,
+  });
 
   // Toggle on Cmd/Ctrl+K from anywhere.
   useEffect(() => {
@@ -78,11 +93,10 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", onGlobalKey);
   }, []);
 
-  // Autofocus when opened; reset state when closed.
+  // Reset state when closed; initial focus is handled by useFocusTrap.
   useEffect(() => {
     if (open) {
       setActiveIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 0);
     } else {
       setQuery("");
       setResults([]);
@@ -129,13 +143,9 @@ export function CommandPalette() {
     };
   }, [query, open]);
 
+  // Arrow / Enter handling (ESC is owned by useFocusTrap).
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setOpen(false);
-        return;
-      }
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setActiveIndex((i) => Math.min(i + 1, Math.max(results.length - 1, 0)));
@@ -174,6 +184,8 @@ export function CommandPalette() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open search palette"
+        aria-haspopup="dialog"
+        aria-expanded={open}
         className="flex w-full items-center justify-between gap-2 rounded-md border border-line-strong bg-raised px-3 py-1.5 text-left text-xs text-quiet hover:border-line-strong"
       >
         <span>Find a case…</span>
@@ -186,7 +198,7 @@ export function CommandPalette() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby={inputId}
+          aria-labelledby={titleId}
           className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-24"
           onClick={(e) => {
             if (e.target === e.currentTarget) setOpen(false);
@@ -197,11 +209,36 @@ export function CommandPalette() {
             onKeyDown={onKeyDown}
             className="w-full max-w-2xl overflow-hidden rounded-lg border border-line bg-raised shadow-2xl"
           >
+            {/*
+             * Visually-hidden title — the dialog needs a labelled-by
+             * target that's actually a heading (the input itself isn't
+             * a label, even though earlier code pointed `aria-labelledby`
+             * at it). Screen readers announce "Search admin, dialog"
+             * on open.
+             */}
+            <h2 id={titleId} className="sr-only">
+              Search admin
+            </h2>
             <div className="border-b border-line">
+              {/*
+               * Combobox pattern: the input owns the listbox below
+               * via aria-controls, exposes expanded state, and points
+               * at the active option for screen-reader announcement
+               * as arrow keys move selection.
+               */}
               <input
                 id={inputId}
                 ref={inputRef}
                 type="text"
+                role="combobox"
+                aria-expanded={results.length > 0}
+                aria-controls={listboxId}
+                aria-autocomplete="list"
+                aria-activedescendant={
+                  results.length > 0 && results[activeIndex]
+                    ? `${listboxId}-${activeIndex}`
+                    : undefined
+                }
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Find a case across overrides, queue, and customer flags…"
@@ -244,11 +281,12 @@ export function CommandPalette() {
                 </p>
               )}
               {!error && results.length > 0 && (
-                <ul role="listbox">
+                <ul id={listboxId} role="listbox" aria-label="Search results">
                   {results.map((r, idx) => (
                     <ResultRow
                       key={`${r.type}-${r.id}`}
                       result={r}
+                      optionId={`${listboxId}-${idx}`}
                       active={idx === activeIndex}
                       onHover={() => setActiveIndex(idx)}
                       onSelect={() => setOpen(false)}
@@ -283,17 +321,20 @@ export function CommandPalette() {
 
 function ResultRow({
   result,
+  optionId,
   active,
   onHover,
   onSelect,
 }: {
   result: SearchResult;
+  optionId: string;
   active: boolean;
   onHover: () => void;
   onSelect: () => void;
 }) {
   return (
     <li
+      id={optionId}
       role="option"
       aria-selected={active}
       onMouseEnter={onHover}

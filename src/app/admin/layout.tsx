@@ -120,7 +120,13 @@ export default async function AdminLayout({
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1 px-6 py-8">{children}</main>
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="min-w-0 flex-1 px-6 py-8 outline-none"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );
