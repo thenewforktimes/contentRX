@@ -276,10 +276,25 @@ export function ExplainClient({ plan = "free" }: { plan?: Plan } = {}) {
         <Button
           onClick={onCheck}
           disabled={loading || text.trim().length === 0 || overLimit}
+          aria-busy={loading || undefined}
         >
           {loading ? "Checking…" : "Check"}
         </Button>
       </section>
+
+      {/*
+       * Live region for the check submit/result lifecycle (WCAG 4.1.3).
+       * Without this, blind users press Check, the button label
+       * silently flips to "Checking…", and ~2s later the verdict
+       * lands with no audible cue. The live region announces
+       * "Checking…" on submit and "Check complete" on response.
+       * The VerdictHeader carries the actual verdict text, but a
+       * leading "Check complete" lets SR users know to navigate
+       * down to the result.
+       */}
+      <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {loading ? "Checking…" : response ? "Check complete" : ""}
+      </p>
 
       {error && <ErrorBlock error={error} />}
 

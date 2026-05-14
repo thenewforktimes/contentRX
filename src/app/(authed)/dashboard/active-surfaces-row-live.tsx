@@ -114,7 +114,20 @@ function SurfaceCard({
   return (
     <div className="rounded-md border border-line p-4 text-sm">
       <p className="font-medium">{label}</p>
-      <div className="mt-2 flex items-center gap-1.5">
+      {/*
+       * Live region (WCAG 4.1.3) — when a check completes on this
+       * surface, the count and lastAt update silently in the prior
+       * implementation. `aria-live="polite"` so the new value is
+       * announced; `aria-atomic` so the whole row re-reads as one
+       * coherent phrase ("Plugin · 12 checks · 2m ago") rather than
+       * a single changed token.
+       */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="mt-2 flex items-center gap-1.5"
+      >
         <span
           aria-hidden
           className={
