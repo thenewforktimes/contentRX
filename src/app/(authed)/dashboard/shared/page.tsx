@@ -24,6 +24,7 @@ import { auth } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
@@ -121,12 +122,20 @@ export default async function SharedChecksPage() {
       {rows.length === 0 ? (
         <section className="rounded-lg border border-line bg-overlay p-6">
           <p className="text-sm text-default">
-            Nothing shared yet. ContentRX has no plaintext of any check
-            you have run. To share a specific check, run it and tap{" "}
+            You don&rsquo;t have any shared checks yet. Run a check from
+            the dashboard, then tap{" "}
             <span className="font-medium text-strong">Flag for review</span>
             {" "}
-            on the result.
+            on a result to share it with ContentRX.
           </p>
+          <div className="mt-4">
+            <Link
+              href="/dashboard"
+              className={buttonStyles({ variant: "primary", size: "sm" })}
+            >
+              Go to dashboard
+            </Link>
+          </div>
         </section>
       ) : (
         <ul className="flex flex-col gap-3">

@@ -64,10 +64,25 @@ const companyLinks = [
   { href: "mailto:hello@contentrx.io", label: "hello@contentrx.io", external: true as const },
 ];
 
-export function SiteFooter() {
+/**
+ * `contentMaxWidth` lets the parent layout match the footer's inner
+ * content width to the page above it. The footer's full-width
+ * border-top is unaffected (it always spans the viewport). Default
+ * `max-w-5xl` matches the marketing pages; the dashboard (max-w-3xl
+ * content) passes `max-w-3xl` so the footer columns line up with the
+ * page chrome instead of breaking the rhythm at the bottom of the
+ * viewport.
+ */
+type SiteFooterProps = {
+  contentMaxWidth?: string;
+};
+
+export function SiteFooter({
+  contentMaxWidth = "max-w-5xl",
+}: SiteFooterProps = {}) {
   return (
     <footer className="border-t border-line bg-sunken">
-      <div className="mx-auto max-w-5xl px-6 py-10">
+      <div className={`mx-auto px-6 py-10 ${contentMaxWidth}`}>
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-5">
           <div>
             <Wordmark size="xs" />

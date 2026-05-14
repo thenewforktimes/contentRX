@@ -89,7 +89,7 @@ export default async function DashboardLayout({
         <FolderTabs />
         <FolderBody>{children}</FolderBody>
       </main>
-      <SiteFooter />
+      <SiteFooter contentMaxWidth="max-w-3xl" />
     </div>
   );
 }
