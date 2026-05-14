@@ -69,7 +69,7 @@ export default function GlobalError({
             <div className="flex flex-col gap-4">
               <Eyebrow>500</Eyebrow>
               <h1 className="text-3xl font-semibold tracking-tight text-strong">
-                Something broke on this page.
+                Something broke on this page
               </h1>
               <p className="text-base text-default">
                 The error is already logged. Refresh the page first.
