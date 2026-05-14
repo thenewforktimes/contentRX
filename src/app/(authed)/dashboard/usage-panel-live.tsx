@@ -110,7 +110,20 @@ export function UsagePanelLive({
           {currentMonth()}
         </span>
       </header>
-      <div className="mb-2 flex items-baseline justify-between">
+      {/*
+       * Live region (WCAG 4.1.3 Status Messages) — when a check
+       * completes, this panel updates the counter optimistically.
+       * Without aria-live, screen-reader users hear nothing as the
+       * count ticks. `aria-atomic` so the whole "X of Y checks"
+       * phrase is re-read, not just the changed number. `polite`
+       * so the announcement doesn't interrupt other speech.
+       */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="mb-2 flex items-baseline justify-between"
+      >
         <span className="text-3xl font-semibold tabular-nums">
           {used.toLocaleString()}
         </span>
@@ -118,7 +131,14 @@ export function UsagePanelLive({
           of {quota.toLocaleString()} checks
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-raised">
+      <div
+        className="h-2 overflow-hidden rounded-full bg-raised"
+        role="progressbar"
+        aria-valuenow={usedPct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Monthly usage"
+      >
         <div
           className={`h-full transition-[width] duration-300 ${barClasses[tone]}`}
           style={{ width: `${usedPct}%` }}
@@ -127,18 +147,25 @@ export function UsagePanelLive({
       <p className="mt-2 text-xs text-default">
         Resets {nextMonthReset()}.
       </p>
-      {tone === "warn" && (
-        <p className="mt-2 text-xs text-strong">
-          You&apos;re close to your monthly limit. Upgrade to keep
-          checking before {nextMonthReset()}.
-        </p>
-      )}
-      {tone === "exhausted" && (
-        <p className="mt-2 text-xs text-strong">
-          You&apos;ve run out of free content checks. Upgrade to keep
-          checking.
-        </p>
-      )}
+      {/*
+       * Threshold messages live in their own live region so the
+       * "close to limit" / "ran out" transitions are announced even
+       * when the count itself didn't visibly change.
+       */}
+      <div role="status" aria-live="polite" aria-atomic="true">
+        {tone === "warn" && (
+          <p className="mt-2 text-xs text-strong">
+            You&apos;re close to your monthly limit. Upgrade to keep
+            checking.
+          </p>
+        )}
+        {tone === "exhausted" && (
+          <p className="mt-2 text-xs text-strong">
+            You&apos;ve run out of free content checks. Upgrade to keep
+            checking.
+          </p>
+        )}
+      </div>
     </section>
   );
 }
