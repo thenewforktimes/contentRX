@@ -32,6 +32,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
+import { logSafeError } from "@/lib/safe-error-log";
 
 export type ProvisionedUser = typeof schema.users.$inferSelect;
 
@@ -43,7 +44,14 @@ async function primaryEmailFromClerk(clerkId: string): Promise<string | null> {
     const primary = user.emailAddresses.find((e) => e.id === primaryId);
     return (primary ?? user.emailAddresses[0])?.emailAddress ?? null;
   } catch (err) {
-    console.error(
+    // Audit Phase 4 (2026-05-14): logSafeError instead of console.error.
+    // Clerk SDK errors can transitively carry the JWT or the user
+    // object (with email) on .message/.cause; the safe-error helper
+    // hand-shapes the log to {kind, message, status?} so Vercel logs
+    // don't pick up PII through a stringified err. Same fix shape as
+    // the May-13 audit applied in /api/check; clerkId is a Clerk-side
+    // opaque identifier and OK to log.
+    logSafeError(
       `getOrProvisionUser: clerkClient.users.getUser failed for ${clerkId}`,
       err,
     );
@@ -82,7 +90,7 @@ export async function getOrProvisionUser(
       .limit(1);
     if (existing) return existing;
   } catch (err) {
-    console.error(
+    logSafeError(
       `getOrProvisionUser: initial select failed for ${clerkId}`,
       err,
     );
@@ -121,7 +129,7 @@ export async function getOrProvisionUser(
     `);
     return rows[0] ?? null;
   } catch (err) {
-    console.error(
+    logSafeError(
       `getOrProvisionUser: upsert-or-fetch failed for ${clerkId}`,
       err,
     );

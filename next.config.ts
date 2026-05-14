@@ -48,11 +48,18 @@ const nextConfig: NextConfig = {
   // single email component pulls every component into the bundle.
   // (Recharts was here pre-Pf7 — replaced by a hand-rolled SVG.
   // `lucide-react` was here through 2026-05-14 but isn't in
-  // `package.json` and isn't imported anywhere in `src/`, so removing
-  // it from the list as part of the Phase 3 zombie cleanup.)
+  // `package.json` and isn't imported anywhere in `src/`, so removed
+  // as part of the Phase 3 zombie cleanup.)
+  //
+  // framer-motion is added 2026-05-14 (Phase 4 audit fix). Used by
+  // AnimatedWordmark, MotionList, and HowItWorksDiagram — small
+  // surface area, but the package's default barrel pulls more than
+  // the named exports need. With this hint, Next.js tree-shakes to
+  // just the entry points actually referenced.
   experimental: {
     optimizePackageImports: [
       "@react-email/components",
+      "framer-motion",
     ],
   },
   // Server-only deps that don't need to be webpack-bundled. Trims

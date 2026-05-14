@@ -43,7 +43,7 @@ import { OutcomesGrid } from "@/components/outcomes-grid";
 import { SurfacesGrid } from "@/components/surfaces-grid";
 import { ButtonArrow, buttonStyles } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { Wordmark } from "@/components/wordmark";
+import { AnimatedWordmark } from "@/components/animated-wordmark";
 
 export const metadata: Metadata = {
   title: "ContentRX. Staff-level content design review in every repo",
@@ -59,7 +59,7 @@ export default function Home() {
           brand presence as the page's first kinetic moment. */}
       <header className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-16">
         <div>
-          <Wordmark size="md" animate link={false} />
+          <AnimatedWordmark size="md" link={false} />
           <h1 className="mt-8 text-5xl font-bold tracking-tight text-strong sm:text-6xl">
             Staff-level content design review in every repo
           </h1>

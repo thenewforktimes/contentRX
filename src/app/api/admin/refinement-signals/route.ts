@@ -50,59 +50,65 @@ export async function GET(req: Request) {
 
   const db = getDb();
 
-  // 90-day violations — feeds per-standard fire counts.
-  const violations90d = await db
-    .select({
-      checkEventId: schema.violations.checkEventId,
-      standardId: schema.violations.standardId,
-      moment: schema.violations.moment,
-      contentType: schema.violations.contentType,
-      textHash: schema.violations.textHash,
-      source: schema.violations.source,
-      reviewReasonSubtype: schema.violations.reviewReasonSubtype,
-      createdAt: schema.violations.createdAt,
-    })
-    .from(schema.violations)
-    .where(gte(schema.violations.createdAt, ninety));
-
-  // 30-day overrides — feeds override clusters + per-standard
-  // overrides_30d counts.
-  const overrides30d = await db
-    .select({
-      standardId: schema.violationOverrides.standardId,
-      overrideReasonCode: schema.violationOverrides.overrideReasonCode,
-      userId: schema.violationOverrides.userId,
-      actorRole: schema.violationOverrides.actorRole,
-      textHash: schema.violationOverrides.textHash,
-      createdAt: schema.violationOverrides.createdAt,
-    })
-    .from(schema.violationOverrides)
-    .where(gte(schema.violationOverrides.createdAt, thirty));
-
-  // 60-day review-tagged violations — feeds OOD + conflict clusters.
-  // Push the `reviewReasonSubtype IS NOT NULL` filter into SQL so
-  // `violations_subtype_created_idx` (on subtype + createdAt) can do
-  // the work. Previously the filter ran in JS after fetching every
-  // 60-day row, defeating the index and pulling far more rows than
-  // the aggregator needed.
-  const reviewViolations60d = await db
-    .select({
-      checkEventId: schema.violations.checkEventId,
-      standardId: schema.violations.standardId,
-      moment: schema.violations.moment,
-      contentType: schema.violations.contentType,
-      textHash: schema.violations.textHash,
-      source: schema.violations.source,
-      reviewReasonSubtype: schema.violations.reviewReasonSubtype,
-      createdAt: schema.violations.createdAt,
-    })
-    .from(schema.violations)
-    .where(
-      and(
-        gte(schema.violations.createdAt, sixty),
-        isNotNull(schema.violations.reviewReasonSubtype),
+  // Phase 4 audit fix (2026-05-14): these three SELECTs are independent.
+  // Running them sequentially burned wall clock on the largest queries
+  // in the codebase (90d window over `violations`). At >1M rows in
+  // `violations` they'd sequentially push past the 60s Vercel function
+  // timeout. Promise.all cuts the wall time to the slowest single
+  // query.
+  const [violations90d, overrides30d, reviewViolations60d] = await Promise.all([
+    // 90-day violations — feeds per-standard fire counts.
+    db
+      .select({
+        checkEventId: schema.violations.checkEventId,
+        standardId: schema.violations.standardId,
+        moment: schema.violations.moment,
+        contentType: schema.violations.contentType,
+        textHash: schema.violations.textHash,
+        source: schema.violations.source,
+        reviewReasonSubtype: schema.violations.reviewReasonSubtype,
+        createdAt: schema.violations.createdAt,
+      })
+      .from(schema.violations)
+      .where(gte(schema.violations.createdAt, ninety)),
+    // 30-day overrides — feeds override clusters + per-standard
+    // overrides_30d counts.
+    db
+      .select({
+        standardId: schema.violationOverrides.standardId,
+        overrideReasonCode: schema.violationOverrides.overrideReasonCode,
+        userId: schema.violationOverrides.userId,
+        actorRole: schema.violationOverrides.actorRole,
+        textHash: schema.violationOverrides.textHash,
+        createdAt: schema.violationOverrides.createdAt,
+      })
+      .from(schema.violationOverrides)
+      .where(gte(schema.violationOverrides.createdAt, thirty)),
+    // 60-day review-tagged violations — feeds OOD + conflict clusters.
+    // Push the `reviewReasonSubtype IS NOT NULL` filter into SQL so
+    // `violations_subtype_created_idx` (on subtype + createdAt) can do
+    // the work. Previously the filter ran in JS after fetching every
+    // 60-day row, defeating the index and pulling far more rows than
+    // the aggregator needed.
+    db
+      .select({
+        checkEventId: schema.violations.checkEventId,
+        standardId: schema.violations.standardId,
+        moment: schema.violations.moment,
+        contentType: schema.violations.contentType,
+        textHash: schema.violations.textHash,
+        source: schema.violations.source,
+        reviewReasonSubtype: schema.violations.reviewReasonSubtype,
+        createdAt: schema.violations.createdAt,
+      })
+      .from(schema.violations)
+      .where(
+        and(
+          gte(schema.violations.createdAt, sixty),
+          isNotNull(schema.violations.reviewReasonSubtype),
+        ),
       ),
-    );
+  ]);
 
   const dump = buildSignalDump({
     now,
