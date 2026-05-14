@@ -17,7 +17,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertDialog } from "@/components/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input, Textarea } from "@/components/ui/input";
+import { Checkbox, Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import { displayLabelFor } from "@/lib/standard-display-names";
 import type { CategorySummary } from "@/lib/standards";
@@ -510,65 +510,79 @@ function AddCustomRuleCard({
   return (
     <section className="rounded-lg border border-line p-4">
       <h2 className="mb-3 text-base font-semibold text-strong">New custom rule</h2>
+      {/* All three fields are required (server-side rejects without
+          any of them). Migrated to <Label required> on 2026-05-14 so
+          the visual asterisk + sr-only "(required)" cue is present
+          alongside the underlying `required` HTML attribute. WCAG
+          3.3.2 — labels or instructions. */}
       <div className="flex flex-col gap-3">
-        <label className="text-xs">
-          <span className="mb-1 block text-default">
+        <div>
+          <Label htmlFor="rule-title" required className="mb-1 text-xs">
             Title
-          </span>
+          </Label>
           <Input
+            id="rule-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="No 'revolutionary'"
+            required
           />
-        </label>
-        <label className="text-xs">
-          <span className="mb-1 block text-default">
+        </div>
+        <div>
+          <Label htmlFor="rule-text" required className="mb-1 text-xs">
             Rule text (shown to anyone who trips this)
-          </span>
+          </Label>
           <Textarea
+            id="rule-text"
             rows={2}
             value={rule}
             onChange={(e) => setRule(e.target.value)}
             placeholder="Avoid the word 'revolutionary'. Describe what's new and why instead."
+            required
           />
-        </label>
-        <label className="text-xs">
-          <span className="mb-1 block text-default">
+        </div>
+        <div>
+          <Label htmlFor="rule-pattern" required className="mb-1 text-xs">
             Regex pattern. Matched against the text being checked
-          </span>
+          </Label>
           <Input
+            id="rule-pattern"
             type="text"
             value={pattern}
             onChange={(e) => setPattern(e.target.value)}
             placeholder="\brevolutionary\b"
+            required
             className="font-mono text-xs"
           />
-        </label>
+        </div>
         <div className="flex flex-wrap items-center gap-4 text-xs">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={caseInsensitive}
-              onChange={(e) => setCaseInsensitive(e.target.checked)}
-            />
-            Case-insensitive
-          </label>
+          {/* Checkbox + Select migrated from raw inputs on 2026-05-14.
+              Pre-migration the checkbox shipped browser defaults (no
+              focus ring, inconsistent tick contrast on tinted bg),
+              and the select missed min-h-[44px] + the canonical focus
+              ring. Both inside a form that gates custom-rule creation
+              for paying customers. */}
+          <Checkbox
+            checked={caseInsensitive}
+            onChange={(e) => setCaseInsensitive(e.target.checked)}
+            label="Case-insensitive"
+          />
           <label className="flex items-center gap-2">
             <span className="text-default">
               Severity
             </span>
-            <select
+            <Select
               value={severity}
               onChange={(e) =>
                 setSeverity(e.target.value as "low" | "medium" | "high")
               }
-              className="rounded-md border border-line-strong bg-raised px-2 py-1 text-xs"
+              className="w-auto"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
-            </select>
+            </Select>
           </label>
         </div>
         <div className="flex gap-2">

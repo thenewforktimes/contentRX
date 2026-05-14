@@ -21,6 +21,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { buttonStyles } from "@/components/ui/button";
+import { Label, Select, Textarea } from "@/components/ui/input";
 import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 import {
   OVERRIDE_REASON_META,
@@ -161,47 +162,46 @@ export function FindingAdjustModal({
         </header>
 
         <div className="space-y-4 px-5 py-5">
+          {/* Reason + Notes migrated to design-system primitives on
+              2026-05-14. Pre-migration this modal used raw <select>
+              and <textarea> with no focus-visible ring and no
+              min-h-[44px] touch target — keyboard users inside the
+              focus-trapped dialog got only the browser default focus
+              outline (which doesn't track --ring-focus). WCAG 2.4.7 +
+              2.5.5. */}
           <div>
-            <label
-              htmlFor={reasonId}
-              className="block text-xs font-medium text-default"
-            >
+            <Label htmlFor={reasonId} className="text-xs">
               Reason
-            </label>
-            <select
+            </Label>
+            <Select
               ref={reasonSelectRef}
               id={reasonId}
               value={reasonCode}
               onChange={(e) =>
                 setReasonCode(e.target.value as OverrideReasonCode)
               }
-              className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
+              helperText={OVERRIDE_REASON_META[reasonCode].description}
+              className="mt-1"
             >
               {VERDICT_REASON_CODES.map((code) => (
                 <option key={code} value={code}>
                   {OVERRIDE_REASON_META[code].label}
                 </option>
               ))}
-            </select>
-            <p className="mt-1 text-xs text-quiet">
-              {OVERRIDE_REASON_META[reasonCode].description}
-            </p>
+            </Select>
           </div>
           <div>
-            <label
-              htmlFor={notesId}
-              className="block text-xs font-medium text-default"
-            >
+            <Label htmlFor={notesId} className="text-xs">
               Notes <span className="font-normal text-quiet">(optional)</span>
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               id={notesId}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               maxLength={500}
-              className="mt-1 block w-full rounded-md border border-line-strong bg-raised px-2 py-1.5 text-sm text-strong"
               placeholder="Anything else worth recording for yourself?"
+              className="mt-1"
             />
           </div>
 

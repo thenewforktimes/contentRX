@@ -39,6 +39,7 @@
 import { useId, useRef, useState } from "react";
 import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 import { Button } from "@/components/ui/button";
+import { Checkbox, Textarea } from "@/components/ui/input";
 
 export interface FlagForReviewProps {
   text: string;
@@ -233,7 +234,13 @@ export function FlagForReview({
                 >
                   What&rsquo;s off?
                 </label>
-                <textarea
+                {/* Migrated from raw <textarea> on 2026-05-14. The old
+                    `focus:ring-1` was 1px (below design-system standard
+                    of 2px) and fired on mouse click too (should be
+                    keyboard-only). The Textarea primitive carries the
+                    canonical focus-visible recipe + the new
+                    hover:border-line-strong cue. */}
+                <Textarea
                   ref={textareaRef}
                   id={noteId}
                   value={note}
@@ -242,7 +249,7 @@ export function FlagForReview({
                   rows={4}
                   maxLength={2000}
                   placeholder="What were you expecting? Anything about the audience or surface helps."
-                  className="mt-1 w-full resize-y rounded-md border border-line-strong bg-raised px-3 py-2 text-sm text-strong focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="mt-1"
                 />
               </div>
 
@@ -272,22 +279,28 @@ export function FlagForReview({
                 </ul>
               </div>
 
-              <label
-                htmlFor={consentId}
-                className="flex items-start gap-2 rounded border border-line bg-sunken p-3 text-sm text-default"
-              >
-                <input
+              {/* The consent gate is the load-bearing element of the
+                  whole flow (ADR 2026-05-11). Migrated from a raw
+                  <input type="checkbox"> to the design-system Checkbox
+                  primitive on 2026-05-14 so it picks up the standard
+                  focus ring + AAA hover-state border instead of the
+                  browser default (which on bg-sunken was barely
+                  visible). */}
+              <div className="rounded border border-line bg-sunken p-3">
+                <Checkbox
                   id={consentId}
-                  type="checkbox"
                   checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-0.5 accent-strong"
+                  required
+                  requiredMark
+                  label={
+                    <>
+                      Share this check with ContentRX and consent to its
+                      use for check improvement.
+                    </>
+                  }
                 />
-                <span>
-                  Share this check with ContentRX and consent to its
-                  use for check improvement.
-                </span>
-              </label>
+              </div>
 
               {errorMessage && (
                 <p className="text-sm text-accent-concern-text">

@@ -11,7 +11,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Checkbox, Input } from "@/components/ui/input";
 import { Pill, type PillTone } from "@/components/ui/pill";
 import type { Plan } from "@/lib/quotas";
 
@@ -203,24 +203,28 @@ function UpgradeCard({ consentToken }: { consentToken: string | null }) {
 
       {/* CARL-compliant auto-renewal consent. Separate from any ToS
           checkbox at signup. Plain language, names the cadence, and
-          points at the Stripe Portal as the cancellation path. */}
-      <label className="mb-3 flex items-start gap-2 rounded-md border border-line bg-canvas p-3 text-xs text-default">
-        <input
-          type="checkbox"
+          points at the Stripe Portal as the cancellation path.
+          Migrated to the Checkbox primitive on 2026-05-14 so it picks
+          up the design-system focus ring + AAA hover border. Previous
+          raw <input type="checkbox"> shipped browser defaults — bad
+          fit for a load-bearing CARL-compliance gate. */}
+      <div className="mb-3 rounded-md border border-line bg-canvas p-3">
+        <Checkbox
           checked={autoRenewalConsented}
           onChange={(e) => setAutoRenewalConsented(e.target.checked)}
-          className="mt-0.5 shrink-0"
-          aria-describedby="auto-renewal-consent-text"
+          required
+          requiredMark
+          label={
+            <span className="text-xs">
+              I agree that my subscription will renew automatically{" "}
+              {interval === "monthly" ? "every month" : "every year"}{" "}
+              at the price shown above. I can cancel anytime from the
+              dashboard, and access continues through the end of the
+              paid period.
+            </span>
+          }
         />
-        <span id="auto-renewal-consent-text">
-          I agree that my subscription will renew automatically
-          {" "}
-          {interval === "monthly" ? "every month" : "every year"}
-          {" "}at the price shown above. I can cancel anytime from
-          the dashboard, and access continues through the end of the
-          paid period.
-        </span>
-      </label>
+      </div>
 
       {error && (
         <div className="mb-3 rounded-md border border-accent-concern-border bg-accent-concern-soft p-3 text-xs text-accent-concern-text">

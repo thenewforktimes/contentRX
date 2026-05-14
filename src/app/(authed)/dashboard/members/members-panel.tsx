@@ -86,21 +86,23 @@ export function MembersPanel({
         <h2 className="text-base font-semibold text-strong">Invite a teammate</h2>
         <p className="mt-1 text-xs text-default">
           They&apos;ll get an email with a link that&apos;s good for 7 days.
-          {seatsAvailable === 0 && (
-            <>
-              {" "}
-              No seats available. Add seats from billing first.
-            </>
-          )}
         </p>
+        {/* "No seats" guidance now lives on the Input via helperText —
+            keeps cause-and-effect adjacent to the locked field instead
+            of three lines up in body prose. */}
         <form onSubmit={onInvite} className="mt-3 flex flex-wrap gap-2">
           {/*
            * Accessible-name pattern: visually-hidden <label> paired
            * with the Input via htmlFor + id. The placeholder is not a
-           * substitute for a label (WCAG 3.3.2). aria-invalid + the
-           * error block linked via aria-describedby are wired by the
-           * Input primitive itself (see input.tsx — PR 3) once `error`
-           * prop is passed.
+           * substitute for a label (WCAG 3.3.2).
+           *
+           * 2026-05-14 — `error` prop now passed to <Input>, which
+           * wires aria-invalid + aria-describedby + role="alert" +
+           * the concern border, and renders the message in line.
+           * Replaces the previous separate alert block which left the
+           * field visually unmarked even though invalid. `helperText`
+           * surfaces the "No seats available" cause-and-effect right
+           * next to the locked field, not three lines up in body copy.
            */}
           <label htmlFor="invite-email" className="sr-only">
             Teammate email
@@ -114,6 +116,12 @@ export function MembersPanel({
             required
             aria-required="true"
             disabled={state === "submitting" || seatsAvailable === 0}
+            error={error ?? undefined}
+            helperText={
+              seatsAvailable === 0
+                ? "No seats available — add seats in billing first."
+                : undefined
+            }
             className="flex-1 min-w-[240px]"
           />
           <Button
@@ -125,14 +133,6 @@ export function MembersPanel({
             {state === "submitting" ? "Sending…" : "Send invite"}
           </Button>
         </form>
-        {error && (
-          <p
-            role="alert"
-            className="mt-3 rounded-md border border-accent-concern-border bg-accent-concern-soft px-3 py-2 text-xs text-accent-concern-text"
-          >
-            {error}
-          </p>
-        )}
         {state === "success" && (
           <p className="mt-3 text-xs text-accent-affirm-text">
             Invite sent.

@@ -32,7 +32,7 @@
  * adjacent surface) per PR 1's AAA-tuning pass.
  */
 
-import { useId } from "react";
+import { forwardRef, useId } from "react";
 import type {
   InputHTMLAttributes,
   LabelHTMLAttributes,
@@ -132,81 +132,85 @@ export function Input({
   );
 }
 
-export function Textarea({
-  className = "",
-  error,
-  helperText,
-  id: idProp,
-  ...props
-}: TextareaProps) {
-  const generatedId = useId();
-  const id = idProp ?? generatedId;
-  const describedBy = buildDescribedBy(id, helperText, error);
-  return (
-    <>
-      <textarea
-        {...props}
-        id={id}
-        aria-invalid={error ? true : props["aria-invalid"]}
-        aria-describedby={describedBy}
-        // No min-h on textarea — the `rows` prop controls height and
-        // textareas are typically tall enough that the 44px floor
-        // doesn't apply.
-        className={[
-          inputBase,
-          "leading-relaxed",
-          error ? inputErrorRing : "",
-          className,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      />
-      <FieldMessages
-        fieldId={id}
-        helperText={helperText}
-        error={error}
-      />
-    </>
-  );
-}
+// forwardRef so callers can keep a ref for focus management (e.g. the
+// flag-for-review consent modal moves initial focus to the textarea
+// via useFocusTrap).
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
+  function Textarea(
+    { className = "", error, helperText, id: idProp, ...props },
+    ref,
+  ) {
+    const generatedId = useId();
+    const id = idProp ?? generatedId;
+    const describedBy = buildDescribedBy(id, helperText, error);
+    return (
+      <>
+        <textarea
+          {...props}
+          ref={ref}
+          id={id}
+          aria-invalid={error ? true : props["aria-invalid"]}
+          aria-describedby={describedBy}
+          // No min-h on textarea — the `rows` prop controls height and
+          // textareas are typically tall enough that the 44px floor
+          // doesn't apply.
+          className={[
+            inputBase,
+            "leading-relaxed",
+            error ? inputErrorRing : "",
+            className,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        />
+        <FieldMessages
+          fieldId={id}
+          helperText={helperText}
+          error={error}
+        />
+      </>
+    );
+  },
+);
 
-export function Select({
-  className = "",
-  children,
-  error,
-  helperText,
-  id: idProp,
-  ...props
-}: SelectProps) {
-  const generatedId = useId();
-  const id = idProp ?? generatedId;
-  const describedBy = buildDescribedBy(id, helperText, error);
-  return (
-    <>
-      <select
-        {...props}
-        id={id}
-        aria-invalid={error ? true : props["aria-invalid"]}
-        aria-describedby={describedBy}
-        className={[
-          inputBase,
-          inputSizing,
-          error ? inputErrorRing : "",
-          className,
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        {children}
-      </select>
-      <FieldMessages
-        fieldId={id}
-        helperText={helperText}
-        error={error}
-      />
-    </>
-  );
-}
+// forwardRef so callers can hold a ref for focus management (e.g. the
+// finding-adjust-modal moves initial focus to the Reason <select>).
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  function Select(
+    { className = "", children, error, helperText, id: idProp, ...props },
+    ref,
+  ) {
+    const generatedId = useId();
+    const id = idProp ?? generatedId;
+    const describedBy = buildDescribedBy(id, helperText, error);
+    return (
+      <>
+        <select
+          {...props}
+          ref={ref}
+          id={id}
+          aria-invalid={error ? true : props["aria-invalid"]}
+          aria-describedby={describedBy}
+          className={[
+            inputBase,
+            inputSizing,
+            error ? inputErrorRing : "",
+            className,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {children}
+        </select>
+        <FieldMessages
+          fieldId={id}
+          helperText={helperText}
+          error={error}
+        />
+      </>
+    );
+  },
+);
 
 /**
  * Helper that renders the helper + error messages with the right ids
@@ -280,5 +284,135 @@ export function Label({
         </>
       )}
     </label>
+  );
+}
+
+/**
+ * `<Checkbox>` and `<Radio>` — control primitives with full state
+ * coverage (resting / hover / focus-visible / checked / disabled).
+ *
+ * Three raw `<input type="checkbox">` callers shipped before this
+ * primitive existed (flag-for-review consent, rules-client custom-rule
+ * case-insensitive flag, subscription-panel auto-renewal consent).
+ * Browser defaults have inconsistent `:focus` and `:checked` styling
+ * across Safari / Firefox / Chrome, and a default tick on tinted
+ * backgrounds can fail WCAG 1.4.11 (3:1 vs adjacent surface). The
+ * primitive paints a consistent visual via `accent-color` (where
+ * supported) plus an explicit design-system focus ring.
+ *
+ * Touch target sized at 18px control + label hit area; the label
+ * extends the clickable region per HTML's native checkbox-label
+ * pairing. WCAG 2.5.5 satisfied via the label-extended hit area, not
+ * the bare control — matches MDN guidance for native form controls.
+ */
+type ToggleControlProps = InputHTMLAttributes<HTMLInputElement> & {
+  /** Visible label rendered to the right of the control. Forms the
+   *  primary text the user reads + clicks. */
+  label: ReactNode;
+  /** Optional supporting helper text rendered under the label. */
+  helperText?: string;
+  /** Mark the field with the asterisk + sr-only "(required)" cue
+   *  that mirrors `<Label required>`. The underlying input should
+   *  ALSO carry the `required` HTML attribute. */
+  requiredMark?: boolean;
+};
+
+const controlBase =
+  "h-[18px] w-[18px] shrink-0 rounded border border-line-strong bg-raised accent-accent-primary transition-colors hover:border-accent-primary-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised disabled:cursor-not-allowed disabled:opacity-50";
+
+export function Checkbox({
+  label,
+  helperText,
+  requiredMark,
+  id: idProp,
+  className = "",
+  ...props
+}: ToggleControlProps) {
+  const generatedId = useId();
+  const id = idProp ?? generatedId;
+  const helperId = helperText ? `${id}-helper` : undefined;
+  return (
+    <div className={`flex items-start gap-2 text-sm ${className}`}>
+      <input
+        type="checkbox"
+        {...props}
+        id={id}
+        aria-describedby={helperId}
+        className={controlBase}
+      />
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor={id}
+          className="cursor-pointer text-default"
+        >
+          {label}
+          {requiredMark && (
+            <>
+              <span
+                aria-hidden="true"
+                className="ml-0.5 text-accent-concern-text"
+              >
+                *
+              </span>
+              <span className="sr-only"> (required)</span>
+            </>
+          )}
+        </label>
+        {helperText && (
+          <p id={helperId} className="text-xs text-quiet">
+            {helperText}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function Radio({
+  label,
+  helperText,
+  requiredMark,
+  id: idProp,
+  className = "",
+  ...props
+}: ToggleControlProps) {
+  const generatedId = useId();
+  const id = idProp ?? generatedId;
+  const helperId = helperText ? `${id}-helper` : undefined;
+  return (
+    <div className={`flex items-start gap-2 text-sm ${className}`}>
+      <input
+        type="radio"
+        {...props}
+        id={id}
+        aria-describedby={helperId}
+        // rounded-full overrides the rounded-md from controlBase.
+        className={`${controlBase} rounded-full`}
+      />
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor={id}
+          className="cursor-pointer text-default"
+        >
+          {label}
+          {requiredMark && (
+            <>
+              <span
+                aria-hidden="true"
+                className="ml-0.5 text-accent-concern-text"
+              >
+                *
+              </span>
+              <span className="sr-only"> (required)</span>
+            </>
+          )}
+        </label>
+        {helperText && (
+          <p id={helperId} className="text-xs text-quiet">
+            {helperText}
+          </p>
+        )}
+      </div>
+    </div>
   );
 }
