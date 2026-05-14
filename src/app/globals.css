@@ -433,7 +433,13 @@ body {
   padding-right: 0.62em;
 }
 
-/* Size variants */
+/* Size variants. xs (16px) is for global chrome placements — header,
+   footer, dashboard, admin — where the wordmark is supporting
+   infrastructure rather than the page's headline. sm (24px) is the
+   "compact but bold" middle slot used today only by the 404 page.
+   md/lg/xl are display-tier sizes, with xl reserved for the marketing
+   hero. */
+.crx-wordmark--xs  { font-size: 16px; }
 .crx-wordmark--sm  { font-size: 24px; }
 .crx-wordmark--md  { font-size: 40px; }
 .crx-wordmark--lg  { font-size: 64px; }

@@ -38,11 +38,14 @@
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 
-type WordmarkSize = "sm" | "md" | "lg" | "xl";
+type WordmarkSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 type WordmarkProps = {
-  /** Visual scale. `sm` is for the global header / footer / dashboard;
-   * `xl` is for the marketing hero placement. */
+  /** Visual scale. `xs` (16px) is for global chrome placements —
+   * header, footer, dashboard, admin — where the wordmark is
+   * supporting infrastructure. `sm` (24px) is the "compact but
+   * bold" slot used by the 404 page where the wordmark IS the
+   * visual anchor. `xl` is the marketing hero placement. */
   size?: WordmarkSize;
   /** When true, runs the one-shot pill-fade + letter-reveal on mount.
    * Default false (static). Respects prefers-reduced-motion. */
@@ -59,6 +62,7 @@ type WordmarkProps = {
 };
 
 const sizeClass: Record<WordmarkSize, string> = {
+  xs: "crx-wordmark--xs",
   sm: "crx-wordmark--sm",
   md: "crx-wordmark--md",
   lg: "crx-wordmark--lg",

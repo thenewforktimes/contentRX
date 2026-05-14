@@ -24,7 +24,7 @@ export function SiteHeader() {
   return (
     <header className="border-b border-line bg-raised">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-        <Wordmark size="sm" />
+        <Wordmark size="xs" />
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           <Link
             href="/pricing"

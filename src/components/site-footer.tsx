@@ -70,7 +70,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-5">
           <div>
-            <Wordmark size="sm" link={false} />
+            <Wordmark size="xs" />
             <p className="mt-2 text-xs text-quiet">
               The content model for product writing.
             </p>
