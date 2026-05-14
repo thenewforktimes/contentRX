@@ -1,5 +1,5 @@
 /**
- * POST /api/cron/purge-expired-invites — drop unaccepted, expired
+ * GET/POST /api/cron/purge-expired-invites — drop unaccepted, expired
  * team_invitations so the table doesn't accrete stale rows.
  *
  * An invite expires 7 days after creation; once past that window and
@@ -8,9 +8,10 @@
  * which is a soft footgun if the same email later needs a fresh
  * invite. Nightly cron is plenty — there's no urgency.
  *
- * Wiring: same CRON_SECRET pattern as the other cron endpoints. Add
- * a scheduler entry in `.github/workflows/` (or vercel.ts cron) that
- * POSTs once a day.
+ * Wiring: scheduled at 03:30 UTC daily via `vercel.json`. Auth is
+ * `Authorization: Bearer <CRON_SECRET>` via `requireCronAuth` (Vercel
+ * Cron passes the header automatically). GET alias added so Vercel
+ * Cron (which sends GET) reaches the handler.
  */
 
 import { and, isNull, lt } from "drizzle-orm";
@@ -35,3 +36,11 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ purged: result.length });
 }
+
+// GET alias for Vercel Cron (which sends GET). The route is purely
+// destructive (DELETE), so unlike `/api/cron/agent-run` and
+// `/api/cron/rollback-monitor` there's no concern about a curious
+// browser request causing side effects beyond what's intended — but
+// the bearer-secret gate still applies via requireCronAuth, so an
+// unauthenticated probe 401s.
+export const GET = POST;

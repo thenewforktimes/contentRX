@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "content-standards-checker"
-version = "4.7.3"
+version = "4.7.6"
 description = "ContentRX content model for product copy. Source-available."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -13,7 +13,15 @@ authors = [
     {name = "Robert Ballard"},
 ]
 dependencies = [
-    "anthropic>=0.30.0",
+    # Lower bound matches api/requirements.txt — the version Vercel
+    # actually builds the Python function with. Upper bound prevents
+    # the next Anthropic SDK major from silently breaking the engine.
+    # The SDK uses cache_control blocks, cache_creation_input_tokens /
+    # cache_read_input_tokens response fields, and per-stage timeout
+    # shapes that have changed across pre-1.0 versions; we pin so a
+    # naive `pip install -e .` matches the function's runtime SDK
+    # rather than pulling 0.30.0 from the floor.
+    "anthropic>=0.101.0,<1.0",
 ]
 
 [project.optional-dependencies]

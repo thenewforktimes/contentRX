@@ -17,6 +17,22 @@
     {
       "path": "/api/cron/renewal-reminder",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/rollback-monitor?live=1",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/purge-expired-invites",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/cost-margin-check",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/stripe-overage-meter",
+      "schedule": "5 0 1 * *"
     }
   ]
 }
