@@ -71,7 +71,7 @@ export default async function AdminLayout({
             disambiguates without breaking visual identity.
           */}
           <div className="flex items-baseline gap-1.5 px-2">
-            <Wordmark size="sm" />
+            <Wordmark size="xs" />
             <span className="text-xs font-semibold uppercase tracking-wider text-quiet">
               Admin
             </span>

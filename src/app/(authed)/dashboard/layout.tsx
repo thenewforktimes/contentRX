@@ -58,7 +58,7 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen flex-col bg-canvas">
       <header className="border-b border-line bg-canvas">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-6 px-6 py-5">
-          <Wordmark size="sm" />
+          <Wordmark size="xs" />
           <nav className="flex items-center gap-5 text-xs">
             {isFounder && (
               <Link
