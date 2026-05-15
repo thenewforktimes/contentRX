@@ -601,3 +601,36 @@ describe("/api/check — cost pause", () => {
     );
   });
 });
+
+/**
+ * Regression: team-owner rule pivot (2026-05-15).
+ *
+ * `/api/check` must resolve the team-rules scope via `teamScope(auth)`,
+ * NOT raw `auth.teamOwnerUserId`. A team OWNER's `teamOwnerUserId` is
+ * null (they are the root of their own team), so the raw form made
+ * `loadTeamRules` early-return EMPTY for every owner — silently making
+ * owners' disable/override/custom rules (and post-seam rewrite
+ * calibration directives) inert in the check pipeline. Owner =
+ * team-of-1 is the primary user shape, so this made custom rules
+ * effectively not work for most users, and it was invisible (no error,
+ * just nothing happening).
+ *
+ * Source-pin (same pattern as site-header.test.ts): a behavioural E2E
+ * through the harness wouldn't have caught the original bug either —
+ * it pins the exact call form so a refactor can't silently revert to
+ * the nullable pivot. If this breaks on a benign refactor, update the
+ * assertion to the new correct form; do NOT revert to
+ * `loadTeamRules(auth.teamOwnerUserId)`.
+ */
+describe("/api/check — team-rules scope pivot", () => {
+  it("loads team rules via teamScope(auth), never raw auth.teamOwnerUserId", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const src = readFileSync(
+      join(__dirname, "route.ts"),
+      "utf-8",
+    );
+    expect(src).toContain("loadTeamRules(teamScope(auth))");
+    expect(src).not.toContain("loadTeamRules(auth.teamOwnerUserId)");
+  });
+});

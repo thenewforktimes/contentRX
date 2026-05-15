@@ -237,7 +237,18 @@ export async function POST(req: Request) {
       return true as const;
     }),
     checkRateLimit(auth.user.id),
-    loadTeamRules(auth.teamOwnerUserId),
+    // teamScope(auth), NOT raw auth.teamOwnerUserId. A team OWNER's
+    // teamOwnerUserId is null (they're the root of their own team), so
+    // the raw form made loadTeamRules early-return EMPTY for every
+    // owner — silently making owners' disable/override/custom rules
+    // (and, post-seam, their rewrite calibration directives) inert in
+    // the check pipeline. The rules page stores under
+    // `teamOwnerUserId ?? user.id`; teamScope() is the canonical
+    // resolver for exactly that pivot and is already used elsewhere in
+    // this route (usage scope, audit log). This call site was the lone
+    // inconsistency. Owner = team-of-1 is the primary user shape, so
+    // this bug made custom rules effectively not work for most users.
+    loadTeamRules(teamScope(auth)),
     fetchPrecedentsForCheck({
       moment: moment ?? null,
       contentType: content_type ?? null,
