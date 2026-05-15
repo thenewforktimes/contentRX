@@ -31,7 +31,8 @@
     "check:engine": "tsx scripts/check-copy-with-engine.ts",
     "reset-usage": "dotenv -e .env.local -- tsx scripts/reset-usage.ts",
     "promote-admin": "dotenv -e .env.local -- tsx scripts/promote-admin-to-team.ts",
-    "export-corpus": "dotenv -e .env.local -- tsx scripts/export-corpus.ts"
+    "export-corpus": "dotenv -e .env.local -- tsx scripts/export-corpus.ts",
+    "diagnose:agent-installs": "dotenv -e .env.local -- tsx scripts/diagnose-agent-installs.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.3",
