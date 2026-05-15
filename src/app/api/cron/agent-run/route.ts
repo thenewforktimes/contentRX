@@ -27,7 +27,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { isGithubAppConfigured } from "@/lib/agent/github-app";
 import { openPrForDigest } from "@/lib/agent/open-pr";
@@ -102,22 +102,40 @@ export async function POST(req: Request) {
     | { kind: "failed"; error: string };
 
   async function processOwner(ownerId: string): Promise<OwnerOutcome> {
-    const [existing] = (await db
-      .select({ id: schema.agentRuns.id })
-      .from(schema.agentRuns)
-      .where(
-        and(
-          eq(schema.agentRuns.teamId, ownerId),
-          gt(schema.agentRuns.runAt, dedupeFloor),
-        ),
-      )
-      .limit(1)) as Array<{ id: string }>;
+    // Phase 1 — dedupe-check + persist, serialized per team via a
+    // Postgres advisory xact lock. Without this, two near-simultaneous
+    // fires (Vercel cron auto-retry + a manual POST) both saw "no
+    // existing run" and double-inserted (and raced openPrForDigest,
+    // surfacing as a noisy branch_create_failed). The xact lock auto-
+    // releases when this short transaction commits — it deliberately
+    // does NOT span the GitHub HTTP call in phase 2, so we never hold
+    // a lock/connection across slow network. Distinct teams hash to
+    // distinct keys, so they don't contend. The `agent-run:` prefix
+    // namespaces our key space (no other advisory-lock users today,
+    // but cheap insurance).
+    const row = await db.transaction(async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${`agent-run:${ownerId}`}))`,
+      );
+      const [existing] = (await tx
+        .select({ id: schema.agentRuns.id })
+        .from(schema.agentRuns)
+        .where(
+          and(
+            eq(schema.agentRuns.teamId, ownerId),
+            gt(schema.agentRuns.runAt, dedupeFloor),
+          ),
+        )
+        .limit(1)) as Array<{ id: string }>;
 
-    if (existing) {
+      if (existing) return null;
+
+      return await persistAgentRun(ownerId, {}, tx);
+    });
+
+    if (!row) {
       return { kind: "skipped" };
     }
-
-    const row = await persistAgentRun(ownerId);
 
     // GitHub-side delivery is gated by App-config presence AND the
     // team having connected a repo. Either being absent silently

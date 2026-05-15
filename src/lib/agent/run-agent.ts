@@ -21,7 +21,7 @@
  */
 
 import { and, desc, eq, gte, sql } from "drizzle-orm";
-import { getDb, schema } from "@/db";
+import { getDb, schema, type DbOrTx } from "@/db";
 import {
   digestHeaderVariant,
   groupByPattern,
@@ -187,13 +187,20 @@ export async function buildAgentRunPayload(
  * Used by the cron route. The two-stage shape (build + persist) keeps
  * the building step pure-ish and unit-testable, while the persistence
  * step is the side-effect that admin review surfaces depend on.
+ *
+ * Accepts an optional `db` handle (DbOrTx). The cron passes its
+ * advisory-locked transaction so the dedupe-check and this insert
+ * commit atomically — without that, two near-simultaneous cron fires
+ * for the same team both saw "no existing run" and double-inserted.
+ * `buildAgentRunPayload`'s reads stay on their own connection
+ * (read-only; they don't need the lock — only the insert does).
  */
 export async function persistAgentRun(
   teamId: string,
   opts: { windowDays?: number; now?: Date } = {},
+  db: DbOrTx = getDb(),
 ) {
   const payload = await buildAgentRunPayload(teamId, opts);
-  const db = getDb();
   const [row] = await db
     .insert(schema.agentRuns)
     .values({
