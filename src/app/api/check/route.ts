@@ -427,6 +427,27 @@ export async function POST(req: Request) {
   // dimension; team-specific suggestion candidates already gate
   // shouldCache).
   const wantsRewrite = isLargeInput(text);
+
+  // Calibration seam (2026-05-15). The team's customer-authored rule
+  // prose — the human `rule` text on `add` rules and the reworded
+  // text on `override` rules — is the team's voice intent. It feeds
+  // the rewrite's TIER 2 customer block so the suggested rewrite is
+  // calibrated to the team instead of silently imposing the default
+  // (the gap that blocked onboarding: disabling a flag hid the
+  // symptom but the rewrite still fought the customer). The regex
+  // `pattern` keeps doing its additive-flag job unchanged; the prose
+  // is the part that shapes the rewrite. TIER 1 (the brand quality
+  // floor) is non-overridable regardless of what these say — enforced
+  // structurally in rewrite_document._build_system_prompt, gated by
+  // tests/test_rewrite_document_prompt.py. Scope note: disabled-
+  // standard-aware rewriting is a documented fast-follow, not P0.
+  const styleDirectives: string[] = [
+    ...teamRules.adds.map((a) => a.fields.rule),
+    ...Array.from(teamRules.overridesByStandardId.values(), (o) => o.rule),
+  ]
+    .filter((r): r is string => typeof r === "string" && r.trim().length > 0)
+    .map((r) => r.trim());
+
   let rewriteSettled: PromiseSettledResult<Awaited<
     ReturnType<typeof rewriteDocument>
   > | null> = { status: "fulfilled", value: null };
@@ -447,7 +468,7 @@ export async function POST(req: Request) {
     const rewritePromise: Promise<
       Awaited<ReturnType<typeof rewriteDocument>> | null
     > = wantsRewrite
-      ? rewriteDocument(text).catch((err) => {
+      ? rewriteDocument(text, styleDirectives).catch((err) => {
           logSafeError("rewriteDocument() failed; returning null", err);
           return null;
         })

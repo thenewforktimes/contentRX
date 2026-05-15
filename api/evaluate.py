@@ -206,8 +206,30 @@ class handler(BaseHTTPRequestHandler):
             from content_checker.rewrite_document import (  # noqa: PLC0415
                 rewrite_document,
             )
+            # Calibration seam (2026-05-15). `style_directives` is the
+            # team's customer-authored rule prose, threaded from
+            # /api/check. Validate hard at this boundary: it is customer
+            # free-text headed into a system prompt. Must be a list of
+            # non-empty strings; anything else is dropped (the rewrite
+            # still runs, just without calibration — fail safe, not
+            # fail closed, since a clean rewrite is better than a 400).
+            # rewrite_document._sanitize_directive applies the per-item
+            # caps + fence-stripping; the count cap is enforced here so
+            # an oversized list never reaches prompt assembly.
+            raw_directives = body.get("style_directives")
+            style_directives: list[str] | None = None
+            if isinstance(raw_directives, list):
+                cleaned = [
+                    s.strip()
+                    for s in raw_directives
+                    if isinstance(s, str) and s.strip()
+                ]
+                if cleaned:
+                    style_directives = cleaned[:25]
             try:
-                result = rewrite_document(text=text)
+                result = rewrite_document(
+                    text=text, style_directives=style_directives
+                )
             except PromptInjectionError as exc:
                 return self._respond(400, {"error": str(exc)})
             except RateLimitedError as exc:

@@ -250,8 +250,21 @@ export type RewriteDocumentResponse = {
  */
 export async function rewriteDocument(
   text: string,
+  styleDirectives?: string[],
 ): Promise<RewriteDocumentResponse> {
   const secret = requireEnv("INTERNAL_EVAL_SECRET");
+
+  // Calibration seam (2026-05-15). When the team has configured
+  // custom-rule prose, it rides as `style_directives` and the Python
+  // side folds it into the rewrite prompt's TIER 2 customer block
+  // (TIER 1 quality floor is non-overridable). Omitted entirely when
+  // empty so the no-customization path (the overwhelming majority of
+  // calls) sends the exact same body it always did — zero behaviour
+  // change there. The directives are also overrideable team rule
+  // text; the engine sanitises + caps them before prompt assembly.
+  const directives = (styleDirectives ?? [])
+    .map((d) => d.trim())
+    .filter((d) => d.length > 0);
 
   const res = await fetch(internalEvaluateUrl(), {
     method: "POST",
@@ -259,7 +272,13 @@ export async function rewriteDocument(
       "content-type": "application/json",
       "x-internal-secret": secret,
     },
-    body: JSON.stringify({ text, mode: "rewrite_document" }),
+    body: JSON.stringify({
+      text,
+      mode: "rewrite_document",
+      ...(directives.length > 0
+        ? { style_directives: directives }
+        : {}),
+    }),
     cache: "no-store",
   });
 
