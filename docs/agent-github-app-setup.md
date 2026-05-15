@@ -5,6 +5,17 @@ request opened on a repo the customer has connected via the
 ContentRX GitHub App. This doc walks through registering the App,
 populating Vercel env, and verifying the wiring end-to-end.
 
+> **STATUS — 2026-05-15: this is a live launch blocker.** A prod env
+> pull (`vercel env pull --environment=production`) confirmed there
+> are **zero `GITHUB_APP_*` variables in production**. The agent
+> code is all merged and hardened, but `isGithubAppConfigured()` is
+> false in prod, so the Connect flow has never run for a single
+> customer — the differentiator cannot post a PR until steps 1–3 +
+> 5 + 6 below are done. (This is also why bug-bash item "I3",
+> webhook-orphan reconciliation, is moot: zero installs exist, so
+> zero orphans exist. I3 stays parked until the App is live and the
+> diagnostic in step 6 reports a non-zero install count.)
+
 ## What lands in code (already shipped)
 
 - `src/lib/agent/github-app.ts` — env loader, install URL builder,
@@ -88,20 +99,24 @@ The Client secret has its own **Generate a new client secret** button
 on the App's settings page; generate one + copy the value before
 saving (it's shown once).
 
-### 4. Apply the DB migration
+### 4. DB table — already done, skip
 
-After this PR merges (and ONLY after — see the schema-drift footgun
-warning further down), run:
+**Historical — no action needed for prod launch.** The
+`agent_github_installations` table shipped with the original agent
+wiring (#441, "feat(agent): GitHub App wiring") and has been in prod
+since. The steps below are kept only for bootstrapping a brand-new
+database (e.g. a fresh staging env); for the production launch you
+are doing now, the table already exists — go straight to step 5.
 
-```bash
-node scripts/apply-agent-github-installations-migration.mjs
-```
+<details>
+<summary>Fresh-database bootstrap only</summary>
 
-Idempotent. Creates `agent_github_installations` table with two
-unique indexes + the FK to `users.id`.
+`node scripts/apply-agent-github-installations-migration.mjs`
+(idempotent) or `npm run db:push`. The "schema-drift footgun"
+below also only applied to the original #441 merge window and is
+no longer reachable.
 
-Or run `npm run db:push` interactively after the merge — drizzle-kit
-will diff prod against the merged `schema.ts` and prompt to apply.
+</details>
 
 ### 5. Trigger a redeploy
 
@@ -111,14 +126,30 @@ the dashboard's `isGithubAppConfigured()` flips to true.
 
 ### 6. Verify end-to-end
 
-1. Sign in to <https://contentrx.io/dashboard/agent>. The "Connect
-   GitHub" button should be live (not the "registration in progress"
-   callout).
+**Prerequisite — the test account must be on the Team plan.** Since
+#569 the Connect flow is gated on `plan === "team"`: a free/pro
+account sees an "A Team plan feature" upgrade card, NOT the Connect
+button, and `/api/agent/github/install` redirects non-team users
+away with `?error=team_plan_required`. (Solo-on-Team counts as
+Team — you don't need a multi-person org.) Use a Team-plan test
+account, or temporarily set one up, or you'll think it's broken.
+
+1. Sign in (Team-plan account) to
+   <https://contentrx.io/dashboard/agent>. The "Connect GitHub"
+   button should be live (not "registration in progress", and not
+   the "A Team plan feature" upgrade card).
 2. Click **Connect GitHub →**. GitHub redirects to the install page.
-3. Pick a test repo (a private one is fine; the App has no UI in
-   the GitHub web product). Click **Install**.
-4. GitHub redirects back to `/dashboard/agent?installed=1`. The page
-   should show "Connected." and the repo coordinates.
+3. Pick a test repo (a private one is fine) **and make sure you
+   grant the App access to at least one repository**. Click
+   **Install**.
+4. GitHub redirects back to `/dashboard/agent?installed=1`. Expected
+   states (since #570):
+   - **Repo selected →** green "Connected." + repo coordinates.
+   - **No repo granted →** a caution "Connected to GitHub, but no
+     repository is selected" + a "Reconfigure connection" CTA. This
+     is correct behavior, not a bug — re-run step 2–3 and grant a
+     repo. The cron will surface this team as `no_repo_connected`
+     on `/admin/agent-runs` rather than silently doing nothing.
 5. Hit `POST /api/cron/agent-run` with the cron secret to fire a
    manual run:
 
@@ -128,21 +159,40 @@ the dashboard's `isGithubAppConfigured()` flips to true.
    ```
 
    Response includes `prsOpened: 1` if the run produced a draft PR.
+   (Since #574 a same-week re-fire is idempotent per team — a second
+   call returns the run as skipped rather than double-posting.)
 6. Check the test repo for a new branch named
    `contentrx-agent/run-<timestamp>` and a draft PR titled
    `ContentRX weekly review · <timestamp>`.
+7. **Health check (since #575).** With prod env loaded, run the
+   reconciliation diagnostic:
 
-### Schema-drift footgun
+   ```bash
+   npx dotenv-cli -e .env.prod.local -- \
+     tsx scripts/diagnose-agent-installs.ts
+   ```
 
-Same gotcha that bit us during the agent_runs table setup: if you
-run `npm run db:push` from `main` BEFORE this PR merges,
-drizzle-kit will see `agent_github_installations` in prod (after I
-applied the migration) but NOT in `main`'s `schema.ts`, and propose
-to drop the table.
+   After a successful test install it should report
+   `db_only: 0`, `db_no_repo: 0`, and `github_only: 0` (your test
+   install now has a matching row). A non-zero `github_only` here —
+   once the App is genuinely live — is the I3 signal: that's when
+   webhook-orphan reconciliation becomes worth designing. Until the
+   App is live this diagnostic errors on the missing
+   `GITHUB_APP_*`, which is itself the launch-blocker check.
 
-Mitigation: don't apply the migration until after merge. Or apply
-the migration and then merge immediately, before any other db:push
-fires.
+### Schema-drift footgun (historical — resolved at #441 merge)
+
+> Kept for the archive. This only applied to the original #441
+> merge window, when `agent_github_installations` could exist in
+> prod but not yet in `main`'s `schema.ts`. The table and schema
+> have been in sync since #441; there is no drop-table risk doing
+> the prod launch today. Ignore for the current task.
+
+Original note: if you ran `npm run db:push` from `main` BEFORE the
+#441 PR merged, drizzle-kit would see `agent_github_installations`
+in prod but NOT in `main`'s `schema.ts`, and propose to drop the
+table. Mitigation at the time: don't apply the migration until
+after merge.
 
 ## Tier B follow-ups (not in this PR)
 
