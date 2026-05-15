@@ -115,6 +115,12 @@ export default async function AgentPage({
     : null;
 
   const installation = scopeId ? await loadInstallation(scopeId) : null;
+  // The GitHub App can be installed with no repo selected (callback
+  // couldn't resolve one). The row exists but targetRepoName is "".
+  // That's NOT a working connection — the cron can't post and surfaces
+  // it as a no_repo_connected failure. The UI must say so, not show a
+  // green "Connected" banner pointed at "/".
+  const hasRepo = Boolean(installation?.targetRepoName);
 
   return (
     <div className="space-y-6">
@@ -128,7 +134,7 @@ export default async function AgentPage({
         <p className="mt-3 text-sm text-default">{PAGE_LOCKED_COPY}</p>
       </header>
 
-      {params.installed && installation && (
+      {params.installed && installation && hasRepo && (
         <div
           role="status"
           className="rounded-md border border-accent-affirm-border bg-accent-affirm-soft p-4 text-sm text-accent-affirm-text"
@@ -140,6 +146,22 @@ export default async function AgentPage({
               {installation.targetRepoOwner}/{installation.targetRepoName}
             </span>{" "}
             every Monday at 13:00 UTC.
+          </p>
+        </div>
+      )}
+
+      {params.installed && installation && !hasRepo && (
+        <div
+          role="alert"
+          className="rounded-md border border-accent-caution-border bg-accent-caution-soft p-4 text-sm text-accent-caution-text"
+        >
+          <p className="font-semibold">
+            Connected to GitHub, but no repository is selected.
+          </p>
+          <p className="mt-1">
+            The agent can&apos;t open a pull request until you pick a
+            repository. Reconfigure the connection below and grant
+            access to the repo you want the weekly digest on.
           </p>
         </div>
       )}
@@ -226,6 +248,35 @@ function ConnectCard({
   }
 
   if (installation) {
+    // Installed but no repo selected (callback couldn't resolve one).
+    // Not a working connection — say so and route to reconfigure
+    // instead of rendering a "Connected repo" card pointed at "/".
+    if (!installation.targetRepoName) {
+      return (
+        <Card variant="emphasis" padding="lg" className="space-y-3">
+          <h2 className="text-lg font-semibold text-strong">
+            No repository selected
+          </h2>
+          <p className="text-sm text-default">
+            The ContentRX GitHub App is installed, but no repository
+            was selected during setup, so the agent has nowhere to
+            open its weekly pull request.
+          </p>
+          <p className="text-sm text-quiet">
+            Reconfigure the connection and grant the App access to the
+            repository you want the weekly digest on.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/api/agent/github/install"
+              className={buttonStyles({ variant: "primary", size: "sm" })}
+            >
+              Reconfigure connection
+            </Link>
+          </div>
+        </Card>
+      );
+    }
     return (
       <Card variant="emphasis" padding="lg" className="space-y-3">
         <h2 className="text-lg font-semibold text-strong">
