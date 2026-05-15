@@ -56,6 +56,10 @@ export default async function MembersPage() {
   }
 
   const teamOwnerUserId = resolveTeamId(user);
+  // Owner's own users row has teamOwnerUserId === null (members point
+  // at the owner). Only the owner can change billing, so only the
+  // owner gets the "Add a seat" CTA; members see "ask your owner".
+  const isOwner = user.teamOwnerUserId === null;
   const [members, pendingInvitations, seats] = await Promise.all([
     listMembers(teamOwnerUserId),
     listPendingInvitations(teamOwnerUserId),
@@ -95,6 +99,7 @@ export default async function MembersPage() {
           expiresAt: p.expiresAt.toISOString(),
         }))}
         seatsAvailable={seats.available}
+        isOwner={isOwner}
       />
     </div>
   );

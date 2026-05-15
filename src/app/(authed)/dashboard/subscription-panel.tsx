@@ -14,35 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox, Input } from "@/components/ui/input";
 import { Pill, type PillTone } from "@/components/ui/pill";
 import type { Plan } from "@/lib/quotas";
+import { safeStripeRedirect } from "@/lib/stripe-redirect";
 
-// Hosts we will redirect the browser to. Any `url` field returned by
-// /api/checkout or /api/portal must resolve to one of these before we
-// set window.location.href — guards against an open-redirect vuln if a
-// future refactor changes what the API returns (UI-H-01 from
-// 2026-04-22 audit).
-const STRIPE_REDIRECT_HOSTS = new Set<string>([
-  "checkout.stripe.com",
-  "billing.stripe.com",
-]);
-
-function safeStripeRedirect(raw: unknown): string {
-  if (typeof raw !== "string") {
-    throw new Error("Stripe didn't return a URL. Try again in a moment.");
-  }
-  let parsed: URL;
-  try {
-    parsed = new URL(raw);
-  } catch {
-    throw new Error("Got a malformed Stripe URL. Try again.");
-  }
-  if (parsed.protocol !== "https:") {
-    throw new Error("Stripe URL must be https.");
-  }
-  if (!STRIPE_REDIRECT_HOSTS.has(parsed.host)) {
-    throw new Error(`Unexpected redirect host: ${parsed.host}`);
-  }
-  return parsed.toString();
-}
+// safeStripeRedirect is the shared open-redirect guard (audit
+// UI-H-01). Extracted to @/lib/stripe-redirect so the members
+// panel's "Add a seat" redirect can't drift from this check.
 
 type Props = {
   plan: Plan;

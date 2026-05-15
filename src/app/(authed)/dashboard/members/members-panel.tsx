@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
+import { safeStripeRedirect } from "@/lib/stripe-redirect";
 
 type Member = {
   userId: string;
@@ -26,16 +27,51 @@ export function MembersPanel({
   members,
   pendingInvitations,
   seatsAvailable,
+  isOwner,
 }: {
   members: Member[];
   pendingInvitations: Invitation[];
   seatsAvailable: number;
+  isOwner: boolean;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [state, setState] = useState<InviteState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [addingSeat, setAddingSeat] = useState(false);
+
+  const seatsFull = seatsAvailable === 0;
+
+  async function onAddSeat() {
+    setAddingSeat(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/portal", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ flow: "manage_seats" }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(
+          body.error ??
+            "Couldn't open billing to add a seat. Try again, or email hello@contentrx.io.",
+        );
+      }
+      const { url } = (await res.json()) as { url?: unknown };
+      window.location.href = safeStripeRedirect(url);
+    } catch (err) {
+      setAddingSeat(false);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't open billing to add a seat.",
+      );
+    }
+  }
 
   async function onInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -115,11 +151,13 @@ export function MembersPanel({
             placeholder="teammate@example.com"
             required
             aria-required="true"
-            disabled={state === "submitting" || seatsAvailable === 0}
+            disabled={state === "submitting" || seatsFull}
             error={error ?? undefined}
             helperText={
-              seatsAvailable === 0
-                ? "No seats available — add seats in billing first."
+              seatsFull
+                ? isOwner
+                  ? "Every seat is taken. Add a seat to invite a teammate."
+                  : "Every seat is taken. Ask the team owner to add a seat."
                 : undefined
             }
             className="flex-1 min-w-[240px]"
@@ -137,6 +175,29 @@ export function MembersPanel({
           <p className="mt-3 text-xs text-accent-affirm-text">
             Invite sent.
           </p>
+        )}
+        {seatsFull && isOwner && (
+          // Real path out of the seat-full dead-end: deep-links into
+          // the Stripe Portal's seat-quantity screen. Owner-only —
+          // members can't change billing (the helperText tells them
+          // to ask the owner).
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-md border border-line bg-overlay p-3">
+            <p className="flex-1 text-xs text-default">
+              You&apos;re using every seat on your plan. Add a seat to
+              open room for a teammate. Billing updates immediately in
+              Stripe.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={onAddSeat}
+              disabled={addingSeat}
+              aria-busy={addingSeat || undefined}
+            >
+              {addingSeat ? "Opening billing…" : "Add a seat"}
+            </Button>
+          </div>
         )}
       </section>
 
@@ -234,7 +295,7 @@ function formatDate(iso: string): string {
 function humanizeInviteError(reason: string): string {
   switch (reason) {
     case "no_seats":
-      return "No seats available. Add seats in billing first.";
+      return "Every seat is taken. Add a seat below to invite a teammate.";
     case "duplicate_pending_invite":
       return "An invite is already pending for that email.";
     case "already_member":
