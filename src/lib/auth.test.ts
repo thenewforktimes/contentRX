@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseBearerToken } from "./auth";
+import { domainGroupedEffectivePlan, parseBearerToken } from "./auth";
 
 describe("parseBearerToken", () => {
   it("returns null for no header", () => {
@@ -35,5 +35,30 @@ describe("parseBearerToken", () => {
 
   it("tolerates multiple spaces between scheme and token", () => {
     expect(parseBearerToken("Bearer   cx_abc123def456")).toBe("cx_abc123def456");
+  });
+});
+
+describe("domainGroupedEffectivePlan", () => {
+  it("maps an entitled grouped Pro sub to the pro quota (un-pooled)", () => {
+    expect(domainGroupedEffectivePlan("pro", "active")).toBe("pro");
+    expect(domainGroupedEffectivePlan("pro", "trialing")).toBe("pro");
+  });
+
+  it("maps an entitled grouped Scale sub to the scale quota", () => {
+    expect(domainGroupedEffectivePlan("scale", "active")).toBe("scale");
+  });
+
+  it("drops an unentitled grouped sub to free", () => {
+    expect(domainGroupedEffectivePlan("pro", "canceled")).toBe("free");
+    expect(domainGroupedEffectivePlan("scale", "past_due")).toBe("free");
+    expect(domainGroupedEffectivePlan("pro", null)).toBe("free");
+  });
+
+  it("is conservative for tiers that shouldn't reach here", () => {
+    // A real Team is handled before this is called; 'team'/'free'/
+    // unknown tiers fall back to free rather than granting a bucket.
+    expect(domainGroupedEffectivePlan("team", "active")).toBe("free");
+    expect(domainGroupedEffectivePlan("free", "active")).toBe("free");
+    expect(domainGroupedEffectivePlan(undefined, "active")).toBe("free");
   });
 });

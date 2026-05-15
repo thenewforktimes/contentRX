@@ -11,10 +11,36 @@
  */
 
 import { auth } from "@clerk/nextjs/server";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { hashApiKey, isWellFormedApiKey } from "./api-key";
 import { QUOTAS, type Plan } from "./quotas";
+
+/**
+ * Effective quota plan for a DOMAIN-GROUPED user.
+ *
+ * Domain grouping (domain-grouping.ts) flips same-domain Pro/Scale
+ * subscribers to users.plan="team" so the dashboard can show a team
+ * VIEW — explicitly "without a Team purchase decision." It is NOT a
+ * billing change: each member keeps their own paid Pro/Scale
+ * entitlement, un-pooled. (Robert, 2026-05-15.)
+ *
+ * So a grouped user's quota is their OWN subscription's pricing tier,
+ * not the pooled Team bucket. An unentitled (canceled/past_due) sub
+ * → free. `pricing_tier` is the 4-value tier; only pro/scale can
+ * legitimately reach here (a real Team has an entitled plan='team'
+ * row, handled before this is ever called).
+ */
+export function domainGroupedEffectivePlan(
+  pricingTier: string | null | undefined,
+  status: string | null | undefined,
+): Plan {
+  const entitled = status === "active" || status === "trialing";
+  if (!entitled) return "free";
+  if (pricingTier === "pro") return "pro";
+  if (pricingTier === "scale") return "scale";
+  return "free";
+}
 
 /** Validate a plan value loaded from the DB against the Plan enum.
  * Closes audit M-01: previously cast as Plan blindly; an invalid
@@ -127,10 +153,60 @@ async function enrichWithSeats(
     )
     .limit(1);
 
+  // Real Team (owner has an entitled plan='team' subscription):
+  // unchanged pooled-seat behavior.
+  if (sub) {
+    return {
+      user,
+      plan,
+      seats: sub.seats ?? 1,
+      teamOwnerUserId: ownerId === user.id ? null : ownerId,
+    };
+  }
+
+  // No real Team subscription, but users.plan="team". This is the
+  // domain-grouping case: same-domain Pro/Scale subscribers flipped
+  // to plan="team" for the team VIEW only. Per the view-only model
+  // (Robert, 2026-05-15) each keeps their OWN paid entitlement,
+  // un-pooled — NOT the pooled 2000/seat Team bucket (which, with
+  // the failed seat lookup, collapsed an N-subscriber org to 2000
+  // shared). Scoped strictly to rows carrying a domainGroupId so a
+  // lapsed real-Team's resolution is left exactly as it was.
+  const [ownSub] = await db
+    .select({
+      pricingTier: schema.subscriptions.pricingTier,
+      status: schema.subscriptions.status,
+    })
+    .from(schema.subscriptions)
+    .where(
+      and(
+        eq(schema.subscriptions.userId, user.id),
+        isNotNull(schema.subscriptions.domainGroupId),
+      ),
+    )
+    // Prefer an entitled row if the user has historical subs too.
+    .orderBy(
+      sql`case ${schema.subscriptions.status} when 'active' then 0 when 'trialing' then 1 else 2 end`,
+      desc(schema.subscriptions.currentPeriodEnd),
+    )
+    .limit(1);
+
+  if (ownSub) {
+    return {
+      user,
+      plan: domainGroupedEffectivePlan(ownSub.pricingTier, ownSub.status),
+      seats: 1,
+      teamOwnerUserId: null, // un-pooled: own entitlement
+    };
+  }
+
+  // Not domain-grouped and no Team subscription (e.g. a lapsed real
+  // Team). Preserve the prior behavior exactly: in this branch `sub`
+  // was always undefined, so the old `sub?.seats ?? 1` was always 1.
   return {
     user,
     plan,
-    seats: sub?.seats ?? 1,
+    seats: 1,
     teamOwnerUserId: ownerId === user.id ? null : ownerId,
   };
 }
