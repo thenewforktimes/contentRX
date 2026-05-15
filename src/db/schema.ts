@@ -46,11 +46,17 @@ export const users = pgTable("users", {
   // owner). Members store teamOwnerUserId pointing at the owner;
   // the owner's own row has teamOwnerUserId = null. Per-team
   // aggregations (violations.teamId, violation_overrides.teamId)
-  // all reference users.id. Documented per audit H-09. Trade-off:
-  // deleting a team owner cascades to every member's historical
-  // attribution, dropping their rows from per-team rollups. A future
-  // migration to a dedicated `teams` table would decouple lifecycle;
-  // intentionally not done yet because team-invite flow isn't shipped.
+  // all reference users.id. Documented per audit H-09.
+  //
+  // No FK on this column by design. Owner-deletion member reset is
+  // handled explicitly in pseudonymizeUser (it must also downgrade
+  // `plan`, which an FK `on delete set null` cannot do). Adding the
+  // FK later would additionally require a one-time backfill to null
+  // any pre-existing orphaned pointers before the constraint can be
+  // applied — tracked as optional hardening, not required for
+  // correctness now that the application resets members on delete.
+  // A dedicated `teams` table would decouple team lifecycle from the
+  // owner's user row entirely; still deferred (solo product).
   teamOwnerUserId: text("team_owner_user_id"),
   // sha256(rawKey) hex digest. Raw cx_... tokens never persist — the key
   // shown to the user once at rotation/mint time is all they get. Unique

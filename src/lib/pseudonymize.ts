@@ -58,6 +58,23 @@ export async function pseudonymizeUser(userId: string): Promise<void> {
   // team_invitations also cascade on the users row delete below
   // when the user is a team owner; explicit delete here covers
   // membership rows where the user is the member, not the owner.)
+
+  // If this user is a team OWNER, reset their members back to
+  // standalone Free accounts BEFORE the team rows are torn down.
+  // users.teamOwnerUserId has no FK (see schema.ts), so deleting the
+  // owner would otherwise strand every member with plan="team" and
+  // teamOwnerUserId pointing at a now-deleted row — PlanPill says
+  // "Team" while the panel shows the Free upgrade card, and quota
+  // resolves against a dead owner id. Keyed on users.teamOwnerUserId,
+  // so when `userId` is a member (not an owner) this matches nobody
+  // and is a safe no-op. An FK set-null couldn't fix this on its own
+  // anyway — it can't also downgrade `plan` — so the application is
+  // the source of truth for the reset.
+  await db
+    .update(schema.users)
+    .set({ teamOwnerUserId: null, plan: "free" })
+    .where(eq(schema.users.teamOwnerUserId, userId));
+
   await db
     .delete(schema.teamRules)
     .where(eq(schema.teamRules.teamOwnerUserId, userId));

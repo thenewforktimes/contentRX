@@ -336,6 +336,45 @@ describe("pseudonymizeUser — right-to-be-forgotten", () => {
     ).toHaveLength(1);
   });
 
+  it("resets the deleted owner's members to standalone Free accounts", async () => {
+    // C4: users.teamOwnerUserId has no FK, so deleting an owner used
+    // to strand members with plan="team" pointing at a dead row.
+    const owner = await seedUser(harness, {
+      id: "usr_owner",
+      plan: "team",
+    });
+    const member = await seedUser(harness, {
+      id: "usr_member",
+      plan: "team",
+      teamOwnerUserId: owner,
+    });
+    await harness.db.insert(schema.teamMembers).values({
+      id: "mem_link",
+      teamOwnerUserId: owner,
+      memberUserId: member,
+    });
+
+    await pseudonymizeUser(owner);
+
+    // Owner gone.
+    expect(
+      await harness.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, owner)),
+    ).toHaveLength(0);
+
+    // Member survives, reset to a coherent standalone Free account
+    // (no "Team" pill over a Free panel, no quota against a dead id).
+    const [memberRow] = await harness.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, member));
+    expect(memberRow).toBeDefined();
+    expect(memberRow?.plan).toBe("free");
+    expect(memberRow?.teamOwnerUserId).toBeNull();
+  });
+
   it("no-ops cleanly when the user has no attached rows", async () => {
     const ghost = await seedUser(harness, { id: "usr_ghost" });
     await pseudonymizeUser(ghost);
