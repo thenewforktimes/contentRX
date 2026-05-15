@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const { userId: clerkId } = await auth();
   if (!clerkId) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
   if (!isContentRXAdmin(clerkId)) {
     // 404 to mirror the layout's notFound() behaviour — non-founders
