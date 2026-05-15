@@ -140,7 +140,12 @@ export async function GET(req: Request) {
         .update(schema.agentGithubInstallations)
         .set({
           githubInstallationId: installationId,
-          githubAccountLogin: accountLogin || existing[0].id,
+          // Fall back to "" (not the row's own cuid) when GitHub
+          // didn't return a login — matches the insert path below.
+          // Writing existing[0].id stuffed an internal ContentRX id
+          // into a display-only github_account_login column: a latent
+          // data-corruption / future-leak hazard.
+          githubAccountLogin: accountLogin || "",
           githubAccountType: accountType,
           targetRepoOwner: targetRepoOwner || "",
           targetRepoName: targetRepoName || "",
