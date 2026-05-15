@@ -28,11 +28,13 @@ export function MembersPanel({
   pendingInvitations,
   seatsAvailable,
   isOwner,
+  currentUserId,
 }: {
   members: Member[];
   pendingInvitations: Invitation[];
   seatsAvailable: number;
   isOwner: boolean;
+  currentUserId: string;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -40,8 +42,37 @@ export function MembersPanel({
   const [error, setError] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [addingSeat, setAddingSeat] = useState(false);
+  // Two-step confirm: first click arms (id here), second click commits.
+  const [confirmingRemovalId, setConfirmingRemovalId] = useState<
+    string | null
+  >(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const seatsFull = seatsAvailable === 0;
+
+  async function onRemove(memberUserId: string) {
+    setRemovingId(memberUserId);
+    setError(null);
+    try {
+      const res = await fetch("/api/teams/members/remove", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ memberUserId }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(body.error ?? `Remove failed (${res.status}).`);
+      }
+      setConfirmingRemovalId(null);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Remove failed.");
+    } finally {
+      setRemovingId(null);
+    }
+  }
 
   async function onAddSeat() {
     setAddingSeat(true);
@@ -269,6 +300,65 @@ export function MembersPanel({
                     </p>
                   )}
                 </div>
+                {(() => {
+                  // Owner row has no remove/leave affordance (the owner
+                  // can't leave via this path; nobody "removes" the
+                  // owner). For non-owner rows: the owner sees "Remove",
+                  // the member sees "Leave team" on their own row, and a
+                  // member viewing another member sees nothing (only the
+                  // owner can remove others — the route enforces this too).
+                  if (m.isOwner) return null;
+                  const isSelf = m.userId === currentUserId;
+                  if (!isOwner && !isSelf) return null;
+                  const label = isSelf ? "Leave team" : "Remove";
+                  const busyLabel = isSelf ? "Leaving…" : "Removing…";
+                  const arming = confirmingRemovalId === m.userId;
+                  const busy = removingId === m.userId;
+                  if (arming) {
+                    return (
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-xs text-quiet">
+                          {isSelf ? "Leave this team?" : "Remove?"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onRemove(m.userId)}
+                          disabled={busy}
+                          aria-busy={busy || undefined}
+                          aria-label={`Confirm ${label.toLowerCase()}${
+                            isSelf ? "" : ` ${m.email}`
+                          }`}
+                          className="rounded-md border border-accent-concern-border bg-accent-concern-soft px-2 py-1 text-xs font-medium text-accent-concern-text hover:bg-accent-concern-soft-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised disabled:opacity-50"
+                        >
+                          {busy ? busyLabel : "Confirm"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingRemovalId(null)}
+                          disabled={busy}
+                          className="rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setError(null);
+                        setConfirmingRemovalId(m.userId);
+                      }}
+                      aria-label={
+                        isSelf ? "Leave team" : `Remove ${m.email}`
+                      }
+                      className="shrink-0 rounded-md border border-line-strong px-2 py-1 text-xs hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised"
+                    >
+                      {label}
+                    </button>
+                  );
+                })()}
               </li>
             ))}
           </ul>

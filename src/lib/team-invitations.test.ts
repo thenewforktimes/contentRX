@@ -14,6 +14,7 @@ import {
   generateInviteToken,
   isExpired,
   normalizeEmail,
+  resolveMemberRemoval,
   resolveTeamId,
 } from "./team-invitations";
 
@@ -144,5 +145,31 @@ describe("canAcceptInvitationSeat", () => {
     expect(
       canAcceptInvitationSeat({ capacity: 2, memberCount: 1 }),
     ).toBe(false);
+  });
+});
+
+describe("resolveMemberRemoval", () => {
+  it("lets the owner remove a member", () => {
+    expect(
+      resolveMemberRemoval({ callerIsOwner: true, callerIsSelf: false }),
+    ).toEqual({ allowed: true, kind: "owner_removes_member" });
+  });
+
+  it("lets a member leave (remove self)", () => {
+    expect(
+      resolveMemberRemoval({ callerIsOwner: false, callerIsSelf: true }),
+    ).toEqual({ allowed: true, kind: "member_leaves" });
+  });
+
+  it("blocks the owner from leaving their own team", () => {
+    expect(
+      resolveMemberRemoval({ callerIsOwner: true, callerIsSelf: true }),
+    ).toEqual({ allowed: false, reason: "owner_cannot_leave" });
+  });
+
+  it("blocks a member from removing a different member", () => {
+    expect(
+      resolveMemberRemoval({ callerIsOwner: false, callerIsSelf: false }),
+    ).toEqual({ allowed: false, reason: "not_authorized" });
   });
 });

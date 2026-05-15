@@ -100,6 +100,7 @@ export default async function MembersPage() {
         }))}
         seatsAvailable={seats.available}
         isOwner={isOwner}
+        currentUserId={user.id}
       />
     </div>
   );

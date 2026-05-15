@@ -167,6 +167,84 @@ export function canAcceptInvitationSeat(args: {
   return postAcceptHeadcount <= capacity;
 }
 
+/**
+ * Pure authorization policy for removing a team member.
+ *
+ * Two legitimate shapes:
+ *   - The team OWNER removes one of their members.
+ *   - A MEMBER removes themselves (leave team).
+ *
+ * Everything else is denied:
+ *   - A member removing a *different* member — invite/revoke power is
+ *     shared (Position-3), but kicking an active teammate + freeing a
+ *     billed seat is an owner action, not a peer one. Avoids a
+ *     member-griefs-member vector.
+ *   - The owner "removing" themselves — that's a subscription /
+ *     account-deletion concern (leaving would dissolve the team and
+ *     orphan billing); routed elsewhere, not here.
+ *
+ * Pure so the policy is unit-tested without a DB; the route resolves
+ * callerIsOwner / callerIsSelf and the lib does the owner-scoped
+ * mutation.
+ */
+export type MemberRemovalDecision =
+  | { allowed: true; kind: "owner_removes_member" | "member_leaves" }
+  | { allowed: false; reason: "owner_cannot_leave" | "not_authorized" };
+
+export function resolveMemberRemoval(args: {
+  callerIsOwner: boolean;
+  callerIsSelf: boolean;
+}): MemberRemovalDecision {
+  const { callerIsOwner, callerIsSelf } = args;
+  if (callerIsOwner && callerIsSelf) {
+    return { allowed: false, reason: "owner_cannot_leave" };
+  }
+  if (callerIsOwner) {
+    return { allowed: true, kind: "owner_removes_member" };
+  }
+  if (callerIsSelf) {
+    return { allowed: true, kind: "member_leaves" };
+  }
+  return { allowed: false, reason: "not_authorized" };
+}
+
+/**
+ * Remove a member from a team. The inverse of acceptInvitation's
+ * users-row write: deletes the team_members row (owner-scoped — a
+ * memberUserId from another team is a no-op, returns false) and
+ * resets that user back to a standalone Free account in the same
+ * transaction. Atomic for the same reason accept is: a partial
+ * commit would strand a user with plan/teamOwnerUserId out of sync
+ * with team_members.
+ *
+ * The historical accepted team_invitations row is intentionally left
+ * as an audit trail (matches revoke only touching pending rows). A
+ * re-invite later creates a fresh invitation.
+ */
+export async function removeMember(args: {
+  teamOwnerUserId: string;
+  memberUserId: string;
+}): Promise<boolean> {
+  const db = getDb();
+  return await db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(schema.teamMembers)
+      .where(
+        and(
+          eq(schema.teamMembers.teamOwnerUserId, args.teamOwnerUserId),
+          eq(schema.teamMembers.memberUserId, args.memberUserId),
+        ),
+      )
+      .returning({ id: schema.teamMembers.id });
+    if (deleted.length === 0) return false;
+    await tx
+      .update(schema.users)
+      .set({ teamOwnerUserId: null, plan: "free" })
+      .where(eq(schema.users.id, args.memberUserId));
+    return true;
+  });
+}
+
 export type CreateInvitationResult =
   | { ok: true; invitation: TeamInvitation }
   | {
