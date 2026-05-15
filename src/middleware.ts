@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 
 const isProtected = createRouteMatcher([
   "/dashboard(.*)",
+  "/admin(.*)",
   "/api/check(.*)",
   "/api/classify(.*)",
   "/api/dashboard(.*)",

@@ -82,12 +82,29 @@ export const metadata = {
 export default async function AdminQueuePage({
   searchParams,
 }: {
-  searchParams: Promise<{ subtype?: string; window?: string }>;
+  searchParams: Promise<{
+    subtype?: string;
+    window?: string;
+    standard?: string;
+  }>;
 }) {
   const params = await searchParams;
   const activeSubtype = isSubtype(params.subtype) ? params.subtype : null;
   const windowDays = clampInt(params.window, DEFAULT_WINDOW_DAYS, 1, 180);
   const since = new Date(Date.now() - windowDays * DAY_MS);
+  // `standard` query param is set when the user lands here from a
+  // standard's mission-control "Overrides last 7d" link
+  // (/admin/model/standards/[id]). Constrains both the counts and
+  // the rows query to that standard's violations only. Plain string
+  // pass-through — the standard library is private + finite, the
+  // value isn't user-typed in any path that reaches here.
+  const standardId =
+    typeof params.standard === "string" && params.standard.length > 0
+      ? params.standard
+      : null;
+  const standardClause = standardId
+    ? sql` AND ${schema.violations.standardId} = ${standardId}`
+    : sql``;
 
   const db = getDb();
 
@@ -102,6 +119,8 @@ export default async function AdminQueuePage({
   const openCustomerFlags = sidebarCounts.customerFlags;
 
   // Counts by subtype within the window. Drives the filter tabs.
+  // `standardClause` narrows to a single standard when the page is
+  // entered from /admin/model/standards/[id].
   const counts = await db
     .select({
       subtype: schema.violations.reviewReasonSubtype,
@@ -109,7 +128,7 @@ export default async function AdminQueuePage({
     })
     .from(schema.violations)
     .where(
-      sql`${schema.violations.reviewReasonSubtype} IS NOT NULL AND ${schema.violations.createdAt} >= ${since.toISOString()}`,
+      sql`${schema.violations.reviewReasonSubtype} IS NOT NULL AND ${schema.violations.createdAt} >= ${since.toISOString()}${standardClause}`,
     )
     .groupBy(schema.violations.reviewReasonSubtype);
 
@@ -138,8 +157,8 @@ export default async function AdminQueuePage({
     .from(schema.violations)
     .where(
       activeSubtype
-        ? sql`${schema.violations.reviewReasonSubtype} = ${activeSubtype} AND ${schema.violations.createdAt} >= ${since.toISOString()}`
-        : sql`${schema.violations.reviewReasonSubtype} IS NOT NULL AND ${schema.violations.createdAt} >= ${since.toISOString()}`,
+        ? sql`${schema.violations.reviewReasonSubtype} = ${activeSubtype} AND ${schema.violations.createdAt} >= ${since.toISOString()}${standardClause}`
+        : sql`${schema.violations.reviewReasonSubtype} IS NOT NULL AND ${schema.violations.createdAt} >= ${since.toISOString()}${standardClause}`,
     )
     .orderBy(desc(schema.violations.createdAt))
     .limit(MAX_ROWS_PER_SUBTYPE);

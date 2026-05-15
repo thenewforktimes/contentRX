@@ -201,9 +201,23 @@ export default async function AdminCustomerFlagsPage({
                 </div>
               </div>
 
-              <p className="mt-3 whitespace-pre-wrap rounded-md border border-line bg-sunken p-3 font-mono text-sm text-default">
-                {row.text}
-              </p>
+              {/*
+                Customer-flag text is uncapped at the column level —
+                a multi-KB paste would otherwise push the triage form
+                off-screen and make the row unworkable. Constrained
+                to ~24rem with a scroll container; tabIndex=0 keeps
+                keyboard users able to scroll it (WCAG 2.1.1).
+              */}
+              <div
+                className="mt-3 max-h-96 overflow-y-auto rounded-md border border-line bg-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised"
+                tabIndex={0}
+                role="region"
+                aria-label="Flagged content"
+              >
+                <p className="whitespace-pre-wrap p-3 font-mono text-sm text-default">
+                  {row.text}
+                </p>
+              </div>
 
               {row.customerNote && (
                 <p className="mt-2 rounded-md border border-line bg-sunken p-3 text-sm text-default">

@@ -63,7 +63,16 @@ export default async function AgentRunsPage() {
       ) : (
         <ul className="space-y-3">
           {runs.map((run) => {
-            const payload = run.payload as AgentRunPayload;
+            // Defensive narrowing — pre-G4 rows in agent_runs.payload
+            // predate the v2 schema (no `topPatterns`, no
+            // `customization`). Treat them as empty rather than
+            // crashing the page on a blind property access. The
+            // schemaVersion === 2 contract still holds for new rows;
+            // these guards only matter for legacy fixtures.
+            const payload = run.payload as Partial<AgentRunPayload> | null;
+            const topPatterns = payload?.topPatterns ?? [];
+            const overrideCount = payload?.customization?.overrideCount ?? 0;
+            const teamRuleCount = payload?.customization?.teamRuleCount ?? 0;
             return (
               <li
                 key={run.id}
@@ -97,11 +106,11 @@ export default async function AgentRunsPage() {
                     <p className="text-xs font-semibold uppercase tracking-wider text-quiet">
                       Top patterns
                     </p>
-                    {payload.topPatterns.length === 0 ? (
+                    {topPatterns.length === 0 ? (
                       <p className="mt-1 text-quiet">None</p>
                     ) : (
                       <ul className="mt-1 space-y-1">
-                        {payload.topPatterns.map((p) => (
+                        {topPatterns.map((p) => (
                           <li key={p.standardId} className="text-default">
                             <code className="rounded bg-sunken px-1.5 py-0.5 font-mono text-xs">
                               {p.standardId}
@@ -125,15 +134,11 @@ export default async function AgentRunsPage() {
                     <ul className="mt-1 space-y-1 text-default">
                       <li>
                         Overrides (window):{" "}
-                        <span className="font-mono">
-                          {payload.customization.overrideCount}
-                        </span>
+                        <span className="font-mono">{overrideCount}</span>
                       </li>
                       <li>
                         Team rules:{" "}
-                        <span className="font-mono">
-                          {payload.customization.teamRuleCount}
-                        </span>
+                        <span className="font-mono">{teamRuleCount}</span>
                       </li>
                     </ul>
                   </div>

@@ -22,9 +22,8 @@
  */
 
 import { auth } from "@clerk/nextjs/server";
-import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { Wordmark } from "@/components/wordmark";
 import { isContentRXAdmin } from "@/lib/graduation";
@@ -36,11 +35,11 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Unauthenticated requests are redirected by middleware.ts (which
+  // preserves the requested deep-link path via the `redirect_url`
+  // query param). We can assume `clerkId` is non-null here; the
+  // founder gate below is the only check left to do at the layout.
   const { userId: clerkId } = await auth();
-  if (!clerkId) {
-    const requestedPath = await currentAdminPath();
-    redirect(`/sign-in?redirect_url=${encodeURIComponent(requestedPath)}`);
-  }
   if (!isContentRXAdmin(clerkId)) {
     notFound();
   }
@@ -151,22 +150,3 @@ function NavGroup({
 
 // NavLink moved to ./admin-nav-link.tsx (client component) on
 // 2026-05-14 so it can drive aria-current="page" from usePathname().
-
-/**
- * Best-effort recovery of the current `/admin/...` URL so the
- * sign-in redirect_url lands back where the user was trying to go.
- * Falls back to `/admin` when the headers are not available.
- */
-async function currentAdminPath(): Promise<string> {
-  try {
-    const h = await headers();
-    const path =
-      h.get("next-url") ?? h.get("x-pathname") ?? h.get("x-invoke-path");
-    if (path && path.startsWith("/admin")) {
-      return path;
-    }
-  } catch {
-    // headers() throws outside a request scope; fall through.
-  }
-  return "/admin";
-}

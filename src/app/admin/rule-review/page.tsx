@@ -194,13 +194,16 @@ export default async function AdminRuleReviewPage({ searchParams }: PageProps) {
                 >
                   <td className="py-2 font-mono text-xs">
                     <Link
-                      href={`https://docs.contentrx.io/model/standards/${r.standardId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/admin/model/standards/${r.standardId}`}
                       // visited locked to default so the standard id
                       // doesn't drop to browser-default purple after
                       // repeated visits. focus-visible ring so the
                       // keyboard tab path is visible. WCAG 2.4.7.
+                      // Internal admin link — no target=_blank; the
+                      // standard mission-control panel lives at
+                      // /admin/model/standards/[id]. ADR 2026-04-25
+                      // forbids public docs.contentrx.io paths that
+                      // render standards by name.
                       className="rounded underline underline-offset-2 visited:text-default hover:text-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-raised"
                     >
                       {r.standardId}
