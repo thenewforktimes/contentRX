@@ -91,10 +91,21 @@ export default async function AgentPage({
     .select({
       id: schema.users.id,
       teamOwnerUserId: schema.users.teamOwnerUserId,
+      plan: schema.users.plan,
     })
     .from(schema.users)
     .where(eq(schema.users.clerkId, userId))
-    .limit(1)) as Array<{ id: string; teamOwnerUserId: string | null }>;
+    .limit(1)) as Array<{
+    id: string;
+    teamOwnerUserId: string | null;
+    plan: string;
+  }>;
+
+  // The agent is a Team-plan feature (the cron only runs plan="team"
+  // owners). Gate the connect UI so a non-team user never starts the
+  // GitHub OAuth flow into a dead-end; the install route enforces the
+  // same server-side.
+  const isTeam = userRows[0]?.plan === "team";
 
   const scopeId = userRows[0]
     ? teamScope({
@@ -147,6 +158,7 @@ export default async function AgentPage({
       <ConnectCard
         githubAppLive={githubAppLive}
         installation={installation}
+        isTeam={isTeam}
       />
 
       <AgentPreviewIsland />
@@ -157,10 +169,40 @@ export default async function AgentPage({
 function ConnectCard({
   githubAppLive,
   installation,
+  isTeam,
 }: {
   githubAppLive: boolean;
   installation: Installation | null;
+  isTeam: boolean;
 }) {
+  if (!isTeam) {
+    return (
+      <Card variant="emphasis" padding="lg" className="space-y-3">
+        <h2 className="text-lg font-semibold text-strong">
+          A Team plan feature
+        </h2>
+        <p className="text-sm text-default">
+          The weekly review agent opens a draft pull request on your
+          repo every Monday, at a cost of zero checks. It ships with
+          the Team plan.
+        </p>
+        <p className="text-sm text-quiet">
+          You can still preview the digest below without a Team plan
+          or a connected repo. It runs the same grouping your team
+          would receive, posting nothing to GitHub.
+        </p>
+        <div className="pt-2">
+          <Link
+            href="/pricing"
+            className={buttonStyles({ variant: "primary", size: "sm" })}
+          >
+            Upgrade to Team →
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
   if (!githubAppLive) {
     return (
       <Card variant="emphasis" padding="lg" className="space-y-3">
@@ -281,6 +323,9 @@ function githubAppErrorMessage(slug: string, githubAppLive: boolean): string {
   }
   if (slug === "account_not_provisioned") {
     return "We're finishing setting up your account. Refresh in a moment.";
+  }
+  if (slug === "team_plan_required") {
+    return "The weekly review agent is a Team plan feature. Upgrade to connect a repo.";
   }
   return "Couldn't complete the connection. Try the Connect button again.";
 }
