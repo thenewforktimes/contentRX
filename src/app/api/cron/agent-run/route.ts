@@ -128,7 +128,18 @@ export async function POST(req: Request) {
     const installation = await getInstallation(db, ownerId);
     if (!installation) return { kind: "persisted", prOpened: false };
     if (!installation.targetRepoOwner || !installation.targetRepoName) {
-      return { kind: "persisted", prOpened: false };
+      // Installed but no repo selected. The run is persisted (digest
+      // exists), but this is NOT a working connection — surface it as
+      // a failure so it shows on /admin/agent-runs and Robert can
+      // nudge the customer to reconfigure, instead of it silently
+      // skipping forever while the customer believes the agent is
+      // live. Same "persisted-but-no-PR, review me" semantics as a
+      // failed PR open.
+      return {
+        kind: "failed",
+        error:
+          "no_repo_connected: GitHub App installed but no repository selected; customer must reconfigure",
+      };
     }
 
     const payload = row.payload as AgentRunPayload;
