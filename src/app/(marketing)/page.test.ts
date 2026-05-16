@@ -5,14 +5,15 @@ import { describe, expect, it } from "vitest";
 /**
  * Copy-pin tests for the landing page. (/about retired 2026-05-10.)
  *
- * Updated 2026-04-29 for Robert's landing rewrite (cut Grammarly
- * contrast + Stripe Radar frame; rebuilt around the brand promise
- * "staff-level content design review, in every repo"). The wedge
- * vocabulary changed: "situation-aware" stayed, "judgment calls"
- * was reframed as "the work without the maintenance" (the prior
- * frame implicitly disrespected style guides; the new frame says
- * the rules are real and ContentRX takes the work of managing
- * them off the human).
+ * Updated 2026-05-16 for the locked NORTH STAR reword: "ContentRX
+ * is the opinionated editor for the prose that lives in a
+ * codebase." The hero h1 + lede were rebuilt around codebase-
+ * resident prose (READMEs, API docs, PR/commit copy, error
+ * strings) reviewed before anyone else sees it. The prior
+ * "staff-level content design review, in every repo" wedge and
+ * the "long-form writing your team sends" supporting line were
+ * intentionally cut as off-thesis (Docs/Figma is ground we
+ * deliberately do not serve). Canonical: _private/product-principles.md.
  *
  * Tests pin structure, not prose. Robert edits the prose; the
  * tests catch regressions like "the brand promise dropped out of
@@ -54,12 +55,16 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     readSource("src/components/agent-section.tsx"),
   );
 
-  it("leads with the brand promise (staff-level content design review, in every repo)", () => {
-    // The hero h1 is the brand promise. If a future edit weakens
-    // the headline (drops "staff" or drops "every repo"), this
-    // test fails — staff-level positioning is the whole hook.
-    expect(visible).toMatch(/Staff[- ]level content design review/i);
-    expect(visible).toMatch(/in every repo/i);
+  it("leads with the locked north-star brand promise (codebase-resident prose, before anyone else)", () => {
+    // The hero h1 + lede are the brand promise. Per the 2026-05-16
+    // NORTH STAR ("the opinionated editor for the prose that lives
+    // in a codebase") the durable concepts that must not silently
+    // drop out of the hero are: prose, the codebase/repo it lives
+    // in, and the before-anyone-else moment. Reword freely — this
+    // fails only if the positioning itself walks off the page.
+    expect(visible).toMatch(/prose/i);
+    expect(visible).toMatch(/codebase|repo/i);
+    expect(visible).toMatch(/before (anyone|merge)/i);
   });
 
   it("calls out the model around the model with the diagram", () => {
@@ -348,18 +353,18 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(matches ?? []).toEqual([]);
   });
 
-  it("lands the long-form audience in the lede (post-2026-05-09 reword)", () => {
-    // F1 originally added a separate supporting-line block under the
-    // H1 ("And on the longer-form writing your team sends."). That
-    // block was dropped 2026-05-09 (third reword same day) for
-    // vertical-spacing reasons — it pushed the IntegrationRow chip
-    // row below the fold, which fights the marketing north-star.
-    //
-    // Long-form coverage moved into the lede paragraph itself
-    // ("strings and long-form writing"). The structural assertion
-    // follows: long-form has to be named in the hero, somewhere.
-    expect(visible).toMatch(/long-form writing/i);
-    // Anti-regression on the dropped supporting line.
+  it("names the codebase-prose artifact range in the lede (2026-05-16 north-star reword)", () => {
+    // The old guard pinned "long-form writing" in the lede (F1,
+    // 2026-05-09). The 2026-05-16 NORTH STAR retired that frame.
+    // The guard's intent is unchanged — the hero must establish
+    // breadth, not a single artifact — but the breadth it pins
+    // moved from "long-form" to the codebase-prose artifact range.
+    // The lede now names READMEs, API docs, and PR/commit copy.
+    expect(visible).toMatch(/READMEs/i);
+    expect(visible).toMatch(/PR and commit copy|PR\/commit copy|commit copy/i);
+    // Anti-regression: the dropped long-form supporting line is now
+    // off-thesis (Docs/Figma is ground we deliberately do not
+    // serve, per _private/product-principles.md). It must not return.
     expect(visible).not.toMatch(/longer-form writing your team sends/i);
   });
 
