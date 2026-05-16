@@ -17,7 +17,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertDialog } from "@/components/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox, Input, Label, Select, Textarea } from "@/components/ui/input";
+import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import { displayLabelFor } from "@/lib/standard-display-names";
 import type { CategorySummary } from "@/lib/standards";
@@ -405,9 +405,11 @@ function CustomRuleRow({
         <p className="mt-1 text-xs text-default">
           {fields.rule}
         </p>
-        <p className="mt-1 font-mono text-[11px] text-quiet">
-          pattern: <code>{fields.pattern}</code>
-        </p>
+        {fields.pattern ? (
+          <p className="mt-1 font-mono text-[11px] text-quiet">
+            pattern: <code>{fields.pattern}</code>
+          </p>
+        ) : null}
       </div>
       <div className="flex gap-2">
         {isAdmin && (
@@ -454,8 +456,6 @@ function AddCustomRuleCard({
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [rule, setRule] = useState("");
-  const [pattern, setPattern] = useState("");
-  const [caseInsensitive, setCaseInsensitive] = useState(true);
   const [severity, setSeverity] = useState<"low" | "medium" | "high">("medium");
   const [busy, setBusy] = useState(false);
 
@@ -476,8 +476,6 @@ function AddCustomRuleCard({
           rule_json: {
             title,
             rule,
-            pattern,
-            case_insensitive: caseInsensitive,
             severity,
           },
         }),
@@ -491,7 +489,6 @@ function AddCustomRuleCard({
       setOpen(false);
       setTitle("");
       setRule("");
-      setPattern("");
     } catch (err) {
       onError(err instanceof Error ? err.message : "Failed to create rule");
     } finally {
@@ -510,11 +507,14 @@ function AddCustomRuleCard({
   return (
     <section className="rounded-lg border border-line p-4">
       <h2 className="mb-3 text-base font-semibold text-strong">New custom rule</h2>
-      {/* All three fields are required (server-side rejects without
-          any of them). Migrated to <Label required> on 2026-05-14 so
-          the visual asterisk + sr-only "(required)" cue is present
-          alongside the underlying `required` HTML attribute. WCAG
-          3.3.2 — labels or instructions. */}
+      {/* Plain-English only (2026-05-15). The customer-authored regex
+          field was cut — hostile to write/debug, and being required it
+          forced garbage patterns into every rule. The rule prose is
+          the lever: it calibrates the rewrite via the seam. Exact-
+          token bans become a ContentRX-DERIVED matcher server-side
+          (project B), never customer-authored. Title + Rule text are
+          required (server rejects without them); <Label required>
+          carries the asterisk + sr-only cue (WCAG 3.3.2). */}
       <div className="flex flex-col gap-3">
         <div>
           <Label htmlFor="rule-title" required className="mb-1 text-xs">
@@ -542,32 +542,7 @@ function AddCustomRuleCard({
             required
           />
         </div>
-        <div>
-          <Label htmlFor="rule-pattern" required className="mb-1 text-xs">
-            Regex pattern. Matched against the text being checked
-          </Label>
-          <Input
-            id="rule-pattern"
-            type="text"
-            value={pattern}
-            onChange={(e) => setPattern(e.target.value)}
-            placeholder="\brevolutionary\b"
-            required
-            className="font-mono text-xs"
-          />
-        </div>
         <div className="flex flex-wrap items-center gap-4 text-xs">
-          {/* Checkbox + Select migrated from raw inputs on 2026-05-14.
-              Pre-migration the checkbox shipped browser defaults (no
-              focus ring, inconsistent tick contrast on tinted bg),
-              and the select missed min-h-[44px] + the canonical focus
-              ring. Both inside a form that gates custom-rule creation
-              for paying customers. */}
-          <Checkbox
-            checked={caseInsensitive}
-            onChange={(e) => setCaseInsensitive(e.target.checked)}
-            label="Case-insensitive"
-          />
           <label className="flex items-center gap-2">
             <span className="text-default">
               Severity
@@ -587,7 +562,7 @@ function AddCustomRuleCard({
         </div>
         <div className="flex gap-2">
           <Button
-            disabled={busy || !title || !rule || !pattern}
+            disabled={busy || !title || !rule}
             onClick={submit}
             size="sm"
           >

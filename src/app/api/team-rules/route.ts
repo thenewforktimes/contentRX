@@ -43,7 +43,12 @@ const AddFieldsSchema = z.object({
   title: z.string().min(1).max(200),
   rule: z.string().min(1).max(2000),
   severity: z.enum(["low", "medium", "high"]).default("medium"),
-  pattern: z.string().min(1).max(500),
+  // Optional (2026-05-15) — customer-facing regex was cut. A
+  // pattern-less rule is prose-only. Patterns still validate when
+  // present (a future ContentRX-derived ban will set this server-
+  // side; the field stays in the schema for that path + back-compat
+  // with existing patterned rows).
+  pattern: z.string().min(1).max(500).optional(),
   case_insensitive: z.boolean().optional(),
   content_types: z.array(z.string().max(50)).max(8).optional(),
 });
@@ -126,22 +131,28 @@ export async function POST(req: Request) {
     // grammar nuances vary by Node version); return a generic 400 so
     // the caller knows it's a pattern problem without echoing the raw
     // error back.
-    try {
-      new RegExp(parsed.data.rule_json.pattern);
-    } catch {
-      return NextResponse.json(
-        { error: "Invalid regex pattern. Check the pattern syntax and try again." },
-        { status: 400 },
-      );
-    }
-    // ReDoS guard — reject obvious catastrophic-backtracking shapes
-    // so one admin can't self-DoS their team's /api/check path.
-    const redos = findReDoSConcern(parsed.data.rule_json.pattern);
-    if (redos) {
-      return NextResponse.json(
-        { error: redos },
-        { status: 400 },
-      );
+    // Pattern is optional (prose-only rules are the default now). The
+    // compile + ReDoS guards only apply when a pattern is present —
+    // e.g. a ContentRX-derived ban, or a legacy patterned row.
+    const pat = parsed.data.rule_json.pattern;
+    if (pat) {
+      try {
+        new RegExp(pat);
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid regex pattern. Check the pattern syntax and try again." },
+          { status: 400 },
+        );
+      }
+      // ReDoS guard — reject obvious catastrophic-backtracking shapes
+      // so one admin can't self-DoS their team's /api/check path.
+      const redos = findReDoSConcern(pat);
+      if (redos) {
+        return NextResponse.json(
+          { error: redos },
+          { status: 400 },
+        );
+      }
     }
     const standardId = await nextCustomStandardId(teamOwnerUserId);
     const [row] = await db

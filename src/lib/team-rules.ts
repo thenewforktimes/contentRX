@@ -89,7 +89,13 @@ export type AddFields = {
   title: string;
   rule: string;
   severity: string;
-  pattern: string;
+  // Optional as of 2026-05-15. Customer-authored regex was cut from
+  // the UI (hostile to write/debug, and a required field forced
+  // garbage patterns into every rule). A pattern-less rule is
+  // prose-only: it feeds the rewrite seam via `rule` and produces NO
+  // flag. Deterministic exact-token bans return as a ContentRX-
+  // *derived* pattern (project B) — never customer-authored.
+  pattern?: string;
   case_insensitive?: boolean;
   content_types?: string[];
 };
@@ -286,11 +292,10 @@ function normalizeOverride(raw: unknown): OverrideFields {
 
 function normalizeAdd(raw: unknown): AddFields | null {
   const obj = (raw ?? {}) as Record<string, unknown>;
-  if (
-    typeof obj.title !== "string" ||
-    typeof obj.rule !== "string" ||
-    typeof obj.pattern !== "string"
-  ) {
+  // pattern is NO LONGER required (2026-05-15). A rule needs only a
+  // title + prose; a pattern-less rule is prose-only (feeds the
+  // rewrite seam, produces no flag — see compilePattern).
+  if (typeof obj.title !== "string" || typeof obj.rule !== "string") {
     return null;
   }
   const severity =
@@ -299,9 +304,11 @@ function normalizeAdd(raw: unknown): AddFields | null {
     title: obj.title,
     rule: obj.rule,
     severity,
-    pattern: obj.pattern,
     case_insensitive: obj.case_insensitive === true,
   };
+  if (typeof obj.pattern === "string" && obj.pattern.length > 0) {
+    fields.pattern = obj.pattern;
+  }
   if (Array.isArray(obj.content_types)) {
     fields.content_types = obj.content_types
       .filter((t): t is string => typeof t === "string");
@@ -310,6 +317,11 @@ function normalizeAdd(raw: unknown): AddFields | null {
 }
 
 function compilePattern(fields: AddFields): RegExp | null {
+  // No pattern → no flag. Critical: without this guard,
+  // `new RegExp(undefined)` compiles to /(?:)/ which matches EVERY
+  // input, so every prose-only rule would flag on everything. A
+  // pattern-less rule contributes only its prose to the rewrite seam.
+  if (!fields.pattern) return null;
   try {
     const flags = fields.case_insensitive === true ? "i" : "";
     return new RegExp(fields.pattern, flags);
