@@ -58,6 +58,61 @@ EXIT_RATELIMIT = 5     # 429
 EXIT_UPSTREAM = 6      # 5xx / network errors
 
 
+# ---------------------------------------------------------------------------
+# Substrate defence-in-depth (ADR 2026-04-25 — private taxonomy).
+#
+# `--json` dumps the API response verbatim. The server already strips
+# substrate at PUBLIC_TAXONOMY=false (the prod default), so in
+# production this is a NO-OP. But the CLI must not be the surface that
+# leaks the private taxonomy if that flag is ever flipped or the API
+# drifts — `--json` is a machine surface people pipe into files and
+# eval harnesses. So we strip the same substrate keys the server-side
+# public projection strips, at any depth, before emitting JSON.
+#
+# This set is exactly the server's substrate denylist. None of the
+# public envelope keys (issue, suggestion, severity, confidence,
+# category, verdict, schema_version, warnings, review_reason,
+# content_type, moment, suggested_rewrite, suggested_diagnostic, usage,
+# metering, ban_enforcement, check_id, latency_ms, tokens) are in it,
+# so the public shape is preserved byte-for-byte in prod.
+_SUBSTRATE_KEYS = frozenset(
+    {
+        "standard_id",
+        "rule",
+        "rule_version",
+        "rationale_chain",
+        "related_standards",
+        "docs_url",
+        "ambiguity_flag",
+        "validate_rejection_reason",
+        "source",
+        "passes",
+        "pipeline",
+        "overall_verdict",
+        "summary",
+        "influences",
+        "version_history",
+    }
+)
+
+
+def _strip_substrate(obj: Any) -> Any:
+    """Recursively drop substrate keys so `--json` can never surface the
+    private taxonomy, even if the server starts returning it. Pure and
+    stdlib-only; shape-preserving for the public envelope (the stripped
+    keys are absent from a PUBLIC_TAXONOMY=false response, so this is a
+    no-op in production)."""
+    if isinstance(obj, dict):
+        return {
+            k: _strip_substrate(v)
+            for k, v in obj.items()
+            if k not in _SUBSTRATE_KEYS
+        }
+    if isinstance(obj, list):
+        return [_strip_substrate(v) for v in obj]
+    return obj
+
+
 class CliError(Exception):
     """Raised when the CLI wants to print a clean message and exit non-zero."""
 
@@ -541,7 +596,8 @@ def run(argv: list[str]) -> int:
         api_key=api_key,
     )
     if args.json_output:
-        json.dump(response, sys.stdout, indent=2)
+        # Defence-in-depth strip (ADR 2026-04-25); no-op in prod.
+        json.dump(_strip_substrate(response), sys.stdout, indent=2)
         print()
         # Schema 2.0.0 — verdict is at the top level, no `result` wrapper.
         passed = response.get("verdict") in ("pass", "review_recommended")
@@ -591,7 +647,10 @@ def _run_batch(
                 verdict in ("pass", "review_recommended")
             )
     if json_output:
-        json.dump(collected, sys.stdout, indent=2)
+        # Defence-in-depth strip (ADR 2026-04-25); no-op in prod. The
+        # `input` echo carries none of these keys, so only each
+        # `response` is affected.
+        json.dump(_strip_substrate(collected), sys.stdout, indent=2)
         print()
     return EXIT_OK if all_passed else EXIT_VIOLATIONS
 

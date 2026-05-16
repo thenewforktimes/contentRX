@@ -256,6 +256,102 @@ def test_main_json_mode_emits_raw_response(monkeypatch: pytest.MonkeyPatch, caps
     assert parsed["schema_version"] == "3.0.0"
 
 
+def test_strip_substrate_unit() -> None:
+    """The defence-in-depth helper drops substrate at any depth and
+    preserves the public envelope exactly (ADR 2026-04-25)."""
+    dirty = {
+        "schema_version": "3.0.0",
+        "verdict": "violation",
+        "summary": "internal",                  # substrate (top-level)
+        "passes": [{"standard_id": "ACT-01"}],   # substrate
+        "violations": [
+            {
+                "issue": "Avoid 'click here'.",
+                "suggestion": "Name the destination.",
+                "severity": "high",
+                "confidence": 0.9,
+                "category": "Accessibility",
+                "standard_id": "ACC-01",            # substrate
+                "rule": "internal rule prose",       # substrate
+                "rule_version": "1.0.0",             # substrate
+                "rationale_chain": [{"step": "x"}],  # substrate
+                "source": "llm",                     # substrate
+            }
+        ],
+        "warnings": [],
+        "ban_enforcement": {"unresolved": ["guys"], "name_collisions": []},
+    }
+    clean = cli._strip_substrate(dirty)
+    blob = json.dumps(clean)
+    for forbidden in (
+        "standard_id", "rule_version", "rationale_chain", "summary",
+        "passes", "source", "ACC-01", "ACT-01", "internal rule prose",
+    ):
+        assert forbidden not in blob, f"{forbidden} survived the strip"
+    assert clean["violations"][0] == {
+        "issue": "Avoid 'click here'.",
+        "suggestion": "Name the destination.",
+        "severity": "high",
+        "confidence": 0.9,
+        "category": "Accessibility",
+    }
+    # Public envelope siblings untouched (incl. the Project B sibling).
+    assert clean["verdict"] == "violation"
+    assert clean["schema_version"] == "3.0.0"
+    assert clean["ban_enforcement"] == {
+        "unresolved": ["guys"],
+        "name_collisions": [],
+    }
+
+
+def test_main_json_mode_strips_substrate_if_server_returns_it(
+    monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    """Defence-in-depth: even if the API ever returns substrate (a
+    PUBLIC_TAXONOMY flip or API drift), `--json` must not surface it.
+    In prod (PUBLIC_TAXONOMY=false) the server already strips, so this
+    is a no-op there — this pins the failure case."""
+    payload = {
+        "schema_version": "3.0.0",
+        "verdict": "violation",
+        "review_reason": None,
+        "violations": [
+            {
+                "issue": "Vague link text.",
+                "suggestion": "Use the destination noun.",
+                "severity": "high",
+                "confidence": 0.91,
+                "category": "Accessibility",
+                # Substrate the server should have stripped:
+                "standard_id": "ACC-01",
+                "rule_version": "1.0.0",
+                "related_standards": ["PRF-01"],
+                "source": "llm",
+            }
+        ],
+        "warnings": [],
+        "usage": {},
+    }
+    monkeypatch.setattr(
+        "urllib.request.urlopen",
+        lambda req, timeout=None: _FakeResponse(payload),
+    )
+    code = main(["--json", "Click here"])
+    assert code == EXIT_VIOLATIONS
+    out = capsys.readouterr().out.strip()
+    parsed = json.loads(out)
+    blob = json.dumps(parsed)
+    for forbidden in (
+        "standard_id", "rule_version", "related_standards", "ACC-01",
+        "PRF-01",
+    ):
+        assert forbidden not in blob, f"{forbidden} leaked to --json"
+    # The public projection still ships intact.
+    assert parsed["verdict"] == "violation"
+    assert parsed["violations"][0]["issue"] == "Vague link text."
+    assert parsed["violations"][0]["category"] == "Accessibility"
+
+
 def test_main_missing_api_key_reports_auth(
     monkeypatch: pytest.MonkeyPatch, capsys
 ) -> None:
