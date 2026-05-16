@@ -203,6 +203,66 @@ export async function classify(text: string): Promise<ClassifyResponse> {
   return (await res.json()) as ClassifyResponse;
 }
 
+/**
+ * Save-time team-rule classification (Project B, 2026-05-15). The
+ * structured split of one custom rule's plain-English prose. Mirrors
+ * the engine's `TeamRuleClassification` (see
+ * `src/content_checker/classify_team_rule.py`). `ban_tokens` are
+ * literal surface forms, never a regex — the customer never authors
+ * one; `/api/team-rules` derives the matcher server-side.
+ */
+export type ClassifyTeamRuleResponse = {
+  result: {
+    is_ban: boolean;
+    ban_tokens: string[];
+    leave_proper_nouns: boolean;
+    stylistic_directive: string;
+  };
+  latency_ms: number;
+  tokens: EngineTokens;
+};
+
+/**
+ * Classify one team rule's prose into ban / stylistic components.
+ * Called by the `/api/team-rules` create path BEFORE insert so the
+ * derived matcher + enforcement label persist on the rule.
+ *
+ * Failure policy is the caller's: this throws `UpstreamEvaluatorError`
+ * on a non-2xx (transport / engine outage). The route degrades that to
+ * "save as plain stylistic" so a classifier outage never blocks rule
+ * creation — an *unparseable* classification already fails safe to
+ * stylistic inside the engine without erroring.
+ */
+export async function classifyTeamRule(
+  ruleText: string,
+  title?: string,
+): Promise<ClassifyTeamRuleResponse> {
+  const secret = requireEnv("INTERNAL_EVAL_SECRET");
+
+  const res = await fetch(internalEvaluateUrl(), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-internal-secret": secret,
+    },
+    body: JSON.stringify({
+      text: ruleText,
+      mode: "classify_team_rule",
+      ...(title && title.trim().length > 0 ? { title: title.trim() } : {}),
+    }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new UpstreamEvaluatorError(
+      `Team-rule classification failed: ${res.status} ${res.statusText}`,
+      res.status,
+    );
+  }
+
+  return (await res.json()) as ClassifyTeamRuleResponse;
+}
+
 export type SuggestFixParams = {
   text: string;
   // ADR 2026-04-25 — standard_id is now optional. Schema-2.0.0 client

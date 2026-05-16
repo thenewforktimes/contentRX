@@ -75,6 +75,79 @@ export function findReDoSConcern(pattern: string): string | null {
   return null;
 }
 
+/** Escape a literal token for safe embedding in a RegExp alternation.
+ *  Covers every JS regex metacharacter. `-` is intentionally NOT
+ *  escaped: it is only special inside a character class and we build
+ *  alternations, never classes. The em dash (U+2014) and other
+ *  punctuation are not metacharacters and pass through unescaped. */
+function escapeRegexLiteral(token: string): string {
+  return token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** A token is "word-shaped" iff it starts and ends with an ASCII word
+ *  character. Those get `\b` boundaries so a ban on "guy" doesn't fire
+ *  inside "guytar". Tokens that begin or end on punctuation (the em
+ *  dash "—", a leading-symbol phrase) must NOT take `\b` — a word
+ *  boundary adjacent to a non-word char is unreliable across engines —
+ *  so they match as bare literals. ASCII-only by design: `\b` semantics
+ *  for non-ASCII letters diverge between JS (no /u) and Python `re`,
+ *  and the canonical ban cases are ASCII words + the em-dash char. */
+const _WORD_SHAPED = /^[A-Za-z0-9_].*[A-Za-z0-9_]$|^[A-Za-z0-9_]$/;
+
+/**
+ * Derive the single server-authored matcher for a set of literal ban
+ * tokens (Project B). This is the ONE place a ban becomes a regex; the
+ * customer never authors or sees it. The produced pattern string is
+ * stored as `AddFields.pattern` and reused verbatim by every consumer
+ * — `applyAddedRules` (the deterministic flag), the length-independent
+ * `/api/check` trigger, and the engine's post-pass rewrite detector —
+ * so flag, trigger, and guarantee can never disagree. It is also
+ * regex-dialect-portable: the shapes emitted (`\b`, `(?:…)`,
+ * alternation, escaped literals) compile identically in JS RegExp and
+ * Python `re`, which is why the engine can compile the same string.
+ *
+ * Returns `null` when no usable token survives — the caller treats
+ * that as the stylistic safe-failure (no pattern, no hard ban).
+ */
+export function deriveBanMatcher(
+  tokens: readonly string[],
+): { pattern: string; caseInsensitive: boolean } | null {
+  const wordShaped: string[] = [];
+  const literal: string[] = [];
+  const seen = new Set<string>();
+
+  for (const raw of tokens) {
+    if (typeof raw !== "string") continue;
+    const tok = raw.trim();
+    if (!tok) continue;
+    const key = tok.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    (_WORD_SHAPED.test(tok) ? wordShaped : literal).push(
+      escapeRegexLiteral(tok),
+    );
+  }
+
+  if (wordShaped.length === 0 && literal.length === 0) return null;
+
+  const groups: string[] = [];
+  if (wordShaped.length > 0) {
+    groups.push(`\\b(?:${wordShaped.join("|")})\\b`);
+  }
+  if (literal.length > 0) {
+    groups.push(`(?:${literal.join("|")})`);
+  }
+  const pattern =
+    groups.length === 1 ? groups[0]! : `(?:${groups.join("|")})`;
+
+  // Always case-insensitive: "Guys"/"guys"/"GUYS" are the same ban. The
+  // flag is harmless for the em-dash / punctuation literals. (The
+  // name-vs-colloquial concern is handled by leaveProperNouns at the
+  // post-pass stage, NOT by making the matcher case-sensitive — a
+  // case-sensitive matcher would silently miss "GUYS".)
+  return { pattern, caseInsensitive: true };
+}
+
 type RuleAction = "disable" | "override" | "add";
 
 export type TeamRuleRow = typeof schema.teamRules.$inferSelect;
@@ -83,6 +156,33 @@ export type OverrideFields = {
   rule?: string;
   severity?: string;
   title?: string;
+};
+
+/**
+ * The deterministic-ban half of a classified custom rule (Project B,
+ * 2026-05-15). Server-derived at rule-create time from the LLM
+ * classifier's output — the customer states "never say guys" in plain
+ * English and never sees a token list or a regex.
+ *
+ * `tokens` are the literal surface forms (e.g. `["guy","guys"]`, or
+ * `["—"]` for an em-dash ban). They are NOT the matcher — the matcher
+ * is the derived `AddFields.pattern`. Tokens drive the human-readable
+ * pieces: the non-overridable TIER-1 rewrite instruction, the wording
+ * of the single corrective re-prompt, and the proper-noun-collision
+ * read. One derivation feeds flag + length-independent trigger +
+ * post-pass detector so they can never disagree.
+ */
+export type BanSpec = {
+  tokens: string[];
+  /**
+   * The "colloquial-only, leave proper nouns" hint. When true a
+   * capitalized standalone occurrence that looks like a name is
+   * surfaced for human disambiguation rather than auto-failed — the
+   * accepted tradeoff for a real literal guarantee (you cannot have
+   * both "token never ships" AND "names never flagged"
+   * deterministically).
+   */
+  leaveProperNouns: boolean;
 };
 
 export type AddFields = {
@@ -98,6 +198,27 @@ export type AddFields = {
   pattern?: string;
   case_insensitive?: boolean;
   content_types?: string[];
+  // ---- Project B: server-DERIVED at rule-create. Customer never ----
+  // ---- authors or edits these; the classifier + deriveBanMatcher ----
+  // ---- set them. Absent on legacy rows ⇒ treated as style guidance, ----
+  // ---- i.e. the pre-Project-B behaviour (prose → TIER 2 seam). ----
+  /**
+   * How this rule is enforced, and what the customer is shown.
+   * "hard_ban" ⇒ deterministic flag + length-independent rewrite +
+   * non-overridable TIER-1 constraint + post-pass guarantee.
+   * "style_guidance" ⇒ rides the existing two-tier seam only.
+   */
+  enforcement?: "hard_ban" | "style_guidance";
+  /** Present iff enforcement === "hard_ban". */
+  ban?: BanSpec;
+  /**
+   * The stylistic component split out of a MIXED rule (e.g. "never
+   * 'guys' AND keep long sentences" → the second clause). Rides TIER 2.
+   * Empty/absent for a pure ban. For a pure stylistic rule the
+   * existing `rule` prose stays the directive (unchanged path), so
+   * this is only consulted for hard_ban rules that also carry style.
+   */
+  stylistic_directive?: string;
 };
 
 export type LoadedRules = {
@@ -312,6 +433,43 @@ function normalizeAdd(raw: unknown): AddFields | null {
   if (Array.isArray(obj.content_types)) {
     fields.content_types = obj.content_types
       .filter((t): t is string => typeof t === "string");
+  }
+  // ---- Project B server-derived fields (carried through from the ----
+  // ---- jsonb verbatim; only ever written by /api/team-rules at ----
+  // ---- create-time). Legacy rows have none of these → the rule is ----
+  // ---- implicitly "style_guidance" and the existing seam path is ----
+  // ---- preserved byte-for-byte. ----
+  if (obj.enforcement === "hard_ban" || obj.enforcement === "style_guidance") {
+    fields.enforcement = obj.enforcement;
+  }
+  if (
+    typeof obj.stylistic_directive === "string" &&
+    obj.stylistic_directive.length > 0
+  ) {
+    fields.stylistic_directive = obj.stylistic_directive;
+  }
+  // A ban spec is only honoured alongside a derived pattern — the
+  // pattern is the matcher, the tokens are the human-readable half.
+  // No pattern ⇒ nothing to deterministically enforce, so a stray
+  // `ban` object can't resurrect a tokenless "ban".
+  if (
+    fields.enforcement === "hard_ban" &&
+    fields.pattern &&
+    obj.ban &&
+    typeof obj.ban === "object"
+  ) {
+    const banObj = obj.ban as Record<string, unknown>;
+    const tokens = Array.isArray(banObj.tokens)
+      ? banObj.tokens.filter(
+          (t): t is string => typeof t === "string" && t.trim().length > 0,
+        )
+      : [];
+    if (tokens.length > 0) {
+      fields.ban = {
+        tokens,
+        leaveProperNouns: banObj.leaveProperNouns === true,
+      };
+    }
   }
   return fields;
 }

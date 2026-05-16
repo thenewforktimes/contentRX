@@ -20,9 +20,16 @@ import { resolveAuth } from "@/lib/auth";
 import { getDb, schema } from "@/db";
 import {
   CUSTOM_STANDARD_ID_REGEX,
-  findReDoSConcern,
+  deriveBanMatcher,
   nextCustomStandardId,
+  type AddFields,
 } from "@/lib/team-rules";
+import { classifyTeamRule } from "@/lib/evaluate";
+import {
+  detectSensitivePatterns,
+  sensitiveDataErrorMessage,
+} from "@/lib/pii-screen";
+import { logSafeError } from "@/lib/safe-error-log";
 import { enforceRateLimit } from "@/lib/ratelimit";
 import { revalidateDashboard } from "@/lib/revalidate";
 import { isKnownStandardId } from "@/lib/standards";
@@ -125,35 +132,81 @@ export async function POST(req: Request) {
   const teamOwnerUserId = auth.user.id;
 
   if (parsed.data.action === "add") {
-    // Validate the regex is compilable up front so a broken pattern
-    // doesn't silently live in the DB and skip every evaluation. The
-    // compile error message can leak engine-internal detail (JS regex
-    // grammar nuances vary by Node version); return a generic 400 so
-    // the caller knows it's a pattern problem without echoing the raw
-    // error back.
-    // Pattern is optional (prose-only rules are the default now). The
-    // compile + ReDoS guards only apply when a pattern is present —
-    // e.g. a ContentRX-derived ban, or a legacy patterned row.
-    const pat = parsed.data.rule_json.pattern;
-    if (pat) {
-      try {
-        new RegExp(pat);
-      } catch {
-        return NextResponse.json(
-          { error: "Invalid regex pattern. Check the pattern syntax and try again." },
-          { status: 400 },
-        );
-      }
-      // ReDoS guard — reject obvious catastrophic-backtracking shapes
-      // so one admin can't self-DoS their team's /api/check path.
-      const redos = findReDoSConcern(pat);
-      if (redos) {
-        return NextResponse.json(
-          { error: redos },
-          { status: 400 },
-        );
-      }
+    const rj = parsed.data.rule_json;
+
+    // PII / credential pre-screen. Project B newly sends the rule
+    // prose to Anthropic (the save-time classifier), so this route now
+    // handles a string headed to the engine — wire the guard exactly
+    // as /api/check does (CLAUDE.md: any new engine-bound string route
+    // pre-screens BEFORE Anthropic/Sentry/logs see it). The matched
+    // value is never echoed back.
+    const sensitive = detectSensitivePatterns(`${rj.title}\n${rj.rule}`);
+    if (sensitive.length > 0) {
+      return NextResponse.json(
+        { error: sensitiveDataErrorMessage(sensitive), patterns: sensitive },
+        { status: 400 },
+      );
     }
+
+    // Save-time classifier (Project B, 2026-05-15). Split the prose
+    // into a deterministic-ban component and/or a stylistic one.
+    // Asymmetric safe-failure: a transport / engine outage degrades to
+    // a plain stylistic rule — it still saves, and the customer is
+    // shown "Style guidance", never silently a mislabeled hard ban. An
+    // *unparseable* classification already fails safe to stylistic
+    // inside the engine without erroring (treat-as-stylistic: a
+    // misclassification must never produce a false hard-enforcement).
+    let classification:
+      | Awaited<ReturnType<typeof classifyTeamRule>>["result"]
+      | null = null;
+    try {
+      classification = (await classifyTeamRule(rj.rule, rj.title)).result;
+    } catch (err) {
+      logSafeError(
+        "team-rule classify failed; saving as plain stylistic",
+        err,
+      );
+    }
+
+    // Derive the single server-authored matcher. The customer never
+    // authors or sees a regex (#579 cut the field); deriveBanMatcher
+    // is the ONE place a ban becomes one, and the stored pattern is
+    // reused verbatim by the flag, the length-independent trigger, and
+    // the post-pass rewrite detector. is_ban with no usable matcher ⇒
+    // degrade to stylistic (never a tokenless hard ban).
+    const derived =
+      classification?.is_ban
+        ? deriveBanMatcher(classification.ban_tokens)
+        : null;
+    const isHardBan = derived !== null;
+
+    // The add path's stored ruleJson is fully SERVER-shaped. Any
+    // customer-supplied `pattern` / `case_insensitive` is intentionally
+    // dropped — the only pattern that may ever exist is the derived
+    // one. This is the post-#579 contract: prose in, mechanism owned.
+    const ruleJson: AddFields = {
+      title: rj.title,
+      rule: rj.rule,
+      severity: rj.severity,
+      ...(rj.content_types ? { content_types: rj.content_types } : {}),
+      enforcement: isHardBan ? "hard_ban" : "style_guidance",
+    };
+    if (isHardBan && derived && classification) {
+      ruleJson.pattern = derived.pattern;
+      ruleJson.case_insensitive = derived.caseInsensitive;
+      ruleJson.ban = {
+        tokens: classification.ban_tokens.filter(
+          (t) => typeof t === "string" && t.trim().length > 0,
+        ),
+        leaveProperNouns: classification.leave_proper_nouns === true,
+      };
+      // Mixed rule: the style clause rides the TIER 2 seam; the ban
+      // rides the non-overridable TIER 1 region. Pure ban ⇒ no
+      // stylistic_directive (nothing goes to TIER 2).
+      const sd = (classification.stylistic_directive ?? "").trim();
+      if (sd) ruleJson.stylistic_directive = sd;
+    }
+
     const standardId = await nextCustomStandardId(teamOwnerUserId);
     const [row] = await db
       .insert(schema.teamRules)
@@ -161,11 +214,18 @@ export async function POST(req: Request) {
         teamOwnerUserId,
         standardId,
         action: "add",
-        ruleJson: parsed.data.rule_json,
+        ruleJson,
       })
       .returning();
     revalidateDashboard({ teamId: teamOwnerUserId });
-    return NextResponse.json(envelope({ rule: row }), { status: 201 });
+    // Surface the enforcement label so the customer SEES how their
+    // rule is enforced ("Hard ban: …" vs "Style guidance"). The
+    // rules-client rendering of this is the separate parked UX
+    // cluster; persisting + returning the label is the in-scope half.
+    return NextResponse.json(
+      envelope({ rule: row, enforcement: ruleJson.enforcement }),
+      { status: 201 },
+    );
   }
 
   const standardId = parsed.data.standard_id;
