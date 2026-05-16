@@ -341,11 +341,6 @@ export default function PrivacyPage() {
               purpose="Rate limiting + dedupe"
               data="Short-lived counters keyed by your user id."
             />
-            <SubprocessorRow
-              name="Figma"
-              purpose="Plugin distribution"
-              data="Whatever Figma collects when you install the plugin. See Figma's own privacy policy."
-            />
           </tbody>
         </table>
         <p className="mt-4">

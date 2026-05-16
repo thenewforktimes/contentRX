@@ -43,7 +43,7 @@ export const metadata = {
 // If a future edit changes one, change all three (page copy, modal
 // copy, PR footer).
 const PAGE_LOCKED_COPY =
-  "Weekly review agent. A draft pull request every Monday with the patterns ContentRX has flagged across your repo. Read-only. The agent never edits your strings. Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (Figma plugin, GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.";
+  "Weekly review agent. A draft pull request every Monday with the patterns ContentRX has flagged across your repo. Read-only. The agent never edits your strings. Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.";
 
 type Installation = {
   githubAccountLogin: string;

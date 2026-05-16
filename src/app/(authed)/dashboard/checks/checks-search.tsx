@@ -34,7 +34,6 @@ import { Input } from "@/components/ui/input";
 import { Pill } from "@/components/ui/pill";
 import {
   CliIcon,
-  FigmaIcon,
   GitHubIcon,
   McpIcon,
   PasteModeIcon,
@@ -98,7 +97,6 @@ const SURFACE_ORDER: ReadonlyArray<{
   { key: "action", label: "GitHub Action", Glyph: GitHubIcon },
   { key: "cli", label: "CLI", Glyph: CliIcon },
   { key: "lsp", label: "Editor", Glyph: VsCodeIcon },
-  { key: "plugin", label: "Figma", Glyph: FigmaIcon },
 ];
 
 interface ChecksSearchProps {
@@ -451,8 +449,8 @@ export function ChecksSearch({
       )}
 
       <p className="mt-2 text-xs text-quiet">
-        Every check from every connected surface (web app, Figma
-        plugin, CLI, GitHub Action, editor LSP, MCP) lands here. If
+        Every check from every connected surface (web app, MCP,
+        GitHub Action, CLI, editor LSP) lands here. If
         you don&apos;t see a check from a specific surface, the auth
         on that surface may not match this account.
       </p>

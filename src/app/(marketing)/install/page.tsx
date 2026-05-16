@@ -19,16 +19,20 @@
  *   - Internal plumbing references dropped: tool names from MCP
  *     prose, /api/suggest-fix from LSP prose.
  *
- * Surface order on THIS page (deliberately diverges from the home
- * SurfacesGrid). Install leads with the no-install Dashboard paste
- * path as the lowest-friction conversion entry (pinned by the F5
- * test below); the home grid leads with MCP per the founder's
- * locked canonical list:
- *   1. Dashboard          (no install — lowest-friction try)
- *   2. MCP server         (available)
- *   3. GitHub Action      (Marketplace listing coming soon)
- *   4. CLI                (available)
- *   5. LSP server         (available; VS Code Marketplace coming soon)
+ * Surface order = the founder's locked canonical list (2026-05-16),
+ * same order as the home SurfacesGrid:
+ *   1. MCP server         (available)
+ *   2. GitHub Action      (Marketplace listing coming soon)
+ *   3. CLI                (available)
+ *   4. LSP server         (available; VS Code Marketplace coming soon)
+ *   5. Dashboard          (no install — the paste path)
+ *
+ * 2026-05-16: the prior "no-install Dashboard paste path leads" pin
+ * (the lowest-friction conversion-funnel rationale) was SUPERSEDED
+ * by the founder's explicit canonical-order instruction. Dashboard
+ * is now last; the F5 test below pins the new order. If the
+ * conversion-funnel concern resurfaces, that is a fresh decision,
+ * not a silent revert.
  *
  * 2026-05-16: the Figma plugin was dropped as a surface entirely.
  * Figma no longer accepts paid plugins in the Community space, so
@@ -85,24 +89,13 @@ export default function InstallPage() {
         }
       >
         <nav className="mt-6 flex flex-wrap gap-2 text-sm">
-          <SurfaceChip href="#paste" label="Dashboard" tagline="no install" />
           <SurfaceChip href="#mcp" label="MCP" tagline="Claude Code · Cursor" />
           <SurfaceChip href="#action" label="GitHub Action" tagline="PR gate" />
           <SurfaceChip href="#cli" label="CLI" tagline="contentrx" />
           <SurfaceChip href="#lsp" label="LSP" tagline="VS Code · Cursor · Zed" />
+          <SurfaceChip href="#paste" label="Dashboard" tagline="no install" />
         </nav>
       </PageHeader>
-
-      <Section
-        id="paste"
-        eyebrow="No install"
-        title="Dashboard. Sign in, paste, get the review"
-      >
-        <p>
-          Sign in and paste. Same engine, no install. Get the
-          document-level read, a clean rewrite, and the flag list.
-        </p>
-      </Section>
 
       <Section id="mcp" title="MCP server. Claude Code, Cursor, any MCP client">
         <p>
@@ -227,6 +220,17 @@ export CONTENTRX_API_KEY=cx_...
             lsp-server
           </a>
           .
+        </p>
+      </Section>
+
+      <Section
+        id="paste"
+        eyebrow="No install"
+        title="Dashboard. Sign in, paste, get the review"
+      >
+        <p>
+          Sign in and paste. Same engine, no install. Get the
+          document-level read, a clean rewrite, and the flag list.
         </p>
       </Section>
 
