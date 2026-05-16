@@ -100,8 +100,8 @@ export default async function DashboardPage() {
     <>
       {/*
         Visibility-aware poll that calls router.refresh() every 5s while
-        the tab is focused. Lets external surfaces (MCP, Figma plugin,
-        CLI, GitHub Action, LSP) reflect on the dashboard without a
+        the tab is focused. Lets external surfaces (MCP, CLI,
+        GitHub Action, LSP) reflect on the dashboard without a
         manual page refresh. Renders nothing — kept outside the
         MotionList so the poll doesn't get a phantom motion wrapper.
       */}
@@ -667,7 +667,6 @@ async function loadSourceStats(
         mcp: { count: 0, lastAt: null },
         lsp: { count: 0, lastAt: null },
         action: { count: 0, lastAt: null },
-        plugin: { count: 0, lastAt: null },
         cli: { count: 0, lastAt: null },
       };
       const since = new Date(Date.now() - ACTIVATION_WINDOW_MS);
@@ -820,8 +819,6 @@ function sourceLabel(source: string): string {
       return "LSP";
     case "action":
       return "GitHub Action";
-    case "plugin":
-      return "Figma plugin";
     case "cli":
       return "CLI";
     default:

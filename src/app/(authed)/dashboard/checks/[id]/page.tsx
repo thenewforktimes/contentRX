@@ -51,7 +51,6 @@ interface PageProps {
 
 const SOURCE_LABEL: Record<string, string> = {
   dashboard: "Paste panel",
-  plugin: "Figma plugin",
   cli: "CLI",
   action: "GitHub Action",
   lsp: "Editor (LSP)",

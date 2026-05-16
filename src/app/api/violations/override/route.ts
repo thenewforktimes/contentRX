@@ -10,7 +10,7 @@
  *     moment?: string,
  *     override_type: "dismiss" | "accept_as_review" | "mark_false_positive",
  *     override_reason?: string,                               // free-text, optional
- *     source?: "plugin" | "cli" | "action" | "dashboard" | "lsp",  // default "plugin"
+ *     source?: "cli" | "action" | "dashboard" | "lsp" | "mcp",  // default "dashboard"
  *     violation_id?: string,                                  // optional FK to violations.id
  *   }
  *
@@ -86,7 +86,7 @@ const RequestSchema = z.object({
   moment: z.enum(MOMENTS).optional(),
   override_type: z.enum(["dismiss", "accept_as_review", "mark_false_positive"]),
   override_reason: z.string().min(1).max(500).optional(),
-  source: z.enum(["plugin", "cli", "action", "dashboard", "lsp", "mcp"]).default("plugin"),
+  source: z.enum(["cli", "action", "dashboard", "lsp", "mcp"]).default("dashboard"),
   violation_id: z.string().min(1).max(64).optional(),
   // Human-eval build plan Session 3 additions. All optional — pre-
   // Session-3 clients keep working without supplying any of these.

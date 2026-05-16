@@ -18,8 +18,8 @@
  *   - In dev, webhooks aren't wired at all unless you tunnel with
  *     `svix listen` / ngrok.
  *
- * `getOrProvisionUser` mirrors the lazy-provision pattern in
- * /auth/figma-callback (`ensureApiKey`): look up by clerkId, and if
+ * `getOrProvisionUser` mirrors the lazy-provision `ensureApiKey`
+ * pattern: look up by clerkId, and if
  * missing, materialize a minimal row from Clerk's user record. Any
  * failure in the provisioning path (Clerk API hiccup, transient DB
  * error) is logged and returns `null` rather than throwing — the

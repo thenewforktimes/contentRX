@@ -21,7 +21,7 @@ function v(overrides: Partial<ViolationRow> = {}): ViolationRow {
     moment: "destructive_action",
     contentType: "confirmation",
     textHash: "hash_a",
-    source: "plugin",
+    source: "mcp",
     reviewReasonSubtype: null,
     createdAt: new Date(NOW.getTime() - 1 * DAY),
   };
@@ -184,7 +184,7 @@ describe("buildOODClusters", () => {
     const rows = [
       v({
         checkEventId: "e1",
-        source: "plugin",
+        source: "mcp",
         reviewReasonSubtype: OUT_OF_DISTRIBUTION,
       }),
       v({
@@ -194,7 +194,7 @@ describe("buildOODClusters", () => {
       }),
       v({
         checkEventId: "e3",
-        source: "plugin",
+        source: "mcp",
         reviewReasonSubtype: OUT_OF_DISTRIBUTION,
       }),
     ];

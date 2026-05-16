@@ -23,7 +23,7 @@ from the same working tree (`thenewforktimes/contentRX`); two more
 surfaces (MCP server, LSP server) land in BUILD_PLAN_v2 phases 1 and 5.
 
 1. **Python evaluation engine** — `src/content_checker/` (the library)
-2. **Figma plugin** — `figma-plugin/` *(DROPPED as a surface 2026-05-16, forced — Figma killed paid Community plugins; code retained but dead, retirement pending)*
+2. ~~**Figma plugin** — `figma-plugin/`~~ **REMOVED 2026-05-16** — Figma dropped as a surface (forced + affirmed); code retired in PR-A. Slot kept struck so the historical numbering below stays stable.
 3. **Python CLI** — `cli/` (engine-side) and `cli-client/` (HTTP client
    shipped to PyPI as `contentrx-cli`)
 4. **Next.js 15 backend app** — `src/app/`, `src/lib/`, `src/db/`,
@@ -450,19 +450,11 @@ to fix immediately. Track these so they don't get forgotten.
    (sentinel delimiters around user text) is still worth doing when
    engine-level test coverage for it exists.
 
-9. **Figma plugin outbound `postMessage` target origin (PLG-H-01).**
-   Every `parent.postMessage()` in `figma-plugin/ui.html` uses `"*"`
-   as the target origin, including the `save-token` message that
-   carries the `cx_...` token. Defense-in-depth says set an explicit
-   target. Not fixed yet because changing to `"https://www.figma.com"`
-   risks silently breaking Figma Desktop (Electron's parent frame may
-   not match the target and the browser drops the message with no
-   error). **Fix:** test with both Figma web and Figma Desktop in a
-   live session, then change the `save-token` call (only — other
-   messages carry no secret). The incoming-message origin check
-   (currently at `ui.html:4709` after the 2026-05-11 substrate
-   strip — was at `:3367` pre-strip) already closes the
-   higher-severity PLG-C-01.
+9. ~~**Figma plugin outbound `postMessage` target origin (PLG-H-01).**~~
+   **RESOLVED 2026-05-16 by deletion.** The entire `figma-plugin/`
+   was retired (Figma dropped as a surface, forced + affirmed — see
+   the amendment under "Surfaces, in order of primacy"). No plugin
+   `postMessage` surface exists, so PLG-H-01 and PLG-C-01 are moot.
 
 ## Before every commit
 
@@ -483,12 +475,14 @@ to fix immediately. Track these so they don't get forgotten.
 > surface list + order is now: **1) MCP  2) GitHub Action  3) CLI
 > 4) LSP  5) ContentRX dashboard** ("GitHub Action" is the label,
 > not bare "GitHub"; Dashboard is the no-install paste path).
-> Marketing leads with this set (shipped PR #588). `figma-plugin/`,
-> `src/app/auth/figma-callback/`, `lib/figma-handoff`, and the Figma
-> CORS-allowlist entry are now dead code, retirement pending — a
-> separate destructive task, NOT yet deleted. The numbered list
-> below is the original BUILD_PLAN_v2 primacy framing, kept for
-> history; item 5 is struck.
+> Marketing leads with this set (PR #588 + #589). The dead plugin
+> code (`figma-plugin/`, `src/app/auth/figma{,-callback}/`,
+> `lib/figma-handoff`, the Figma CORS-allowlist entry, the `plugin`
+> source-enum value + its label fallbacks) was RETIRED 2026-05-16
+> ("roots and all", Robert's explicit go). Figma is affirmatively
+> dead: a future Figma policy reversal is NOT a reactivation
+> trigger. The numbered list below is the original BUILD_PLAN_v2
+> primacy framing, kept for history; item 5 is struck.
 
 1. **MCP server** (Python, stdio, via `uvx contentrx-mcp`) — engineers in
    Claude Code / Cursor / Claude desktop. **Lands in v2 Phase 1.**
@@ -576,7 +570,7 @@ every API change, every new surface, every code review going forward.
 - **No inventing customer-facing vocabulary.** Read
   [docs/copy-vocabulary.md](docs/copy-vocabulary.md) before writing
   any string a customer sees. *Findings* vs *violations* vs
-  *overrides*, *team owner* not *admin*, *Figma plugin* not *Figma*,
+  *overrides*, *team owner* not *admin*,
   *monthly limit* not *quota* — these are settled calls, diverging
   in a new surface is a regression.
 

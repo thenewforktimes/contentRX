@@ -292,7 +292,6 @@ export default async function RunPage({ params }: RunParams) {
       if (s === "cli") return "CLI";
       if (s === "mcp") return "MCP";
       if (s === "lsp") return "LSP";
-      if (s === "plugin") return "Figma plugin";
     }
     return "mixed";
   })();

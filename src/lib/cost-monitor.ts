@@ -32,7 +32,6 @@ import { estimateCostUsd } from "./pricing/model-rates";
 
 export type CheckSource =
   | "dashboard"
-  | "plugin"
   | "cli"
   | "action"
   | "lsp"

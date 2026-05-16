@@ -63,7 +63,7 @@ export interface FlagForReviewProps {
    * card-action variant. */
   label?: string;
   /** Source surface — defaults to "dashboard" when omitted. */
-  source?: "dashboard" | "plugin" | "cli" | "action" | "lsp" | "mcp";
+  source?: "dashboard" | "cli" | "action" | "lsp" | "mcp";
 }
 
 type Status = "idle" | "submitting" | "submitted" | "error";

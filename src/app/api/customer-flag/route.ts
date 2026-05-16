@@ -75,7 +75,7 @@ const RequestSchema = z.object({
   // forced category. The modal gates submit until this is non-empty.
   customer_note: z.string().min(1).max(2000),
   source: z
-    .enum(["dashboard", "plugin", "cli", "action", "lsp", "mcp"])
+    .enum(["dashboard", "cli", "action", "lsp", "mcp"])
     .default("dashboard"),
   // Hard requirement. The schema's existence on the row records
   // consent; the API requires it explicitly so the consent moment is

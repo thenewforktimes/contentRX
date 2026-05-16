@@ -24,21 +24,23 @@ afterEach(() => {
 });
 
 describe("corsHeaders — allowlist", () => {
-  it("echoes back Figma plugin null origin", () => {
+  // Figma plugin retired 2026-05-16 — the static allowlist is now
+  // empty. Anti-regression: figma origins must NOT be re-allowed
+  // without a deliberate new browser caller + a fresh allowlist entry.
+  it("rejects the former Figma plugin null origin", () => {
     const headers = corsHeaders(reqWith("null"));
-    expect(headers["Access-Control-Allow-Origin"]).toBe("null");
-    expect(headers["Vary"]).toBe("Origin");
+    expect(headers["Access-Control-Allow-Origin"]).toBeUndefined();
+    expect(headers["Vary"]).toBeUndefined();
   });
 
-  it("echoes back https://www.figma.com", () => {
+  it("rejects https://www.figma.com", () => {
     const headers = corsHeaders(reqWith("https://www.figma.com"));
-    expect(headers["Access-Control-Allow-Origin"]).toBe("https://www.figma.com");
-    expect(headers["Vary"]).toBe("Origin");
+    expect(headers["Access-Control-Allow-Origin"]).toBeUndefined();
   });
 
-  it("echoes back the apex https://figma.com", () => {
+  it("rejects the apex https://figma.com", () => {
     const headers = corsHeaders(reqWith("https://figma.com"));
-    expect(headers["Access-Control-Allow-Origin"]).toBe("https://figma.com");
+    expect(headers["Access-Control-Allow-Origin"]).toBeUndefined();
   });
 
   it("denies an origin not on the allowlist", () => {
@@ -86,12 +88,16 @@ describe("corsHeaders — allowlist", () => {
 
 describe("corsJson — convenience helper", () => {
   it("returns a NextResponse with the body and CORS headers", async () => {
-    const res = corsJson(reqWith("https://www.figma.com"), { ok: true }, {
+    // Figma (the former only static origin) retired 2026-05-16;
+    // localhost-dev is now the only allowed origin, so the positive
+    // echo path is exercised through it.
+    vi.stubEnv("NODE_ENV", "development");
+    const res = corsJson(reqWith("http://localhost:3000"), { ok: true }, {
       status: 201,
     });
     expect(res.status).toBe(201);
     expect(res.headers.get("access-control-allow-origin")).toBe(
-      "https://www.figma.com",
+      "http://localhost:3000",
     );
     expect(await res.json()).toEqual({ ok: true });
   });
@@ -108,9 +114,14 @@ describe("corsJson — convenience helper", () => {
 
 describe("corsPreflight — OPTIONS shortcut", () => {
   it("returns 204 with allowlist headers", () => {
-    const res = corsPreflight(reqWith("null"));
+    // Post-Figma, localhost-dev is the only allowed origin; it
+    // exercises the 204 + echoed-origin + methods path.
+    vi.stubEnv("NODE_ENV", "development");
+    const res = corsPreflight(reqWith("http://localhost:3000"));
     expect(res.status).toBe(204);
-    expect(res.headers.get("access-control-allow-origin")).toBe("null");
+    expect(res.headers.get("access-control-allow-origin")).toBe(
+      "http://localhost:3000",
+    );
     expect(res.headers.get("access-control-allow-methods")).toContain("POST");
   });
 

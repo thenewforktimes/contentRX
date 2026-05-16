@@ -5,7 +5,6 @@
  *
  * Each entry is an official caller of `/api/check`:
  *   - dashboard: the web app's own try-a-check panel
- *   - plugin:    the Figma plugin
  *   - cli:       contentrx-cli (terminal)
  *   - action:    GitHub Action running in CI
  *   - lsp:       LSP server / editor extensions
@@ -21,7 +20,6 @@
 
 export const SURFACE_SOURCES = [
   "dashboard",
-  "plugin",
   "cli",
   "action",
   "lsp",

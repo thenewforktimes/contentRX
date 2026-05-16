@@ -7,9 +7,9 @@ import {
 } from "./rationale-feedback";
 
 /**
- * Pins the public contract of /api/feedback/rationale. The Figma
- * plugin, CLI, and web-app dashboard all post to this endpoint — the
- * schema is the boundary. Divergence here is a client-breaking change.
+ * Pins the public contract of /api/feedback/rationale. The CLI, MCP,
+ * and web-app dashboard all post to this endpoint — the schema is the
+ * boundary. Divergence here is a client-breaking change.
  *
  * Human-eval build plan Session 21.
  */
@@ -22,7 +22,7 @@ function validBody(overrides: Record<string, unknown> = {}) {
     hop_step: "detect_moment" as const,
     correction_type: "situation_ambiguity" as const,
     original_value: "decision_point",
-    source: "plugin" as const,
+    source: "cli" as const,
     ...overrides,
   };
 }
@@ -34,7 +34,7 @@ describe("RationaleFeedbackRequestSchema", () => {
     if (parsed.success) {
       expect(parsed.data.hop_step).toBe("detect_moment");
       expect(parsed.data.correction_type).toBe("situation_ambiguity");
-      expect(parsed.data.source).toBe("plugin");
+      expect(parsed.data.source).toBe("cli");
     }
   });
 

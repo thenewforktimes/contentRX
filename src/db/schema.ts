@@ -396,8 +396,8 @@ export const violations = pgTable(
     textHash: text("text_hash").notNull(),
     source: text("source", { enum: SURFACE_SOURCES }).notNull(),
     // Source-file path for violations that originated from CI extraction
-    // (GitHub Action runs against a repo). Nullable because plugin and
-    // CLI checks have no file context. Powers the "Top files" panel in
+    // (GitHub Action runs against a repo). Nullable because CLI, MCP,
+    // and dashboard checks have no file context. Powers "Top files" in
     // team analytics.
     filePath: text("file_path"),
     // Session 34 activation (refinement-signals endpoint): groups every
@@ -485,8 +485,9 @@ export const violationOverrides = pgTable(
       onDelete: "set null",
     }),
     // Optional pointer to the originating violations row, when the
-    // override comes from a logged violation (plugin dismiss). PR-comment
-    // ignores from CI may not have a single source row, so this stays
+    // override comes from a logged violation (a dashboard dismiss).
+    // PR-comment ignores from CI may not have a single source row, so
+    // this stays
     // nullable.
     violationId: text("violation_id").references(() => violations.id, {
       onDelete: "set null",
@@ -499,7 +500,7 @@ export const violationOverrides = pgTable(
     }).notNull(),
     overrideReason: text("override_reason"),
     source: text("source", {
-      enum: ["plugin", "cli", "action", "dashboard", "lsp", "mcp"],
+      enum: ["cli", "action", "dashboard", "lsp", "mcp"],
     }).notNull(),
     // Human-eval build plan Session 3 — richer override signal.
     //
@@ -887,7 +888,7 @@ export const rationaleFeedback = pgTable(
     }).notNull(),
     note: text("note"),
     source: text("source", {
-      enum: ["plugin", "cli", "action", "dashboard", "mcp"],
+      enum: ["cli", "action", "dashboard", "mcp"],
     }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -1073,7 +1074,7 @@ export const customerFlaggedReviews = pgTable(
     // at review time instead.
     customerNote: text("customer_note").notNull(),
     source: text("source", {
-      enum: ["dashboard", "plugin", "cli", "action", "lsp", "mcp"],
+      enum: ["dashboard", "cli", "action", "lsp", "mcp"],
     }).notNull(),
     // Captured at insert time. Audit trail for the consent moment —
     // useful for a future privacy review or a customer's own data-export

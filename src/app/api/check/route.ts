@@ -91,11 +91,11 @@ import { QuotaWarningEmail } from "@/emails/quota-warning";
 // caller splits into multiple calls (MCP evaluate_copy_batch and the
 // GitHub Action handle this client-side).
 
-// CORS allowlist (audit S5): see `lib/cors.ts`. The Figma plugin
-// iframe sends `Origin: null`; the marketing site is same-origin to
-// /api/*; we narrowed from `*` to figma + localhost-dev as defense-
-// in-depth. Auth is the bearer header, never a cookie, so an origin
-// that isn't on the list still can't forge an authenticated call.
+// CORS allowlist (audit S5): see `lib/cors.ts`. The only browser
+// caller was the Figma plugin (retired 2026-05-16), so the static
+// allowlist is now empty (localhost-dev only). Auth is the bearer
+// header, never a cookie, so a cross-origin caller still can't forge
+// an authenticated call; the helper stays as the seam.
 
 export async function OPTIONS(req: Request) {
   return corsPreflight(req);
@@ -139,13 +139,13 @@ const RequestSchema = z.object({
   content_type: z.enum(CONTENT_TYPES).optional(),
   audience: z.enum(AUDIENCES).optional(),
   moment: z.enum(MOMENTS).optional(),
-  // Required: every official client (dashboard web app, figma plugin, CLI,
-  // github action, LSP, MCP) sets this explicitly. The pre-pivot default was
-  // "plugin", which silently misattributed every web-app and unauthenticated
-  // test call to the Figma plugin counter. Dropped on 2026-04-28 — see the
-  // surface-attribution fix PR. Rogue callers now get a 400 instead of
-  // polluting analytics. "dashboard" matches the existing terminology in
-  // violation_overrides + correction-feedback source enums.
+  // Required: every official client (dashboard web app, CLI, GitHub
+  // Action, LSP, MCP) sets this explicitly. A pre-pivot default
+  // silently misattributed unauthenticated/web-app calls to the wrong
+  // surface counter; dropped 2026-04-28 (surface-attribution fix).
+  // Rogue callers now get a 400 instead of polluting analytics.
+  // "dashboard" matches the terminology in violation_overrides +
+  // correction-feedback source enums.
   source: z.enum(SURFACE_SOURCES),
   // Optional file_path, populated by the GitHub Action only. Upper
   // bound guards against repo paths that could swell the violations

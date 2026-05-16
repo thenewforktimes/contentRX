@@ -73,18 +73,6 @@ export function GitHubIcon({ className }: IconProps = {}) {
   );
 }
 
-export function FigmaIcon({ className }: IconProps = {}) {
-  return (
-    <svg className={className} {...baseSvgProps}>
-      <path d="M9 3a3 3 0 100 6h3V3H9z" />
-      <path d="M9 9a3 3 0 100 6h3V9H9z" />
-      <path d="M9 15a3 3 0 103 3v-3H9z" />
-      <path d="M12 3h3a3 3 0 010 6h-3V3z" />
-      <circle cx="15" cy="12" r="3" />
-    </svg>
-  );
-}
-
 export function CliIcon({ className }: IconProps = {}) {
   return (
     <svg className={className} {...baseSvgProps}>

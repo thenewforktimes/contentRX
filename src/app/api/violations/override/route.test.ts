@@ -2,7 +2,7 @@
  * Resolver tests for /api/violations/override.
  *
  * Schema 2.0.0 stripped substrate from the public Violation envelope,
- * so surfaces like the Figma plugin don't carry standard_id. The
+ * so public surfaces like the CLI don't carry standard_id. The
  * route accepts the override anyway and recovers standard_id from
  * the violations table by:
  *   1. violation_id (direct FK), then
@@ -105,7 +105,7 @@ function makeReq(body: object): Request {
 async function seedViolation(args: {
   standardId: string;
   text: string;
-  source?: "plugin" | "dashboard";
+  source?: "cli" | "dashboard";
 }): Promise<string> {
   const id = `vio_${Math.random().toString(36).slice(2, 10)}`;
   await harness.db.insert(schema.violations).values({
@@ -116,7 +116,7 @@ async function seedViolation(args: {
     standardId: args.standardId,
     severity: "high",
     textHash: hashText(args.text),
-    source: args.source ?? "plugin",
+    source: args.source ?? "cli",
   });
   return id;
 }
@@ -129,7 +129,7 @@ describe("POST /api/violations/override — standard_id resolver", () => {
       makeReq({
         text: "Click here",
         override_type: "dismiss",
-        source: "plugin",
+        source: "cli",
         override_stance: "disagree",
       }),
     );
@@ -139,7 +139,7 @@ describe("POST /api/violations/override — standard_id resolver", () => {
       .select()
       .from(schema.violationOverrides);
     expect(row?.standardId).toBe("ACC-01");
-    expect(row?.source).toBe("plugin");
+    expect(row?.source).toBe("cli");
   });
 
   it("prefers violation_id over textHash when both available", async () => {
@@ -156,7 +156,7 @@ describe("POST /api/violations/override — standard_id resolver", () => {
       makeReq({
         text: "shared text",
         override_type: "dismiss",
-        source: "plugin",
+        source: "cli",
         violation_id: olderId,
       }),
     );
@@ -173,7 +173,7 @@ describe("POST /api/violations/override — standard_id resolver", () => {
       makeReq({
         text: "never logged before",
         override_type: "dismiss",
-        source: "plugin",
+        source: "cli",
       }),
     );
 

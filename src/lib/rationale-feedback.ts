@@ -29,7 +29,6 @@ export const RATIONALE_CORRECTION_TYPES = [
 ] as const;
 
 export const RATIONALE_SOURCES = [
-  "plugin",
   "cli",
   "action",
   "dashboard",

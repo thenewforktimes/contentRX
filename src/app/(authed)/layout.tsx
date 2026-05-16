@@ -14,9 +14,9 @@
  *   /dashboard, /sign-in, /sign-up
  *
  * Server-side `auth()` works regardless of provider placement (it
- * reads the cookie via middleware), so /admin, /onboard, /join, and
- * /auth/figma-callback can stay at the root layout — they call
- * `auth()` from the server but never render a Clerk client component.
+ * reads the cookie via middleware), so /admin, /onboard, and /join
+ * can stay at the root layout — they call `auth()` from the server
+ * but never render a Clerk client component.
  */
 
 import { ClerkProvider } from "@clerk/nextjs";

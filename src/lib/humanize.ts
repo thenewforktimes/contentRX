@@ -94,7 +94,7 @@ export function humanizeMoment(value: string | null | undefined): string {
  * Source-surface label for `usage_events.source` / `violations.source`
  * style values. Used by the dashboard's "via {source}" annotations on
  * /dashboard/runs, /dashboard/shared, etc. so customers see the
- * surface name they recognise — "Figma plugin" not "plugin", "Web
+ * surface name they recognise — "GitHub Action" not "action", "Web
  * app" not "dashboard". Engine-side stays the short enum; render
  * boundary humanises.
  */
@@ -104,7 +104,6 @@ export function humanizeSource(value: string | null | undefined): string {
   if (value === "cli") return "CLI";
   if (value === "mcp") return "MCP";
   if (value === "lsp") return "LSP";
-  if (value === "plugin") return "Figma plugin";
   if (value === "dashboard") return "Web app";
   return value;
 }

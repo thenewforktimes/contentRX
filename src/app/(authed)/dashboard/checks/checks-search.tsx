@@ -77,7 +77,6 @@ const VERDICT_KEYS: VerdictFilter[] = [
 
 const SOURCE_LABEL: Record<string, string> = {
   dashboard: "Web app",
-  plugin: "Figma plugin",
   cli: "CLI",
   action: "GitHub Action",
   lsp: "Editor (LSP)",

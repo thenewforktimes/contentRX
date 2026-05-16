@@ -25,14 +25,13 @@ import { useEffect, useState } from "react";
 
 const DISMISS_PREFIX = "cx_first_call_dismissed_";
 
-type SurfaceKey = "dashboard" | "mcp" | "lsp" | "action" | "plugin" | "cli";
+type SurfaceKey = "dashboard" | "mcp" | "lsp" | "action" | "cli";
 
 const LABELS: Record<SurfaceKey, string> = {
   dashboard: "Web app",
   mcp: "MCP",
   lsp: "LSP",
   action: "GitHub Action",
-  plugin: "Figma plugin",
   cli: "CLI",
 };
 

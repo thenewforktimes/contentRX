@@ -29,7 +29,6 @@ export type SurfaceKey =
   | "mcp"
   | "lsp"
   | "action"
-  | "plugin"
   | "cli";
 
 export type SurfaceActivity = Record<

@@ -13,7 +13,6 @@ import { getDb, schema, type DbOrTx } from "@/db";
 
 type ViolationSource =
   | "dashboard"
-  | "plugin"
   | "cli"
   | "action"
   | "lsp"

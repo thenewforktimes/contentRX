@@ -1,12 +1,12 @@
 /**
- * CORS allowlist for plugin-callable endpoints.
+ * CORS allowlist for the public API endpoints.
  *
- * Audit S5 — defense-in-depth. The Figma plugin iframe sends
- * `Origin: null` (sandboxed srcdoc), so the original `*` was correct
- * for current callers but unnecessarily wide. This helper echoes
- * the request Origin back when it's on the allowlist, omits the
- * header otherwise, and adds `Vary: Origin` so caches don't fold
- * responses across origins.
+ * Audit S5 — defense-in-depth. The only browser caller was the Figma
+ * plugin (sandboxed iframe, `Origin: null`), retired 2026-05-16; the
+ * static allowlist is now empty. This helper echoes the request
+ * Origin back when it's on the allowlist, omits the header otherwise,
+ * and adds `Vary: Origin` so caches don't fold responses across
+ * origins.
  *
  * The endpoints don't read cookies — auth is `Authorization: Bearer
  * cx_...`, never a credentialed cookie — so an origin that's NOT
@@ -15,10 +15,11 @@
  * for any future browser-side caller we didn't anticipate.
  *
  * Allowed origins:
- *   - "null"                     — Figma plugin UI (sandboxed iframe)
- *   - https://www.figma.com      — Figma web (parent of the plugin frame)
- *   - https://figma.com          — apex
  *   - http://localhost:3000      — local dev (only when NODE_ENV=development)
+ *
+ * The Figma plugin (the only browser caller) was retired 2026-05-16,
+ * so no static origin is allowed. The helper stays as the seam if a
+ * browser caller is ever reintroduced.
  *
  * Server-to-server callers (CLI, MCP, LSP, GitHub Action) send no
  * Origin header. CORS doesn't apply to those requests — the browser
@@ -29,11 +30,10 @@
 
 import { NextResponse } from "next/server";
 
-const STATIC_ALLOWED = new Set<string>([
-  "null",
-  "https://www.figma.com",
-  "https://figma.com",
-]);
+// Empty since the Figma plugin (the only browser caller) was retired
+// 2026-05-16. Kept as the seam: add an origin here if a browser
+// caller is ever reintroduced. localhost-dev is handled in isAllowed().
+const STATIC_ALLOWED = new Set<string>([]);
 
 function isAllowed(origin: string | null): boolean {
   if (!origin) return false;
