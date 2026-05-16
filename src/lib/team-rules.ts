@@ -361,6 +361,45 @@ export function applyAddedRules<T extends EvaluationResult>(
   return { ...result, violations: [...existingViolations, ...appended] };
 }
 
+/**
+ * Does `text` contain any team's hard-ban token? (Project B, length-
+ * independence — Robert: "a ban is a ban, no ifs ands or buts".)
+ *
+ * Scope is PRECISELY the classifier-extracted ban component: only
+ * `add` rules the save-time classifier marked `enforcement: "hard_ban"`
+ * AND that carry a server-derived `pattern`. Stylistic directives have
+ * no deterministic token, so they are not force-detected here — they
+ * keep the normal rewrite-tier (length) gate. Legacy rows have no
+ * `enforcement` and are skipped, preserving pre-Project-B behaviour.
+ *
+ * Reuses `compilePattern` and the same input clip as `applyAddedRules`,
+ * so the length-independent rewrite trigger, the deterministic flag,
+ * and (pt.3) the post-pass detector all match on the identical
+ * server-authored matcher — they can never disagree about whether a
+ * banned token is present. Pure + synchronous: the caller passes
+ * already-loaded `teamRules.adds`; no extra I/O on the hot path.
+ */
+export function containsDerivedBanToken(
+  text: string,
+  adds: LoadedRules["adds"],
+): boolean {
+  if (adds.length === 0) return false;
+
+  const clipped =
+    text.length > CUSTOM_RULE_MAX_TEXT_BYTES
+      ? text.slice(0, CUSTOM_RULE_MAX_TEXT_BYTES)
+      : text;
+
+  for (const { fields } of adds) {
+    if (fields.enforcement !== "hard_ban" || !fields.pattern) continue;
+    const re = compilePattern(fields);
+    // compilePattern returns a non-global RegExp, so `.test` is
+    // stateless (no lastIndex carry between rules).
+    if (re && re.test(clipped)) return true;
+  }
+  return false;
+}
+
 export function recomputeVerdict<T extends EvaluationResult>(
   result: T,
 ): T & { overall_verdict: "pass" | "fail" } {

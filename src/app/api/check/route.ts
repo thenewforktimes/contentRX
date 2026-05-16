@@ -59,6 +59,7 @@ import {
   applyAddedRules,
   applyDisabledFilter,
   applyOverrides,
+  containsDerivedBanToken,
   loadTeamRules,
   recomputeVerdict,
 } from "@/lib/team-rules";
@@ -437,7 +438,22 @@ export async function POST(req: Request) {
   // both. The rewrite path stays out of the cache for now (separate
   // dimension; team-specific suggestion candidates already gate
   // shouldCache).
-  const wantsRewrite = isLargeInput(text);
+  //
+  // Project B length-independence (2026-05-15). The rewrite normally
+  // fires only for "large" inputs (>200 chars). A hard ban is
+  // length-independent — "a ban is a ban, no ifs ands or buts": if a
+  // team bans em dashes and ships one in a 12-char button, the rewrite
+  // must fire regardless of length. This trigger is strictly ADDITIVE
+  // (a disjunct) — the global length threshold and its cost profile
+  // are untouched; only inputs that actually contain a classifier-
+  // derived ban token are pulled in early, and only when a hard_ban
+  // rule exists for this team. Stylistic directives keep the plain
+  // length gate (no deterministic token to force-detect). The pt.3
+  // TIER-1 guarantee is what makes the fired rewrite actually remove
+  // the token; until that lands the early-fired rewrite is the
+  // existing best-effort seam (monotonic improvement, honest).
+  const wantsRewrite =
+    isLargeInput(text) || containsDerivedBanToken(text, teamRules.adds);
 
   // Calibration seam (2026-05-15). The team's customer-authored rule
   // prose — the human `rule` text on `add` rules and the reworded
