@@ -9,6 +9,24 @@ This doc is a reference, not enforcement. Drift gets caught by audit
 ([first one was 2026-04-28](https://github.com/thenewforktimes/contentRX/pull/227)).
 This page is what the audit checks against.
 
+> **SUPERSEDED IN PART — 2026-05-16 (locked + signed NORTH STAR).**
+> The customer-facing *framing* below ("speaks like a staff content
+> designer", the *"content model for product writing"* tagline, the
+> persona-led examples) is retired by the locked north star in
+> `_private/product-principles.md` (SIGNED 2026-05-16): **ContentRX
+> is the opinionated editor for the prose that lives in a codebase.**
+> Lead with the artifact and the moment (prose in the repo, reviewed
+> before merge), never the persona. Canonical customer voice = the
+> shipped hero ("Your codebase ships prose. ContentRX reads it before
+> anyone else does." / "one opinionated editorial standard, before
+> merge"). Robert *being* a staff content designer remains the
+> named-expert credential behind the standard (that is the moat, kept
+> on /accuracy + /ethics) — it is no longer the voice we *speak in*
+> to customers. The mechanics below (Findings vs violations, no em
+> dashes, etc.) still hold. A full rewrite of this doc to the
+> north-star voice is a tracked follow-up; until then, when this doc
+> and the signed north star conflict, the north star wins.
+
 ## Voice
 
 ContentRX speaks like a staff content designer who has read the

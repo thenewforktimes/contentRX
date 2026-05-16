@@ -22,9 +22,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ContentRX. The content model for product writing",
+  title: "ContentRX. The opinionated editor for the prose in your codebase.",
   description:
-    "Staff-level content design review for the writing that decides whether the product works: error states, destructive confirmations, permissions flows, empty states. Runs in Claude Code, Cursor, your CLI, and your CI.",
+    "The opinionated editor for the prose that lives in your codebase. Error messages, READMEs, API docs, PR and commit copy, held to one editorial standard before merge. Runs in Claude Code, Cursor, your CLI, and CI.",
 };
 
 export default function RootLayout({

@@ -261,8 +261,8 @@ export function FlagForReview({
                     to ContentRX&rsquo;s review queue. Nothing else.
                   </li>
                   <li>
-                    A content designer reviews your check to improve
-                    future checks.
+                    Your check is reviewed against the editorial
+                    standard to improve future checks.
                   </li>
                   <li>
                     ContentRX never sells or relicenses shared checks.

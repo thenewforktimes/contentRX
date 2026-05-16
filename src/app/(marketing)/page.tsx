@@ -128,9 +128,9 @@ export default function Home() {
           The model around the model.
         </h2>
         <p className="mt-4 max-w-2xl text-base text-default">
-          ContentRX isn&apos;t an LLM with a prompt. It&apos;s a
-          content-design pipeline that gives the LLM the context it
-          needs to render a real judgment.
+          ContentRX isn&apos;t an LLM with a prompt. It&apos;s an
+          opinionated editorial pipeline that gives the LLM the
+          context it needs to render a real judgment.
         </p>
         <div className="mt-6">
           <HowItWorksDiagram />

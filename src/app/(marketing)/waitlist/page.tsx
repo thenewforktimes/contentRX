@@ -130,10 +130,10 @@ export default async function WaitlistPage({
           What ContentRX does
         </p>
         <p className="mt-2">
-          ContentRX is a content design review tool. It reviews
-          microcopy, error messages, empty states, and longer-form
-          product copy against a calibrated set of standards. The
-          public credibility surface is{" "}
+          ContentRX is the opinionated editor for the prose that
+          lives in your codebase. It reviews error messages, READMEs,
+          API docs, and PR and commit copy against one editorial
+          standard. The public credibility surface is{" "}
           <Link
             href="/accuracy"
             className="underline underline-offset-2"

@@ -87,7 +87,7 @@ export function SiteFooter({
           <div>
             <Wordmark size="xs" />
             <p className="mt-2 text-xs text-quiet">
-              The content model for product writing.
+              The opinionated editor for the prose in your codebase.
             </p>
           </div>
           <FooterColumn title="Product" links={productLinks} />

@@ -64,7 +64,7 @@ export default function InstallPage() {
     <main className="mx-auto max-w-3xl px-6 py-20">
       <PageHeader
         eyebrow="Install"
-        title="Five surfaces, one content model."
+        title="Five surfaces, one editorial standard."
         lede={
           <>
             Pick the surfaces your team writes in. Or skip the install

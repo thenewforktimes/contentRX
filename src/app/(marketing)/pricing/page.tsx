@@ -59,7 +59,7 @@ export default function PricingPage() {
         eyebrow="Pricing"
         eyebrowHighlight
         scale="display"
-        title="Staff-level content design review on every check you ship."
+        title="One opinionated editorial standard on every check you ship."
         lede={
           <>
             Free for evaluation. $39/month to use it daily. $79/seat
