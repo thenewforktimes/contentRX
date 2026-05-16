@@ -261,6 +261,59 @@ class handler(BaseHTTPRequestHandler):
                 },
             )
 
+        # Save-time team-rule classifier (Project B, 2026-05-15). Splits
+        # one custom rule's plain-English prose into a deterministic-ban
+        # component (exact tokens + variants + a leave-proper-nouns hint)
+        # and/or a stylistic component. The TS /api/team-rules create
+        # path calls this, derives a server-authored matcher from the
+        # tokens (the customer never authors regex), and persists the
+        # spec on the rule. `text` carries the rule prose; `title` is
+        # optional context. An unparseable classification fails safe to
+        # stylistic INSIDE classify_team_rule (no 500, no false ban);
+        # only transport errors surface here for the caller to degrade.
+        if mode == "classify_team_rule":
+            from content_checker.classify_team_rule import (  # noqa: PLC0415
+                classify_team_rule,
+            )
+            title_raw = body.get("title")
+            title = (
+                title_raw
+                if isinstance(title_raw, str) and title_raw.strip()
+                else None
+            )
+            try:
+                classification = classify_team_rule(
+                    rule_text=text, title=title
+                )
+            except PromptInjectionError as exc:
+                return self._respond(400, {"error": str(exc)})
+            except RateLimitedError as exc:
+                return self._respond(503, {"error": str(exc)}, retry_after=30)
+            except RequestTimeoutError as exc:
+                return self._respond(504, {"error": str(exc)})
+            except Exception as exc:  # noqa: BLE001
+                _log_safe("classify_team_rule failed", exc)
+                return self._respond(500, {"error": "Classification failed"})
+
+            return self._respond(
+                200,
+                {
+                    "result": {
+                        "is_ban": classification.is_ban,
+                        "ban_tokens": list(classification.ban_tokens),
+                        "leave_proper_nouns": classification.leave_proper_nouns,
+                        "stylistic_directive": classification.stylistic_directive,
+                    },
+                    "latency_ms": classification.latency_ms,
+                    "tokens": {
+                        "input": classification.input_tokens,
+                        "output": classification.output_tokens,
+                        "cache_creation_input": classification.cache_creation_input_tokens,
+                        "cache_read_input": classification.cache_read_input_tokens,
+                    },
+                },
+            )
+
         # Classify-only mode: cheap (~1 LLM call) helper used by the MCP
         # server's classify_moment tool. Skips the full check pipeline
         # so MCP clients can plan content without burning a quota slot
