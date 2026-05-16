@@ -70,9 +70,6 @@ export default function SecurityPage() {
             endpoints (<code>/api/*</code>)
           </li>
           <li>
-            The Figma plugin distributed via the Figma plugin store
-          </li>
-          <li>
             The PyPI packages <code>contentrx-mcp</code>,{" "}
             <code>contentrx-lsp</code>, and <code>contentrx-cli</code>
           </li>

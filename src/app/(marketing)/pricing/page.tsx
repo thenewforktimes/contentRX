@@ -63,8 +63,8 @@ export default function PricingPage() {
         lede={
           <>
             Free for evaluation. $39/month to use it daily. $79/seat
-            for teams. In your repo, your PR, your Figma file, your
-            terminal, without leaving the work.
+            for teams. In your repo, your PR, your terminal, without
+            leaving the work.
           </>
         }
         meta={<>Same engine, same standards, every plan.</>}
@@ -286,8 +286,8 @@ export default function PricingPage() {
                 <Link href="/install" className="underline underline-offset-2">
                   /install
                 </Link>
-                {" "}covers the MCP server, the LSP, the CLI, the
-                GitHub Action, and the Figma plugin.
+                {" "}covers the MCP server, the GitHub Action, the
+                CLI, and the LSP.
               </>
             }
           />

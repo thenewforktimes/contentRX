@@ -13,19 +13,28 @@
  *     sign-in code block was stating the obvious; the trailing
  *     "calibrated for product writing" paragraph lives on /pricing
  *     FAQ + /writes).
- *   - MCP / LSP / CLI / Action / Figma bodies cut to one-liners.
+ *   - MCP / LSP / CLI / Action bodies cut to one-liners.
  *   - "Stacking surfaces" closer cut entirely. /accuracy +
  *     /dashboard cross-links survive in a tight foot line.
  *   - Internal plumbing references dropped: tool names from MCP
  *     prose, /api/suggest-fix from LSP prose.
  *
- * Surface order matches the home page's SurfacesGrid:
+ * Surface order on THIS page (deliberately diverges from the home
+ * SurfacesGrid). Install leads with the no-install Dashboard paste
+ * path as the lowest-friction conversion entry (pinned by the F5
+ * test below); the home grid leads with MCP per the founder's
+ * locked canonical list:
  *   1. Dashboard          (no install — lowest-friction try)
  *   2. MCP server         (available)
- *   3. LSP server         (available; VS Code Marketplace coming soon)
+ *   3. GitHub Action      (Marketplace listing coming soon)
  *   4. CLI                (available)
- *   5. GitHub Action      (Marketplace listing coming soon)
- *   6. Figma plugin       (Community publication coming soon)
+ *   5. LSP server         (available; VS Code Marketplace coming soon)
+ *
+ * 2026-05-16: the Figma plugin was dropped as a surface entirely.
+ * Figma no longer accepts paid plugins in the Community space, so
+ * the plugin can never ship. Do not re-add the section, chip, or
+ * any "coming soon" Figma copy without a superseding founder
+ * decision.
  *
  * "Surface N" eyebrow numbering dropped 2026-05-11. The chip-nav
  * + section ordering carry the sequence; numbers added nothing.
@@ -43,7 +52,7 @@ import { Section } from "@/components/ui/section";
 export const metadata: Metadata = {
   title: "Install. ContentRX",
   description:
-    "Install ContentRX for Claude Code, Cursor, any LSP editor, your CLI, GitHub Actions, or Figma. Or skip the install and paste in the dashboard.",
+    "Install ContentRX for Claude Code, Cursor, any LSP editor, your CLI, or GitHub Actions. Or skip the install and paste in the dashboard.",
 };
 
 export default function InstallPage() {
@@ -81,7 +90,6 @@ export default function InstallPage() {
           <SurfaceChip href="#action" label="GitHub Action" tagline="PR gate" />
           <SurfaceChip href="#cli" label="CLI" tagline="contentrx" />
           <SurfaceChip href="#lsp" label="LSP" tagline="VS Code · Cursor · Zed" />
-          <SurfaceChip href="#figma" label="Figma plugin" tagline="design-time" />
         </nav>
       </PageHeader>
 
@@ -219,26 +227,6 @@ export CONTENTRX_API_KEY=cx_...
             lsp-server
           </a>
           .
-        </p>
-      </Section>
-
-      <Section
-        id="figma"
-        title="Figma plugin. Design-time check, alongside the engine"
-        pill={<Pill tone="neutral">Coming soon</Pill>}
-      >
-        <p>
-          Catch checks at design time, before they land in code.
-          Per-check verdicts and a stance on every finding.
-        </p>
-        <p className="mt-3 text-sm text-quiet">
-          Figma Community publication is in review. We&apos;ll
-          announce on{" "}
-          <Link href="/accuracy" className="underline underline-offset-2">
-            /accuracy
-          </Link>
-          {" "}when the plugin lands and email everyone on the
-          waitlist.
         </p>
       </Section>
 

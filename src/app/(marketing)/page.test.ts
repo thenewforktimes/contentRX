@@ -173,35 +173,35 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(visible).not.toMatch(/real marketing copy ships in Session/i);
   });
 
-  it("leads with generation-layer surfaces (MCP before Figma)", () => {
-    // Surface order in the SurfacesGrid: MCP must appear before
-    // Figma. Session 29 moved the Figma plugin off the flagship
-    // slot, and the post-pivot positioning kept it that way.
-    //
-    // 2026-05-09 design pass replaced the prior bullet `<strong>` /
-    // `<li>` shape with a card grid (`<SurfacesGrid />`); the
-    // ordering pin moves to the source of the surfaces array.
+  it("leads with MCP in the surfaces grid and no longer lists Figma", () => {
+    // 2026-05-16: Figma was dropped as a surface entirely (Figma no
+    // longer accepts paid Community plugins, so the plugin can never
+    // ship). The grid now leads with MCP per the founder's locked
+    // canonical list: MCP, GitHub Action, CLI, LSP, Dashboard.
+    // Anti-regression: the Figma plugin must not return to the grid
+    // data (the header comment documents the drop, so the pin is on
+    // the data entry, not a blanket source scan).
     const gridSource = readSource("src/components/surfaces-grid.tsx");
     const mcpIdx = gridSource.indexOf('name: "MCP server"');
-    const figmaIdx = gridSource.indexOf('name: "Figma plugin"');
+    const actionIdx = gridSource.indexOf('name: "GitHub Action"');
     expect(mcpIdx).toBeGreaterThan(-1);
-    expect(figmaIdx).toBeGreaterThan(-1);
-    expect(mcpIdx).toBeLessThan(figmaIdx);
+    expect(actionIdx).toBeGreaterThan(mcpIdx);
+    expect(gridSource).not.toContain('name: "Figma plugin"');
   });
 
   it("renders the SurfacesGrid in place of the prior bullet list", () => {
     // The 2026-05-09 design pass replaced the bullet `<ul>` with a
-    // 6-card grid. The structural pin: the import + render exist,
-    // and all six surfaces are named in the grid's data array.
+    // card grid. The structural pin: the import + render exist, and
+    // all five canonical surfaces are named in the grid's data
+    // array. 2026-05-16: dropped from six to five (Figma removed).
     expect(source).toContain("SurfacesGrid");
     const gridSource = readSource("src/components/surfaces-grid.tsx");
     for (const surface of [
-      "Dashboard",
       "MCP server",
-      "LSP server",
-      "CLI",
       "GitHub Action",
-      "Figma plugin",
+      "CLI",
+      "LSP server",
+      "Dashboard",
     ]) {
       expect(gridSource).toContain(`name: "${surface}"`);
     }
@@ -353,15 +353,24 @@ describe("landing page (src/app/(marketing)/page.tsx)", () => {
     expect(matches ?? []).toEqual([]);
   });
 
-  it("names the codebase-prose artifact range in the lede (2026-05-16 north-star reword)", () => {
-    // The old guard pinned "long-form writing" in the lede (F1,
-    // 2026-05-09). The 2026-05-16 NORTH STAR retired that frame.
-    // The guard's intent is unchanged — the hero must establish
-    // breadth, not a single artifact — but the breadth it pins
-    // moved from "long-form" to the codebase-prose artifact range.
-    // The lede now names READMEs, API docs, and PR/commit copy.
-    expect(visible).toMatch(/READMEs/i);
-    expect(visible).toMatch(/PR and commit copy|PR\/commit copy|commit copy/i);
+  it("hero establishes codebase-resident prose + the before-merge moment (2026-05-16 north star)", () => {
+    // The old guard pinned the enumerated artifact range (READMEs /
+    // PR + commit copy) in the lede. 2026-05-16: the founder
+    // deliberately shortened the hero lede to two punchy beats so
+    // the surfaces row clears the fold. The artifact range now
+    // lives in the SurfacesGrid + IntegrationRow; the headline
+    // carries "codebase ships prose". The guard's INTENT is
+    // unchanged — the hero must still establish (a) prose that
+    // lives in the codebase and (b) the before-anyone / before-
+    // merge moment. It fails only if the positioning itself walks
+    // off the page.
+    expect(visible).toMatch(/prose/i);
+    expect(visible).toMatch(/codebase|repo/i);
+    expect(visible).toMatch(/before (anyone|merge)/i);
+    // The two load-bearing beats of the shortened lede: the
+    // opinionated-standard wedge and the published-accuracy moat.
+    expect(visible).toMatch(/opinionated/i);
+    expect(visible).toMatch(/accuracy|measured|published/i);
     // Anti-regression: the dropped long-form supporting line is now
     // off-thesis (Docs/Figma is ground we deliberately do not
     // serve, per _private/product-principles.md). It must not return.

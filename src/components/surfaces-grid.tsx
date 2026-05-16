@@ -9,27 +9,22 @@
  * grid carries the same content with a visual register that earns
  * its place in the page.
  *
- * Six cards in a 2×3 grid (1 column on mobile, 2 cols at sm, 3
- * cols at lg). Each card sources its glyph from
- * `surface-icons.tsx` — the same icon set the IntegrationRow chips
- * use, just rendered larger.
+ * Five cards in a responsive grid (1 col mobile, 2 at sm, 3 at lg).
+ * Each card sources its glyph from `surface-icons.tsx` — the same
+ * icon set the IntegrationRow chips use, just rendered larger.
  *
- * Card order mirrors the install-page chip-nav order so the surfaces
- * read in the same sequence whether a visitor lands here or on
- * /install:
- *   1. Dashboard (no install — first because it's the
- *      lowest-friction try)
- *   2. MCP server (engineering ICP, ships today)
- *   3. GitHub Action (high CI usage; Marketplace coming soon)
- *   4. CLI
- *   5. LSP (IDE-resident, somewhat redundant with MCP)
- *   6. Figma plugin (coming soon)
+ * Card order is the founder's locked canonical surface list
+ * (2026-05-16): MCP, GitHub Action, CLI, LSP, Dashboard. The Figma
+ * plugin was dropped as a surface entirely on 2026-05-16 because
+ * Figma no longer accepts paid plugins in the Community space, so
+ * the plugin can never ship. Do not re-add it without a superseding
+ * founder decision.
  *
- * 2026-05-11: GitHub Action moved up (was 5th); LSP moved down
- * (was 3rd). Rationale: every team that uses MCP probably already
- * has the IDE story covered; the GitHub Action is what gates merge
- * on every PR, so its slot ranking lifts. Figma stays at the foot
- * for now — flip up when Community publication clears.
+ * Deliberate divergence from /install: this grid leads with MCP per
+ * the canonical list, while /install still leads with the no-install
+ * Dashboard paste path by conversion-funnel design (pinned by the
+ * F5 test in install/page.test.ts). Reordering /install to match is
+ * a separate, flagged call.
  *
  * The card surface uses bg-raised + border-line — the default Card
  * primitive treatment — to keep the visual rhythm consistent with
@@ -39,7 +34,6 @@
 import Link from "next/link";
 import {
   CliIcon,
-  FigmaIcon,
   GitHubIcon,
   McpIcon,
   PasteModeIcon,
@@ -58,14 +52,6 @@ type Surface = {
 };
 
 const SURFACES: readonly Surface[] = [
-  {
-    name: "Dashboard",
-    href: "/dashboard/explain",
-    Glyph: PasteModeIcon,
-    description:
-      "Sign in and paste your writing. Get the document-level diagnostic and a clean rewrite. No install.",
-    ctaLabel: "Open the dashboard",
-  },
   {
     name: "MCP server",
     href: "/install#mcp",
@@ -104,12 +90,12 @@ const SURFACES: readonly Surface[] = [
     ctaLabel: "Install",
   },
   {
-    name: "Figma plugin",
-    href: "/install#figma",
-    Glyph: FigmaIcon,
+    name: "Dashboard",
+    href: "/dashboard/explain",
+    Glyph: PasteModeIcon,
     description:
-      "Per-string findings with context banners and rationale chains, at design time before the strings reach the repo.",
-    ctaLabel: "Install",
+      "Sign in and paste your writing. Get the document-level diagnostic and a clean rewrite. No install.",
+    ctaLabel: "Open the dashboard",
   },
 ];
 

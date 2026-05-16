@@ -22,9 +22,10 @@
  *   Row 2: One approval | Weekly review agent
  *   Row 3: Receipts | Long-form review
  *
- * Save money: 6 surface icons (was 5; Dashboard paste mode was
- * missing). Icon size bumped h-5 → h-7 to match the visual weight
- * of the IntegrationRow chips at the top of the page.
+ * Save money: 5 surface icons (MCP, GitHub Action, CLI, LSP,
+ * Dashboard) matching the locked canonical surface list. Icon size
+ * h-7 matches the visual weight of the IntegrationRow chips at the
+ * top of the page. (Figma dropped 2026-05-16, was the 6th icon.)
  */
 
 import Link from "next/link";
@@ -32,7 +33,6 @@ import { AgentSection } from "@/components/agent-section";
 import { OneApprovalCell } from "@/components/one-approval-cell";
 import {
   CliIcon,
-  FigmaIcon,
   GitHubIcon,
   McpIcon,
   PasteModeIcon,
@@ -153,9 +153,9 @@ function SaveTimeCell() {
 }
 
 function SaveMoneyCell() {
-  // Six surface icons (Dashboard + MCP + LSP + GitHub Action + CLI
-  // + Figma plugin) so the row matches SurfacesGrid and
-  // IntegrationRow at the top of the page.
+  // Five surface icons in the locked canonical order (MCP, GitHub
+  // Action, CLI, LSP, Dashboard) so the row matches SurfacesGrid
+  // and IntegrationRow at the top of the page.
   return (
     <Cell
       eyebrow="Save money"
@@ -172,12 +172,11 @@ function SaveMoneyCell() {
             </span>
           </p>
           <div className="flex items-center gap-3 opacity-80">
-            <PasteModeIcon className="h-7 w-7 text-quiet" />
             <McpIcon className="h-7 w-7 text-quiet" />
-            <VsCodeIcon className="h-7 w-7 text-quiet" />
             <GitHubIcon className="h-7 w-7 text-quiet" />
             <CliIcon className="h-7 w-7 text-quiet" />
-            <FigmaIcon className="h-7 w-7 text-quiet" />
+            <VsCodeIcon className="h-7 w-7 text-quiet" />
+            <PasteModeIcon className="h-7 w-7 text-quiet" />
           </div>
         </div>
       }

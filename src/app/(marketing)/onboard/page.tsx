@@ -4,10 +4,12 @@
  * Default post-signup destination via Clerk's `fallbackRedirectUrl`
  * on the SignUp component. The customer-journey diagrams put this
  * right after Clerk auth: "Where do you want to use ContentRX?"
- * Five options — one per generation-layer surface (MCP, LSP, Action,
- * Figma, CLI). The Audit Pack option was removed alongside the SKU
- * itself; if we re-add a one-time pricing tier later, this picker
- * can grow back to six.
+ * Four options in the locked canonical order — one per installable
+ * surface (MCP, GitHub Action, CLI, LSP). The no-install Dashboard
+ * path is the "skip" footer link, not a card. Figma was dropped
+ * 2026-05-16 (Figma no longer accepts paid Community plugins, so
+ * the plugin can never ship); do not re-add it. The Audit Pack
+ * option was removed alongside the SKU itself.
  *
  * Picking a surface routes to its anchor on /install. All picks are
  * stateless for now — we don't persist the choice yet (PR-24's
@@ -48,14 +50,6 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     cta: "Set up MCP",
   },
   {
-    key: "lsp",
-    name: "LSP server",
-    description:
-      "Diagnostics in VS Code, Zed, JetBrains, Neovim, anywhere with an LSP client. Squiggle as you type.",
-    href: "/install#lsp",
-    cta: "Set up LSP",
-  },
-  {
     key: "action",
     name: "GitHub Action",
     description:
@@ -64,20 +58,20 @@ const SURFACE_OPTIONS: ReadonlyArray<SurfaceOption> = [
     cta: "Set up the GitHub Action",
   },
   {
-    key: "figma",
-    name: "Figma plugin",
-    description:
-      "Catch strings during design, before they land in code. Per-frame verdicts in the side panel.",
-    href: "/install#figma",
-    cta: "Set up the Figma plugin",
-  },
-  {
     key: "cli",
     name: "CLI",
     description:
       "Batch checks from the terminal or CI. One pip install, stdlib runtime, exit codes you can pipe.",
     href: "/install#cli",
     cta: "Set up CLI",
+  },
+  {
+    key: "lsp",
+    name: "LSP server",
+    description:
+      "Diagnostics in VS Code, Zed, JetBrains, Neovim, anywhere with an LSP client. Squiggle as you type.",
+    href: "/install#lsp",
+    cta: "Set up LSP",
   },
 ];
 

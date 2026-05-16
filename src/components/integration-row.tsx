@@ -28,7 +28,6 @@ import {
   ClaudeCodeIcon,
   CliIcon,
   CursorIcon,
-  FigmaIcon,
   GitHubIcon,
   McpIcon,
   VsCodeIcon,
@@ -49,15 +48,14 @@ const INTEGRATIONS: readonly Integration[] = [
   { name: "MCP", href: "/install#mcp", Glyph: McpIcon },
   { name: "Claude Code", href: "/install#mcp", Glyph: ClaudeCodeIcon },
   { name: "Cursor", href: "/install#mcp", Glyph: CursorIcon },
-  { name: "VS Code", href: "/install#lsp", Glyph: VsCodeIcon },
   { name: "GitHub", href: "/install#action", Glyph: GitHubIcon },
-  { name: "Figma", href: "/install#figma", Glyph: FigmaIcon },
   { name: "CLI", href: "/install#cli", Glyph: CliIcon },
+  { name: "VS Code", href: "/install#lsp", Glyph: VsCodeIcon },
 ];
 
 export function IntegrationRow() {
   return (
-    <div className="mt-12">
+    <div className="mt-8">
       <p className="text-center text-xs font-semibold uppercase tracking-widest text-quiet">
         Wired into the surfaces you already ship in
       </p>
@@ -77,7 +75,7 @@ export function IntegrationRow() {
         ))}
       </ul>
       <p className="mt-4 text-center text-xs text-quiet">
-        Seven surfaces, one model. See the{" "}
+        One model, every surface you ship in. See the{" "}
         <Link href="/install" className="underline underline-offset-2 hover:text-default">
           install instructions
         </Link>

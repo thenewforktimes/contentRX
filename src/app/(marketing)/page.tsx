@@ -5,7 +5,7 @@
  *   1. Hero — wordmark + brand promise + verdict mock
  *   2. Integration row — chip strip
  *   3. How it works — animated pipeline panel, dot-grid bg
- *   4. Where it runs — 6 surface cards (SurfacesGrid)
+ *   4. Where it runs — 5 surface cards (SurfacesGrid)
  *   5. Outcomes — 2x3 quadrant grid (six cells, OutcomesGrid):
  *      Save time / Save money / One approval / Weekly review agent /
  *      Receipts / Long-form review
@@ -48,32 +48,35 @@ import { AnimatedWordmark } from "@/components/animated-wordmark";
 export const metadata: Metadata = {
   title: "ContentRX. Your codebase ships prose. We read it before anyone else does.",
   description:
-    "ContentRX reviews the prose that lives in your repo, error messages, READMEs, API docs, PR and commit copy, against one opinionated editorial standard, with the rationale behind every call. Before merge, not after someone screenshots it and your triage Slack blows up. The accuracy is measured and published, so you can check our work.",
+    "Your prose, held to one opinionated editorial standard, before merge. The accuracy is measured and published, so you can check our work.",
 };
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+    <main className="mx-auto max-w-6xl px-6 py-12 sm:py-14">
       {/* Hero — 2-column at md+. The animated wordmark replaces the
           plain Eyebrow that used to label the headline; treats the
           brand presence as the page's first kinetic moment. */}
       <header className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-16">
         <div>
           <AnimatedWordmark size="md" link={false} />
-          <h1 className="mt-8 text-5xl font-bold tracking-tight text-strong sm:text-6xl">
+          <h1 className="mt-6 text-5xl font-bold tracking-tight text-strong sm:text-6xl">
             Your codebase ships prose. ContentRX reads it before
             anyone else does.
           </h1>
           <p className="mt-6 text-lg text-default sm:text-xl">
-            ContentRX reviews the prose that lives in your repo,
-            error messages, READMEs, API docs, PR and commit copy,
-            against one opinionated editorial standard, with the
-            rationale behind every call. Before merge, not after
-            someone screenshots it and your triage Slack blows up.
-            The accuracy is measured and published, so you can check
-            our work.
+            Your prose, held to one opinionated editorial standard,
+            before merge. The accuracy is measured and published, so
+            you can{" "}
+            <Link
+              href="/accuracy"
+              className="font-medium text-strong underline underline-offset-4"
+            >
+              check our work
+            </Link>
+            .
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
+          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
             <Link href="/sign-up" className={buttonStyles({ variant: "primary" })}>
               Try free <ButtonArrow />
             </Link>
@@ -134,7 +137,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Where it runs — 6 surface cards (the integration row is
+      {/* Where it runs — 5 surface cards (the integration row is
           the teaser; this is the index). 2026-05-09 design pass. */}
       <SurfacesGrid />
 
