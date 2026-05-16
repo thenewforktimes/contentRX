@@ -315,6 +315,41 @@ describe("applyAddedRules", () => {
     expect(out.violations).toHaveLength(1);
     expect(out.violations![0]?.standard_id).toBe("GRM-01");
   });
+
+  // 2026-05-15: customer-facing regex was cut. A prose-only rule (no
+  // `pattern`) is the new default. The load-bearing regression: such a
+  // rule must produce NO flag and must NOT match-all. `new
+  // RegExp(undefined)` compiles to /(?:)/ which matches every input —
+  // without the compilePattern no-pattern guard, EVERY prose-only rule
+  // would flag on EVERYTHING. This pins that guard.
+  it("a prose-only rule (no pattern) produces no flag and never match-alls", () => {
+    const proseOnly: LoadedRules["adds"][number] = {
+      standardId: "TEAM-09",
+      fields: {
+        title: "Voice",
+        rule: "Use em dashes freely. Never remove em dashes the writer used.",
+        severity: "medium",
+        // no `pattern`
+      },
+    };
+    // Arbitrary text that a match-all (/(?:)/) regex WOULD match.
+    const out = applyAddedRules(baseResult, "literally any text at all", [
+      proseOnly,
+    ]);
+    expect(out.violations).toHaveLength(1); // base only — no spurious add
+    expect(out.violations![0]?.standard_id).toBe("GRM-01");
+    // Even against empty input (where /(?:)/ also matches) — no flag.
+    const outEmpty = applyAddedRules(baseResult, "", [proseOnly]);
+    expect(outEmpty.violations).toHaveLength(1);
+  });
+
+  it("still flags patterned rules (backward compat with legacy rows)", () => {
+    const out = applyAddedRules(baseResult, "this is forbidden here", [
+      addRule("TEAM-02", "forbidden"),
+    ]);
+    expect(out.violations).toHaveLength(2);
+    expect(out.violations![1]?.standard_id).toBe("TEAM-02");
+  });
 });
 
 // ---------------------------------------------------------------------------
