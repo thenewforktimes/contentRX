@@ -3,10 +3,10 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * /install page copy-pin. Session 29's acceptance criterion is that
- * a first-time visitor sees MCP / CLI / GitHub Action as the primary
- * surfaces, with Figma alongside rather than leading. This test
- * locks the section order + the real install snippet for each.
+ * /install page copy-pin. Locks the section order + the real install
+ * snippet for each surface. 2026-05-16: Figma dropped as a surface
+ * (forced); order is now the founder's locked canonical list — MCP,
+ * GitHub Action, CLI, LSP, Dashboard.
  */
 
 const SOURCE = fs.readFileSync(
@@ -86,24 +86,27 @@ describe("/install page source", () => {
     expect(visible).not.toMatch(/href=["']\/model/);
   });
 
-  it("surfaces the dashboard paste flow before the install surfaces (F5)", () => {
-    // Phase F5 (2026-05-09 roadmap) lands the dashboard paste flow
-    // alongside the developer surfaces. Order pin: paste section
-    // sits above MCP so the no-install path is the first thing a
-    // founder/PM/ops buyer sees.
-    const pasteIdx = visible.indexOf('id="paste"');
+  it("orders surfaces by the locked canonical list, Dashboard last (F5 superseded 2026-05-16)", () => {
+    // Phase F5 (2026-05-09) originally pinned the no-install Dashboard
+    // paste path ABOVE MCP as the lowest-friction conversion entry.
+    // 2026-05-16: the founder's explicit canonical-order instruction
+    // SUPERSEDED that funnel pin. Order is now the locked canonical
+    // list, same as the home SurfacesGrid: MCP, GitHub Action, CLI,
+    // LSP, then Dashboard last. The Dashboard paste section still
+    // exists (a real surface, just no longer the lead).
     const mcpIdx = visible.indexOf('id="mcp"');
-    expect(pasteIdx).toBeGreaterThan(-1);
-    expect(pasteIdx).toBeLessThan(mcpIdx);
-    // The section's anchor links to /dashboard/explain (the paste-
-    // mode surface) and the chip nav adds a Dashboard chip pointing
-    // at the new section.
+    const actionIdx = visible.indexOf('id="action"');
+    const cliIdx = visible.indexOf('id="cli"');
+    const lspIdx = visible.indexOf('id="lsp"');
+    const pasteIdx = visible.indexOf('id="paste"');
+    expect(mcpIdx).toBeGreaterThan(-1);
+    expect(actionIdx).toBeGreaterThan(mcpIdx);
+    expect(cliIdx).toBeGreaterThan(actionIdx);
+    expect(lspIdx).toBeGreaterThan(cliIdx);
+    expect(pasteIdx).toBeGreaterThan(lspIdx);
+    // The Dashboard paste section still exists, links to the paste-
+    // mode surface, and keeps its paste-flow language.
     expect(visible).toContain('href="/dashboard/explain"');
-    // 2026-05-11: surface renamed "Dashboard paste mode" → "Dashboard"
-    // (the "paste mode" qualifier added noise; the description
-    // already explains the no-install paste workflow). The
-    // structural pin loosens to "Dashboard" + paste-flow language
-    // somewhere in the section.
     expect(visible).toMatch(/Dashboard\.\s+Sign in, paste/i);
   });
 });

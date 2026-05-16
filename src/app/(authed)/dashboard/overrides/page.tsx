@@ -252,7 +252,7 @@ export default async function OverridesPage() {
         <section className="rounded-lg border border-dashed border-line-strong p-6 text-sm text-quiet">
           <p>
             Nothing to show yet. Your team hasn&apos;t dismissed any
-            findings. Dismissals from the Figma plugin or{" "}
+            findings. Dismissals from{" "}
             <code className="rounded bg-raised px-1 py-0.5 font-mono text-xs">
               /contentrx ignore &lt;STD&gt;
             </code>{" "}

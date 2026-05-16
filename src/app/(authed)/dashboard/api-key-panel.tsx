@@ -111,7 +111,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-base font-semibold text-strong">API key</h2>
         <span className="text-xs text-quiet">
-          Used by the Figma plugin, CLI, and GitHub Action
+          Used by the MCP server, CLI, LSP, and GitHub Action
         </span>
       </header>
 
@@ -180,8 +180,8 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       ) : (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-default">
-            No active API key. Generate one to sign in from the Figma plugin
-            or the CLI.
+            No active API key. Generate one to use the MCP server,
+            CLI, LSP, or GitHub Action.
           </p>
           <Button disabled={isLoading} onClick={rotate} size="sm">
             {isLoading ? "Generating…" : "Generate key"}
@@ -192,7 +192,7 @@ export function ApiKeyPanel({ initialPrefix, initialCreatedAt }: Props) {
       <AlertDialog
         open={confirmingRevoke}
         title="Revoke this API key?"
-        description="The Figma plugin and any CLI sessions using this key will stop working immediately. You'll need to generate a new key to sign in again."
+        description="Any MCP, CLI, LSP, or GitHub Action sessions using this key will stop working immediately. You'll need to generate a new key to use them again."
         confirmLabel="Revoke key"
         cancelLabel="Keep key"
         tone="danger"

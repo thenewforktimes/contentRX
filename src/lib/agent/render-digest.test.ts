@@ -406,7 +406,7 @@ describe("renderDigest substrate translation", () => {
 describe("ZERO_CHECKS_FOOTER", () => {
   it("matches the roadmap's locked wording verbatim", () => {
     expect(ZERO_CHECKS_FOOTER).toBe(
-      "Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (Figma plugin, GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.",
+      "Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.",
     );
   });
 

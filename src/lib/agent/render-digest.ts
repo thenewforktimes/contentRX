@@ -15,9 +15,9 @@
  *
  * Locked copy this file owns:
  *   - Footer: "Cost: 0 checks per run. The agent reads flags your
- *     other surfaces have already produced (Figma plugin, GitHub
- *     Action, MCP, LSP, CLI, paste mode) and renders them as a
- *     weekly digest. Your monthly check limit is unaffected."
+ *     other surfaces have already produced (GitHub Action, MCP,
+ *     LSP, CLI, paste mode) and renders them as a weekly digest.
+ *     Your monthly check limit is unaffected."
  *     Identical to the dashboard page copy and (eventually) the
  *     install confirmation modal — the three-place rule from the
  *     roadmap.
@@ -53,7 +53,7 @@ const WARMED_UP_OVERRIDE_THRESHOLD = 30;
  *   3. The PR comment footer (this file)
  */
 export const ZERO_CHECKS_FOOTER =
-  "Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (Figma plugin, GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.";
+  "Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.";
 
 /** Category-name lookup. Names mirror the public taxonomy. */
 const CATEGORY_NAMES: Record<string, string> = (() => {

@@ -23,7 +23,7 @@ from the same working tree (`thenewforktimes/contentRX`); two more
 surfaces (MCP server, LSP server) land in BUILD_PLAN_v2 phases 1 and 5.
 
 1. **Python evaluation engine** — `src/content_checker/` (the library)
-2. **Figma plugin** — `figma-plugin/`
+2. **Figma plugin** — `figma-plugin/` *(DROPPED as a surface 2026-05-16, forced — Figma killed paid Community plugins; code retained but dead, retirement pending)*
 3. **Python CLI** — `cli/` (engine-side) and `cli-client/` (HTTP client
    shipped to PyPI as `contentrx-cli`)
 4. **Next.js 15 backend app** — `src/app/`, `src/lib/`, `src/db/`,
@@ -477,6 +477,19 @@ to fix immediately. Track these so they don't get forgotten.
 
 ## Surfaces, in order of primacy (BUILD_PLAN_v2)
 
+> **AMENDMENT 2026-05-16 (forced — Figma killed paid Community
+> plugins).** The Figma plugin is DROPPED as a surface entirely; the
+> plugin can never ship. The locked canonical *customer-facing*
+> surface list + order is now: **1) MCP  2) GitHub Action  3) CLI
+> 4) LSP  5) ContentRX dashboard** ("GitHub Action" is the label,
+> not bare "GitHub"; Dashboard is the no-install paste path).
+> Marketing leads with this set (shipped PR #588). `figma-plugin/`,
+> `src/app/auth/figma-callback/`, `lib/figma-handoff`, and the Figma
+> CORS-allowlist entry are now dead code, retirement pending — a
+> separate destructive task, NOT yet deleted. The numbered list
+> below is the original BUILD_PLAN_v2 primacy framing, kept for
+> history; item 5 is struck.
+
 1. **MCP server** (Python, stdio, via `uvx contentrx-mcp`) — engineers in
    Claude Code / Cursor / Claude desktop. **Lands in v2 Phase 1.**
 2. **LSP server** (Python, stdio, via `uvx contentrx-lsp`) — engineers
@@ -485,17 +498,18 @@ to fix immediately. Track these so they don't get forgotten.
 3. **GitHub Action** — engineers on PRs. (In-tree today; publishes to
    Marketplace in v2 Phase 2.)
 4. **CLI** — engineers in terminals and CI. (`contentrx-cli` on PyPI.)
-5. **Figma plugin** — designers and PMs working in Figma.
+5. ~~**Figma plugin** — designers and PMs working in Figma.~~ **DROPPED 2026-05-16 (forced) — see amendment above.**
 6. **Customer web dashboard** — `/dashboard` for paying customers (usage,
    API keys, team rules if/when teams ship).
 7. **Founder `/admin` dashboard** — substrate UI for the daily review
    rhythm, accuracy snapshots, calibration log, refinement-log, and
    report publication gate. Single-user. **Critical-path post-pivot.**
 
-The plugin is no longer the headline. The MCP server is. The privacy
-boundary applies to surfaces 1–5 (which render to product users) — they
-must never expose `standard_id` or `rule_version`. Surfaces 6 and 7 are
-allowed to render those fields under appropriate auth.
+The MCP server is the headline. The privacy boundary applies to the
+developer-facing surfaces that render to product users (MCP, LSP,
+GitHub Action, CLI) — they must never expose `standard_id` or
+`rule_version`. The customer web dashboard and founder `/admin`
+dashboard are allowed to render those fields under appropriate auth.
 
 ## Non-negotiables (additions per BUILD_PLAN_v2 + ADR 2026-04-25)
 

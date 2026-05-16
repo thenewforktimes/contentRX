@@ -39,7 +39,7 @@ describe("/dashboard/agent (page locked copy + preview interaction)", () => {
       "Read-only. The agent never edits your strings.",
     );
     expect(pageSource).toContain(
-      "Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (Figma plugin, GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.",
+      "Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.",
     );
   });
 
@@ -50,7 +50,7 @@ describe("/dashboard/agent (page locked copy + preview interaction)", () => {
     // PR-footer instances have to stay aligned.
     const renderSource = readFileSync(RENDER_PATH, "utf-8");
     const lockedFragment =
-      "Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (Figma plugin, GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.";
+      "Cost: 0 checks per run. The agent reads flags your other surfaces have already produced (GitHub Action, MCP, LSP, CLI, paste mode) and renders them as a weekly digest. Your monthly check limit is unaffected.";
     expect(pageSource).toContain(lockedFragment);
     expect(renderSource).toContain(lockedFragment);
   });

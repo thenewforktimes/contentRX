@@ -241,18 +241,19 @@ function TryACheckPanel({ plan }: { plan: Plan }) {
 // and are imported above. Single source of truth so the loader and the
 // renderer stay in lockstep.
 
-// Customer-likelihood order — the order a typical ICP discovers + adopts
-// the surfaces, not the BUILD_PLAN_v2 surface-primacy order (which is
-// the founder-side architectural ranking). Web app first because it's
-// where the customer is when reading this card. Figma plugin second
-// because content designers are a primary ICP and the plugin is their
-// natural entry. MCP / CLI / GitHub Action are the engineer-side
-// surfaces in approachability order. LSP last as the niche
-// editor-extension surface.
+// Web app first because it's where the customer is when reading this
+// card. The rest follow the founder's locked canonical surface order
+// (2026-05-16): MCP, GitHub Action, CLI, LSP. Figma was dropped as a
+// surface entirely 2026-05-16 (forced — Figma killed paid Community
+// plugins); the prior "Figma second / content designers are a primary
+// ICP" rationale retired with it (the north star moved off the
+// content-designer persona).
 //
 // `key` matches the source enum on usage_events + violations (see
-// src/lib/surfaces.ts). The `dashboard` key + "Web app" label is the
-// one place enum-vs-label diverges; everywhere else key === lowercase
+// src/lib/surfaces.ts). The legacy `plugin` enum value stays in
+// surfaces.ts as defensive/legacy handling; it just no longer gets a
+// promo card here. The `dashboard` key + "Web app" label is the one
+// place enum-vs-label diverges; everywhere else key === lowercase
 // label.
 const SURFACES: ReadonlyArray<{
   key: SurfaceKey;
@@ -263,20 +264,14 @@ const SURFACES: ReadonlyArray<{
   // Web app — installHref points back to Try-a-check on this same
   // page so a fresh user gets a clear nudge to run their first check.
   { key: "dashboard", label: "Web app", installHref: "#try-a-check", installLabel: "Try a check" },
-  {
-    key: "plugin",
-    label: "Figma plugin",
-    installHref: "/install#figma",
-    installLabel: "Install",
-  },
   { key: "mcp", label: "MCP", installHref: "/install#mcp", installLabel: "Install" },
-  { key: "cli", label: "CLI", installHref: "/install#cli", installLabel: "Install" },
   {
     key: "action",
     label: "GitHub Action",
     installHref: "/install#action",
     installLabel: "Install",
   },
+  { key: "cli", label: "CLI", installHref: "/install#cli", installLabel: "Install" },
   { key: "lsp", label: "LSP", installHref: "/install#lsp", installLabel: "Install" },
 ];
 
