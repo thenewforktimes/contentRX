@@ -23,9 +23,14 @@ import inspect
 
 from content_checker.rewrite_document import (
     _DIRECTIVE_FENCE,
+    _MAX_BAN_TOKEN_CHARS,
+    _MAX_BAN_TOKENS_IN_PROMPT,
     _MAX_DIRECTIVE_CHARS,
     _MAX_DIRECTIVES,
     _build_system_prompt,
+    _detect_ban_survivors,
+    _looks_like_proper_noun,
+    _normalize_ban_rules,
     rewrite_document,
 )
 
@@ -148,3 +153,196 @@ def test_rewrite_document_accepts_style_directives_kwarg() -> None:
     sig = inspect.signature(rewrite_document)
     assert "style_directives" in sig.parameters
     assert sig.parameters["style_directives"].default is None
+
+
+# ===========================================================================
+# Project B — deterministic ban guarantee (2026-05-15)
+# ===========================================================================
+
+def test_rewrite_document_accepts_ban_rules_kwarg() -> None:
+    """Pin the ban wire seam alongside style_directives: a refactor
+    must not silently drop ban_rules and revert to the no-guarantee
+    rewrite."""
+    sig = inspect.signature(rewrite_document)
+    assert "ban_rules" in sig.parameters
+    assert sig.parameters["ban_rules"].default is None
+
+
+def test_no_ban_path_is_byte_identical() -> None:
+    """THE Project B byte-invariant. The overwhelming majority of calls
+    have no hard ban; that path must be byte-for-byte the pre-Project-B
+    two-tier prompt. None / [] / whitespace-only all collapse to the
+    same empty ban block, and the ban header must be wholly absent."""
+    base = _build_system_prompt()
+    assert base == _build_system_prompt(ban_tokens=None)
+    assert base == _build_system_prompt(ban_tokens=[])
+    assert base == _build_system_prompt(ban_tokens=["   ", ""])
+    # And independent of the style-directive axis (the seam still holds
+    # when both inputs are empty).
+    assert base == _build_system_prompt(None, None)
+    assert "Hard content ban" not in base
+    # A style directive present but no ban ⇒ still no ban header.
+    assert "Hard content ban" not in _build_system_prompt(
+        ["British spelling"], None
+    )
+
+
+def test_ban_token_lands_in_tier1_not_tier2() -> None:
+    """The locked placement: a ban is part of the non-overridable
+    floor. It must sit in the TIER 1 slice (before the TIER 2 header),
+    never in the overridable TIER 2 / customer block."""
+    p = _build_system_prompt(ban_tokens=["guys"])
+    t1 = _tier1(p)
+    assert "Hard content ban" in t1
+    assert '"guys"' in t1
+    # Nothing of the ban region may appear after the TIER 2 header.
+    tier2_onward = p.split(_TIER2_HEADER, 1)[1]
+    assert "Hard content ban" not in tier2_onward
+    assert '"guys"' not in tier2_onward
+    # It must assert its own supremacy over TIER 2 + customer rules.
+    assert "outranks TIER 2" in t1
+    assert "non-negotiable floor" in t1
+
+
+def test_ban_block_forbids_mangling() -> None:
+    """The primary layer must instruct rephrase-around, never
+    delete/mangle — the locked 'strip the token is DEAD' rule."""
+    t1 = _tier1(_build_system_prompt(ban_tokens=["guys"]))
+    assert "genuinely rephrasing" in t1
+    assert "Do NOT" in t1 and "mangle" in t1
+
+
+def test_ban_tokens_sanitized_capped_and_fenced() -> None:
+    # Fence sentinel stripped from a token (can't escape into
+    # instruction space).
+    p = _build_system_prompt(ban_tokens=[f"ev{_DIRECTIVE_FENCE}il"])
+    assert _DIRECTIVE_FENCE not in _tier1(p)
+    assert '"evil"' in _tier1(p)
+    # Over-long token truncated.
+    longtok = "z" * (_MAX_BAN_TOKEN_CHARS + 50)
+    p2 = _build_system_prompt(ban_tokens=[longtok])
+    assert ("z" * (_MAX_BAN_TOKEN_CHARS + 50)) not in p2
+    assert ("z" * _MAX_BAN_TOKEN_CHARS) in p2
+    # Token count capped.
+    many = [f"t{i}" for i in range(_MAX_BAN_TOKENS_IN_PROMPT + 30)]
+    p3 = _build_system_prompt(ban_tokens=many)
+    assert f'"t{_MAX_BAN_TOKENS_IN_PROMPT - 1}"' in p3
+    assert f'"t{_MAX_BAN_TOKENS_IN_PROMPT + 29}"' not in p3
+
+
+# ---- deterministic post-pass detector --------------------------------------
+
+def _rule(pattern: str, *, ci: bool = True, leave_names: bool = False,
+          tokens: tuple[str, ...] = ("x",)) -> dict:
+    return {
+        "pattern": pattern,
+        "case_insensitive": ci,
+        "tokens": list(tokens),
+        "leave_proper_nouns": leave_names,
+    }
+
+
+def test_detector_catches_a_planted_survivor() -> None:
+    rules = _normalize_ban_rules([_rule(r"\b(?:guys)\b", tokens=("guys",))])
+    hard, names = _detect_ban_survivors("hey guys, welcome aboard", rules)
+    assert [m for _, m in hard] == ["guys"]
+    assert names == []
+
+
+def test_detector_clean_text_has_no_survivor() -> None:
+    rules = _normalize_ban_rules([_rule(r"\b(?:guys)\b", tokens=("guys",))])
+    hard, names = _detect_ban_survivors("hello everyone, welcome", rules)
+    assert hard == [] and names == []
+
+
+def test_detector_is_case_insensitive_when_flagged() -> None:
+    rules = _normalize_ban_rules([_rule(r"\b(?:guys)\b", tokens=("guys",))])
+    hard, _ = _detect_ban_survivors("Listen up GUYS", rules)
+    assert [m for _, m in hard] == ["GUYS"]
+
+
+def test_em_dash_literal_detector_does_not_match_en_dash() -> None:
+    # Derived em-dash matcher is the literal char; the en dash and the
+    # hyphen must NOT trip it (the precision the classifier prompt
+    # pins).
+    rules = _normalize_ban_rules([_rule("—", tokens=("—",))])
+    hard, _ = _detect_ban_survivors("a — b", rules)
+    assert [m for _, m in hard] == ["—"]
+    clean, _ = _detect_ban_survivors("a – b - c", rules)  # en dash + hyphen
+    assert clean == []
+
+
+def test_name_collision_routes_to_names_not_hard() -> None:
+    """leave_proper_nouns: a mid-sentence capitalised occurrence reads
+    as a name → flag-to-human bucket, never auto-failed, never
+    mangled."""
+    rules = _normalize_ban_rules(
+        [_rule(r"\b(?:guy)\b", leave_names=True, tokens=("guy",))]
+    )
+    hard, names = _detect_ban_survivors(
+        "I spoke with Guy yesterday about the rollout", rules
+    )
+    assert [m for _, m in names] == ["Guy"]
+    assert hard == []
+    # The colloquial lowercase use is still a hard survivor.
+    hard2, names2 = _detect_ban_survivors("listen guy, it's fine", rules)
+    assert [m for _, m in hard2] == ["guy"]
+    assert names2 == []
+
+
+def test_sentence_initial_capital_is_hard_not_a_name() -> None:
+    """Sentence-start capitalisation is ambiguous — it could just be
+    the banned word opening a sentence, which IS a violation. The
+    conservative heuristic keeps it as a hard survivor."""
+    rules = _normalize_ban_rules(
+        [_rule(r"\b(?:guys)\b", leave_names=True, tokens=("guys",))]
+    )
+    hard, names = _detect_ban_survivors("Guys, here is the update.", rules)
+    assert [m for _, m in hard] == ["Guys"]
+    assert names == []
+
+
+def test_all_caps_is_hard_not_a_name() -> None:
+    rules = _normalize_ban_rules(
+        [_rule(r"\b(?:guys)\b", leave_names=True, tokens=("guys",))]
+    )
+    hard, names = _detect_ban_survivors("listen up GUYS now", rules)
+    assert [m for _, m in hard] == ["GUYS"]
+    assert names == []
+
+
+def test_normalize_skips_malformed_pattern_without_crashing() -> None:
+    rules = _normalize_ban_rules(
+        [_rule("(unclosed", tokens=("x",)), _rule(r"\b(?:ok)\b",
+                                                  tokens=("ok",))]
+    )
+    # The bad rule is dropped; the good one survives.
+    assert len(rules) == 1
+    hard, _ = _detect_ban_survivors("ok then", rules)
+    assert [m for _, m in hard] == ["ok"]
+
+
+def test_normalize_drops_non_dict_and_empty_pattern() -> None:
+    assert _normalize_ban_rules(None) == []
+    assert _normalize_ban_rules([]) == []
+    assert _normalize_ban_rules(["not a dict", {"pattern": ""}]) == []
+
+
+def test_looks_like_proper_noun_heuristic() -> None:
+    import re
+
+    def m(text: str, needle: str) -> re.Match[str]:
+        mm = re.search(re.escape(needle), text)
+        assert mm is not None
+        return mm
+
+    # Mid-sentence Capitalised → name.
+    assert _looks_like_proper_noun(
+        "we asked Guy about it", m("we asked Guy about it", "Guy")
+    )
+    # Sentence-initial → not a name (ambiguous capitalisation).
+    assert not _looks_like_proper_noun("Guy is here", m("Guy is here", "Guy"))
+    # lowercase → not a name.
+    assert not _looks_like_proper_noun("hey guy", m("hey guy", "guy"))
+    # ALL CAPS → not a name (shouting, not a proper noun).
+    assert not _looks_like_proper_noun("oi GUY", m("oi GUY", "GUY"))

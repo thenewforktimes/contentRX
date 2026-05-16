@@ -634,3 +634,102 @@ describe("/api/check — team-rules scope pivot", () => {
     expect(src).not.toContain("loadTeamRules(auth.teamOwnerUserId)");
   });
 });
+
+/**
+ * Project B (2026-05-15) — length-independent ban enforcement.
+ *
+ * The holistic rewrite normally fires only for >200-char inputs. A
+ * classified hard_ban rule is length-independent: a banned token in a
+ * tiny string must still trigger the rewrite ("a ban is a ban, no ifs
+ * ands or buts"). This is the prod-path proof that the additive
+ * `|| containsDerivedBanToken` disjunct actually pulls the rewrite in
+ * for a short input — the unit test in team-rules.test.ts covers the
+ * predicate; this covers the wiring end-to-end through the route.
+ */
+describe("/api/check — Project B length-independent ban trigger", () => {
+  async function seedHardBanRule(ownerUserId: string) {
+    await harness.db.insert(schema.teamRules).values({
+      teamOwnerUserId: ownerUserId,
+      standardId: "TEAM-01",
+      action: "add",
+      ruleJson: {
+        title: "No slang",
+        rule: "Never say guys.",
+        severity: "medium",
+        pattern: "\\b(?:guys)\\b",
+        case_insensitive: true,
+        enforcement: "hard_ban",
+        ban: { tokens: ["guys"], leaveProperNouns: false },
+      },
+    });
+  }
+
+  it("fires the rewrite for a SHORT input containing a banned token", async () => {
+    const userId = await seedAuthedUser("team");
+    await seedHardBanRule(userId);
+    cannedEval.current = PASS_RESULT;
+    const { rewriteDocument } = await import("@/lib/evaluate");
+    vi.mocked(rewriteDocument).mockClear();
+
+    // 8 chars — far below the 200-char large-input threshold.
+    const res = await POST(makeReq({ text: "hey guys" }));
+    expect(res.status).toBe(200);
+    // The additive ban trigger pulled the rewrite in despite the
+    // input being "small".
+    expect(vi.mocked(rewriteDocument)).toHaveBeenCalledTimes(1);
+    // And the server-derived matcher passed through as a ban rule.
+    const [, , banRules] = vi.mocked(rewriteDocument).mock.calls[0]!;
+    expect(banRules).toEqual([
+      {
+        pattern: "\\b(?:guys)\\b",
+        case_insensitive: true,
+        tokens: ["guys"],
+        leave_proper_nouns: false,
+      },
+    ]);
+  });
+
+  it("does NOT fire for a short input with no banned token (control)", async () => {
+    const userId = await seedAuthedUser("team");
+    await seedHardBanRule(userId);
+    cannedEval.current = PASS_RESULT;
+    const { rewriteDocument } = await import("@/lib/evaluate");
+    vi.mocked(rewriteDocument).mockClear();
+
+    const res = await POST(makeReq({ text: "hello team" }));
+    expect(res.status).toBe(200);
+    // Short input, no ban token present → the plain length gate
+    // applies and the rewrite is NOT fired.
+    expect(vi.mocked(rewriteDocument)).not.toHaveBeenCalled();
+  });
+
+  it("withholds the rewrite and surfaces a blocker when a ban is unresolved", async () => {
+    const userId = await seedAuthedUser("team");
+    await seedHardBanRule(userId);
+    cannedEval.current = PASS_RESULT;
+    const { rewriteDocument } = await import("@/lib/evaluate");
+    // Engine says the ban survived the rewrite + the one corrective.
+    vi.mocked(rewriteDocument).mockResolvedValueOnce({
+      result: {
+        rewritten: "still has guys in it",
+        diagnostic: "d",
+        ban_unresolved: ["guys"],
+        ban_name_collisions: [],
+      },
+      latency_ms: 1,
+      tokens: { input: 1, output: 1, cache_creation_input: 0, cache_read_input: 0 },
+    });
+
+    const res = await POST(makeReq({ text: "hey guys, ship it" }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    // NEVER ship clean-with-banned-token: the rewrite is withheld...
+    expect(body.suggested_rewrite).toBeNull();
+    expect(body.suggested_diagnostic).toBeNull();
+    // ...and the explicit blocker is surfaced.
+    expect(body.ban_enforcement).toEqual({
+      unresolved: ["guys"],
+      name_collisions: [],
+    });
+  });
+});

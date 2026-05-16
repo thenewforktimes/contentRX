@@ -15,6 +15,8 @@ import {
   applyAddedRules,
   applyDisabledFilter,
   applyOverrides,
+  containsDerivedBanToken,
+  deriveBanMatcher,
   findReDoSConcern,
   recomputeVerdict,
   type EvaluationResult,
@@ -458,5 +460,177 @@ describe("team-rules pipeline integration", () => {
 
     expect(final.violations).toEqual([]);
     expect(final.overall_verdict).toBe("pass");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Project B — deriveBanMatcher (the single server-authored matcher)
+// ---------------------------------------------------------------------------
+
+/** Compile what deriveBanMatcher produced exactly as compilePattern
+ *  would (`i` iff caseInsensitive), so the test matches what every
+ *  consumer actually runs. */
+function compileDerived(tokens: string[]): RegExp {
+  const d = deriveBanMatcher(tokens);
+  if (!d) throw new Error("expected a matcher");
+  return new RegExp(d.pattern, d.caseInsensitive ? "i" : "");
+}
+
+describe("deriveBanMatcher", () => {
+  it("word token is \\b-bounded and case-insensitive", () => {
+    const d = deriveBanMatcher(["guys"]);
+    expect(d).not.toBeNull();
+    expect(d!.pattern).toBe("\\b(?:guys)\\b");
+    expect(d!.caseInsensitive).toBe(true);
+    const re = compileDerived(["guys"]);
+    expect(re.test("hey guys")).toBe(true);
+    expect(re.test("GUYS listen")).toBe(true);
+    expect(re.test("Guys, hi")).toBe(true);
+    // Boundary holds — no substring false-positive.
+    expect(re.test("guytar solo")).toBe(false);
+    expect(re.test("disguys")).toBe(false);
+  });
+
+  it("carries the customer's intended variants (guy|guys)", () => {
+    const re = compileDerived(["guy", "guys"]);
+    expect(re.test("one guy")).toBe(true);
+    expect(re.test("many guys")).toBe(true);
+    expect(re.test("guidance given")).toBe(false);
+  });
+
+  it("em dash is a literal char, NOT word-bounded, and exact", () => {
+    const d = deriveBanMatcher(["—"]);
+    expect(d!.pattern).toBe("(?:—)");
+    const re = compileDerived(["—"]);
+    expect(re.test("yes — really")).toBe(true);
+    // The en dash (U+2013) and hyphen must NOT trip an em-dash ban.
+    expect(re.test("range 1–9")).toBe(false);
+    expect(re.test("co-op")).toBe(false);
+  });
+
+  it("mixes word + literal groups in one matcher", () => {
+    const d = deriveBanMatcher(["guys", "—"]);
+    expect(d!.pattern).toBe("(?:\\b(?:guys)\\b|(?:—))");
+    const re = compileDerived(["guys", "—"]);
+    expect(re.test("hey guys")).toBe(true);
+    expect(re.test("a — b")).toBe(true);
+    expect(re.test("clean text")).toBe(false);
+  });
+
+  it("escapes regex metacharacters in literal tokens", () => {
+    // "C++" ends on a non-word char → literal group, metachars escaped.
+    const re = compileDerived(["C++"]);
+    expect(re.test("we use C++ here")).toBe(true);
+    expect(re.test("we use C  here")).toBe(false);
+    // A token that is pure regex metachars must match literally, not
+    // act as a pattern.
+    const dot = compileDerived([".*"]);
+    expect(dot.test("literally .* here")).toBe(true);
+    expect(dot.test("anything")).toBe(false);
+  });
+
+  it("dedupes case-insensitively and ignores empty tokens", () => {
+    const d = deriveBanMatcher(["guys", " GUYS ", "guys", "", "   "]);
+    expect(d!.pattern).toBe("\\b(?:guys)\\b");
+  });
+
+  it("returns null when no usable token survives", () => {
+    expect(deriveBanMatcher([])).toBeNull();
+    expect(deriveBanMatcher(["", "  ", "\t"])).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Project B — containsDerivedBanToken (length-independent trigger)
+// ---------------------------------------------------------------------------
+
+describe("containsDerivedBanToken", () => {
+  function hardBan(
+    pattern: string,
+    extra?: Partial<LoadedRules["adds"][number]["fields"]>,
+  ): LoadedRules["adds"][number] {
+    return {
+      standardId: "TEAM-01",
+      fields: {
+        title: "No slang",
+        rule: "Never say guys.",
+        severity: "medium",
+        pattern,
+        case_insensitive: true,
+        enforcement: "hard_ban",
+        ban: { tokens: ["guys"], leaveProperNouns: false },
+        ...extra,
+      },
+    };
+  }
+
+  it("returns false when there are no add rules", () => {
+    expect(containsDerivedBanToken("hey guys", [])).toBe(false);
+  });
+
+  it("fires on a SHORT input — the length-independence guarantee", () => {
+    // 8 chars, far below the 200-char large-input threshold: a ban is
+    // a ban regardless of length.
+    expect(
+      containsDerivedBanToken("hey guys", [hardBan("\\b(?:guys)\\b")]),
+    ).toBe(true);
+  });
+
+  it("em-dash ban fires inside a tiny button label", () => {
+    const rule = hardBan("(?:—)", {
+      ban: { tokens: ["—"], leaveProperNouns: false },
+    });
+    expect(containsDerivedBanToken("Save — exit", [rule])).toBe(true);
+    expect(containsDerivedBanToken("Save now", [rule])).toBe(false);
+  });
+
+  it("is false when the banned token is absent", () => {
+    expect(
+      containsDerivedBanToken("hello team", [hardBan("\\b(?:guys)\\b")]),
+    ).toBe(false);
+  });
+
+  it("scope: only hard_ban rules — style_guidance is ignored", () => {
+    const styleRule: LoadedRules["adds"][number] = {
+      standardId: "TEAM-02",
+      fields: {
+        title: "Voice",
+        rule: "Keep it warm.",
+        severity: "medium",
+        // a pattern present but NOT a hard ban → must not trigger
+        pattern: "\\b(?:guys)\\b",
+        case_insensitive: true,
+        enforcement: "style_guidance",
+      },
+    };
+    expect(containsDerivedBanToken("hey guys", [styleRule])).toBe(false);
+  });
+
+  it("scope: a legacy row (no enforcement field) is ignored", () => {
+    const legacy: LoadedRules["adds"][number] = {
+      standardId: "TEAM-03",
+      fields: {
+        title: "Legacy",
+        rule: "old",
+        severity: "low",
+        pattern: "\\b(?:guys)\\b",
+        case_insensitive: true,
+        // no `enforcement`
+      },
+    };
+    expect(containsDerivedBanToken("hey guys", [legacy])).toBe(false);
+  });
+
+  it("clips input to CUSTOM_RULE_MAX_TEXT_BYTES (ReDoS parity)", () => {
+    const text = "a".repeat(10_500) + "guys";
+    expect(
+      containsDerivedBanToken(text, [hardBan("\\b(?:guys)\\b")]),
+    ).toBe(false);
+  });
+
+  it("a hard_ban rule missing its pattern does not trigger", () => {
+    const noPattern = hardBan("\\b(?:guys)\\b");
+    delete noPattern.fields.pattern;
+    expect(containsDerivedBanToken("hey guys", [noPattern])).toBe(false);
   });
 });

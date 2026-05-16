@@ -24,6 +24,19 @@ Arms:
   BENIGN    em-dash-friendly input + "keep our em dashes / long
             flowing sentences" directive. Seam works iff the em
             dashes SURVIVE (the positive case — flexibility delivered).
+  BAN       Project B — input that contains a hard-banned token + the
+            server-derived ban rule. The guarantee holds iff we never
+            SHIP clean-with-banned: the banned token is absent from
+            the final rewrite, OR it is explicitly surfaced as
+            unresolved (blocker). A banned token present in the
+            rewrite with no unresolved signal is the one failure mode
+            that must never happen.
+
+Re-run after any prompt/model change: the TIER 1 floor text is
+unchanged for the no-ban arms (byte-invariant pinned in pytest), but
+Project B added a non-overridable ban region — this is the live
+confidence check that it actually removes a real banned token end to
+end without weakening the existing three arms.
 """
 
 from __future__ import annotations
@@ -59,6 +72,7 @@ from content_checker.api_utils import create_message  # noqa: E402
 from content_checker.rewrite_document import (  # noqa: E402
     _build_system_prompt,
     _build_user_prompt,
+    rewrite_document,
 )
 
 SLOPPY = (
@@ -90,6 +104,22 @@ BENIGN = (
     "Em dashes are part of our voice — keep them. We write long, "
     "flowing sentences on purpose. Do not split them into short ones."
 )
+# Project B — a hard ban. Input deliberately uses the banned token
+# several times, colloquially (not as a name), so the only correct
+# outcome is genuine rephrasing — never deletion/mangling.
+BAN_INPUT = (
+    "Hey guys, thanks for joining. We built this for guys who are "
+    "tired of clunky tools, and we think you guys are going to love "
+    "what the team shipped this quarter."
+)
+BAN_RULE = {
+    # The same shape deriveBanMatcher stores + every consumer runs.
+    "pattern": r"\b(?:guy|guys)\b",
+    "case_insensitive": True,
+    "tokens": ["guy", "guys"],
+    "leave_proper_nouns": False,
+}
+_BAN_RE = re.compile(BAN_RULE["pattern"], re.IGNORECASE)
 
 _POWER = [
     "revolutionary", "game-changing", "game changing", "best-in-class",
@@ -144,6 +174,33 @@ def main() -> int:
           f"{'PASS' if ok else 'FAIL'}")
     if not ok:
         failures.append("BENIGN: seam did not honour the em-dash directive")
+
+    # BAN — Project B end to end through the real three-layer path
+    # (TIER 1 region → deterministic detector → one corrective →
+    # unresolved blocker). The guarantee is "never SHIP clean-with-
+    # banned": PASS iff the token is gone from the rewrite, OR it is
+    # explicitly surfaced as unresolved. FAIL only if a banned token
+    # is present in the rewrite with NO unresolved signal — the exact
+    # outcome that must never reach a customer.
+    res = rewrite_document(text=BAN_INPUT, ban_rules=[BAN_RULE])
+    survivors = _BAN_RE.findall(res.rewritten)
+    n_surv = len(survivors)
+    n_unres = len(res.ban_unresolved)
+    clean_ship = n_surv == 0 and n_unres == 0
+    blocked = n_unres > 0
+    ok = n_surv == 0 or blocked
+    state = (
+        "clean" if clean_ship
+        else f"BLOCKED(unresolved={list(res.ban_unresolved)})" if blocked
+        else f"LEAKED(survivors={survivors})"
+    )
+    print(f"BAN      survivors_in_rewrite={n_surv} {state}  "
+          f"{'PASS' if ok else 'FAIL'}")
+    if not ok:
+        failures.append(
+            "BAN: shipped a clean rewrite still containing a banned "
+            f"token {survivors} with no unresolved blocker"
+        )
 
     if failures:
         print("\nFAILURES:")
