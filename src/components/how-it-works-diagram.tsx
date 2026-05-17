@@ -810,44 +810,51 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
         aria-hidden
       />
       <RepoLabels />
+
+      {/* No box — a soft bottom-up scrim so the radar shows through
+          the whole stage while the copy stays AAA. Token-driven
+          (canvas colour); the opaque ~220px floor guarantees the
+          text never sits on the moving canvas, the fade reveals the
+          orbit + pointer + centre anchor above it. */}
       <div
-        className={`${FRAME_PAD} pointer-events-none`}
-        style={{ display: "flex" }}
-      >
-        {/* Opaque token surface (not the handoff's translucent navy)
-            so the copy is AAA over a stable bg, not the animation. */}
-        <div
-          className={`${CARD} agent-card pointer-events-auto max-w-[420px] ring-1 ring-line/50 max-[720px]:max-w-[340px] max-[480px]:max-w-[280px]`}
-        >
-          <div className={FRAME_INNER}>
-            <p
-              className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-affirm-text"
-              style={reveal(1)}
-            >
-              The agent
-            </p>
-            <p
-              className="mt-2.5 text-[22px] font-semibold leading-tight tracking-tight text-strong max-[480px]:text-[18px]"
-              style={reveal(2)}
-            >
-              Not just a tool. An agent.
-            </p>
-            <p
-              className="mt-3 text-sm leading-relaxed text-default max-[480px]:mt-2 max-[480px]:text-[13px]"
-              style={reveal(3)}
-            >
-              A deterministic agent watches your repos on a cadence.
-              It catches drift and keeps your prose consistent,
-              without burning a token.
-            </p>
-            <div className="mt-3" style={reveal(4)}>
-              <AgentBullet>Runs on its own, on the schedule you set.</AgentBullet>
-            </div>
-            <div style={reveal(5)}>
-              <AgentBullet>
-                Deterministic, so it never spends a token to do it.
-              </AgentBullet>
-            </div>
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to top, var(--color-canvas, #0e1430) 0px, var(--color-canvas, #0e1430) 240px, transparent 380px)",
+        }}
+      />
+
+      {/* Copy, bottom-anchored within the opaque floor of the scrim. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-[8%] max-[720px]:p-[5%] max-[480px]:p-[4%]">
+        <div className="max-w-[34rem]">
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-affirm-text"
+            style={reveal(1)}
+          >
+            The agent
+          </p>
+          <p
+            className="mt-2 text-[22px] font-semibold leading-tight tracking-tight text-strong max-[480px]:text-[18px]"
+            style={reveal(2)}
+          >
+            Not just a tool. An agent.
+          </p>
+          <p
+            className="mt-2.5 text-sm leading-relaxed text-default max-[480px]:mt-2 max-[480px]:text-[13px]"
+            style={reveal(3)}
+          >
+            A deterministic agent watches your repos on a cadence. It
+            catches drift and keeps your prose consistent, without
+            burning a token.
+          </p>
+          <div className="mt-2.5" style={reveal(4)}>
+            <AgentBullet>Runs on its own, on the schedule you set.</AgentBullet>
+          </div>
+          <div style={reveal(5)}>
+            <AgentBullet>
+              Deterministic, so it never spends a token to do it.
+            </AgentBullet>
           </div>
         </div>
       </div>
