@@ -566,15 +566,18 @@ function ReasonFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
 }
 
 // ---- Frame 5: The Agent — radar fan over the prose it watches ------------
-// The points are the kinds of prose the deterministic agent scans, in the
-// order they're written (PR -> changelog -> README -> product copy ->
-// error copy). NOT service names — the agent watches prose, not APIs.
+// The kinds of prose the deterministic agent scans, in lifecycle order
+// left -> right (define -> build -> document the interface -> the repo
+// front door -> the words users read). Spans PM, eng, and design;
+// internal and customer-facing. NOT service names — the agent watches
+// prose, not APIs (so "API docs", never "API"). "copy" is banned from
+// the lexicon, so error/product prose is "Product writing".
 const REPOS = [
+  "PRDs",
   "PR descriptions",
-  "changelogs",
+  "API docs",
   "READMEs",
-  "product copy",
-  "error copy",
+  "Product writing",
 ] as const;
 // Scrim opaque floor (px from the stage bottom). Mirrored in the scrim
 // gradient + RepoLabels CSS below — keep all three in sync.
@@ -617,6 +620,15 @@ function RepoLabels() {
         const sinN = Math.sin(a);
         const cos = cosN.toFixed(4);
         const sin = sinN.toFixed(4);
+        // Anchor the box's INNER edge at the node's radial point and let
+        // text grow toward center, instead of centering the box on the
+        // point (which spilled half the longest label past the stage's
+        // overflow-hidden edge at narrow widths). The outermost pixel is
+        // now `cos * (R + 14px)` ≤ 0.42w → it can never clip for any
+        // stage wider than ~132px, regardless of label length. Each
+        // label stays tethered to its node; only the spill is removed.
+        const anchorX =
+          cosN > 0.25 ? "-100%" : cosN < -0.25 ? "0%" : "-50%";
         return (
           <div
             key={name}
@@ -627,12 +639,12 @@ function RepoLabels() {
               // 0.42w)). Keeps each label locked to its node on the fan.
               left: "50%",
               top: "calc(100% - 260px)",
-              transform: `translate(-50%, -50%) translate(calc(${cos} * (${R} + 14px)), calc(${sin} * (${R} + 14px)))`,
+              transform: `translate(${anchorX}, -50%) translate(calc(${cos} * (${R} + 14px)), calc(${sin} * (${R} + 14px)))`,
               whiteSpace: "nowrap",
               letterSpacing: "0.02em",
               textShadow: "0 1px 5px rgba(0,0,0,0.9)",
               textAlign:
-                cosN > 0.25 ? "left" : cosN < -0.25 ? "right" : "center",
+                cosN > 0.25 ? "right" : cosN < -0.25 ? "left" : "center",
             }}
           >
             {name}
@@ -660,6 +672,11 @@ function AgentBullet({ children }: { children: React.ReactNode }) {
 
 function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Wall-clock timestamp of the moment this frame last became active.
+  // The sweep angle is phase-locked to this (not the free-running rAF
+  // clock) so the metronome always starts at the left edge (FAN_A0)
+  // each time step 5 lights up — while the canvas keeps drawing.
+  const activeAtRef = useRef(0);
   const seeds = useMemo(
     () =>
       REPOS.map((_, i) => ({
@@ -712,8 +729,13 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
         ctx.stroke();
       }
 
-      // Oscillating sweep across the fan, eased at both ends.
-      const ph = (1 - Math.cos((t / SWEEP_PERIOD) * Math.PI * 2)) / 2;
+      // Oscillating sweep across the fan, eased at both ends. The
+      // phase is measured from the moment the frame became active
+      // (not the free-running canvas clock `t`), so the beam always
+      // begins at the left edge (FAN_A0) and swings right, then back
+      // left like a metronome — restarting cleanly on each activation.
+      const st = (performance.now() - activeAtRef.current) / 1000;
+      const ph = (1 - Math.cos((st / SWEEP_PERIOD) * Math.PI * 2)) / 2;
       const sweep = FAN_A0 + ph * (FAN_A1 - FAN_A0);
       const sx = ox + Math.cos(sweep) * arcR;
       const sy = oy + Math.sin(sweep) * arcR;
@@ -819,6 +841,10 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
+    // The canvas runs a single always-on rAF for the component's
+    // lifetime (cheap; one fan). The metronome's start-at-left
+    // behaviour is handled by phase-locking the sweep angle to
+    // `activeAtRef` in `draw`, not by gating this loop on `active`.
     if (!reduce) {
       const start = performance.now();
       const tick = (now: number) => {
@@ -834,6 +860,13 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
       ro.disconnect();
     };
   }, [reduce]);
+
+  // Stamp the activation time so the sweep phase resets to FAN_A0
+  // (left edge) every time step 5 lights up. The canvas keeps
+  // drawing; only the metronome's zero point moves.
+  useEffect(() => {
+    if (!reduce && active) activeAtRef.current = performance.now();
+  }, [active, reduce]);
 
   const [phase, setPhase] = useState(reduce ? 5 : 0);
   useEffect(() => {
