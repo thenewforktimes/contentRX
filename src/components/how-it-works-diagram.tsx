@@ -1,59 +1,53 @@
 "use client";
 
 /**
- * HowItWorksDiagram — "the model around the model", v10.
+ * HowItWorksDiagram — "the model around the model", v11.
  *
- * Ported from the Claude-design handoff (design_handoff_how_it_works/):
- * a two-column story — a clickable step rail on the left, a single
- * dark stage on the right that crossfades between five purpose-built
- * visuals as autoplay (or a click) advances the steps.
+ * v11 ports the second Claude-design handoff (revised frames 3/4/5)
+ * and fixes the three issues Robert flagged:
  *
- * Structure + motion are ported faithfully from the handoff:
- *   - Frames 1+2: a <canvas> of converging particle streams; the
- *     `narrow` value tweens from "every rule" to "the few that do".
- *   - Frames 3/4/5: composed cards that reveal in sequence.
- *   - Autoplay with a progress bar, pause-on-hover, click-to-jump.
+ *  1. Design-system fidelity. The handoff is browser-only raw hex;
+ *     every colour is mapped to the app's semantic AAA tokens. The
+ *     frame-5 agent card was unreadable (translucent navy + blur over
+ *     a moving canvas) — it is now an OPAQUE token surface so the
+ *     copy sits on a stable background, not the animation.
+ *  2. Section was enormous below the fold. Root cause: v10 used a
+ *     bare `aspect-[4/3]` on a `1fr` column with no cap, so the stage
+ *     ballooned on desktop. v11 caps the whole block (`max-w-4xl`)
+ *     and the stage (`max-h`), and uses the handoff's responsive
+ *     aspect ratios.
+ *  3. Broke on tablet/mobile (inner card overflowed the short stage
+ *     and mangled the chrome). Root cause: v10 never ported the
+ *     responsive aspect-ratio / padding rules. v11 does: portrait
+ *     stage on phones, roomier padding shrink, agent-card max-width
+ *     steps — so content always fits inside the clipped stage.
  *
- * Content is OURS, not the handoff's. The handoff frames 3/4/5 shipped
- * the scorecard/threshold/`rule:` mechanics and a fabricated audit
- * receipt (invented model version, commit, latency, and a
- * `github.com/contentrx/judgments` repo that does not exist and would
- * violate ADR 2026-04-25). All of that is replaced with the locked
- * value-forward copy: the verdict + plain observations (frame 3), the
- * sharper line and the reason (frame 4), and the real published-
- * accuracy moat linking /accuracy (frame 5). The README explicitly
- * says the copy is meant to be swapped on port.
+ * Frames 1+2 (StreamsCanvas) are unchanged. Frames 3/4/5 are the new
+ * designs: a highlighter-pen PR critique, the paired call→answer
+ * card, and an orbital deterministic-agent scan.
  *
- * Tokens: the handoff's raw navy/mint/butter palette is mapped onto
- * the app's semantic AAA tokens. The canvas reads the affirm token
- * from CSS custom properties at runtime so it stays themed.
+ * Content is OURS (the locked value-forward copy). The rail STEPS,
+ * phase labels, and closer are not the handoff's placeholders. The
+ * closer keeps the /accuracy link, reachable and not aria-hidden
+ * (CLAUDE.md non-negotiable: an accuracy claim links to /accuracy).
+ * page.tsx is untouched — it owns the section eyebrow + "The model
+ * around the model." h2 + intro, so the copy-pin test stays green.
  *
- * Boundaries kept: substrate-safe (no standard_id, rule version,
- * taxonomy-axis vocabulary, scores, or fabricated infra); voice-clean;
- * the section's eyebrow + "The model around the model." h2 + intro are
- * owned by the page (src/app/(marketing)/page.tsx), so this component
- * is the grid + the closer only — no duplicate heading.
- *
- * Accessibility:
- *   - The rail is real <button>s carrying the full story (title +
- *     body); it is the semantic interface, with focus rings and
- *     aria-current.
- *   - The stage is decorative (aria-hidden).
- *   - The closer carries the /accuracy link, reachable and not
- *     aria-hidden (CLAUDE.md non-negotiable: an accuracy claim links
- *     to /accuracy).
- *   - prefers-reduced-motion: no autoplay, no canvas RAF (one static
- *     frame), no typewriter/cascade (full content immediately), no
- *     scanline. The rail still advances on click.
+ * Accessibility: the rail is the semantic interface (real buttons,
+ * focus rings, aria-current); the stage is decorative (aria-hidden).
+ * prefers-reduced-motion: no autoplay, no canvas RAF (one static
+ * frame), no typewriter / staged reveal / ticker — content shown in
+ * full; the rail still advances on click.
  */
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pill } from "@/components/ui/pill";
 
 type Step = { n: number; title: string; body: string };
 
-// Rail copy — the locked value-forward arc.
+// Rail copy — the locked value-forward arc (NOT the handoff's
+// placeholder STEPS).
 const STEPS: ReadonlyArray<Step> = [
   {
     n: 1,
@@ -82,7 +76,6 @@ const STEPS: ReadonlyArray<Step> = [
   },
 ];
 
-// Stage top-right phase labels — value framing, not "SCORE".
 const PHASE_LABELS = [
   "IN YOUR REPO",
   "IN FOCUS",
@@ -91,23 +84,7 @@ const PHASE_LABELS = [
   "THE AGENT",
 ] as const;
 
-const AUTOPLAY_MS = 6800;
-
-// Three plain observations for frame 3 — a sharp editor's read,
-// specific and about the reader's experience, never a put-down or a
-// score. Same error-message artifact as frame 4 and the hero, so the
-// page reads as one product.
-const OBSERVATIONS = [
-  "A reviewer can't tell what actually changed.",
-  "Nothing says why it's safe to merge.",
-  "The next person reading the history learns nothing.",
-] as const;
-
-const BAD =
-  "Refactored the auth flow and fixed a couple edge cases. Should be good to merge.";
-const READ = "A reviewer can't tell what changed or why it's safe to merge.";
-const GOOD =
-  "Shorten session expiry to 30m and add a refresh-token guard. No API changes.";
+const AUTOPLAY_MS = 3800;
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.trim().replace("#", "");
@@ -120,6 +97,14 @@ function hexToRgb(hex: string): [number, number, number] {
       : h;
   const int = parseInt(v || "4ade80", 16);
   return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
+}
+
+function tokenRgb(name: string, fallback: string): [number, number, number] {
+  if (typeof window === "undefined") return hexToRgb(fallback);
+  const v = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  return hexToRgb(v || fallback);
 }
 
 function usePrefersReducedMotion(): boolean {
@@ -135,10 +120,17 @@ function usePrefersReducedMotion(): boolean {
   return reduce;
 }
 
-// ---- Frame 1 + 2: converging particle streams -----------------------------
-// Canvas math ported 1:1 from the handoff. `narrow` 0..1 fades the
-// non-survivor streams out and brightens the few that remain. Colors
-// come from the affirm token so the stage stays on-theme.
+// Frame-card chrome shared by frames 3 + 4 — a real token surface
+// (not the handoff's translucent white gradient), so text is AAA.
+const CARD =
+  "w-full rounded-2xl border border-line bg-raised shadow-xl shadow-canvas/40";
+// Responsive outer/inner padding (handoff: 6%/8% → 4%/5% → 3%/4%;
+// inner 28 → 20 → 16/18).
+const FRAME_PAD =
+  "absolute inset-0 flex items-center justify-center p-[8%] max-[720px]:p-[5%] max-[480px]:p-[4%]";
+const FRAME_INNER = "p-7 max-[720px]:p-5 max-[480px]:px-[18px] max-[480px]:py-4";
+
+// ---- Frames 1 + 2: converging particle streams (unchanged) ---------------
 const STREAM_COUNT = 19;
 const SURVIVORS = new Set([3, 6, 13]);
 const SEEDS = Array.from({ length: STREAM_COUNT }, (_, i) => ({
@@ -160,33 +152,19 @@ function StreamsCanvas({
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => {
-      const css = getComputedStyle(document.documentElement);
-      const [mr, mg, mb] = hexToRgb(
-        css.getPropertyValue("--color-accent-affirm") || "#4ade80",
-      );
-      const [br, bg, bb] = hexToRgb(
-        css.getPropertyValue("--color-accent-affirm-text") || "#86efac",
-      );
+      const [mr, mg, mb] = tokenRgb("--color-accent-affirm", "#4ade80");
+      const [br, bg, bb] = tokenRgb("--color-accent-affirm-text", "#86efac");
       const mid = (a: number) => `rgba(${mr},${mg},${mb},${a})`;
       const bright = (a: number) => `rgba(${br},${bg},${bb},${a})`;
       const narrow = narrowRef.current ?? 0;
 
-      // Transparent canvas over the bg-canvas container — no token
-      // guesswork, stays themed.
       ctx.clearRect(0, 0, w, h);
 
       const fx = w * 0.78;
       const fy = h * 0.5;
       const pulse = 0.5 + 0.5 * Math.sin(t * 1.4);
 
-      const halo = ctx.createRadialGradient(
-        fx,
-        fy,
-        0,
-        fx,
-        fy,
-        90 + pulse * 28,
-      );
+      const halo = ctx.createRadialGradient(fx, fy, 0, fx, fy, 90 + pulse * 28);
       halo.addColorStop(0, mid(0.32 + pulse * 0.12));
       halo.addColorStop(0.5, mid(0.06));
       halo.addColorStop(1, mid(0));
@@ -317,232 +295,561 @@ function StreamsCanvas({
     };
   }, [reduce]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="block h-full w-full"
-      aria-hidden
-    />
-  );
+  return <canvas ref={canvasRef} className="block h-full w-full" aria-hidden />;
 }
 
-// ---- Frame 3: the call ----------------------------------------------------
+// ---- Frame 3: The Call — highlighter PR critique -------------------------
+const PR_PARTS = [
+  { text: "Refactored the auth flow and fixed " },
+  { text: "a couple edge cases", mark: 1 },
+  { text: ". " },
+  { text: "Should be good to merge.", mark: 2 },
+] as const;
+
+const ISSUES = [
+  {
+    n: "1",
+    text: "A reviewer can't tell what actually changed.",
+    phase: 3,
+    meta: false,
+  },
+  {
+    n: "2",
+    text: "Nothing says why it's safe to merge.",
+    phase: 4,
+    meta: false,
+  },
+  {
+    n: "*",
+    text: "The next person reading the history learns nothing.",
+    phase: 5,
+    meta: true,
+  },
+] as const;
+
 function CallFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
-  const [phase, setPhase] = useState(reduce ? OBSERVATIONS.length + 1 : 0);
+  const MAX = 5;
+  const [phase, setPhase] = useState(reduce ? MAX : 0);
   useEffect(() => {
     if (reduce) {
-      setPhase(OBSERVATIONS.length + 1);
+      setPhase(MAX);
       return;
     }
     if (!active) {
       setPhase(0);
       return;
     }
-    let id: ReturnType<typeof setTimeout>;
-    const step = (i: number) => {
-      setPhase(i);
-      if (i <= OBSERVATIONS.length) id = setTimeout(() => step(i + 1), 600);
-    };
-    id = setTimeout(() => step(1), 350);
-    return () => clearTimeout(id);
+    const timers = [
+      setTimeout(() => setPhase(1), 100),
+      setTimeout(() => setPhase(2), 300),
+      setTimeout(() => setPhase(3), 850),
+      setTimeout(() => setPhase(4), 1500),
+      setTimeout(() => setPhase(5), 2150),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, [active, reduce]);
 
+  const reveal = (n: number, x = false) => ({
+    opacity: phase >= n ? 1 : 0,
+    transform:
+      phase >= n
+        ? "translate(0,0)"
+        : x
+          ? "translateX(14px)"
+          : "translateY(8px)",
+    transition: "opacity 0.5s ease, transform 0.5s ease",
+  });
+
+  const filled = Math.max(0, Math.min(3, phase - 2));
+
   return (
-    <div className="absolute inset-0 flex items-center justify-center p-[6%]">
-      <div className="w-full max-w-[34rem] rounded-2xl border border-line bg-raised p-7 shadow-xl shadow-canvas/40">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Pill tone="amber" size="xs">
-            Worth adjusting
-          </Pill>
-          <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
-            PR description
-          </span>
-        </div>
-        <ul className="mt-5 space-y-3">
-          {OBSERVATIONS.map((o, i) => (
-            <li
-              key={o}
-              className="flex gap-3 text-sm leading-relaxed text-default transition-all duration-500"
+    <div className={FRAME_PAD}>
+      <div className={`${CARD} relative max-w-[600px] overflow-hidden`}>
+        <div className={`relative ${FRAME_INNER}`}>
+          <div
+            className="mb-5 flex flex-wrap items-center justify-between gap-3"
+            style={reveal(1)}
+          >
+            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
+              PR description
+            </span>
+            <Pill tone="amber" size="xs">
+              Worth adjusting
+            </Pill>
+          </div>
+
+          <p
+            className="m-0 text-[15px] italic leading-[1.7] text-quiet"
+            style={reveal(2)}
+          >
+            {PR_PARTS.map((part, i) => {
+              if (!("mark" in part) || !part.mark)
+                return <span key={i}>{part.text}</span>;
+              const on = reduce || phase >= part.mark + 2;
+              return (
+                <span
+                  key={i}
+                  className={on ? "text-strong" : "text-quiet"}
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(120deg, var(--color-accent-caution-soft), var(--color-accent-caution-soft))",
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: on ? "100% 72%" : "0% 72%",
+                    backgroundPosition: "0 78%",
+                    transition:
+                      "background-size 0.75s cubic-bezier(0.4,0,0.2,1), color 0.5s ease",
+                    padding: "0 2px",
+                    borderRadius: 2,
+                  }}
+                >
+                  {part.text}
+                </span>
+              );
+            })}
+          </p>
+
+          <div className="my-5 h-px bg-line" style={reveal(2)} />
+
+          <div className="relative pl-[18px]">
+            <div
+              className="absolute left-1 top-2 w-0.5 rounded-full"
               style={{
-                opacity: phase > i ? 1 : 0,
-                transform: phase > i ? "translateY(0)" : "translateY(6px)",
+                height: `calc(${(filled / 3) * 100}% - 16px)`,
+                minHeight: phase >= 3 ? 24 : 0,
+                background:
+                  "linear-gradient(180deg, var(--color-accent-caution-border), var(--color-accent-caution-soft))",
+                transition: "height 0.6s cubic-bezier(0.4,0,0.2,1)",
               }}
-            >
-              <span
-                aria-hidden
-                className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-affirm-border"
-              />
-              {o}
-            </li>
-          ))}
-        </ul>
+            />
+            {ISSUES.map((issue, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3.5 py-2"
+                style={reveal(issue.phase, true)}
+              >
+                <span
+                  className={[
+                    "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[11px] font-semibold leading-none",
+                    issue.meta
+                      ? "border-line bg-sunken text-quiet"
+                      : "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text",
+                  ].join(" ")}
+                >
+                  {issue.n}
+                </span>
+                <span
+                  className={[
+                    "text-sm leading-relaxed",
+                    issue.meta ? "text-quiet" : "text-default",
+                  ].join(" ")}
+                >
+                  {issue.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// ---- Frame 4: the sharper line, and why -----------------------------------
+// ---- Frame 4: The Reason — the paired call→answer ------------------------
+const PR_DESC =
+  "Refactored the auth flow and fixed a couple edge cases. Should be good to merge.";
+const CRITIQUE = "A reviewer can't tell what changed or why it's safe to merge.";
+const SUGGESTED =
+  "Shorten session expiry to 30m and add a refresh-token guard. No API changes.";
+
 function ReasonFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
-  const [phase, setPhase] = useState(reduce ? 5 : 0);
-  const [badTyped, setBadTyped] = useState(reduce ? BAD : "");
-  const [goodTyped, setGoodTyped] = useState(reduce ? GOOD : "");
+  const [phase, setPhase] = useState(reduce ? 4 : 0);
+  const [typed, setTyped] = useState(reduce ? SUGGESTED : "");
 
   useEffect(() => {
     if (reduce) {
-      setPhase(5);
-      setBadTyped(BAD);
-      setGoodTyped(GOOD);
+      setPhase(4);
+      setTyped(SUGGESTED);
       return;
     }
     if (!active) {
       setPhase(0);
-      setBadTyped("");
-      setGoodTyped("");
+      setTyped("");
       return;
     }
-    const timers: Array<ReturnType<typeof setTimeout>> = [];
-    const intervals: Array<ReturnType<typeof setInterval>> = [];
-    timers.push(setTimeout(() => setPhase(1), 200));
-    timers.push(setTimeout(() => setPhase(2), 500));
-    let bi = 0;
-    intervals.push(
-      setInterval(() => {
-        bi += 1;
-        setBadTyped(BAD.slice(0, bi));
-        if (bi >= BAD.length) intervals.forEach(clearInterval);
-      }, 18),
-    );
-    timers.push(setTimeout(() => setPhase(3), 1700));
-    timers.push(setTimeout(() => setPhase(4), 2100));
-    timers.push(
-      setTimeout(() => {
-        let gi = 0;
-        const gt = setInterval(() => {
-          gi += 1;
-          setGoodTyped(GOOD.slice(0, gi));
-          if (gi >= GOOD.length) clearInterval(gt);
-        }, 20);
-        intervals.push(gt);
-      }, 2200),
-    );
-    timers.push(setTimeout(() => setPhase(5), 4000));
+    const timers: Array<ReturnType<typeof setTimeout>> = [
+      setTimeout(() => setPhase(1), 100),
+      setTimeout(() => setPhase(2), 350),
+      setTimeout(() => setPhase(3), 900),
+      setTimeout(() => setPhase(4), 1400),
+    ];
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const typeStart = setTimeout(() => {
+      let i = 0;
+      interval = setInterval(() => {
+        i += 1;
+        setTyped(SUGGESTED.slice(0, i));
+        if (i >= SUGGESTED.length && interval) clearInterval(interval);
+      }, 14);
+    }, 1500);
     return () => {
       timers.forEach(clearTimeout);
-      intervals.forEach(clearInterval);
+      clearTimeout(typeStart);
+      if (interval) clearInterval(interval);
     };
   }, [active, reduce]);
 
   const reveal = (n: number) => ({
     opacity: phase >= n ? 1 : 0,
-    transform: phase >= n ? "translateY(0)" : "translateY(6px)",
-    transition: "opacity 0.4s ease, transform 0.4s ease",
+    transform: phase >= n ? "translateY(0)" : "translateY(8px)",
+    transition: "opacity 0.45s ease, transform 0.45s ease",
   });
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center p-[6%]">
-      <div className="w-full max-w-[34rem] rounded-2xl border border-line bg-raised p-6 shadow-xl shadow-canvas/40">
-        <div
-          className="flex flex-wrap items-center justify-between gap-3"
-          style={reveal(1)}
-        >
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Pill tone="amber" size="xs">
-              Worth adjusting
-            </Pill>
-            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-quiet">
-              <span aria-hidden>⚡</span> Instant
-              <span aria-hidden className="mx-1.5 text-quiet/50">
-                ·
+    <div className={FRAME_PAD}>
+      <div className={`${CARD} max-w-[560px] overflow-hidden`}>
+        <div className={FRAME_INNER}>
+          <div
+            className="mb-5 flex flex-wrap items-center justify-between gap-3"
+            style={reveal(1)}
+          >
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Pill tone="amber" size="xs">
+                Worth adjusting
+              </Pill>
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-quiet">
+                <span aria-hidden>⚡</span> Instant
+                <span aria-hidden className="mx-1.5 text-quiet/50">
+                  ·
+                </span>
+                ✓ Before merge
               </span>
-              ✓ Before merge
+            </div>
+            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
+              PR description
             </span>
           </div>
-          <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
-            PR description
-          </span>
-        </div>
 
-        <p
-          className="mt-4 min-h-[1.4rem] text-[13px] italic leading-relaxed text-quiet"
-          style={reveal(2)}
-        >
-          {badTyped}
-        </p>
-        <p
-          className="mt-3 text-sm font-medium leading-relaxed text-strong"
-          style={reveal(3)}
-        >
-          {READ}
-        </p>
+          <p
+            className="mb-4 text-sm italic leading-relaxed text-quiet"
+            style={reveal(2)}
+          >
+            {PR_DESC}
+          </p>
+          <p
+            className="mb-5 text-[15px] font-medium leading-relaxed text-strong"
+            style={reveal(3)}
+          >
+            {CRITIQUE}
+          </p>
 
-        <div
-          className="mt-4 rounded-xl border border-accent-affirm-border/40 bg-accent-affirm-soft p-4"
-          style={reveal(4)}
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-affirm-text">
-            Suggested
-          </p>
-          <p className="mt-2 min-h-[1.4rem] text-[13px] leading-relaxed text-default">
-            {goodTyped}
-          </p>
+          <div
+            className="rounded-xl border border-accent-affirm-border/40 bg-accent-affirm-soft p-4"
+            style={reveal(4)}
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-affirm-text">
+              Suggested
+            </p>
+            <p className="mt-2 min-h-[1.4rem] text-sm leading-relaxed text-default">
+              {typed}
+              {!reduce && phase >= 4 && typed.length < SUGGESTED.length && (
+                <span
+                  aria-hidden
+                  className="ml-0.5 inline-block h-3.5 w-[7px] translate-y-0.5 bg-accent-affirm motion-safe:animate-pulse"
+                />
+              )}
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// ---- Frame 5: the published-accuracy moat ---------------------------------
+// ---- Frame 5: The Agent — orbital deterministic scan ---------------------
+const REPOS = [
+  "api",
+  "web",
+  "cli",
+  "docs",
+  "sdk",
+  "mobile",
+  "infra",
+  "worker",
+] as const;
+const REPO_ANGLES = REPOS.map(
+  (_, i) => -Math.PI / 2 + (i / REPOS.length) * Math.PI * 2,
+);
+const ROTATION_PERIOD = 12;
+
+function RepoLabels() {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0"
+      style={{ containerType: "size" }}
+    >
+      {REPOS.map((name, i) => {
+        const a = REPO_ANGLES[i];
+        const cos = Math.cos(a);
+        const sin = Math.sin(a);
+        return (
+          <div
+            key={name}
+            className="absolute left-1/2 top-1/2 font-mono text-[10px] text-quiet"
+            style={{
+              transform: `translate(-50%, -50%) translate(calc(${cos} * min(42cqw, 42cqh) + ${
+                cos * 16
+              }px), calc(${sin} * min(42cqw, 42cqh) + ${sin * 16}px))`,
+              whiteSpace: "nowrap",
+              textAlign: cos > 0.3 ? "left" : cos < -0.3 ? "right" : "center",
+            }}
+          >
+            {name}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AgentBullet({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2.5 py-1.5">
+      <span
+        aria-hidden
+        className="mt-[7px] h-[7px] w-[7px] shrink-0 rounded-full bg-accent-affirm"
+        style={{ boxShadow: "0 0 8px var(--color-accent-affirm)" }}
+      />
+      <span className="text-[13.5px] leading-snug text-default">
+        {children}
+      </span>
+    </div>
+  );
+}
+
 function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
-  const [shown, setShown] = useState(reduce);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const seeds = useMemo(
+    () =>
+      REPOS.map((_, i) => ({
+        angle: REPO_ANGLES[i],
+        breathPhase: (i * 0.7) % (Math.PI * 2),
+      })),
+    [],
+  );
+
+  const draw = useCallback(
+    (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => {
+      const [mr, mg, mb] = tokenRgb("--color-accent-affirm", "#4ade80");
+      const [br, bgc, bb] = tokenRgb("--color-accent-affirm-text", "#86efac");
+      const [qr, qg, qb] = tokenRgb("--color-quiet", "#c4c8d4");
+      const mint = (a: number) => `rgba(${mr},${mg},${mb},${a})`;
+      const bright = (a: number) => `rgba(${br},${bgc},${bb},${a})`;
+      const faint = (a: number) => `rgba(${qr},${qg},${qb},${a})`;
+
+      ctx.clearRect(0, 0, w, h);
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+      const orbitR = Math.min(w, h) * 0.42;
+      const innerR = orbitR * 0.55;
+
+      [orbitR, orbitR * 0.78, innerR].forEach((r, idx) => {
+        ctx.strokeStyle = mint(0.08 - idx * 0.015);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      for (let i = 0; i < 24; i++) {
+        const a = -Math.PI / 2 + (i / 24) * Math.PI * 2;
+        const r1 = orbitR;
+        const r2 = orbitR + (i % 6 === 0 ? 6 : 3);
+        ctx.strokeStyle = i % 6 === 0 ? mint(0.35) : faint(0.18);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+        ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
+        ctx.stroke();
+      }
+
+      const scanAngle = -Math.PI / 2 + (t / ROTATION_PERIOD) * Math.PI * 2;
+      const scanX = cx + Math.cos(scanAngle) * orbitR;
+      const scanY = cy + Math.sin(scanAngle) * orbitR;
+
+      const grad = ctx.createLinearGradient(cx, cy, scanX, scanY);
+      grad.addColorStop(0, mint(0));
+      grad.addColorStop(0.55, mint(0.05));
+      grad.addColorStop(1, mint(0.5));
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(scanX, scanY);
+      ctx.stroke();
+
+      const beamW = (30 * Math.PI) / 180;
+      ctx.fillStyle = mint(0.04);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, orbitR, scanAngle - beamW, scanAngle);
+      ctx.closePath();
+      ctx.fill();
+
+      seeds.forEach((s) => {
+        const x = cx + Math.cos(s.angle) * orbitR;
+        const y = cy + Math.sin(s.angle) * orbitR;
+        let delta = Math.abs(scanAngle - s.angle);
+        while (delta > Math.PI) delta = Math.abs(delta - Math.PI * 2);
+        const proximity = Math.max(0, 1 - delta / 0.25);
+        const breath = 0.5 + 0.5 * Math.sin(t * 1.2 + s.breathPhase);
+        ctx.fillStyle = mint(0.5 + breath * 0.2 + proximity * 0.5);
+        ctx.beginPath();
+        ctx.arc(x, y, 3 + proximity * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        if (proximity > 0.05) {
+          ctx.strokeStyle = bright(proximity * 0.6);
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(x, y, 4 + (1 - proximity) * 18, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      });
+
+      const centerR = 3.5 + 0.6 * Math.sin(t * 1.5);
+      const centerG = ctx.createRadialGradient(cx, cy, 0, cx, cy, 28);
+      centerG.addColorStop(0, bright(0.9));
+      centerG.addColorStop(0.4, mint(0.35));
+      centerG.addColorStop(1, mint(0));
+      ctx.fillStyle = centerG;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bright(0.95);
+      ctx.beginPath();
+      ctx.arc(cx, cy, centerR, 0, Math.PI * 2);
+      ctx.fill();
+    },
+    [seeds],
+  );
+
+  const drawRef = useRef(draw);
+  useEffect(() => {
+    drawRef.current = draw;
+  });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let raf = 0;
+    let running = true;
+    let w = 0;
+    let h = 0;
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const resize = () => {
+      const r = canvas.getBoundingClientRect();
+      w = r.width;
+      h = r.height;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (reduce) drawRef.current(ctx, w, h, 3);
+    };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+    if (!reduce) {
+      const start = performance.now();
+      const tick = (now: number) => {
+        if (!running) return;
+        drawRef.current(ctx, w, h, (now - start) / 1000);
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [reduce]);
+
+  const [phase, setPhase] = useState(reduce ? 5 : 0);
   useEffect(() => {
     if (reduce) {
-      setShown(true);
+      setPhase(5);
       return;
     }
     if (!active) {
-      setShown(false);
+      setPhase(0);
       return;
     }
-    const id = setTimeout(() => setShown(true), 300);
-    return () => clearTimeout(id);
+    const timers = [
+      setTimeout(() => setPhase(1), 150),
+      setTimeout(() => setPhase(2), 400),
+      setTimeout(() => setPhase(3), 700),
+      setTimeout(() => setPhase(4), 1000),
+      setTimeout(() => setPhase(5), 1300),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, [active, reduce]);
 
+  const reveal = (n: number) => ({
+    opacity: phase >= n ? 1 : 0,
+    transform: phase >= n ? "translateY(0)" : "translateY(8px)",
+    transition: "opacity 0.45s ease, transform 0.45s ease",
+  });
+
   return (
-    <div className="absolute inset-0 flex items-center justify-center p-[6%]">
+    <div className="absolute inset-0">
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 block h-full w-full"
+        aria-hidden
+      />
+      <RepoLabels />
       <div
-        className="w-full max-w-[34rem] rounded-2xl border border-line bg-raised p-7 shadow-xl shadow-canvas/40 transition-all duration-500"
-        style={{
-          opacity: shown ? 1 : 0,
-          transform: shown ? "translateY(0)" : "translateY(8px)",
-        }}
+        className={`${FRAME_PAD} pointer-events-none`}
+        style={{ display: "flex" }}
       >
-        <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
-          The agent
-        </span>
-        <p className="mt-3 text-lg font-semibold text-strong">
-          Not just a tool. An agent.
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-default">
-          A deterministic agent watches your repos on a cadence. It
-          catches drift and keeps your prose consistent, without
-          burning a token.
-        </p>
-        <ul className="mt-5 space-y-2 text-sm text-quiet">
-          <li className="flex gap-2.5">
-            <span
-              aria-hidden
-              className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-affirm"
-            />
-            Runs on its own, on the schedule you set.
-          </li>
-          <li className="flex gap-2.5">
-            <span
-              aria-hidden
-              className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-affirm"
-            />
-            Deterministic, so it never spends a token to do it.
-          </li>
-        </ul>
+        {/* Opaque token surface (not the handoff's translucent navy)
+            so the copy is AAA over a stable bg, not the animation. */}
+        <div
+          className={`${CARD} agent-card pointer-events-auto max-w-[420px] ring-1 ring-line/50 max-[720px]:max-w-[340px] max-[480px]:max-w-[280px]`}
+        >
+          <div className={FRAME_INNER}>
+            <p
+              className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-affirm-text"
+              style={reveal(1)}
+            >
+              The agent
+            </p>
+            <p
+              className="mt-2.5 text-[22px] font-semibold leading-tight tracking-tight text-strong max-[480px]:text-[18px]"
+              style={reveal(2)}
+            >
+              Not just a tool. An agent.
+            </p>
+            <p
+              className="mt-3 text-sm leading-relaxed text-default max-[480px]:mt-2 max-[480px]:text-[13px]"
+              style={reveal(3)}
+            >
+              A deterministic agent watches your repos on a cadence.
+              It catches drift and keeps your prose consistent,
+              without burning a token.
+            </p>
+            <div className="mt-3" style={reveal(4)}>
+              <AgentBullet>Runs on its own, on the schedule you set.</AgentBullet>
+            </div>
+            <div style={reveal(5)}>
+              <AgentBullet>
+                Deterministic, so it never spends a token to do it.
+              </AgentBullet>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -555,8 +862,6 @@ export function HowItWorksDiagram() {
   const [progress, setProgress] = useState(0);
   const narrowRef = useRef(0);
 
-  // Autoplay with progress. Disabled under reduced motion (click to
-  // advance) and while hovered.
   useEffect(() => {
     if (reduce || paused) return;
     setProgress(0);
@@ -572,9 +877,6 @@ export function HowItWorksDiagram() {
     return () => cancelAnimationFrame(raf);
   }, [active, paused, reduce]);
 
-  // narrow: frame 1 = 0; frame 2 = easeOutQuart over the first 55% of
-  // the step; frames 3+ = 1. Held in a ref so the canvas rAF reads the
-  // latest value without restarting.
   let narrow = 1;
   if (active === 0) narrow = 0;
   else if (active === 1) {
@@ -585,9 +887,9 @@ export function HowItWorksDiagram() {
   narrowRef.current = narrow;
 
   return (
-    <div className="my-2">
+    <div className="mx-auto max-w-4xl">
       <div
-        className="grid gap-8 lg:grid-cols-[minmax(220px,300px)_1fr] lg:items-stretch lg:gap-12"
+        className="flex flex-col gap-7 lg:grid lg:grid-cols-[minmax(220px,280px)_1fr] lg:items-stretch lg:gap-10"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -649,24 +951,25 @@ export function HowItWorksDiagram() {
             >
               ●
             </span>
-            <span>{reduce ? "click to advance" : paused ? "paused" : "auto"}</span>
+            <span>
+              {reduce ? "click to advance" : paused ? "paused" : "auto · 3.8s"}
+            </span>
             <span className="ml-auto">
               {`0${active + 1} / 0${STEPS.length}`}
             </span>
           </li>
         </ol>
 
-        {/* Right stage — decorative */}
+        {/* Right stage — decorative. Responsive aspect + a hard
+            max-height so it can never balloon below the fold. */}
         <div
           aria-hidden
-          className="relative order-1 aspect-[4/3] overflow-hidden rounded-2xl border border-line bg-canvas shadow-2xl shadow-canvas/60 lg:order-2"
+          className="relative order-1 aspect-[2/3] max-h-[460px] overflow-hidden rounded-2xl border border-line bg-canvas shadow-2xl shadow-canvas/60 sm:aspect-[16/11] lg:order-2 lg:aspect-[4/3]"
         >
           <div className="absolute left-4 top-4 z-10 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-quiet">
             <span
               className="h-1.5 w-1.5 rounded-full bg-accent-affirm motion-safe:animate-pulse"
-              style={{
-                boxShadow: "0 0 6px var(--color-accent-affirm)",
-              }}
+              style={{ boxShadow: "0 0 6px var(--color-accent-affirm)" }}
             />
             {`Stage · 0${active + 1}`}
           </div>
@@ -674,7 +977,6 @@ export function HowItWorksDiagram() {
             {PHASE_LABELS[active]}
           </div>
 
-          {/* Streams (frames 1 + 2) */}
           <div
             className="absolute inset-0 transition-opacity duration-700"
             style={{
@@ -694,19 +996,14 @@ export function HowItWorksDiagram() {
                 pointerEvents: active === idx ? "auto" : "none",
               }}
             >
-              {idx === 2 && (
-                <CallFrame active={active === 2} reduce={reduce} />
-              )}
+              {idx === 2 && <CallFrame active={active === 2} reduce={reduce} />}
               {idx === 3 && (
                 <ReasonFrame active={active === 3} reduce={reduce} />
               )}
-              {idx === 4 && (
-                <AgentFrame active={active === 4} reduce={reduce} />
-              )}
+              {idx === 4 && <AgentFrame active={active === 4} reduce={reduce} />}
             </div>
           ))}
 
-          {/* Bottom progress bar */}
           <div className="absolute inset-x-0 bottom-0 z-10 h-0.5 bg-line">
             <div
               className="h-full bg-accent-affirm"
