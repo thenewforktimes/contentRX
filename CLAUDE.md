@@ -517,7 +517,7 @@ every API change, every new surface, every code review going forward.
   in `src/content_checker/models.py` and `src/lib/api-envelope.ts`.
 - All LLM JSON parses go through `parse_llm_json` in `api_utils.py`. (Lands in v2 Session 3.)
 - All Anthropic clients have `max_retries=2`. (Lands in v2 Session 3.)
-- JS/Python parity is CI-gated; divergence blocks merge. (Lands in v2 Session 2.)
+- JS/Python parity is CI-gated; divergence blocks merge. (Lands in v2 Session 2.) **2026-05-16: the JS-preprocessor sub-gate (`tools/parity_check.py`, figma-plugin/ui.html vs Python) was RETIRED with the Figma plugin (#590) — no JS preprocessor exists anymore. The display-labels, humanize, and engine-taxonomy-mirror parity gates remain CI-blocking. This non-negotiable stands, narrowed in scope, not removed.**
 - Every verdict is one of `violation | review_recommended | pass`. (Lands in v2 Session 10.)
 - Override dismissals write to the `violation_overrides` table — never
   silently discarded. (Lands in v2 Session 11.)

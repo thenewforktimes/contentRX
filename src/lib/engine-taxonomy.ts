@@ -14,7 +14,7 @@
  *
  * Drift between this file and the Python sources is caught by
  * `tests/test_engine_taxonomy_ts_mirror.py` (wired into
- * `.github/workflows/parity.yml` as the fourth parity gate).
+ * `.github/workflows/parity.yml` as a parity gate).
  */
 
 export const CONTENT_TYPES = [
