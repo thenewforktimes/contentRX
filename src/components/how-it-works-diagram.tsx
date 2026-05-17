@@ -595,12 +595,19 @@ function RepoLabels() {
         return (
           <div
             key={name}
-            className="absolute left-1/2 top-1/2 font-mono text-[10px] text-quiet"
+            className="absolute font-mono text-[11px] font-medium text-strong"
             style={{
-              transform: `translate(-50%, -50%) translate(calc(${cos} * min(42cqw, 42cqh) + ${
-                cos * 16
-              }px), calc(${sin} * min(42cqw, 42cqh) + ${sin * 16}px))`,
+              // Anchored to the canvas centre (cx = 50% w, cy = 40% h)
+              // and orbitR = min(w,h)*0.40, so the labels stay locked
+              // to their node dots after the radar was lifted.
+              left: "50%",
+              top: "40%",
+              transform: `translate(-50%, -50%) translate(calc(${cos} * min(40cqw, 40cqh) + ${
+                cos * 14
+              }px), calc(${sin} * min(40cqw, 40cqh) + ${sin * 14}px))`,
               whiteSpace: "nowrap",
+              letterSpacing: "0.02em",
+              textShadow: "0 1px 5px rgba(0,0,0,0.9)",
               textAlign: cos > 0.3 ? "left" : cos < -0.3 ? "right" : "center",
             }}
           >
@@ -656,8 +663,8 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
       const innerR = orbitR * 0.55;
 
       [orbitR, orbitR * 0.78, innerR].forEach((r, idx) => {
-        ctx.strokeStyle = mint(0.22 - idx * 0.045);
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = mint(0.4 - idx * 0.08);
+        ctx.lineWidth = idx === 0 ? 1.5 : 1;
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.stroke();
@@ -667,7 +674,7 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
         const a = -Math.PI / 2 + (i / 24) * Math.PI * 2;
         const r1 = orbitR;
         const r2 = orbitR + (i % 6 === 0 ? 7 : 3);
-        ctx.strokeStyle = i % 6 === 0 ? mint(0.75) : faint(0.36);
+        ctx.strokeStyle = i % 6 === 0 ? mint(0.85) : faint(0.55);
         ctx.lineWidth = i % 6 === 0 ? 1.5 : 1;
         ctx.beginPath();
         ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
