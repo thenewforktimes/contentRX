@@ -1,14 +1,16 @@
 /**
- * /writes — long-form gallery, REFRAMED 2026-05-16 to the locked
- * north star ("the opinionated editor for the prose that lives in a
- * codebase").
+ * /writes — codebase-prose gallery, REFRAMED 2026-05-16 to the
+ * locked north star ("the opinionated editor for the prose that
+ * lives in a codebase"). The "long-form" form-taxonomy framing was
+ * dropped 2026-05-16 (we frame by the moment and the act, not by
+ * form length).
  *
  * The 2026-05-09 design sold "the longer-form writing your team sends
  * to itself" — product-update emails, security advisories, all-hands
  * pre-reads, policy notices. Every one was company comms / the inbox:
  * exactly the out-of-scope ground the north star refuses. This
- * reframe relocates the same failure modes to the long-form prose
- * that actually lives in the repo and gets reviewed before merge:
+ * reframe relocates the same failure modes to the prose that
+ * actually lives in the repo and gets reviewed before merge:
  * README, API reference, PR description, design doc, runbook,
  * changelog.
  *
@@ -44,9 +46,9 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Pill } from "@/components/ui/pill";
 
 export const metadata: Metadata = {
-  title: "Long-form codebase prose review. ContentRX",
+  title: "Codebase prose review. ContentRX",
   description:
-    "ContentRX reviews the long-form prose that lives in your repo. READMEs, API docs, PR descriptions, design docs, runbooks, changelogs, against one opinionated editorial standard before merge.",
+    "ContentRX reviews the prose that lives in your repo. READMEs, API docs, PR descriptions, design docs, runbooks, changelogs, against one opinionated editorial standard before merge.",
 };
 
 type Flag = {
@@ -61,7 +63,6 @@ type Example = {
   id: string;
   label: string;
   momentLabel: string;
-  contentTypeLabel: string;
   intro: string;
   inputText: string;
   flags: readonly Flag[];
@@ -73,7 +74,6 @@ const EXAMPLES: readonly Example[] = [
     id: "readme",
     label: "README",
     momentLabel: "Repo entry point",
-    contentTypeLabel: "Long-form",
     intro:
       "The first file anyone, or any agent, opens. It gets written by the person who knows the system best, which is exactly why it leaves out the things they already know.",
     inputText:
@@ -114,7 +114,6 @@ const EXAMPLES: readonly Example[] = [
     id: "api-reference",
     label: "API reference",
     momentLabel: "Endpoint doc",
-    contentTypeLabel: "Long-form",
     intro:
       "Reference docs get written right after the endpoint ships, by the person who just built it. They document what they're looking at, the success path, and skip the parts that were obvious while their hands were on the code.",
     inputText:
@@ -155,7 +154,6 @@ const EXAMPLES: readonly Example[] = [
     id: "pr-description",
     label: "PR description",
     momentLabel: "Before merge",
-    contentTypeLabel: "Long-form",
     intro:
       "The description gets written last, when the work is done and you're tired and the next thing is waiting. So it gets the summary the author can write from memory, not the one the reviewer needs to review it.",
     inputText:
@@ -196,7 +194,6 @@ const EXAMPLES: readonly Example[] = [
     id: "design-doc",
     label: "Design doc",
     momentLabel: "Before the build",
-    contentTypeLabel: "Long-form",
     intro:
       "A design doc written by someone who did the thinking and wants the reader to see the path they took. The proposal is in there, after a few paragraphs of the context they can't quite bring themselves to cut.",
     inputText:
@@ -237,7 +234,6 @@ const EXAMPLES: readonly Example[] = [
     id: "runbook",
     label: "Runbook",
     momentLabel: "On-call",
-    contentTypeLabel: "Long-form",
     intro:
       "Runbook steps get written during or right after the incident, by the person who just fixed it. It's exact in their head. On the page it's exact only if you were there too.",
     inputText:
@@ -278,7 +274,6 @@ const EXAMPLES: readonly Example[] = [
     id: "changelog",
     label: "Changelog",
     momentLabel: "Release notes",
-    contentTypeLabel: "Long-form",
     intro:
       "Release notes get written under the release, from the merge list, by someone who knows what each line did and is compressing fast. The compression is where the reader loses the one change that affects them.",
     inputText:
@@ -334,14 +329,14 @@ export default function WritesPage() {
     // defeated the before/after comparison the redesign exists for.
     <main className="mx-auto max-w-6xl px-6 py-20">
       <PageHeader
-        eyebrow="Long-form review"
-        title="The long-form prose that lives in your codebase."
+        eyebrow="Wherever you work. Whatever you write."
+        title="The prose that lives in your codebase."
         lede={
           <>
             READMEs. API docs. PR descriptions. Design docs. Runbooks.
-            Changelogs. ContentRX reviews the long-form prose that
-            lives in your repo, against one opinionated editorial
-            standard, before it merges.
+            Changelogs. ContentRX reviews the prose that lives in your
+            repo, against one opinionated editorial standard, before it
+            merges.
           </>
         }
         meta={
@@ -367,7 +362,7 @@ export default function WritesPage() {
           <a
             key={ex.id}
             href={`#${ex.id}`}
-            className="inline-flex h-7 items-center rounded-full border border-line bg-raised px-3 text-xs font-medium text-default transition hover:border-line-strong hover:text-strong"
+            className="inline-flex h-7 items-center rounded-full border border-line bg-raised px-3 text-xs font-medium text-default transition hover:border-line-strong hover:bg-canvas hover:text-strong"
           >
             {ex.label}
           </a>
@@ -395,11 +390,8 @@ function ExampleCard({ example }: { example: Example }) {
     <article id={example.id} className="scroll-mt-16">
       <header className="flex flex-wrap items-baseline gap-3 border-b border-line pb-3">
         <Eyebrow>{example.label}</Eyebrow>
-        <Pill tone="stone" size="xs">
-          Moment: {example.momentLabel}
-        </Pill>
-        <Pill tone="stone" size="xs">
-          {example.contentTypeLabel}
+        <Pill tone="neutral" size="xs">
+          {example.momentLabel}
         </Pill>
       </header>
 

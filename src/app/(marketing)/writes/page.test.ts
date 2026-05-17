@@ -31,11 +31,14 @@ describe("/writes (src/app/(marketing)/writes/page.tsx)", () => {
 
   it("lands the codebase-prose headline (north-star reframe 2026-05-16)", () => {
     // Was "longer-form writing your team sends to itself" (company
-    // comms, off-thesis). The locked north star is the prose that
-    // lives in the codebase; the headline pins that.
+    // comms, off-thesis); briefly "long-form prose…" before the
+    // form-taxonomy framing was dropped 2026-05-16. The locked north
+    // star is "the prose that lives in a codebase"; the headline
+    // pins that, no "long-form" qualifier.
     expect(visible).toMatch(
-      /long-form prose that lives in your codebase/i,
+      /prose that lives in your codebase/i,
     );
+    expect(visible).not.toMatch(/long-form/i);
   });
 
   it("renders all six gallery example labels", () => {
