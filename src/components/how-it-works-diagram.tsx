@@ -98,14 +98,16 @@ const AUTOPLAY_MS = 6800;
 // score. Same error-message artifact as frame 4 and the hero, so the
 // page reads as one product.
 const OBSERVATIONS = [
-  "The reader can't tell what broke.",
-  "There's nothing they can do next.",
-  "It reads the same whether it's a network blip or a lost draft.",
+  "A reviewer can't tell what actually changed.",
+  "Nothing says why it's safe to merge.",
+  "The next person reading the history learns nothing.",
 ] as const;
 
-const BAD = 'throw new Error("Something went wrong. Try again later.")';
-const READ = "The reader can't tell what broke or what to do.";
-const GOOD = "We couldn't save your changes. Check your connection and retry.";
+const BAD =
+  "Refactored the auth flow and fixed a couple edge cases. Should be good to merge.";
+const READ = "A reviewer can't tell what changed or why it's safe to merge.";
+const GOOD =
+  "Shorten session expiry to 30m and add a refresh-token guard. No API changes.";
 
 function hexToRgb(hex: string): [number, number, number] {
   const h = hex.trim().replace("#", "");
@@ -353,7 +355,7 @@ function CallFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
             Worth adjusting
           </Pill>
           <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
-            Error message
+            PR description
           </span>
         </div>
         <ul className="mt-5 space-y-3">
@@ -456,12 +458,12 @@ function ReasonFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
             </span>
           </div>
           <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
-            Error message
+            PR description
           </span>
         </div>
 
         <p
-          className="mt-4 min-h-[1.4rem] font-mono text-[12px] leading-relaxed text-quiet"
+          className="mt-4 min-h-[1.4rem] text-[13px] italic leading-relaxed text-quiet"
           style={reveal(2)}
         >
           {badTyped}
@@ -480,7 +482,7 @@ function ReasonFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-affirm-text">
             Suggested
           </p>
-          <p className="mt-2 min-h-[1.4rem] font-mono text-[12px] leading-relaxed text-default">
+          <p className="mt-2 min-h-[1.4rem] text-[13px] leading-relaxed text-default">
             {goodTyped}
           </p>
         </div>
