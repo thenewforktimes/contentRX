@@ -649,12 +649,14 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
 
       ctx.clearRect(0, 0, w, h);
       const cx = w * 0.5;
-      const cy = h * 0.5;
-      const orbitR = Math.min(w, h) * 0.42;
+      // Centre lifted out of the bottom scrim so the radar lives in
+      // the clear zone above the copy.
+      const cy = h * 0.4;
+      const orbitR = Math.min(w, h) * 0.4;
       const innerR = orbitR * 0.55;
 
       [orbitR, orbitR * 0.78, innerR].forEach((r, idx) => {
-        ctx.strokeStyle = mint(0.08 - idx * 0.015);
+        ctx.strokeStyle = mint(0.22 - idx * 0.045);
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -664,9 +666,9 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
       for (let i = 0; i < 24; i++) {
         const a = -Math.PI / 2 + (i / 24) * Math.PI * 2;
         const r1 = orbitR;
-        const r2 = orbitR + (i % 6 === 0 ? 6 : 3);
-        ctx.strokeStyle = i % 6 === 0 ? mint(0.35) : faint(0.18);
-        ctx.lineWidth = 1;
+        const r2 = orbitR + (i % 6 === 0 ? 7 : 3);
+        ctx.strokeStyle = i % 6 === 0 ? mint(0.75) : faint(0.36);
+        ctx.lineWidth = i % 6 === 0 ? 1.5 : 1;
         ctx.beginPath();
         ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
         ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
@@ -677,23 +679,41 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
       const scanX = cx + Math.cos(scanAngle) * orbitR;
       const scanY = cy + Math.sin(scanAngle) * orbitR;
 
-      const grad = ctx.createLinearGradient(cx, cy, scanX, scanY);
-      grad.addColorStop(0, mint(0));
-      grad.addColorStop(0.55, mint(0.05));
-      grad.addColorStop(1, mint(0.5));
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(scanX, scanY);
-      ctx.stroke();
-
-      const beamW = (30 * Math.PI) / 180;
-      ctx.fillStyle = mint(0.04);
+      // Trailing comet wedge first, so the bright ray sits on top.
+      const beamW = (36 * Math.PI) / 180;
+      ctx.fillStyle = mint(0.16);
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, orbitR, scanAngle - beamW, scanAngle);
       ctx.closePath();
+      ctx.fill();
+
+      // The sweep ray — bold, bright at the leading edge.
+      const grad = ctx.createLinearGradient(cx, cy, scanX, scanY);
+      grad.addColorStop(0, mint(0));
+      grad.addColorStop(0.45, mint(0.4));
+      grad.addColorStop(1, bright(0.98));
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(scanX, scanY);
+      ctx.stroke();
+      ctx.lineCap = "butt";
+
+      // Leading glow + dot at the scan tip.
+      const tipG = ctx.createRadialGradient(scanX, scanY, 0, scanX, scanY, 14);
+      tipG.addColorStop(0, bright(0.95));
+      tipG.addColorStop(0.4, mint(0.4));
+      tipG.addColorStop(1, mint(0));
+      ctx.fillStyle = tipG;
+      ctx.beginPath();
+      ctx.arc(scanX, scanY, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bright(0.98);
+      ctx.beginPath();
+      ctx.arc(scanX, scanY, 3, 0, Math.PI * 2);
       ctx.fill();
 
       seeds.forEach((s) => {
@@ -703,13 +723,13 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
         while (delta > Math.PI) delta = Math.abs(delta - Math.PI * 2);
         const proximity = Math.max(0, 1 - delta / 0.25);
         const breath = 0.5 + 0.5 * Math.sin(t * 1.2 + s.breathPhase);
-        ctx.fillStyle = mint(0.5 + breath * 0.2 + proximity * 0.5);
+        ctx.fillStyle = mint(0.62 + breath * 0.22 + proximity * 0.45);
         ctx.beginPath();
-        ctx.arc(x, y, 3 + proximity * 1.5, 0, Math.PI * 2);
+        ctx.arc(x, y, 3.2 + proximity * 1.8, 0, Math.PI * 2);
         ctx.fill();
         if (proximity > 0.05) {
-          ctx.strokeStyle = bright(proximity * 0.6);
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = bright(proximity * 0.95);
+          ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.arc(x, y, 4 + (1 - proximity) * 18, 0, Math.PI * 2);
           ctx.stroke();
@@ -821,7 +841,7 @@ function AgentFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(to top, var(--color-canvas, #0e1430) 0px, var(--color-canvas, #0e1430) 240px, transparent 380px)",
+            "linear-gradient(to top, var(--color-canvas, #0e1430) 0px, var(--color-canvas, #0e1430) 260px, transparent 410px)",
         }}
       />
 
