@@ -228,8 +228,9 @@ field. The pattern:
    in `src/content_checker/models.py` (e.g. `1.0.0` → `1.1.0`).
 3. Add a `warnings` entry only if the change affects existing fields
    (a pure addition typically doesn't need one).
-4. Run the parity gate (`python3 tools/parity_check.py`) to confirm
-   the JS side is in lock-step.
+4. (The JS-preprocessor parity gate was retired with the Figma plugin
+   on 2026-05-16. There is no separate JS preprocessor to reconcile;
+   `src/lib/api-envelope.ts` is the JS side and was bumped in step 2.)
 5. Update the Changelog section above.
 
 ## Removing a field (major bump example — hypothetical)

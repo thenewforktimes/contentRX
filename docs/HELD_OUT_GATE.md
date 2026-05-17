@@ -166,7 +166,6 @@ path past a failing gate is a real `held-out-update:` commit.
 
 | Gate | Tests | Threshold | Source |
 |---|---|---|---|
-| Preprocessor parity | JS/Python preprocessor agreement | 53/53 | `tools/parity_check.py` |
 | Library regression | Each rule fires on synthetic adversarial inputs | ≥98% | `evals/novel_cases.json` (committed) |
 | **Held-out (this)** | **Engine vs human verdicts on production-like data** | **κ-based (Session 10)** | **`evals/industry/` (gitignored)** |
 | Vitest | TypeScript lib functions | 100% pass | `src/**/*.test.ts` |

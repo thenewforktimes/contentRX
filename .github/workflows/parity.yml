@@ -1,28 +1,30 @@
-name: JS/Python preprocessor parity
+name: JS/Python parity
 
-# Runs four parity gates on every PR and every push to main:
+# Runs three parity gates on every PR and every push to main:
 #
-#   1. `tools/parity_check.py` — JS preprocessor (figma-plugin/ui.html)
-#      vs. Python preprocessor (src/content_checker/preprocess.py).
-#      v2 Session 2 deliverable.
-#
-#   2. `scripts/check-display-labels-parity.py` — DISPLAY_LABELS map
+#   1. `scripts/check-display-labels-parity.py` — DISPLAY_LABELS map
 #      mirrored across three packages (engine, MCP, web TS). Fails
 #      if any sibling drifts from the engine canonical.
 #
-#   3. `scripts/check-humanize-parity.py` — humanize_verdict /
+#   2. `scripts/check-humanize-parity.py` — humanize_verdict /
 #      humanize_severity / humanize_review_reason behavioral parity
 #      across cli-client, mcp-server, lsp-server, github-action.
 #      Compares outputs across 36 input cases per function rather
 #      than byte-identity (docstrings legitimately diverge per
 #      package).
 #
-#   4. `tests/test_engine_taxonomy_ts_mirror.py` — pins
+#   3. `tests/test_engine_taxonomy_ts_mirror.py` — pins
 #      src/lib/engine-taxonomy.ts CONTENT_TYPES / MOMENTS / AUDIENCES
 #      against the Python canonicals (standards_library.json,
 #      moments.py, audience.py). Catches the exact drift class that
 #      hid `native_mobile` from every product surface for the entire
 #      beta-prep window before the gate landed (2026-05-11).
+#
+# RETIRED 2026-05-16: the JS-preprocessor parity gate
+# (`tools/parity_check.py` vs the `runPreprocessor()` block in
+# figma-plugin/ui.html) was removed with the Figma plugin (#590).
+# There is no JS preprocessor anymore; every surface calls the
+# Python engine. The remaining gates are not Figma-related.
 
 on:
   push:
@@ -61,16 +63,13 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Fetch substrate
-        # parity_check.py loads the standards library to drive the
-        # preprocessor comparison. Substrate lives in a private repo
-        # per ADR 2026-04-25; the script is the same one Vercel runs
-        # in `prebuild` (package.json).
+        # The engine-taxonomy mirror gate reads the standards library
+        # (standards_library.json) to pin engine-taxonomy.ts. Substrate
+        # lives in a private repo per ADR 2026-04-25; the fetch is the
+        # same one Vercel runs in `prebuild` (package.json).
         env:
           SUBSTRATE_TOKEN: ${{ secrets.SUBSTRATE_TOKEN }}
         run: scripts/fetch-substrate.sh
-
-      - name: Run preprocessor parity gate
-        run: python3 tools/parity_check.py
 
       - name: Run display-labels parity gate
         # No substrate or pip deps needed — pure regex parse over the

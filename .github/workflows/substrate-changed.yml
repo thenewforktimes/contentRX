@@ -95,12 +95,11 @@ jobs:
             -v
 
       - name: Run parity gates
-        # The five JS/Python parity gates from .github/workflows/parity.yml,
+        # The JS/Python parity gates from .github/workflows/parity.yml,
         # re-run here so substrate-side adds (new content_type, moment,
         # standard) get caught immediately, not waiting for the next
         # public-repo PR.
         run: |
-          python3 tools/parity_check.py
           python3 scripts/check-display-labels-parity.py
           python3 scripts/check-humanize-parity.py
           python3 -m pytest \
