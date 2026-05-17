@@ -82,7 +82,7 @@ const FINDINGS: readonly MockFinding[] = [
     issue: "Says nothing. The user cannot tell what broke or what to do.",
     suggestion:
       "We couldn't save your changes. Check your connection and retry.",
-    category: "Error string",
+    category: "Error message",
   },
 ] as const;
 

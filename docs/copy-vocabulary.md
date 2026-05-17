@@ -248,6 +248,14 @@ Settled calls. Diverging in a new surface is a regression.
   TS type signatures, and DB schema names only. The lint rule
   `checks-not-strings` blocks customer-facing uses of *string* /
   *strings*.
+- **Moments** are an internal taxonomy axis (the 13 moments, private
+  substrate per ADR 2026-04-25). They are never rendered to product
+  users. Customer copy talks about what you are writing and shipping
+  (the check, before merge), *never "your moment" / "the moment" /
+  "moments"* as a product concept. The everyday idiom *"in a moment"*
+  (a short span of time) is fine. The lint rule
+  `no-moment-taxonomy-vocab` blocks the concept use and carves out
+  the idiom.
 - **Flag for Review** is the customer-facing calibration-share path
   (per ADR 2026-05-11). One CTA on every finding card. One consent
   modal that names what gets stored and how to revoke. The dashboard

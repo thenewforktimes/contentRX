@@ -57,6 +57,31 @@ describe("error-severity checks", () => {
     expect(findingsByCheck(out)).not.toContain("no-standard-id");
   });
 
+  it("flags 'moment' as taxonomy vocab but not the time idiom", () => {
+    expect(
+      findingsByCheck(lintString(makeString("Only the few that fit your moment."))),
+    ).toContain("no-moment-taxonomy-vocab");
+    expect(
+      findingsByCheck(lintString(makeString("The moment you ship."))),
+    ).toContain("no-moment-taxonomy-vocab");
+    expect(
+      findingsByCheck(lintString(makeString("moments that matter"))),
+    ).toContain("no-moment-taxonomy-vocab");
+    // Idiom carve-out: "a moment" / "in a moment" = a short time.
+    expect(
+      findingsByCheck(lintString(makeString("Try again in a moment."))),
+    ).not.toContain("no-moment-taxonomy-vocab");
+    expect(
+      findingsByCheck(lintString(makeString("Give it a moment to load."))),
+    ).not.toContain("no-moment-taxonomy-vocab");
+    // Word boundary: momentum / momentary are unrelated.
+    expect(
+      findingsByCheck(
+        lintString(makeString("Build momentum with a momentary cache.")),
+      ),
+    ).not.toContain("no-moment-taxonomy-vocab");
+  });
+
   it("flags gender-exclusive language", () => {
     expect(findingsByCheck(lintString(makeString("Hey guys!")))).toContain("inclusive-gender");
     expect(findingsByCheck(lintString(makeString("All of mankind")))).toContain("inclusive-gender");

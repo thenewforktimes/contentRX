@@ -30,7 +30,6 @@ import { Pill } from "@/components/ui/pill";
 import { getDb, schema } from "@/db";
 import {
   humanizeContentType,
-  humanizeMoment,
   humanizeSource,
   humanizeVerdictLabel,
 } from "@/lib/humanize";
@@ -167,12 +166,6 @@ export default async function SharedChecksPage() {
                     <dt className="font-medium text-quiet">What you wrote</dt>
                     <dd className="italic">{row.customerNote}</dd>
                   </div>
-                  {row.moment && (
-                    <div>
-                      <dt className="font-medium text-quiet">Moment</dt>
-                      <dd>{humanizeMoment(row.moment)}</dd>
-                    </div>
-                  )}
                   {row.contentType && (
                     <div>
                       <dt className="font-medium text-quiet">Content type</dt>

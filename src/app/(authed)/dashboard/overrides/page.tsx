@@ -105,7 +105,6 @@ export default async function OverridesPage() {
   const rawStandardCounts = (await db
     .select({
       standard_id: schema.violationOverrides.standardId,
-      moment: schema.violationOverrides.moment,
       count: sql<number>`count(*)::int`,
     })
     .from(schema.violationOverrides)
@@ -115,25 +114,20 @@ export default async function OverridesPage() {
         gte(schema.violationOverrides.createdAt, since),
       ),
     )
-    .groupBy(
-      schema.violationOverrides.standardId,
-      schema.violationOverrides.moment,
-    )
+    .groupBy(schema.violationOverrides.standardId)
     .orderBy(desc(sql`count(*)`))) as Array<{
     standard_id: string;
-    moment: string | null;
     count: number;
   }>;
 
-  const categoryTotals = new Map<string, { category: string; moment: string | null; count: number }>();
+  const categoryTotals = new Map<string, { category: string; count: number }>();
   for (const row of rawStandardCounts) {
     const category = categoryNameFor(row.standard_id);
-    const key = `${category}|${row.moment ?? ""}`;
-    const existing = categoryTotals.get(key);
+    const existing = categoryTotals.get(category);
     if (existing) {
       existing.count += row.count;
     } else {
-      categoryTotals.set(key, { category, moment: row.moment, count: row.count });
+      categoryTotals.set(category, { category, count: row.count });
     }
   }
   const topCategories = Array.from(categoryTotals.values())
@@ -324,20 +318,13 @@ export default async function OverridesPage() {
               <thead>
                 <tr className="border-b border-line text-left text-xs uppercase tracking-wider text-quiet">
                   <th className="py-2">Category</th>
-                  <th className="py-2">Moment</th>
                   <th className="py-2 text-right">Overrides</th>
                 </tr>
               </thead>
               <tbody>
                 {topCategories.map((s) => (
-                  <tr
-                    key={`${s.category}|${s.moment ?? ""}`}
-                    className="border-b border-line"
-                  >
+                  <tr key={s.category} className="border-b border-line">
                     <td className="py-2 text-xs">{s.category}</td>
-                    <td className="py-2 text-xs text-default">
-                      {s.moment ?? "n/a"}
-                    </td>
                     <td className="py-2 text-right">
                       {s.count.toLocaleString()}
                     </td>

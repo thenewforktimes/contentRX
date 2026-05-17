@@ -144,6 +144,18 @@ const CHECKS: Check[] = [
     match: regexMatch(/\bsubstrate\b/i),
   },
   {
+    id: "no-moment-taxonomy-vocab",
+    severity: "error",
+    description:
+      'Reserved internal taxonomy axis per ADR 2026-04-25. The 13 "moments" are private substrate, never rendered to product users. Customer copy talks about what you are writing and shipping (the check, before merge), not "your moment" / "the moment" / "moments" as a product concept. The everyday idiom "in a moment" (a short span of time) is carved out and allowed. See docs/copy-vocabulary.md.',
+    // Flags "moment" / "moments" as the product/taxonomy concept but
+    // NOT the time idiom: the negative lookbehind lets "a moment" /
+    // "in a moment" pass while still catching "your moment", "the
+    // moment", and the bare plural "moments". Word-boundaried so
+    // "momentum" / "momentary" never match.
+    match: regexMatch(/(?<!\ba\s)\bmoments?\b/i),
+  },
+  {
     id: "checks-not-strings",
     severity: "error",
     description:
