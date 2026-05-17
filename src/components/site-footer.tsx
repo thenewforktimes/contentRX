@@ -38,6 +38,7 @@ const productLinks = [
   { href: "/pricing", label: "Pricing" },
   { href: "/install", label: "Install" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/writes", label: "Write and edit" },
 ];
 
 // Trust column order (2026-05-11 Robo): Ethics → Privacy → Security
