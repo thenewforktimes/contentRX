@@ -987,7 +987,14 @@ export function HowItWorksDiagram() {
   narrowRef.current = narrow;
 
   return (
-    <div className="mx-auto max-w-4xl">
+    // 2026-05-17 home-rhythm pass: was max-w-4xl (896px) centered
+    // inside the max-w-6xl How-it-works panel → ~96px dead gutter
+    // each side, reading as a frame-in-a-frame. max-w-5xl shrinks
+    // the gutter to normal panel padding. Stage stays height-bound
+    // (h-[460px] → arcR = min(100cqh-296, 42cqw) is the 100cqh-296
+    // term at any reasonable width), so the radar geometry, AAA
+    // scrim, and the by-construction label-clip guard are unaffected.
+    <div className="mx-auto max-w-5xl">
       <div
         className="flex flex-col gap-7 lg:grid lg:grid-cols-[minmax(220px,280px)_1fr] lg:items-stretch lg:gap-10"
         onMouseEnter={() => setPaused(true)}
@@ -1119,7 +1126,7 @@ export function HowItWorksDiagram() {
 
       {/* Closer — reachable, not aria-hidden. Carries the /accuracy
           link required whenever a surface claims accuracy. */}
-      <p className="mt-8 max-w-2xl text-sm leading-relaxed text-quiet">
+      <p className="mt-6 max-w-2xl text-sm leading-relaxed text-quiet">
         The context-aware editor in your codebase. Sharper
         communication, shipped faster, with the accuracy{" "}
         <Link

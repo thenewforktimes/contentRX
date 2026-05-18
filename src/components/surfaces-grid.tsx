@@ -102,7 +102,15 @@ const SURFACES: readonly Surface[] = [
 export function SurfacesGrid() {
   return (
     <section
-      className="mt-20 scroll-mt-16 rounded-3xl border border-accent-info-border/40 bg-accent-info-soft/30 p-8 sm:p-12"
+      // 2026-05-17 home-rhythm pass: was a blue accent-info-soft
+      // panel — the loudest cohesion break between the neutral
+      // How-it-works panel above and the (previously bare) Outcomes
+      // grid below. Now the shared lower-fold shell: same neutral
+      // bordered panel as How-it-works and Outcomes (rounded-3xl ·
+      // border-line · bg-raised/40 · p-6 sm:p-8 · mt-16). The
+      // dot-grid stays the single intentional accent (How-it-works
+      // only). Keep these three section shells in lockstep.
+      className="mt-16 scroll-mt-16 rounded-3xl border border-line bg-raised/40 p-6 sm:p-8"
     >
       <Eyebrow>Where it runs</Eyebrow>
       <h2 className="mt-2 text-2xl font-semibold text-strong sm:text-3xl">

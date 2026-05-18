@@ -44,13 +44,24 @@ import { Pill } from "@/components/ui/pill";
 
 export function OutcomesGrid() {
   return (
-    <section id="outcomes" className="mt-20 scroll-mt-16">
+    // 2026-05-17 home-rhythm pass: Outcomes was a bare section (no
+    // envelope) directly under two bordered panels — the third of
+    // three different section treatments that read as incoherent.
+    // Now wears the shared lower-fold shell, identical to
+    // How-it-works and SurfacesGrid (rounded-3xl · border-line ·
+    // bg-raised/40 · p-6 sm:p-8 · mt-16). The cells inside stay
+    // bg-raised (solid) on the panel's bg-raised/40 wash. Keep
+    // these three section shells in lockstep.
+    <section
+      id="outcomes"
+      className="mt-16 scroll-mt-16 rounded-3xl border border-line bg-raised/40 p-6 sm:p-8"
+    >
       <Eyebrow>Outcomes</Eyebrow>
       <h2 className="mt-2 text-2xl font-semibold text-strong sm:text-3xl">
         Why teams pick ContentRX.
       </h2>
 
-      <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+      <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
         <SaveTimeCell />
         <SaveMoneyCell />
         <OneApprovalCell />

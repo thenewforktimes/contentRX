@@ -53,18 +53,25 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12 sm:py-14">
+    <main className="mx-auto max-w-6xl px-6 py-10">
       {/* Hero — 2-column at md+. The animated wordmark replaces the
           plain Eyebrow that used to label the headline; treats the
-          brand presence as the page's first kinetic moment. */}
-      <header className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-16">
+          brand presence as the page's first kinetic moment.
+
+          Scale note (2026-05-17): the h1 was text-5xl/6xl (60px),
+          ~2x the locked <Heading> ramp, and lg:items-center
+          vertically centered a tall row — the hero alone filled a
+          1080p screen and overflowed a 14" MBP. Capped to
+          text-4xl/5xl + text-balance + a tight measure, top-aligned
+          so the integration row peeks and invites the scroll. */}
+      <header className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-12">
         <div>
           <AnimatedWordmark size="md" link={false} />
-          <h1 className="mt-6 text-5xl font-bold tracking-tight text-strong sm:text-6xl">
+          <h1 className="mt-6 max-w-[18ch] text-balance text-4xl font-bold tracking-tight text-strong sm:text-5xl">
             Your codebase ships prose. ContentRX reads it before
             anyone else does.
           </h1>
-          <p className="mt-6 text-lg text-default sm:text-xl">
+          <p className="mt-6 max-w-xl text-lg text-default">
             Your prose, held to one opinionated editorial standard,
             before merge. The accuracy is measured and published, so
             you can{" "}
@@ -116,7 +123,7 @@ export default function Home() {
         // off-screen trigger (WCAG 2.4.3). outline-none prevents the
         // default focus ring from showing on the section itself.
         tabIndex={-1}
-        className="mt-20 rounded-3xl border border-line bg-raised/40 p-8 outline-none sm:p-12"
+        className="mt-16 scroll-mt-16 rounded-3xl border border-line bg-raised/40 p-6 outline-none sm:p-8"
         style={{
           backgroundImage:
             "radial-gradient(circle, var(--decoration-dot) 1px, transparent 1px)",
