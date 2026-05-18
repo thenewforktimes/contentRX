@@ -120,22 +120,21 @@ function usePrefersReducedMotion(): boolean {
   return reduce;
 }
 
-// Frame-card chrome shared by frames 3 + 4 — a real token surface
-// (not the handoff's translucent white gradient), so text is AAA.
-const CARD =
-  "w-full rounded-2xl border border-line bg-raised shadow-xl shadow-canvas/40";
-// Responsive outer/inner padding (handoff: 6%/8% → 4%/5% → 3%/4%;
-// inner 28 → 20 → 16/18).
-// items-center at desktop (the card is shorter than the stage, so it
-// sits balanced with the absolute Stage badge in the empty space
-// above it). At <=480px the content-rich card can exceed the fixed
-// aspect-[2/3] box; items-start there pins it to the top so the
-// header is never center-clipped UP into the (now hidden) Stage
-// badge — only the least-critical bottom line can clip. Frames 3+4
-// only; the radar (AgentFrame) uses its own absolute inset-0.
+// Frames 3 + 4 render their content DIRECTLY on the stage — no
+// interior card — exactly like frames 1/2 (particles) and 5 (radar).
+// The old nested bg-raised card was a box-in-a-box and, being a
+// fixed block centered in the fixed aspect-[2/3] stage, it overran
+// the box at narrow widths and its header wallpapered up under the
+// absolute Stage badge. With the card gone the content is a plain
+// text block, top-anchored so it always clears the top chrome at
+// EVERY width: pt-12 (48px) reserves the Stage-badge zone, and
+// items-start means overflow (only at the very narrowest) clips the
+// least-critical last line off the BOTTOM, never the header. Text
+// is AAA on the stage's bg-canvas (same token pairing the radar
+// copy uses). FRAME_PAD is frames 3+4 only; AgentFrame/radar has
+// its own absolute inset-0 wrapper and is untouched.
 const FRAME_PAD =
-  "absolute inset-0 flex items-center justify-center p-[8%] max-[720px]:p-[5%] max-[480px]:items-start max-[480px]:p-[4%]";
-const FRAME_INNER = "p-7 max-[720px]:p-5 max-[480px]:px-[18px] max-[480px]:py-4";
+  "absolute inset-0 flex items-start justify-center px-[7%] pt-12 pb-8 max-[480px]:px-5 max-[480px]:pb-6";
 
 // ---- Frames 1 + 2: converging particle streams (unchanged) ---------------
 const STREAM_COUNT = 19;
@@ -371,90 +370,88 @@ function CallFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
 
   return (
     <div className={FRAME_PAD}>
-      <div className={`${CARD} relative max-w-[600px] overflow-hidden`}>
-        <div className={`relative ${FRAME_INNER}`}>
-          <div
-            className="mb-5 flex flex-wrap items-center justify-between gap-3 max-[480px]:mb-3"
-            style={reveal(1)}
-          >
-            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
-              PR description
-            </span>
-            <Pill tone="amber" size="xs">
-              Worth adjusting
-            </Pill>
-          </div>
+      <div className="relative w-full max-w-[600px]">
+        <div
+          className="mb-5 flex flex-wrap items-center justify-between gap-3"
+          style={reveal(1)}
+        >
+          <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
+            PR description
+          </span>
+          <Pill tone="amber" size="xs">
+            Worth adjusting
+          </Pill>
+        </div>
 
-          <p
-            className="m-0 text-[15px] italic leading-[1.7] text-quiet"
-            style={reveal(2)}
-          >
-            {PR_PARTS.map((part, i) => {
-              if (!("mark" in part) || !part.mark)
-                return <span key={i}>{part.text}</span>;
-              const on = reduce || phase >= part.mark + 2;
-              return (
-                <span
-                  key={i}
-                  className={on ? "text-strong" : "text-quiet"}
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(120deg, var(--color-accent-caution-soft), var(--color-accent-caution-soft))",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: on ? "100% 72%" : "0% 72%",
-                    backgroundPosition: "0 78%",
-                    transition:
-                      "background-size 0.75s cubic-bezier(0.4,0,0.2,1), color 0.5s ease",
-                    padding: "0 2px",
-                    borderRadius: 2,
-                  }}
-                >
-                  {part.text}
-                </span>
-              );
-            })}
-          </p>
-
-          <div className="my-5 h-px bg-line" style={reveal(2)} />
-
-          <div className="relative pl-[18px]">
-            <div
-              className="absolute left-1 top-2 w-0.5 rounded-full"
-              style={{
-                height: `calc(${(filled / 3) * 100}% - 16px)`,
-                minHeight: phase >= 3 ? 24 : 0,
-                background:
-                  "linear-gradient(180deg, var(--color-accent-caution-border), var(--color-accent-caution-soft))",
-                transition: "height 0.6s cubic-bezier(0.4,0,0.2,1)",
-              }}
-            />
-            {ISSUES.map((issue, i) => (
-              <div
+        <p
+          className="m-0 text-[15px] italic leading-[1.7] text-quiet"
+          style={reveal(2)}
+        >
+          {PR_PARTS.map((part, i) => {
+            if (!("mark" in part) || !part.mark)
+              return <span key={i}>{part.text}</span>;
+            const on = reduce || phase >= part.mark + 2;
+            return (
+              <span
                 key={i}
-                className="flex items-start gap-3.5 py-2"
-                style={reveal(issue.phase, true)}
+                className={on ? "text-strong" : "text-quiet"}
+                style={{
+                  backgroundImage:
+                    "linear-gradient(120deg, var(--color-accent-caution-soft), var(--color-accent-caution-soft))",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: on ? "100% 72%" : "0% 72%",
+                  backgroundPosition: "0 78%",
+                  transition:
+                    "background-size 0.75s cubic-bezier(0.4,0,0.2,1), color 0.5s ease",
+                  padding: "0 2px",
+                  borderRadius: 2,
+                }}
               >
-                <span
-                  className={[
-                    "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[11px] font-semibold leading-none",
-                    issue.meta
-                      ? "border-line bg-sunken text-quiet"
-                      : "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text",
-                  ].join(" ")}
-                >
-                  {issue.n}
-                </span>
-                <span
-                  className={[
-                    "text-sm leading-relaxed",
-                    issue.meta ? "text-quiet" : "text-default",
-                  ].join(" ")}
-                >
-                  {issue.text}
-                </span>
-              </div>
-            ))}
-          </div>
+                {part.text}
+              </span>
+            );
+          })}
+        </p>
+
+        <div className="my-5 h-px bg-line" style={reveal(2)} />
+
+        <div className="relative pl-[18px]">
+          <div
+            className="absolute left-1 top-2 w-0.5 rounded-full"
+            style={{
+              height: `calc(${(filled / 3) * 100}% - 16px)`,
+              minHeight: phase >= 3 ? 24 : 0,
+              background:
+                "linear-gradient(180deg, var(--color-accent-caution-border), var(--color-accent-caution-soft))",
+              transition: "height 0.6s cubic-bezier(0.4,0,0.2,1)",
+            }}
+          />
+          {ISSUES.map((issue, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3.5 py-2"
+              style={reveal(issue.phase, true)}
+            >
+              <span
+                className={[
+                  "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[11px] font-semibold leading-none",
+                  issue.meta
+                    ? "border-line bg-sunken text-quiet"
+                    : "border-accent-caution-border bg-accent-caution-soft text-accent-caution-text",
+                ].join(" ")}
+              >
+                {issue.n}
+              </span>
+              <span
+                className={[
+                  "text-sm leading-relaxed",
+                  issue.meta ? "text-quiet" : "text-default",
+                ].join(" ")}
+              >
+                {issue.text}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -513,59 +510,57 @@ function ReasonFrame({ active, reduce }: { active: boolean; reduce: boolean }) {
 
   return (
     <div className={FRAME_PAD}>
-      <div className={`${CARD} max-w-[560px] overflow-hidden`}>
-        <div className={FRAME_INNER}>
-          <div
-            className="mb-5 flex flex-wrap items-center justify-between gap-3 max-[480px]:mb-3"
-            style={reveal(1)}
-          >
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Pill tone="amber" size="xs">
-                Worth adjusting
-              </Pill>
-              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-quiet">
-                <span aria-hidden>⚡</span> Instant
-                <span aria-hidden className="mx-1.5 text-quiet/50">
-                  ·
-                </span>
-                ✓ Before merge
+      <div className="relative w-full max-w-[560px]">
+        <div
+          className="mb-5 flex flex-wrap items-center justify-between gap-3"
+          style={reveal(1)}
+        >
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Pill tone="amber" size="xs">
+              Worth adjusting
+            </Pill>
+            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-quiet">
+              <span aria-hidden>⚡</span> Instant
+              <span aria-hidden className="mx-1.5 text-quiet/50">
+                ·
               </span>
-            </div>
-            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
-              PR description
+              ✓ Before merge
             </span>
           </div>
+          <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-quiet">
+            PR description
+          </span>
+        </div>
 
-          <p
-            className="mb-4 text-sm italic leading-relaxed text-quiet"
-            style={reveal(2)}
-          >
-            {PR_DESC}
-          </p>
-          <p
-            className="mb-5 text-[15px] font-medium leading-relaxed text-strong"
-            style={reveal(3)}
-          >
-            {CRITIQUE}
-          </p>
+        <p
+          className="mb-4 text-sm italic leading-relaxed text-quiet"
+          style={reveal(2)}
+        >
+          {PR_DESC}
+        </p>
+        <p
+          className="mb-5 text-[15px] font-medium leading-relaxed text-strong"
+          style={reveal(3)}
+        >
+          {CRITIQUE}
+        </p>
 
-          <div
-            className="rounded-xl border border-accent-affirm-border/40 bg-accent-affirm-soft p-4"
-            style={reveal(4)}
-          >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-affirm-text">
-              Suggested
-            </p>
-            <p className="mt-2 min-h-[1.4rem] text-sm leading-relaxed text-default">
-              {typed}
-              {!reduce && phase >= 4 && typed.length < SUGGESTED.length && (
-                <span
-                  aria-hidden
-                  className="ml-0.5 inline-block h-3.5 w-[7px] translate-y-0.5 bg-accent-affirm motion-safe:animate-pulse"
-                />
-              )}
-            </p>
-          </div>
+        <div
+          className="rounded-xl border border-accent-affirm-border/40 bg-accent-affirm-soft p-4"
+          style={reveal(4)}
+        >
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-affirm-text">
+            Suggested
+          </p>
+          <p className="mt-2 min-h-[1.4rem] text-sm leading-relaxed text-default">
+            {typed}
+            {!reduce && phase >= 4 && typed.length < SUGGESTED.length && (
+              <span
+                aria-hidden
+                className="ml-0.5 inline-block h-3.5 w-[7px] translate-y-0.5 bg-accent-affirm motion-safe:animate-pulse"
+              />
+            )}
+          </p>
         </div>
       </div>
     </div>
@@ -1094,13 +1089,7 @@ export function HowItWorksDiagram() {
           aria-hidden
           className="relative order-1 aspect-[2/3] max-h-[440px] overflow-hidden rounded-2xl border border-line bg-canvas shadow-2xl shadow-canvas/60 sm:aspect-auto sm:h-[440px] lg:order-2"
         >
-          {/* Hidden at <=480px: at the narrowest viewport the
-              content-rich call/reason card fills the stage, and this
-              absolute badge wallpapered over the card header. The
-              step rail (active step + "0X / 05" legend) already
-              carries stage context there. Mirrors the top-right
-              PHASE_LABELS badge, which is likewise viewport-hidden. */}
-          <div className="absolute left-4 top-4 z-10 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-quiet max-[480px]:hidden">
+          <div className="absolute left-4 top-4 z-10 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-quiet">
             <span
               className="h-1.5 w-1.5 rounded-full bg-accent-affirm motion-safe:animate-pulse"
               style={{ boxShadow: "0 0 6px var(--color-accent-affirm)" }}
