@@ -59,7 +59,7 @@ const FINDINGS: readonly MockFinding[] = [
     sourceLabel: "AI",
     inputText:
       "ContentRX is a revolutionary, best-in-class platform that leverages AI to supercharge your workflow.",
-    issue: "Hype with no information. A developer skims this and learns nothing.",
+    issue: "A developer still can't tell what ContentRX does or who it's for.",
     suggestion:
       "ContentRX reviews the prose in your codebase and flags what to fix before merge.",
     category: "README",
@@ -79,7 +79,7 @@ const FINDINGS: readonly MockFinding[] = [
     severityLabel: "Worth adjusting",
     sourceLabel: "Instant",
     inputText: 'throw new Error("Something went wrong. Try again later.");',
-    issue: "Says nothing. The user cannot tell what broke or what to do.",
+    issue: "The reader can't tell what broke or what to do next.",
     suggestion:
       "We couldn't save your changes. Check your connection and retry.",
     category: "Error message",
